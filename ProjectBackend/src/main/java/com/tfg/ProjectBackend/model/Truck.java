@@ -21,7 +21,7 @@ public class Truck {
     private String referenceCode;
 
     @OneToMany(mappedBy = "assignedTruck")
-    private Set<Order> ordersToDeliver;
+    private Set<Order> ordersToDeliver = new HashSet<>();
 
     @ManyToOne
     private Shop assignedShop;
@@ -32,6 +32,5 @@ public class Truck {
     public Truck(String referenceCode) {
         this.id = id;
         this.referenceCode = referenceCode;
-        this.ordersToDeliver = new HashSet<>();
     }
 }

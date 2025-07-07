@@ -25,10 +25,10 @@ public class Shop {
     private String address;
 
     @ManyToMany(mappedBy = "shopsWithStock")
-    private Set<Product> availableProducts;
+    private Set<Product> availableProducts = new HashSet<>();
 
     @OneToMany(mappedBy = "assignedShop")
-    private Set<Truck> assignedTrucks;
+    private Set<Truck> assignedTrucks = new HashSet<>();
 
     public Shop() {
     }
@@ -37,7 +37,5 @@ public class Shop {
         this.referenceCode = referenceCode;
         this.name = name;
         this.address = address;
-        this.availableProducts = new HashSet<>();
-        this.assignedTrucks = new HashSet<>();
     }
 }

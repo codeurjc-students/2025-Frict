@@ -3,12 +3,14 @@ package com.tfg.ProjectBackend.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "products")
+@Table(name = "orders")
 public class Order {
 
     @Id
@@ -22,7 +24,7 @@ public class Order {
     private User user;
 
     @ManyToMany
-    private Set<Product> products;
+    private Set<Product> products = new HashSet<>();
 
     @ManyToOne
     private Truck assignedTruck;
@@ -34,9 +36,10 @@ public class Order {
     public Order() {
     }
 
-    public Order(String referenceCode, Truck assignedTruck, int estimatedCompletionTime, float totalAmount) {
+    public Order(String referenceCode, Truck assignedTruck, User user, int estimatedCompletionTime, float totalAmount) {
         this.referenceCode = referenceCode;
         this.assignedTruck = assignedTruck;
+        this.user = user;
         this.estimatedCompletionTime = estimatedCompletionTime;
         this.totalAmount = totalAmount;
     }

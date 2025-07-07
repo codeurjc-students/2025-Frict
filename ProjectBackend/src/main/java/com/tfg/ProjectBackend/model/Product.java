@@ -33,13 +33,13 @@ public class Product {
     private double price;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Review> reviews;
+    private Set<Review> reviews = new HashSet<>();
 
     @ManyToMany(mappedBy = "products")
-    private Set<Order> orders;
+    private Set<Order> orders = new HashSet<>();
 
     @ManyToMany
-    private Set<Shop> shopsWithStock;
+    private Set<Shop> shopsWithStock = new HashSet<>();
 
     public Product() {
     }
@@ -55,8 +55,5 @@ public class Product {
         }
         this.description = description;
         this.price = price;
-        this.reviews = new HashSet<>();
-        this.orders = new HashSet<>();
-        this.shopsWithStock = new HashSet<>();
     }
 }

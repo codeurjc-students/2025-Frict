@@ -1,19 +1,14 @@
 package com.tfg.ProjectBackend.model;
 
-import java.io.IOException;
 import java.sql.Blob;
-import java.sql.SQLException;
 import java.util.*;
 
 import com.tfg.ProjectBackend.utils.PhotoUtils;
 import jakarta.persistence.*;
-import javax.sql.rowset.serial.SerialBlob;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.StreamUtils;
 
 
 @Setter
@@ -48,7 +43,7 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private List<String> role; //Se obliga a que sea un tipo Collection, pero solamente tendrá un rol
+    private List<String> roles; //Se obliga a que sea un tipo Collection, pero solamente tendrá un rol
 
     private boolean isBanned;
 
@@ -61,7 +56,7 @@ public class User {
     public User() {
     }
 
-    public User(String name, String username, String email, String address, Blob profilePhoto, String encodedPassword, String role) {
+    public User(String name, String username, String email, String address, Blob profilePhoto, String encodedPassword, String... roles) {
         this.id = id;
         this.name = name;
         this.username = username;
@@ -74,7 +69,7 @@ public class User {
             this.profilePhoto = PhotoUtils.setDefaultPhoto(User.class);
         }
         this.isBanned = false;
-        this.role = List.of(role);
+        this.roles = List.of(roles);
         this.registeredOrders = new HashSet<>();
         this.publishedReviews = new HashSet<>();
     }
