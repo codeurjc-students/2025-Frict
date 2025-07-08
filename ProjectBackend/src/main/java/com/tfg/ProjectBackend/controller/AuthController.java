@@ -63,7 +63,7 @@ public class AuthController {
             return ResponseEntity.ok().headers(responseHeaders).body(response);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Collections.singletonMap("error", "Invalid credentials or banned user"));
+                    .body(Collections.singletonMap("error", "Backend: Invalid credentials or banned user"));
         }
     }
 
@@ -71,20 +71,20 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserRegisterDTO registerDTO) {
         if (authService.isEmailTaken(registerDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("error", "Email in use"));
+                    .body(Collections.singletonMap("error", "Backend: Email in use"));
         }
 
         User newUser = authService.registerUser(registerDTO);
 
         if (newUser == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "Error signing up "));
+                    .body(Collections.singletonMap("error", "Backend: Error signing up"));
         }
 
         String token = tokenService.generateToken(newUser);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "User signed up successfully");
+        response.put("message", "Backend: User signed up successfully");
         response.put("role", newUser.getRole());
         response.put("token", token);
 
