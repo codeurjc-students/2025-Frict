@@ -16,85 +16,116 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+
 
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
+	@Autowired
+	private JwtRequestFilter jwtRequestFilter;
 
-    @Autowired
+	@Autowired
     public RepositoryUserDetailsService userDetailService;
 
-    @Autowired
-    private UnauthorizedHandlerJwt unauthorizedHandlerJwt;
+	@Autowired
+  	private UnauthorizedHandlerJwt unauthorizedHandlerJwt;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+		return authConfig.getAuthenticationManager();
+	}
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+	@Bean
+	public DaoAuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
-        authProvider.setUserDetailsService(userDetailService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+		authProvider.setUserDetailsService(userDetailService);
+		authProvider.setPasswordEncoder(passwordEncoder());
 
-        return authProvider;
-    }
+		return authProvider;
+	}
 
-    @Bean
-    @Order(1) // Esta cadena de filtros se aplica primero
-    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+	@Bean
+	@Order(1)
+	public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
 
-        http.authenticationProvider(authenticationProvider());
+		http.authenticationProvider(authenticationProvider());
 
-        http
-                .securityMatcher("/api/**")
-                .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt)); // Manejador de errores de autenticación
+		http
+			.securityMatcher("/api/**")
+			.exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt));
 
-        // Habilitar CSRF para la API, usando un repositorio de cookies que JavaScript pueda leer
-        http.csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // El token CSRF se guarda en una cookie NO HttpOnly para que JS pueda leerla
-                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()) // Manejador por defecto para poner el token en el request attribute
-        );
+		http
 
-        http
-                .authorizeHttpRequests(authorize -> authorize
-                        // ENDPOINTS PÚBLICOS (no requieren autenticación ni JWT)
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+            .authorizeHttpRequests(authorize -> authorize
+				// PUBLIC ENDPOINTS
+				.requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
 
-                        // ENDPOINTS PRIVADOS (requieren autenticación con JWT)
-                        .requestMatchers("/api/auth/available-doctors", "/api/user/role", "/api/user/profile").authenticated()
-                        .requestMatchers("/api/auth/logout").authenticated() // Logout también es una acción protegida
+				// PRIVATE ENDPOINTS (require login)
+				.requestMatchers("/api/user/profile", "/api/auth/logout")
+				.permitAll()
 
-                        // Cualquier otra solicitud a /api/** requiere autenticación por defecto
-                        .anyRequest().authenticated()
-                );
+				// Additional rules for other specific resources
+				.anyRequest().permitAll()
+		);
 
 
-        // Deshabilitar la autenticación por formulario (ya que es una API REST con JWT)
+		// Disable Form login Authentication
         http.formLogin(formLogin -> formLogin.disable());
 
-        // Deshabilitar la autenticación Basic (ya que es una API REST con JWT)
+        // Disable CSRF protection (it is difficult to implement in REST APIs)
+        http.csrf(csrf -> csrf.disable());
+
+        // Disable Basic Authentication
         http.httpBasic(httpBasic -> httpBasic.disable());
 
-        // Configurar la gestión de sesión como STATELESS (sin estado), esencial para JWT
+        // Stateless session
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Filtro JWT antes del filtro de autenticación de usuario/contraseña de Spring Security
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+		// Add JWT Token filter
+		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+		return http.build();
+	}
+
+	@Bean
+    @Order(2)
+	public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
+
+		http.authenticationProvider(authenticationProvider());
+
+		http
+			.authorizeHttpRequests(authorize -> authorize
+					// PUBLIC PAGES
+					.requestMatchers("/").permitAll()
+					.requestMatchers("/error").permitAll()
+                    .requestMatchers("/books/*").permitAll()
+					// PRIVATE PAGES
+					.requestMatchers("/newbook").hasAnyRole("USER")
+					.requestMatchers("/editbook/*").hasAnyRole("USER")
+                    .requestMatchers("/editbook").hasAnyRole("USER")
+					.requestMatchers("/removebook/*").hasAnyRole("ADMIN")
+			)
+			.formLogin(formLogin -> formLogin
+					.loginPage("/login")
+					.failureUrl("/loginerror")
+					.defaultSuccessUrl("/")
+					.permitAll()
+			)
+			.logout(logout -> logout
+					.logoutUrl("/logout")
+					.logoutSuccessUrl("/")
+					.permitAll()
+			);
+
+		return http.build();
+	}
+
 }

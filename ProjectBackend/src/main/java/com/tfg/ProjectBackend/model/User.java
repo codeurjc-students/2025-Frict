@@ -7,6 +7,7 @@ import com.tfg.ProjectBackend.utils.PhotoUtils;
 import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,7 +31,7 @@ public class User {
     @Column(nullable = false)
     private String encodedPassword;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -43,9 +44,9 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private List<String> roles; //Se obliga a que sea un tipo Collection, pero solamente tendrá un rol
+    private List<String> roles = new ArrayList<>(); //Se obliga a que sea un tipo Collection, pero solamente tendrá un rol
 
-    private boolean isBanned;
+    private boolean isBanned = false;
 
     @OneToMany(mappedBy = "user")
     private Set<Order> registeredOrders = new HashSet<>();
@@ -72,5 +73,15 @@ public class User {
         this.roles = List.of(roles);
         this.registeredOrders = new HashSet<>();
         this.publishedReviews = new HashSet<>();
+    }
+
+    public String getRole() {
+        return this.roles.getFirst();
+    }
+
+    public String setRole(String r) {
+        this.roles.clear();
+        this.roles.add(r);
+        return r;
     }
 }

@@ -54,10 +54,9 @@ public class DatabaseInitializer {
 
         // 2. Entidades "padre" o independientes
         // Usuarios
-        String mail = "korex53699@bulmp3.com";
-        User user1 = new User("Alonso Gómez", "alonsogomez", mail, "CallePorDefecto1", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
-        User user2 = new User("Sara García", "saragarcia", mail, "CallePorDefecto2", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
-        User user3 = new User("Miguel Martínez", "miguelmartinez", mail, "CallePorDefecto3", defaultProfileBlob, passwordEncoder.encode("pass"), "ADMIN");
+        User user1 = new User("Alonso Gómez", "alonsogomez", "korex53699@bulmp1.com", "CallePorDefecto1", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
+        User user2 = new User("Sara García", "saragarcia", "korex53699@bulmp2.com", "CallePorDefecto2", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
+        User user3 = new User("Miguel Martínez", "miguelmartinez", "korex53699@bulmp3.com", "CallePorDefecto3", defaultProfileBlob, passwordEncoder.encode("pass"), "ADMIN");
 
         user1 = userRepository.save(user1); // Guarda y obtiene la instancia persistida
         user2 = userRepository.save(user2);

@@ -1,5 +1,5 @@
 
-package org.example.oncocoderswebapp.security;
+package com.tfg.ProjectBackend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
