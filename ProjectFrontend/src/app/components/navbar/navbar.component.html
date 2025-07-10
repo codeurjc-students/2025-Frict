@@ -58,28 +58,33 @@
     <div class="items-center hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
       <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
         <li>
-          <a routerLink="/" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/home.png" alt="Home">Inicio
+          <a routerLink="/" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5" src="/home.png" alt="Home">
+            Inicio
           </a>
         </li>
         <li>
-          <a routerLink="/shops" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/shop.png" alt="Shops">Tiendas
+          <a routerLink="/shops" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5" src="/shop.png" alt="Home">
+            Tiendas
           </a>
         </li>
         <li>
-          <a routerLink="/delivery" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/truck.png" alt="Delivery">Reparto
+          <a routerLink="/delivery" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5" src="/truck.png" alt="Home">
+            Pedidos
           </a>
         </li>
         <li>
-          <a routerLink="/reports" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/report.png" alt="Reports">Informes
+          <a routerLink="/reports" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5" src="/report.png" alt="Home">
+            Informes
           </a>
         </li>
         <li>
-          <a routerLink="/users" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/user.png" alt="Users">Usuarios
+          <a routerLink="/users" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5" src="/user.png" alt="Home">
+            Usuarios
           </a>
         </li>
       </ul>
