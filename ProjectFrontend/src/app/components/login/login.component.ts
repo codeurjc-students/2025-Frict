@@ -40,7 +40,7 @@ export class LoginComponent {
           localStorage.setItem('USER', JSON.stringify(response.user));
           this.authService.saveToken(response.token);
 
-          this.router.navigate(['/home']);
+          this.router.navigate(['/']);
         },
         error: (error: any) => {
           console.error('Frontend: Error en el login', error);
