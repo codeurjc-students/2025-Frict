@@ -7,8 +7,9 @@
     <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
 
 
-      <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="mr-4" type="button">
-        <img class="w-5 h-5 mr-4 rounded-full" src="/bell.png" alt="Notifications">
+      <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="group mr-4" type="button">
+        <img class="w-5 h-5 mr-4 rounded-full group-focus:hidden" src="/bell.png" alt="Notifications">
+        <img class="w-5 h-5 mr-4 rounded-full hidden group-focus:block" src="/s-bell.png" alt="Notifications active">
       </button>
 
       <!-- Dropdown menu -->
@@ -33,6 +34,7 @@
         <span class="sr-only">Open user menu</span>
         <img class="w-10 h-10 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-3.jpg" alt="user photo">
       </button>
+
       <!-- Dropdown menu -->
       <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 dark:divide-gray-600" id="user-dropdown">
         <div class="px-4 py-3">
@@ -58,32 +60,37 @@
     <div class="items-center hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
       <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
         <li>
-          <a routerLink="/" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/home.png" alt="Home">
+          <a routerLink="/" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5 group-focus:hidden" src="/home.png" alt="Home">
+            <img class="w-5 h-5 hidden group-focus:block" src="/s-home.png" alt="Home active">
             Inicio
           </a>
         </li>
         <li>
-          <a routerLink="/shops" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/shop.png" alt="Home">
+          <a routerLink="/shops" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5 group-focus:hidden" src="/shop.png" alt="Shop">
+            <img class="w-5 h-5 hidden group-focus:block" src="/s-shop.png" alt="Shop active">
             Tiendas
           </a>
         </li>
         <li>
-          <a routerLink="/delivery" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/truck.png" alt="Home">
+          <a routerLink="/delivery" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5 group-focus:hidden" src="/truck.png" alt="Truck">
+            <img class="w-5 h-5 hidden group-focus:block" src="/s-truck.png" alt="Truck active">
             Pedidos
           </a>
         </li>
         <li>
-          <a routerLink="/reports" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/report.png" alt="Home">
+          <a routerLink="/reports" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5 group-focus:hidden" src="/report.png" alt="Report">
+            <img class="w-5 h-5 hidden group-focus:block" src="/s-report.png" alt="Report active">
             Informes
           </a>
         </li>
         <li>
-          <a routerLink="/users" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 block py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5" src="/user.png" alt="Home">
+          <a routerLink="/users" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img class="w-5 h-5 group-focus:hidden" ngSrc="/user.png" alt="User" height="96" width="96">
+            <img class="w-5 h-5 hidden group-focus:block" ngSrc="/s-user.png" alt="User active" height="96" width="96">
             Usuarios
           </a>
         </li>

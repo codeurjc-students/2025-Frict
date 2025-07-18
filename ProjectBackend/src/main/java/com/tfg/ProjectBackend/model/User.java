@@ -58,7 +58,6 @@ public class User {
     }
 
     public User(String name, String username, String email, String address, Blob profilePhoto, String encodedPassword, String... roles) {
-        this.id = id;
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
