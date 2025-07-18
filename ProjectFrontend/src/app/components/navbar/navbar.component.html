@@ -60,38 +60,38 @@
     <div class="items-center hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
       <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
         <li>
-          <a routerLink="/" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5 group-focus:hidden" src="/home.png" alt="Home">
-            <img class="w-5 h-5 hidden group-focus:block" src="/s-home.png" alt="Home active">
-            Inicio
+          <a routerLink="/" routerLinkActive="text-yellow-300" #rlah="routerLinkActive" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img *ngIf="!rlah.isActive" class="w-5 h-5" src="/home.png" alt="Home">
+            <img *ngIf="rlah.isActive" class="w-5 h-5" src="/s-home.png" alt="Home active">
+            <div class="md:hidden lg:block"> Inicio </div>
           </a>
         </li>
         <li>
-          <a routerLink="/shops" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5 group-focus:hidden" src="/shop.png" alt="Shop">
-            <img class="w-5 h-5 hidden group-focus:block" src="/s-shop.png" alt="Shop active">
-            Tiendas
+          <a routerLink="/shops" routerLinkActive="text-yellow-300" #rlas="routerLinkActive" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img *ngIf="!rlas.isActive" class="w-5 h-5" src="/shop.png" alt="Shop">
+            <img *ngIf="rlas.isActive" class="w-5 h-5" src="/s-shop.png" alt="Shop active">
+            <div class="md:hidden lg:block"> Tiendas </div>
           </a>
         </li>
         <li>
-          <a routerLink="/delivery" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5 group-focus:hidden" src="/truck.png" alt="Truck">
-            <img class="w-5 h-5 hidden group-focus:block" src="/s-truck.png" alt="Truck active">
-            Pedidos
+          <a routerLink="/delivery" routerLinkActive="text-yellow-300" #rlat="routerLinkActive" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img *ngIf="!rlat.isActive" class="w-5 h-5" src="/truck.png" alt="Truck">
+            <img *ngIf="rlat.isActive" class="w-5 h-5" src="/s-truck.png" alt="Truck active">
+            <div class="md:hidden lg:block"> Pedidos </div>
           </a>
         </li>
         <li>
-          <a routerLink="/reports" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5 group-focus:hidden" src="/report.png" alt="Report">
-            <img class="w-5 h-5 hidden group-focus:block" src="/s-report.png" alt="Report active">
-            Informes
+          <a routerLink="/reports" routerLinkActive="text-yellow-300" #rlar="routerLinkActive" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img *ngIf="!rlar.isActive" class="w-5 h-5" src="/report.png" alt="Report">
+            <img *ngIf="rlar.isActive" class="w-5 h-5" src="/s-report.png" alt="Report active">
+            <div class="md:hidden lg:block"> Informes </div>
           </a>
         </li>
         <li>
-          <a routerLink="/users" routerLinkActive="text-yellow-300" [routerLinkActiveOptions]="{ exact: true }" class="group flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
-            <img class="w-5 h-5 group-focus:hidden" ngSrc="/user.png" alt="User" height="96" width="96">
-            <img class="w-5 h-5 hidden group-focus:block" ngSrc="/s-user.png" alt="User active" height="96" width="96">
-            Usuarios
+          <a routerLink="/users" routerLinkActive="text-yellow-300" #rlau="routerLinkActive" [routerLinkActiveOptions]="{ exact: true }" class="flex items-center gap-1 py-2 px-3 text-white rounded-sm md:bg-transparent">
+            <img *ngIf="!rlau.isActive" class="w-5 h-5" ngSrc="/user.png" alt="User" height="96" width="96">
+            <img *ngIf="rlau.isActive" class="w-5 h-5" ngSrc="/s-user.png" alt="User active" height="96" width="96">
+            <div class="md:hidden lg:block"> Usuarios </div>
           </a>
         </li>
       </ul>
