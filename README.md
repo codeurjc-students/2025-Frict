@@ -121,8 +121,11 @@ The application will be implemented following an incremental model with 7 differ
 
 
 #### Management subsystem
-- All detailed views
+- [All detailed views](/docs/management-subsystem.md)
 - Screen flow diagram:
+
+![Management subsystem screens diagram](/docs/sketches/management/Frict-management.png)
+&nbsp;
 
 ### Entities
 ![Database schema diagram](docs/images/schema.png)
