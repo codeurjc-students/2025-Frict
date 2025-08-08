@@ -131,6 +131,14 @@ The application will be implemented following an incremental model with 7 differ
 ![Database schema diagram](docs/images/schema.png)
 
 ### Permissions
+In order to separate customers and staff functionalities and to prevent internal data from being accessed by any user, each functionality will only be available to its corresponding user roles, which will be:
+- Anon user: Lowest level of permissions, restricted to product data read only.
+- Registered user: Identified user which will be able to order products and track their orders.
+- Store manager: Used by the person in charge of an specific shop. Allowed to check that shop statistics and products, and restock them if necessary.
+- Delivery driver: Used by truck drivers to check the content of their assigned orders, and to update its status when delivered.
+- Administrator: Highest level of permissions, will be able to manage all registered shops, check overall company data and restrict the system access to any registered user if needed.
+
+
 | Basic funtionality                                   | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 | ------------------------------                       | --------- | --------------- | ------------- | --------------- | ------------- |
 | Check product info                                   | ✅ | ✅ | ✅ | ✅ | ✅ |
