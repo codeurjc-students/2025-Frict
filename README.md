@@ -8,6 +8,23 @@ FRICT (Flexible Real-Time Inventory Control Tool) is a composed system, designed
 
 Feature sketches:
 
+![Home Page Sketch](/docs/sketches/shop/home.png)
+
+![Product Details Page Sketch](/docs/sketches/shop/productInfo.png)
+
+![Cart Page Sketch](/docs/sketches/shop/cart.png)
+
+![Order Details Page Sketch](/docs/sketches/shop/orderDetails.png)
+
+![Order Delivery Page Sketch](/docs/sketches/management/delivery.png)
+
+![Home Page Sketch](/docs/sketches/management/home.png)
+
+![Product Details Page Sketch](/docs/sketches/management/productInfo.png)
+
+![Reports Page Sketch](/docs/sketches/management/reports.png)
+
+
 > ℹ️ NOTE: This software has not been implemented yet. At the moment, only functional and technical objectives will be defined.
 
 &nbsp;
@@ -50,7 +67,7 @@ The application will be implemented following an incremental model with 7 differ
 ### Project schedule
 | Phase   | Description                                  | Deadline          | Start Date       | End Date       |
 | ------- | -------------------------------------------  | ----------------- | ---------------- | -------------- |
-| Phase 1 | Main features, design and screens navigation | 15 September 2025 | 5 July 2025      | ....           |
+| Phase 1 | Main features, design and screens navigation | 15 September 2025 | 5 July 2025      | 11 August 2025 |
 | Phase 2 | Minimal services, tests and CI               | 15 October 2025   | ....             | ....           |
 | Phase 3 | v0.1 - Basic functionality, Docker packaging | 15 December 2025  | ....             | ....           |
 | Phase 4 | v0.2 - Intermediate functionality            | 1 March 2026      | ....             | ....           |
