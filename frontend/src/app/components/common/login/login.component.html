@@ -1,49 +1,65 @@
-<section class="bg-gray-50 dark:bg-gray-900">
-    <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <a routerLink="/" class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
-            <img class="w-8 h-8 mr-2" src="/logo.png" alt="logo"> Frict
-        </a>
-        <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-            <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
-                <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
-                    Inicia sesión con tu cuenta
-                </h1>
-              <form class="space-y-4 md:space-y-6" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-                <div class="mb-4">
-                  <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email:</label>
-                  <input formControlName="email" type="email" placeholder="email" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="name@company.com">
-                  <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
-                    El email es obligatorio
-                  </div>
-                </div>
-                <div class="mb-4 relative">
-                  <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contraseña:</label>
-                  <input
-                    [type]="showPassword ? 'text' : 'password'"
-                    formControlName="password"
-                    placeholder="••••••••"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  >
-                  <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-                       class="text-red-500 text-sm mt-1">
-                    La contraseña es obligatoria
-                  </div>
+<!-- Login Card -->
+<div class="min-h-screen flex flex-col items-center justify-center bg-gray-950">
 
-                  <label class="flex items-center space-x-2 mt-3">
-                    <input (click)="togglePassword()" id="remember" type="checkbox" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"/>
-                    <span class="block text-sm font-medium text-gray-900 dark:text-white">Mostrar contraseña</span>
-                  </label>
+  <a href="#" class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+    <img class="w-8 h-8 mr-2" src="/logo.png" alt="logo">
+    Frict
+  </a>
 
-                  <div class="mt-2 mb-2">
-                  <a routerLink="/" class="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Olvidé mi contraseña</a>
-                  </div>
-                </div>
-                <button type="submit" [disabled]="!loginForm.valid"
-                        class="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                  Iniciar sesión
-                </button>
-              </form>
-            </div>
-        </div>
+  <div class="w-full max-w-md bg-gray-900 text-gray-100 rounded-2xl shadow-lg p-8 space-y-6">
+    <!-- Título -->
+    <h2 class="text-2xl font-bold">Iniciar sesión con tu cuenta</h2>
+
+    <!-- Botones de social login -->
+    <div class="flex gap-3">
+      <button class="flex-1 flex items-center justify-center gap-2 border border-gray-700 rounded-lg py-2 bg-gray-800 hover:bg-gray-700">
+        <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" class="w-5 h-5"/>
+        Iniciar sesión con Google
+      </button>
     </div>
-</section>
+
+    <!-- Divider -->
+    <div class="flex items-center gap-3">
+      <div class="flex-1 h-px bg-gray-700"></div>
+      <span class="text-gray-400 text-sm">o</span>
+      <div class="flex-1 h-px bg-gray-700"></div>
+    </div>
+
+    <!-- Formulario -->
+    <form class="space-y-4" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium">Correo electrónico</label>
+        <input id="email" formControlName="email" type="email" placeholder="Dirección de correo" class="mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label for="password" class="block text-sm font-medium">Contraseña</label>
+        <input id="password" formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••"
+               class="mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+      </div>
+
+      <!-- Opciones -->
+      <div class="flex items-center justify-between text-sm">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" (click)="togglePassword()" class="rounded bg-gray-700 border-gray-600"/>
+          Mostrar contraseña
+        </label>
+        <a href="#" class="text-blue-400 hover:underline">¿Olvidaste la contraseña?</a>
+      </div>
+
+      <!-- Botón principal -->
+      <button type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg py-2">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <!-- Registro -->
+    <p class="text-center text-sm text-gray-400">
+      ¿Todavía no tienes una cuenta?
+      <a href="#" class="text-blue-400 hover:underline">Regístrate</a>
+    </p>
+  </div>
+</div>
