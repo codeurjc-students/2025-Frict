@@ -65,10 +65,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
 				// PUBLIC ENDPOINTS
 				.requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers("/api/products/all").permitAll()
 
 				// PRIVATE ENDPOINTS (require login)
-				.requestMatchers("/api/user/profile", "/api/auth/logout")
-				.permitAll()
+				.requestMatchers("/api/user/profile", "/api/auth/logout").permitAll()
 
 				// Additional rules for other specific resources
 				.anyRequest().permitAll()
