@@ -9,6 +9,7 @@ import {ClientHomeComponent} from './components/client/client-home/client-home.c
 import {ErrorComponent} from './components/common/error/error.component';
 
 export const routes: Routes = [
+
   //Rutas del lado del cliente
   {path: '', component: ClientHomeComponent}, //La ruta '' será la que se muestre por defecto en el router cuando se inicia la aplicación. Si no se define, el router no mostrará nada dentro de su componente
 
