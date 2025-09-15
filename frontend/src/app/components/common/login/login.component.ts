@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {AuthService} from '../../../services/auth.service';
 import {LoginResponse} from '../../../models/loginResponse.model';
@@ -9,8 +9,7 @@ import {LoginResponse} from '../../../models/loginResponse.model';
   selector: 'app-login',
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    RouterLink
+    ReactiveFormsModule
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'

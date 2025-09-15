@@ -46,7 +46,7 @@ public class FullUserDTO implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;  // Usamos el email como nombre de usuario
+        return this.email;  // Se usa el email como nombre de usuario (debería de ser único)
     }
 
     @Override
@@ -64,21 +64,21 @@ public class FullUserDTO implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;  // Aquí puedes aplicar tu lógica para determinar si la cuenta ha expirado
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return !this.banned;  // Si está baneado, la cuenta está bloqueada
+        return !this.banned;  // La cuenta está bloqueada si el usuario está baneado
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;  // Devolver true si las credenciales no han expirado
+        return true;  // Si las credenciales no han expirado devuelve true
     }
 
     @Override
     public boolean isEnabled() {
-        return !this.banned;  // Si está baneado, no está habilitado
+        return !this.banned;  // Si el usuarios está baneado no está habilitado
     }
 }

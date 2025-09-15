@@ -7,7 +7,6 @@ import {FooterComponent} from '../../common/footer/footer.component';
   imports: [
     NavbarComponent,
     FooterComponent
-
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'

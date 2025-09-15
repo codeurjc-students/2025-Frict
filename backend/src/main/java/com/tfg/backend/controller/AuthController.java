@@ -50,16 +50,16 @@ public class AuthController {
 
             UserDetails user = (UserDetails) response.get("user");
 
-            // Generamos los nuevos tokens
+            // Generar los nuevos tokens
             Token newAccessToken = jwtTokenProvider.generateToken(user);
             Token newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            // Creamos las cabeceras para agregar las cookies
+            // Crear las cabeceras para agregar las cookies
             HttpHeaders responseHeaders = new HttpHeaders();
             userLoginService.addAccessTokenCookie(responseHeaders, newAccessToken);  // Usamos UserLoginService
             userLoginService.addRefreshTokenCookie(responseHeaders, newRefreshToken);  // Usamos UserLoginService
 
-            // Devolvemos la respuesta con los tokens en las cookies
+            // Devolver la respuesta con los tokens en las cookies
             return ResponseEntity.ok().headers(responseHeaders).body(response);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -94,15 +94,13 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(@RequestHeader("Authorization") String token) {
-        // Verificar si el token está presente y no es vacío
         if (token == null || token.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Collections.singletonMap("error", "Token not provided"));
         }
 
-        // Eliminar el prefijo "Bearer " del token si está presente
         if (token.startsWith("Bearer ")) {
-            token = token.substring(7);  // Elimina el prefijo "Bearer "
+            token = token.substring(7);  // Elimina el prefijo "Bearer " del token si está presente
         }
 
         // Invalidar el token
