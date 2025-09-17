@@ -11,12 +11,12 @@ public class PhotoUtils {
 
     public static SerialBlob setDefaultPhoto(Class<?> entityClass) {
         try {
-            String imagePath = switch (entityClass.getName()) {
+            String imagePath = switch (entityClass.getSimpleName()) {
                 case "User" -> "static/img/defaultProfilePhoto.jpg";
                 case "Product" -> "static/img/defaultProductPhoto.jpg";
-                default -> throw new IllegalArgumentException("No se ha definido una foto por defecto para la clase: " + entityClass.getName());
+                default -> throw new IllegalArgumentException("No se ha definido una foto por defecto para la clase: " + entityClass.getSimpleName());
             };
-            ClassPathResource imgFile = new ClassPathResource("static/img/defaultProfilePhoto.jpg");
+            ClassPathResource imgFile = new ClassPathResource(imagePath);
             byte[] photoBytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
             return new SerialBlob(photoBytes);
         } catch (IOException | SQLException e) {
