@@ -1,7 +1,6 @@
 package com.tfg.backend.e2e;
 
 import com.tfg.backend.BackendApplication;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
