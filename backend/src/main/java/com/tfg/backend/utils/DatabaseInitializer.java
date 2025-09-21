@@ -4,6 +4,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.util.HashSet; // Importar HashSet
 
 @Service
+@Profile("!test")
 public class DatabaseInitializer {
 
     @Autowired

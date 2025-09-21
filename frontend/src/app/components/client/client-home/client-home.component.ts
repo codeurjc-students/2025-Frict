@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
-import { ProductService } from '../../../services/product.service';
-import { Router } from '@angular/router';
-import { Product } from '../../../models/product.model';
-import { NgForOf } from '@angular/common';
+import {Component, OnInit} from '@angular/core';
+import {Product} from '../../../models/product.model';
+import {Router} from '@angular/router';
+import {ProductService} from '../../../services/product.service';
+import {NgForOf} from '@angular/common';
 
 @Component({
   selector: 'app-client-home',
@@ -10,10 +10,9 @@ import { NgForOf } from '@angular/common';
     NgForOf
   ],
   templateUrl: './client-home.component.html',
-  styleUrls: ['./client-home.component.css']
+  styleUrl: './client-home.component.css'
 })
-export class ClientHomeComponent {
-
+export class ClientHomeComponent implements OnInit {
   products: Product[] = [];
 
   constructor(private router: Router, private productService: ProductService) { }
@@ -30,5 +29,4 @@ export class ClientHomeComponent {
       }
     });
   }
-
 }
