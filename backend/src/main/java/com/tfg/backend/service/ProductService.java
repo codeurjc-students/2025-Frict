@@ -34,21 +34,16 @@ public class ProductService {
         if(productRepository.existsByReferenceCode(p.getReferenceCode())){
             throw new IllegalArgumentException("The reference code is already taken");
         }
-        else if (p.getName() == null || p.getName().isEmpty()){
-            throw new IllegalArgumentException("The title is null or empty");
-        }
-        else if (p.getPrice() < 0){
-            throw new IllegalArgumentException("The price should be positive or 0");
-        }
-        else return productRepository.save(p);
+        this.checkProductFields(p);
+        return productRepository.save(p);
     }
 
-    public Product update(Product product) {
-        Optional<Product> productOpt = productRepository.findById(product.getId());
-        if (!productOpt.isPresent()) {
+    public Product update(Product p) {
+        if (!productRepository.existsById(p.getId())){
             throw new EntityNotFoundException("The product that is being updated does not exist");
         }
-        return this.save(product);
+        this.checkProductFields(p);
+        return productRepository.save(p);
     }
 
     public void deleteById(Long id) {
@@ -57,5 +52,14 @@ public class ProductService {
             throw new EntityNotFoundException("The product that is being deleted does not exist");
         }
         productRepository.deleteById(id);
+    }
+
+    private void checkProductFields(Product p){
+        if (p.getName() == null || p.getName().isEmpty()){
+            throw new IllegalArgumentException("The title is null or empty");
+        }
+        else if (p.getPrice() < 0){
+            throw new IllegalArgumentException("The price should be positive or 0");
+        }
     }
 }
