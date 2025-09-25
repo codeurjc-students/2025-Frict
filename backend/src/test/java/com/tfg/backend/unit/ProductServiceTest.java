@@ -81,12 +81,12 @@ public class ProductServiceTest {
         testProduct.setId(5L);
         Optional<Product> productOpt = Optional.of(testProduct);
         Product updatedProduct = new Product("5A6", "Ratón inalámbrico", null, "Sin necesidad de cable", 89.95);
-        updatedProduct.setId(5L);
+        updatedProduct.setId(testProduct.getId());
 
-        when(productRepository.findById(testProduct.getId())).thenReturn(productOpt);
+        when(productRepository.existsById(updatedProduct.getId())).thenReturn(true);
         when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
 
-        Product savedProduct = productService.update(testProduct);
+        Product savedProduct = productService.update(updatedProduct);
 
         assertEquals(5L, savedProduct.getId());
         assertEquals("5A6", savedProduct.getReferenceCode());
@@ -94,7 +94,7 @@ public class ProductServiceTest {
         assertEquals("Sin necesidad de cable", savedProduct.getDescription());
         assertEquals(89.95, savedProduct.getPrice());
 
-        verify(productRepository, times(1)).save(testProduct);
+        verify(productRepository, times(1)).save(updatedProduct);
     }
 
     @Test

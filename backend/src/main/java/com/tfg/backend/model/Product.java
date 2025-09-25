@@ -45,7 +45,6 @@ public class Product {
     }
 
     public Product(String referenceCode, String name, Blob photo, String description, double price) {
-        this.id = id;
         this.referenceCode = referenceCode;
         this.name = name;
         if (photo !=null){

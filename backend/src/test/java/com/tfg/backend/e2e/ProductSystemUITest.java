@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
-public class ProductSystemTest {
+public class ProductSystemUITest {
 
     private static WebDriver driver;
     private static WebDriverWait wait;

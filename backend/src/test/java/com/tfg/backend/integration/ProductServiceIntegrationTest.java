@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 //SERVER SIDE INTEGRATION TESTS
 @SpringBootTest
-@ActiveProfiles("test") //Database is empty, as DatabaseInitializer class does not run with this profile
 public class ProductServiceIntegrationTest {
 
     @Autowired
@@ -39,7 +37,7 @@ public class ProductServiceIntegrationTest {
         assertNotNull(savedProduct);
         assertProductEquality(testProduct, savedProduct);
 
-        Product productInDb = productService.findById(savedProduct.getId()).orElseThrow();
+        Product productInDb = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertProductEquality(testProduct, productInDb);
     }
 
@@ -53,7 +51,7 @@ public class ProductServiceIntegrationTest {
         Product updatedProduct = productService.update(modifiedProduct);
         assertProductEquality(modifiedProduct, updatedProduct);
 
-        Product productInDb = productService.findById(savedProduct.getId()).orElseThrow();
+        Product productInDb = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertProductEquality(productInDb, updatedProduct);
     }
 
@@ -79,15 +77,4 @@ public class ProductServiceIntegrationTest {
                 () -> assertEquals(p1.getPrice(), p2.getPrice())
         );
     }
-
-
-
-
-
-
-
-
-
-
-
 }
