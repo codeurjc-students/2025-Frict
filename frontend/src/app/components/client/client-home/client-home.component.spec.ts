@@ -4,17 +4,18 @@ import { ProductService } from '../../../services/product.service';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 
+//CLIENT SIDE UNIT TESTS
 describe('ClientHomeComponent', () => {
   let fixture: ComponentFixture<ClientHomeComponent>;
   let component: ClientHomeComponent;
   let mockProductService: jasmine.SpyObj<ProductService>;
 
   beforeEach(async () => {
-    // creamos un mock de ProductService con jasmine
+    // Create a ProductService mock using Jasmine
     mockProductService = jasmine.createSpyObj('ProductService', ['getAllProducts']);
 
     await TestBed.configureTestingModule({
-      imports: [ClientHomeComponent], // como es standalone
+      imports: [ClientHomeComponent],
       providers: [
         { provide: ProductService, useValue: mockProductService }
       ]
@@ -25,10 +26,10 @@ describe('ClientHomeComponent', () => {
   });
 
   it('debe mostrar mensaje cuando no hay productos', () => {
-    // mock vacío → no devuelve nada
+    // Empty mock should return an empty array
     mockProductService.getAllProducts.and.returnValue(of([]));
 
-    fixture.detectChanges(); // dispara ngOnInit y el render
+    fixture.detectChanges(); // runs ngOnInit and renders
 
     const nativeElement: HTMLElement = fixture.nativeElement;
     expect(nativeElement.textContent).toContain('No hay productos disponibles para mostrar.');
@@ -42,7 +43,7 @@ describe('ClientHomeComponent', () => {
 
     mockProductService.getAllProducts.and.returnValue(of(mockProducts));
 
-    fixture.detectChanges(); // ngOnInit + render
+    fixture.detectChanges();
 
     const items = fixture.debugElement.queryAll(By.css('.m-4'));
     expect(items.length).toBe(2);
