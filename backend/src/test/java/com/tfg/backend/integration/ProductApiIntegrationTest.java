@@ -1,4 +1,4 @@
-package com.tfg.backend.e2e;
+package com.tfg.backend.integration;
 
 import com.tfg.backend.BackendApplication;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,12 +12,12 @@ import io.restassured.response.Response;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-//SERVER SIDE SYSTEM TESTS
+//CLIENT SIDE INTEGRATION TESTS
 @SpringBootTest(
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-public class ProductApiTest {
+public class ProductApiIntegrationTest {
 
     @LocalServerPort
     int port;

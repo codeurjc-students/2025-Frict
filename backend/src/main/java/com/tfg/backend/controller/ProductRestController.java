@@ -74,7 +74,7 @@ public class ProductRestController {
         product.setDescription(productDTO.getDescription());
         product.setPrice(productDTO.getPrice());
 
-        Product updatedProduct = productService.save(product);
+        Product updatedProduct = productService.update(product);
         return ResponseEntity.accepted().body(new ProductDTO(updatedProduct));
     }
 
