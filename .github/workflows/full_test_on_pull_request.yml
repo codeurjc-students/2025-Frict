@@ -72,7 +72,7 @@ jobs:
         working-directory: frontend
 
       - name: Start Angular project
-        run: ng serve &
+        run: ng serve --proxy-config proxy-test.conf.json &
         working-directory: frontend
 
       - name: Run client system tests
