@@ -9,7 +9,7 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  private apiUrl = 'https://localhost:443/api';
+  private apiUrl = '/api';
 
   getAllProducts(): Observable<any> {
     return this.http.get(this.apiUrl + `/products/all`);

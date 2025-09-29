@@ -26,7 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
         properties = {
-        "app.db.init=false" // Deactivate sample data initialization only for this test (DatabaseInitializer class will not run)
+        "app.db.init=false", // Deactivate sample data initialization only for this test (DatabaseInitializer class will not run)
+        "server.port=8443"
         }
 )
 public class ProductSystemUITest {

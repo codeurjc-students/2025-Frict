@@ -1,0 +1,43 @@
+name: Unit test on commit (exclude main)
+
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  server-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Run server unit tests
+        run: mvn test -Dtest=com.tfg.backend.unit.*Test
+
+
+  client-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Angular CLI
+        run: npm install -g @angular/cli
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Run client unit tests
+        run: ng test --watch=false
