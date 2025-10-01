@@ -336,3 +336,7 @@ https://localhost:443/api/products/1 #Deletes all the information associated wit
 > ℹ️ NOTE: To make this process easier and faster, complete fully-functional endpoints list is available at frict.postman_collection.json file, which could be easily imported by Postman.
 
 &nbsp;
+
+[◀️](/docs/pages/06-authors.md) **Page 7. Development guide**
+
+[⏪ Return to Index](/README.md)

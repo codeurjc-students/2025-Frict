@@ -6,3 +6,7 @@ This application will be developed as part of the **Bachelor’s Final Projects 
 - **Professor**: Óscar Soto Sánchez
 
 &nbsp;
+
+[◀️](/docs/pages/05-progress-tracking.md) **Page 6. Authors** [▶️](/docs/pages/07-development-guide.md)
+
+[⏪ Return to Index](/README.md)

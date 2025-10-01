@@ -120,4 +120,4 @@ It is automatically displayed when an error occurred, and allows the user to ret
 
 &nbsp;
 
-[⬅️ Return to the main page](/README.md)
+[⬅️ Return to Analysis page](/docs/pages/04-analysis.md)
