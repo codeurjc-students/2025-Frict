@@ -19,7 +19,7 @@
 &nbsp;
 
 ### Entities
-![Database schema diagram](docs/images/schema.png)
+![Database schema diagram](../images/schema.png)
 
 ### Permissions
 In order to separate customers and staff functionalities and to prevent internal data from being accessed by any user, each functionality will only be available to its corresponding user roles, which will be:
@@ -65,3 +65,7 @@ In order to separate customers and staff functionalities and to prevent internal
 - Product filtering and recommendations based on user´s interests
 
 &nbsp;
+
+[◀️](/docs/pages/03-functionalities.md) **Page 4. Analysis** [▶️](/docs/pages/05-progress-tracking.md)
+
+[⏪ Return to Index](/README.md)

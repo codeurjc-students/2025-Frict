@@ -24,3 +24,7 @@ In order to provide the main functionality, the application will be able to:
 - Amazon Web Services (AWS) integrated cloud deployment
 
 &nbsp;
+
+**Page 1. Objectives** [▶️](/docs/pages/02-methodology.md)
+
+[⏪ Return to Index](/README.md)

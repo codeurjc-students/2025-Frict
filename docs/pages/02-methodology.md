@@ -18,6 +18,10 @@ The application will be implemented following an incremental model with 7 differ
 | Phase 7 | Project Presentation                         | 15 June 2026      | ....             | ....           |
 
 ### Gantt diagram
-![Gantt diagram](docs/images/gantt.png)
+![Gantt diagram](../images/gantt.png)
 
 &nbsp;
+
+[◀️](/docs/pages/01-objectives.md) **Page 2. Methodology** [▶️](/docs/pages/03-functionalities.md)
+
+[⏪ Return to Index](/README.md)
