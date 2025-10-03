@@ -114,7 +114,7 @@ public class ProductRestController {
         }
         Product product = productOptional.get();
 
-        //De momento no se tienen en cuenta las relaciones de los productos con los pedidos
+        //For the moment, product relations with orders are not taken into account
         productService.deleteById(id);
 
         return ResponseEntity.status(200).body(new ProductDTO(product));

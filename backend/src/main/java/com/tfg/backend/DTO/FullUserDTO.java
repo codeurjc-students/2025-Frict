@@ -42,11 +42,11 @@ public class FullUserDTO implements UserDetails {
         this.photo = "/api/users/img/" + user.getId();
     }
 
-    // Métodos requeridos por la interfaz UserDetails
+    // UserDetails interface required methods
 
     @Override
     public String getUsername() {
-        return this.email;  // Se usa el email como nombre de usuario (debería de ser único)
+        return this.email;  // Email is used as username (should be unique)
     }
 
     @Override
@@ -56,7 +56,7 @@ public class FullUserDTO implements UserDetails {
 
     @Override
     public List<SimpleGrantedAuthority> getAuthorities() {
-        // Convertir los roles a una lista de autoridades
+        // Change roles to an authority list
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role))
                 .collect(Collectors.toList());
@@ -69,16 +69,16 @@ public class FullUserDTO implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !this.banned;  // La cuenta está bloqueada si el usuario está baneado
+        return !this.banned;  // The account is blocked is user is banned
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;  // Si las credenciales no han expirado devuelve true
+        return true;  // If credentials have not expired returns true
     }
 
     @Override
     public boolean isEnabled() {
-        return !this.banned;  // Si el usuarios está baneado no está habilitado
+        return !this.banned;  // If user is banned is not enabled
     }
 }
