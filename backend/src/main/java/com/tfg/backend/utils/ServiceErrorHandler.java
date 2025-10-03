@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 Handles the format exceptions thrown up from the services to the controllers:
 
 EntityNotFoundException: An object could not be found in database
-IllegalArgumentException: The object that is saving in the database does not have the right fields or format
-MethodArgumentNotValidException:
+IllegalArgumentException / MethodArgumentNotValidException: The object that is saving in the database does not have the right fields or format
 
  */
 
