@@ -34,7 +34,7 @@ public class ProductApiIntegrationTest {
     public void setUp() {
         referenceCode = "RC-" + System.currentTimeMillis();
         RestAssured.baseURI = "https://localhost:" + port;
-        RestAssured.basePath = "/api/products";
+        RestAssured.basePath = "/api/v1/products";
         RestAssured.useRelaxedHTTPSValidation();
     }
 
