@@ -39,7 +39,7 @@ public class ProductSystemApiTest {
     @BeforeEach
     public void setUp() {
         RestAssured.baseURI = "https://localhost:" + port;
-        RestAssured.basePath = "/api/products";
+        RestAssured.basePath = "/api/v1/products";
         RestAssured.useRelaxedHTTPSValidation();
 
         productRepository.save(product1);

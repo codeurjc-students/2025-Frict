@@ -46,7 +46,7 @@ public class DatabaseInitializer {
     @PostConstruct
     public void init() throws IOException, SQLException {
         if (initEnabled) {
-            // 1. Fotos por defecto
+            // 1. Default images
             ClassPathResource defaultProductImgFile = new ClassPathResource("static/img/defaultProductPhoto.jpg");
             byte[] defaultProductPhotoBytes = StreamUtils.copyToByteArray(defaultProductImgFile.getInputStream());
             Blob defaultProductBlob = new SerialBlob(defaultProductPhotoBytes);
@@ -55,7 +55,7 @@ public class DatabaseInitializer {
             byte[] defaultProfilePhotoBytes = StreamUtils.copyToByteArray(defaultProfileImgFile.getInputStream());
             Blob defaultProfileBlob = new SerialBlob(defaultProfilePhotoBytes);
 
-            // 2. Entidades "padre" o independientes
+            // 2. Independent entities
             User user1 = new User("Alonso Gómez", "alonsogomez", "korex53699@bulmp1.com", "CallePorDefecto1", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
             User user2 = new User("Sara García", "saragarcia", "korex53699@bulmp2.com", "CallePorDefecto2", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
             User user3 = new User("Admin", "admin", "admin@gmail.com", "CallePorDefecto3", defaultProfileBlob, passwordEncoder.encode("adminpass"), "ADMIN");

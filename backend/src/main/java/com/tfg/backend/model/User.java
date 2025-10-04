@@ -43,7 +43,7 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private List<String> roles = new ArrayList<>(); //Se obliga a que sea un tipo Collection, pero solamente tendrá un rol
+    private List<String> roles = new ArrayList<>(); //It is compulsory for it to be a Collection type, but user will only have one role
 
     private boolean isBanned = false;
 

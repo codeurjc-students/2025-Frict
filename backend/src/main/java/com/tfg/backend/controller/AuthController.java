@@ -20,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     @Autowired
@@ -41,7 +41,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginDTO loginDTO) {
-        // Autenticar al usuario utilizando el servicio
+        // Authenticate the user using auth service
         Optional<Map<String, Object>> authResult = authService.authenticate(loginDTO);
 
         if (authResult.isPresent()) {
@@ -50,16 +50,16 @@ public class AuthController {
 
             UserDetails user = (UserDetails) response.get("user");
 
-            // Generar los nuevos tokens
+            // Generate new tokens
             Token newAccessToken = jwtTokenProvider.generateToken(user);
             Token newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-            // Crear las cabeceras para agregar las cookies
+            // Create the headers to add the cookies
             HttpHeaders responseHeaders = new HttpHeaders();
             userLoginService.addAccessTokenCookie(responseHeaders, newAccessToken);  // Usamos UserLoginService
             userLoginService.addRefreshTokenCookie(responseHeaders, newRefreshToken);  // Usamos UserLoginService
 
-            // Devolver la respuesta con los tokens en las cookies
+            // Return the response with tokens in cookies
             return ResponseEntity.ok().headers(responseHeaders).body(response);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -100,13 +100,13 @@ public class AuthController {
         }
 
         if (token.startsWith("Bearer ")) {
-            token = token.substring(7);  // Elimina el prefijo "Bearer " del token si está presente
+            token = token.substring(7);  // Deletes prefix "Bearer " from token if present
         }
 
-        // Invalidar el token
+        // Invalidate the token
         boolean isLoggedOut = tokenService.invalidateToken(token);
 
-        // Responder dependiendo de si la invalidación fue exitosa
+        // Respond depending on whether the invalidation was successful
         if (isLoggedOut) {
             return ResponseEntity.ok(Collections.singletonMap("message", "Logout completed successfully"));
         } else {
