@@ -60,9 +60,10 @@
           "options": {
             "host": "localhost",
             "ssl": true,
+            "port": 4202,
+            "proxyConfig": "proxy.conf.json",
             "sslKey": "certs/localhost-key.pem",
-            "sslCert": "certs/localhost.pem",
-            "port": 4202
+            "sslCert": "certs/localhost.pem"
           },
           "configurations": {
             "production": {
