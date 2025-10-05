@@ -38,7 +38,7 @@ public class User {
 
     @Lob
     @Column(nullable = false)
-    private Blob profilePhoto;
+    private Blob profilePhoto = PhotoUtils.setDefaultPhoto(User.class);
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
@@ -64,8 +64,6 @@ public class User {
         this.address = address;
         if (profilePhoto!=null){
             this.profilePhoto = profilePhoto;
-        } else {
-            this.profilePhoto = PhotoUtils.setDefaultPhoto(User.class);
         }
         this.isBanned = false;
         this.roles = List.of(roles);

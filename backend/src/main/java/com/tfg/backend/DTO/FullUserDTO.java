@@ -27,7 +27,6 @@ public class FullUserDTO implements UserDetails {
         this.email = email;
         this.banned = banned;
         this.roles = roles;
-        this.id = id;
         this.photo = "/api/users/img/" + id;
     }
 
@@ -46,7 +45,7 @@ public class FullUserDTO implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;  // Email is used as username (should be unique)
+        return this.username;
     }
 
     @Override

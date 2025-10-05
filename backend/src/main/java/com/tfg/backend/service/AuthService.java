@@ -60,8 +60,11 @@ public class AuthService {
         try {
             User user = new User();
             user.setName(registerDTO.getName());
+            user.setUsername(registerDTO.getUsername());
             user.setEmail(registerDTO.getEmail());
+            user.setAddress(registerDTO.getAddress());
             user.setEncodedPassword(passwordEncoder.encode(registerDTO.getPassword()));
+
 
             // Asignar el rol según el email
             if (registerDTO.getEmail().toLowerCase().contains("admin")) {

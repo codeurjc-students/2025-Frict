@@ -23,4 +23,12 @@ public class UserService {
     public Optional<User> findByEmail(String userEmail) {
         return repository.findByEmail(userEmail);
     }
+
+    public Optional<User> findByUsername(String username) {
+        return repository.findByUsername(username);
+    }
+
+    public Optional<User> findById(Long userId) {
+        return repository.findById(userId);
+    }
 }
