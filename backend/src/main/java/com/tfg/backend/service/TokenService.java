@@ -29,7 +29,7 @@ public class TokenService {
 
     public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
+                .setSubject(user.getUsername())
                 .claim("role", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
@@ -46,7 +46,7 @@ public class TokenService {
         }
     }
 
-    public String getEmailFromToken(String token) {
+    public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
         return claims.getSubject();
     }
@@ -59,8 +59,8 @@ public class TokenService {
     }
 
     public Optional<User> getUserFromToken(String token) {
-        String userEmail = decodeToken(token);
-        Optional<User> userOptional = userService.findByEmail(userEmail);
+        String username = decodeToken(token);
+        Optional<User> userOptional = userService.findByUsername(username);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
@@ -80,9 +80,9 @@ public class TokenService {
                     .setSigningKey(secretKey)
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject(); // Email del usuario en subject del token
+            return claims.getSubject(); // User username in token subject
         } catch (Exception e) {
-            return null; // Para errores de token inválido
+            return null; // For invalid token errors
         }
     }
 }

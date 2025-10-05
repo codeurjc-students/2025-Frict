@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-public class AuthController {
+public class AuthRestController {
 
     @Autowired
     private AuthService authService;
@@ -67,11 +67,10 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register")
+    @PostMapping("/registration")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody UserRegisterDTO registerDTO) {
         if (authService.isEmailTaken(registerDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("error", "Backend: Email in use"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", "Backend: Email in use"));
         }
 
         User newUser = authService.registerUser(registerDTO);
@@ -85,6 +84,7 @@ public class AuthController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Backend: User signed up successfully");
+        response.put("id", newUser.getId());
         response.put("role", newUser.getRole());
         response.put("token", token);
 

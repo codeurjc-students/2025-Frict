@@ -9,7 +9,7 @@ import {LoginResponse} from '../models/loginResponse.model';
 })
 export class AuthService {
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   private apiUrl = '/api/v1';
 
@@ -37,9 +37,8 @@ export class AuthService {
     return new Observable();  // Devuelve un observable vacío si no hay token
   }
 
-  register(name: string, email: string, password: string, comunidadAutonoma: string, hospitalRef: string, consentFirm: boolean): Observable<any> {
-    const body = { name, email, password, comunidadAutonoma, hospitalRef, consentFirm };
-    return this.http.post<any>(this.apiUrl + '/auth/register', body);
+  register(userData: FormData): Observable<any> {
+    return this.http.post<any>(this.apiUrl + '/auth/registration', userData);
   }
 
   getUserRole(): Observable<string> {

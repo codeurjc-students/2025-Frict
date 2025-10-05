@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {AuthService} from '../../../services/auth.service';
 import {LoginResponse} from '../../../models/loginResponse.model';
@@ -9,7 +9,8 @@ import {LoginResponse} from '../../../models/loginResponse.model';
   selector: 'app-login',
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    RouterLink
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
@@ -35,7 +36,7 @@ export class LoginComponent {
         next: (response: LoginResponse) => {
           console.log('Frontend: User authenticated:', response);
 
-          // Aquí accedes a user y token desde la respuesta
+          // User and token fields in localStorage are filled with the response information
           localStorage.setItem('USER', JSON.stringify(response.user));
           this.authService.saveToken(response.token);
 
