@@ -1,7 +1,13 @@
 package com.tfg.backend.security.jwt;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+
+@Setter
+@Getter
 public class Token {
 
 	private TokenType tokenType;
@@ -21,39 +27,7 @@ public class Token {
 		this.expiryDate = expiryDate;
 	}
 
-	public TokenType getTokenType() {
-		return tokenType;
-	}
-
-	public void setTokenType(TokenType tokenType) {
-		this.tokenType = tokenType;
-	}
-
-	public String getTokenValue() {
-		return tokenValue;
-	}
-
-	public void setTokenValue(String tokenValue) {
-		this.tokenValue = tokenValue;
-	}
-
-	public Long getDuration() {
-		return duration;
-	}
-
-	public void setDuration(Long duration) {
-		this.duration = duration;
-	}
-
-	public LocalDateTime getExpiryDate() {
-		return expiryDate;
-	}
-
-	public void setExpiryDate(LocalDateTime expiryDate) {
-		this.expiryDate = expiryDate;
-	}
-
-	@Override
+    @Override
 	public String toString() {
 		return "Token [tokenType=" + tokenType + ", tokenValue=" + tokenValue + ", duration=" + duration
 				+ ", expiryDate=" + expiryDate + "]";

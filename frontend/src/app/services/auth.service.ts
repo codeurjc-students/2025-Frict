@@ -25,6 +25,10 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
+  isUserLogged(): boolean {
+    return !!this.getToken();
+  }
+
   logout(): Observable<any> {
     const token = localStorage.getItem('token');
     if (token) {
