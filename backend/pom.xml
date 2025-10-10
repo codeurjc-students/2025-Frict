@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.tfg</groupId>
-	<artifactId>backend</artifactId>
+	<artifactId>2025-Frict</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>backend</name>
-	<description>Backend</description>
+	<name>2025-Frict</name>
+	<description>Frict Backend</description>
 	<url/>
 	<licenses>
 		<license/>
