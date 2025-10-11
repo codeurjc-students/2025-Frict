@@ -1,13 +1,16 @@
 import {Component, OnInit} from '@angular/core';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {NgForOf, NgIf} from '@angular/common';
+import {faCoffee} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-client-home',
   imports: [
     NgForOf,
-    NgIf
+    NgIf,
+    FontAwesomeModule
   ],
   templateUrl: './client-home.component.html',
   styleUrl: './client-home.component.css'
@@ -30,4 +33,6 @@ export class ClientHomeComponent implements OnInit {
       }
     });
   }
+
+  protected readonly faCoffee = faCoffee;
 }

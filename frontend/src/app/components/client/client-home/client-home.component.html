@@ -7,7 +7,7 @@
 <div *ngIf="availableProducts" id="productList">
   <ng-template ngFor let-product [ngForOf]="products">
     <div class="product m-4">
-      Producto {{product.id}} <br>
+      Producto {{product.id}} <br> <!-- Optional: ? -->
       Número de referencia: {{product.referenceCode}} <br>
       Nombre: {{product.name}} <br>
       Descripción: {{product.description}} <br>
@@ -15,4 +15,7 @@
     </div>
   </ng-template>
 </div>
+
+<fa-icon [icon]="faCoffee" />
+
 
