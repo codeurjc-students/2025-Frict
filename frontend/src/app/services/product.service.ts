@@ -12,6 +12,6 @@ export class ProductService {
   private apiUrl = '/api/v1';
 
   getAllProducts(): Observable<any> {
-    return this.http.get(this.apiUrl + `/products/all`);
+    return this.http.get(this.apiUrl + `/products/`);
   }
 }

@@ -4,13 +4,15 @@ import {ProductService} from '../../../services/product.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {NgForOf, NgIf} from '@angular/common';
 import {faCoffee} from '@fortawesome/free-solid-svg-icons';
+import {NavbarComponent} from '../../common/navbar/navbar.component';
 
 @Component({
   selector: 'app-client-home',
   imports: [
     NgForOf,
     NgIf,
-    FontAwesomeModule
+    FontAwesomeModule,
+    NavbarComponent
   ],
   templateUrl: './client-home.component.html',
   styleUrl: './client-home.component.css'
