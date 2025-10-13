@@ -57,8 +57,8 @@ public class DatabaseInitializer {
 
             // 2. Independent entities
             User user1 = new User("Alonso Gómez", "alonsogomez", "korex53699@bulmp1.com", "CallePorDefecto1", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
-            User user2 = new User("Sara García", "saragarcia", "korex53699@bulmp2.com", "CallePorDefecto2", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
-            User user3 = new User("Admin", "admin", "admin@gmail.com", "CallePorDefecto3", defaultProfileBlob, passwordEncoder.encode("adminpass"), "ADMIN");
+            User user2 = new User("Sara Cuadrado", "saracuadrado", "saracuadrado@gmail.com", "CallePorDefecto2", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
+            User user3 = new User("Administración", "admin", "admin@gmail.com", "CallePorDefecto3", defaultProfileBlob, passwordEncoder.encode("adminpass"), "ADMIN");
 
             user1 = userRepository.save(user1);
             user2 = userRepository.save(user2);
