@@ -3,6 +3,7 @@ import { ClientHomeComponent } from './client-home.component';
 import { ProductService } from '../../../services/product.service';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
+import {ActivatedRoute} from '@angular/router';
 
 //CLIENT SIDE UNIT TESTS
 describe('ClientHomeComponent', () => {
@@ -17,7 +18,15 @@ describe('ClientHomeComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ClientHomeComponent],
       providers: [
-        { provide: ProductService, useValue: mockProductService }
+        { provide: ProductService, useValue: mockProductService },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            params: of({}), // params: of({ id: '123' }) (if needed)
+            queryParams: of({}),
+            snapshot: { paramMap: new Map() }
+          }
+        }
       ]
     }).compileComponents();
 
