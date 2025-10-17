@@ -5,8 +5,6 @@ import com.tfg.backend.security.jwt.UnauthorizedHandlerJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -63,12 +61,11 @@ public class SecurityConfig {
 		http
 			.authorizeHttpRequests(authorize -> authorize
                     // PRIVATE ENDPOINTS
-                    //.requestMatchers(HttpMethod.POST,"/api/v1/users/profile").hasRole("USER")
 
 					// PUBLIC ENDPOINTS
 					.anyRequest().permitAll()
 			);
-		
+
         // Disable Form login Authentication (as JWT authentication is being used)
         http.formLogin(formLogin -> formLogin.disable());
 

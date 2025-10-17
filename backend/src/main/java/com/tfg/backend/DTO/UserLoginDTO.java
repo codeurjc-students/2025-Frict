@@ -1,18 +1,24 @@
 package com.tfg.backend.DTO;
 
+
+import com.tfg.backend.model.User;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
 public class UserLoginDTO {
-    private String email;
-    private String password;
+    private Long id;
+    private String name;
+    private String username;
+    private List<String> roles;
 
-    public UserLoginDTO() {}
-
-    public UserLoginDTO(String email, String password) {
-        this.email = email;
-        this.password = password;
+    public UserLoginDTO(User u){
+        this.id = u.getId();
+        this.name = u.getName();
+        this.username = u.getUsername();
+        this.roles = u.getRoles();
     }
 }

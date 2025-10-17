@@ -1,5 +1,6 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.DTO.UserLoginDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,24 +12,28 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository repository;
+	@Autowired
+	private UserRepository userRepository;
 
-    public List<User> findAll() { return repository.findAll(); }
+    public List<User> findAll() { return userRepository.findAll(); }
 
     public User save(User u) {
-        return repository.save(u);
-    }
-
-    public Optional<User> findByEmail(String userEmail) {
-        return repository.findByEmail(userEmail);
-    }
-
-    public Optional<User> findByUsername(String username) {
-        return repository.findByUsername(username);
+        return userRepository.save(u);
     }
 
     public Optional<User> findById(Long userId) {
-        return repository.findById(userId);
+        return userRepository.findById(userId);
     }
+
+    public Optional<User> findByEmail(String userEmail) {
+        return userRepository.findByEmail(userEmail);
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+	public UserLoginDTO getLoggedUserInfo(String name) {
+		return new UserLoginDTO(userRepository.findByUsername(name).orElseThrow());
+	}
 }
