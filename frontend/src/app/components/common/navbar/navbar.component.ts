@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {faBars, faCartShopping, faHouse, faUser, faXmark} from '@fortawesome/free-solid-svg-icons';
 import {RouterLink} from '@angular/router';
-import {NgIf} from '@angular/common';
+import {NgIf, NgOptimizedImage} from '@angular/common';
+import {AuthService} from '../../../services/auth.service';
+import {LoginInfo} from '../../../models/loginInfo.model';
+
 
 
 @Component({
@@ -10,7 +13,8 @@ import {NgIf} from '@angular/common';
   imports: [
     FontAwesomeModule,
     RouterLink,
-    NgIf
+    NgIf,
+    NgOptimizedImage
   ],
   templateUrl: './navbar.component.html',
   standalone: true,
@@ -24,6 +28,5 @@ export class NavbarComponent {
   protected readonly faXmark = faXmark;
   protected readonly faUser = faUser;
 
-  isLogged : boolean = false;
-  isAdmin: boolean = false;
+  @Input() loginInfo!: LoginInfo;
 }

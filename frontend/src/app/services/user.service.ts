@@ -10,7 +10,7 @@ export class UserService {
 
   private apiUrl = '/api/v1';
 
-  uploadUserImage(id: string, selectedPhoto: File) {
+  public uploadUserImage(id: string, selectedPhoto: File) {
     const formData = new FormData();
     formData.append('photo', selectedPhoto);
     return this.http.put(this.apiUrl + `/users/${id}/photo`, formData);

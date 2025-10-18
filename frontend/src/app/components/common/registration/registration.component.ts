@@ -3,24 +3,31 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
+import {NgOptimizedImage} from '@angular/common';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
+import {faGoogle} from '@fortawesome/free-brands-svg-icons';
 
 @Component({
   selector: 'app-registration',
   imports: [
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    NgOptimizedImage,
+    FaIconComponent
   ],
   templateUrl: './registration.component.html',
   styleUrl: './registration.component.css'
 })
 export class RegistrationComponent {
 
+  protected readonly faGoogle = faGoogle;
+
   registerForm: FormGroup;
   showPassword = false;
   selectedPhoto: File | null = null;
 
   constructor(private fb: FormBuilder, private authService: AuthService, private userService: UserService, private router: Router) {
-    this.registerForm = this.fb.group({
+    this.registerForm = this.fb.nonNullable.group({
       name: ['', Validators.required],
       username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -48,7 +55,7 @@ export class RegistrationComponent {
   private uploadUserImage(id: string, selectedPhoto: File) {
     this.userService.uploadUserImage(id, selectedPhoto).subscribe({
       next: () => {
-        this.router.navigate([`/`]);
+        this.router.navigate([`/login`]);
       },
       error: () => {
         this.router.navigate(['/error']);

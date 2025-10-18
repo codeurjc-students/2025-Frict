@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import {LoginResponse} from '../models/loginResponse.model';
+import {LoginInfo} from '../models/loginInfo.model';
+import {catchError, map, Observable, of} from 'rxjs';
 
 
 @Injectable({
@@ -13,44 +13,31 @@ export class AuthService {
 
   private apiUrl = '/api/v1';
 
-  login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.apiUrl + '/auth/login', { email, password });
+  public login(user: string, pass: string) {
+    return this.http.post(
+      this.apiUrl + "/auth/login",
+      { username: user, password: pass },
+      { withCredentials: true }
+    )}
+
+  public getLoginInfo(): Observable<LoginInfo> {
+    return this.http.get<LoginInfo>(this.apiUrl + "/users/me", { withCredentials: true }).pipe(
+      map(info => ({...info, isLogged: true})),
+      catchError(() => {
+        return of({isLogged: false, id: 0, name: '', username: '', admin: false} as LoginInfo);
+      })
+    );
   }
 
-  saveToken(token: string) {
-    localStorage.setItem('token', token);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
-  isUserLogged(): boolean {
-    return !!this.getToken();
-  }
-
-  logout(): Observable<any> {
-    const token = localStorage.getItem('token');
-    if (token) {
-      return this.http.post<any>(`${this.apiUrl}/auth/logout`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-    }
-    return new Observable();  // Devuelve un observable vacío si no hay token
-  }
-
-  register(userData: FormData): Observable<any> {
+  public register(userData: FormData) {
     return this.http.post<any>(this.apiUrl + '/auth/registration', userData);
   }
 
-  getUserRole(): Observable<string> {
-    return this.http.get<string>(this.apiUrl + '/auth/user-role', {
-      headers: {
-        'Authorization': `Bearer ${this.getToken()}`
-      }
-    });
+  public logout() {
+    this.http.post(this.apiUrl + "/logout", { withCredentials: true });
   }
 
+  getDefaultLoginInfo() {
+    return {isLogged: false, id: 0, name: '', username: '', admin: false} as LoginInfo;
+  }
 }

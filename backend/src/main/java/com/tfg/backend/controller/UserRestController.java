@@ -32,7 +32,7 @@ public class UserRestController {
 		if(principal != null) {
             return ResponseEntity.ok(userService.getLoggedUserInfo(principal.getName()));
 		} else {
-			throw new NoSuchElementException();
+			return ResponseEntity.notFound().build();
 		}
 	}
 

@@ -1,4 +1,4 @@
-<app-navbar></app-navbar>
+<app-navbar [loginInfo]="loginInfo"></app-navbar>
 
 <div *ngIf="!availableProducts" id="noProducts">
   <div class="noProducts m-4">
@@ -17,3 +17,4 @@
     </div>
   </ng-template>
 </div>
+

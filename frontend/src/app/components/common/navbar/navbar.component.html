@@ -3,9 +3,9 @@
   <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
 
     <!-- Logo -->
-    <div *ngIf="!isLogged || (isLogged && !isAdmin)">
+    <div *ngIf="!loginInfo.isLogged || (loginInfo.isLogged && !loginInfo.admin)">
       <a routerLink="/" class="flex items-center gap-2 font-extrabold order-2 sm:order-1 h-full">
-        <img class="w-8 h-8 m-1" src="/shopLogo.png" alt="logo"/>
+        <img class="w-8 h-8 m-1" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden sm:inline text-2xl">MiTienda</span>
       </a>
       <!-- Client drawer component -->
@@ -29,9 +29,9 @@
         </div>
       </div>
     </div>
-    <div *ngIf="isLogged && isAdmin">
+    <div *ngIf="loginInfo.isLogged && loginInfo.admin">
       <a routerLink="/" class="flex items-center gap-2 font-extrabold order-2 sm:order-1 h-full">
-        <img class="w-8 h-8 m-1" src="/frictLogo.png" alt="logo"/>
+        <img class="w-8 h-8 m-1" ngSrc="/frictLogo.png" alt="logo" height="94" width="94"/>
         <span class="hidden sm:inline text-2xl">Frict</span>
       </a>
       <!-- Admin drawer component -->
@@ -77,13 +77,13 @@
     <!-- Actions -->
     <div class="flex items-center order-4 h-full">
       <!-- Account and cart (registered users) -->
-      <div *ngIf="isLogged" class="flex items-center gap-3">
+      <div *ngIf="loginInfo.isLogged" class="flex items-center gap-3">
         <a id="dropdownInformationButton" data-dropdown-toggle="dropdownInformation" class="flex items-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl h-10" type="button">
-          <img class="w-4 h-4 rounded-full m-1" src="/favicon.ico" alt="user photo" />
+          <img class="w-4 h-4 rounded-full m-1" ngSrc="/favicon.ico" alt="user photo" width="48" height="48"/>
           <span class="hidden lg:inline m-1">Nombre Apellido</span>
         </a>
 
-        <div *ngIf="!isAdmin">
+        <div *ngIf="!loginInfo.admin">
           <button routerLink="/cart" class="flex items-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl h-10 relative" type="button">
             <fa-icon [icon]="faCartShopping" class="text-lg" />
             <span class="hidden lg:inline m-1">Cesta (0)</span>
@@ -94,7 +94,7 @@
       </div>
 
       <!-- Registration / login  (unregistered users) -->
-      <div *ngIf="!isLogged">
+      <div *ngIf="!loginInfo.isLogged">
         <button routerLink="/login" class="flex items-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl relative h-10" type="button">
           <fa-icon [icon]="faUser" class="text-lg"/>
           <span class="hidden lg:inline m-1">Registrarse / Iniciar sesión</span>
