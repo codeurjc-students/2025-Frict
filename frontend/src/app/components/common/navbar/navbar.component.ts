@@ -10,6 +10,7 @@ import {StyleClass} from 'primeng/styleclass';
 import {MenuItem, PrimeTemplate} from 'primeng/api';
 import {FormsModule} from '@angular/forms';
 import {Menu} from 'primeng/menu';
+import {AuthService} from '../../../services/auth.service';
 
 
 
@@ -34,7 +35,7 @@ import {Menu} from 'primeng/menu';
 })
 export class NavbarComponent {
 
-  loginInfo: LoginInfo = {isLogged: true, id: 0, name: '', username: '', admin: false};
+  constructor(protected authService: AuthService) {}
 
   @ViewChild('drawerRef') drawerRef!: Drawer;
   @ViewChild('menu') menu!: Menu;

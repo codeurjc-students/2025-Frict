@@ -14,12 +14,12 @@ public class UserLoginDTO {
     private Long id;
     private String name;
     private String username;
-    private boolean isAdmin;
+    private List<String> roles;
 
     public UserLoginDTO(User u){
         this.id = u.getId();
         this.name = u.getName();
         this.username = u.getUsername();
-        this.isAdmin = u.getRoles().contains("ADMIN");
+        this.roles = u.getRoles();
     }
 }

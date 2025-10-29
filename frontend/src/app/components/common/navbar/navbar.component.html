@@ -3,13 +3,13 @@
   <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
 
     <!-- Logo -->
-    <div *ngIf="!loginInfo.isLogged || (loginInfo.isLogged && !loginInfo.admin)">
+    <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
       <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden sm:inline text-2xl">MiTienda</span>
       </a>
     </div>
-    <div *ngIf="loginInfo.isLogged && loginInfo.admin">
+    <div *ngIf="authService.isAdmin()">
       <a routerLink="/admin" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/frictLogo.png" alt="logo" height="94" width="94"/>
         <span class="hidden sm:inline text-2xl">Frict</span>
@@ -38,7 +38,7 @@
     <!-- Actions -->
     <div class="flex items-center order-4 h-full ml-2">
       <!-- Notifications and cart (registered users) -->
-      <div *ngIf="loginInfo.isLogged" class="flex items-center gap-2">
+      <div *ngIf="authService.isLogged()" class="flex items-center gap-2">
         <p-button (click)="menu.toggle($event)" iconPos="left" styleClass="h-10 !text-surface-900">
           <ng-template pTemplate="content">
             <i class="pi pi-bell"></i>
@@ -47,7 +47,7 @@
         </p-button>
         <p-menu #menu [model]="items" [popup]="true" styleClass="!bg-surface-800 !border-none !mt-4" appendTo="body"/>
 
-        <div *ngIf="!loginInfo.admin">
+        <div *ngIf="!authService.isAdmin()">
           <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/cart">
             <ng-template pTemplate="content">
               <i class="pi pi-shopping-cart"></i>
@@ -58,7 +58,7 @@
       </div>
 
       <!-- Registration / login  (unregistered users) -->
-      <div *ngIf="!loginInfo.isLogged">
+      <div *ngIf="!authService.isLogged()">
         <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/login">
           <ng-template pTemplate="content">
             <i class="pi pi-sign-in"></i>
@@ -76,7 +76,7 @@
 <p-drawer #drawerRef [(visible)]="visible" styleClass="!bg-surface-800 !border-none !w-90">
   <ng-template #headless>
     <div class="mt-22 flex flex-col h-full overflow-y-auto">
-      <div *ngIf="loginInfo.isLogged" class="top-0 w-full">
+      <div *ngIf="authService.isLogged()" class="top-0 w-full">
         <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
           <p-avatar image="/favicon.ico" styleClass="mr-2 rounded-border" size="large"/>
           <div class="flex flex-col">
@@ -87,7 +87,7 @@
         <hr class="mx-8 mb-6 border-t border-0 border-surface" />
       </div>
 
-      <div *ngIf="!loginInfo.isLogged" class="top-0 w-full" >
+      <div *ngIf="!authService.isLogged()" class="top-0 w-full" >
         <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/login">
           <p-avatar icon="pi pi-user" size="large"/>
           <div class="flex flex-col">
@@ -145,7 +145,7 @@
             </ul>
           </li>
         </ul>
-        <div *ngIf="loginInfo.isLogged">
+        <div *ngIf="authService.isLogged()">
           <ul class="list-none p-4 m-0">
             <li>
               <div

@@ -3,5 +3,5 @@ export interface LoginInfo {
   id: number;
   name: string;
   username: string;
-  admin: boolean;
+  roles: string[];
 }

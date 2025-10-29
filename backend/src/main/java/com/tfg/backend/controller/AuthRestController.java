@@ -33,7 +33,7 @@ public class AuthRestController {
 	}
 
     //Spring automatically matches the form fields with the same name and generates an UserRegisterDTO object
-    @PostMapping("/registration")
+    @PostMapping("/signup")
     public ResponseEntity<UserLoginDTO> registerUser(@RequestBody UserRegisterDTO registerDTO) {
         if (userService.isUsernameTaken(registerDTO.getUsername()) || userService.isEmailTaken(registerDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

@@ -36,7 +36,7 @@ export class SignupComponent {
   }
 
   onSubmit() {
-    this.authService.register(this.registerForm.value).subscribe({
+    this.authService.signup(this.registerForm.value).subscribe({
       next: (response) => { //Backend returns some fields, one of them being the id of the user created
         if (this.selectedPhoto) { this.uploadUserImage(response.id, this.selectedPhoto);}
         else{ this.router.navigate(["/login"]); }
