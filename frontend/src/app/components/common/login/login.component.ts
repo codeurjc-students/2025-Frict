@@ -2,17 +2,13 @@ import {Component} from '@angular/core';
 import {AuthService} from '../../../services/auth.service';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faCircleInfo} from '@fortawesome/free-solid-svg-icons';
 import {NgIf, NgOptimizedImage} from '@angular/common';
-import {faGoogle} from '@fortawesome/free-brands-svg-icons';
 
 @Component({
   selector: 'app-login',
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    FaIconComponent,
     NgOptimizedImage,
     NgIf,
   ],
@@ -20,8 +16,6 @@ import {faGoogle} from '@fortawesome/free-brands-svg-icons';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-
-  protected readonly faGoogle = faGoogle;
 
   loginForm: FormGroup;
   showPassword : boolean = false;
@@ -56,6 +50,4 @@ export class LoginComponent {
   public togglePassword() {
     this.showPassword = !this.showPassword;
   }
-
-  protected readonly faCircleInfo = faCircleInfo;
 }

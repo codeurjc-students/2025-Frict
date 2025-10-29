@@ -4,23 +4,18 @@ import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
 import {NgOptimizedImage} from '@angular/common';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {faGoogle} from '@fortawesome/free-brands-svg-icons';
 
 @Component({
-  selector: 'app-registration',
+  selector: 'app-signup',
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    NgOptimizedImage,
-    FaIconComponent
+    NgOptimizedImage
   ],
-  templateUrl: './registration.component.html',
-  styleUrl: './registration.component.css'
+  templateUrl: './signup.component.html',
+  styleUrl: './signup.component.css'
 })
-export class RegistrationComponent {
-
-  protected readonly faGoogle = faGoogle;
+export class SignupComponent {
 
   registerForm: FormGroup;
   showPassword = false;

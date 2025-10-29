@@ -1,122 +1,195 @@
 <!-- Navbar -->
-<nav class="sticky top-0 z-50 backdrop-blur bg-slate-700 h-18 text-white">
+<nav class="sticky top-0 z-2000 backdrop-blur bg-surface-800 h-20 text-white">
   <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
 
     <!-- Logo -->
     <div *ngIf="!loginInfo.isLogged || (loginInfo.isLogged && !loginInfo.admin)">
-      <a routerLink="/" class="flex items-center gap-2 font-extrabold order-2 sm:order-1 h-full">
+      <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden sm:inline text-2xl">MiTienda</span>
       </a>
-      <!-- Client drawer component -->
-      <div id="drawer-navigation" class="fixed top-18 left-0 z-80 w-84 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-slate-800 text-white" tabindex="-1" aria-labelledby="drawer-navigation-label">
-        <h5 id="drawer-navigation-label" class="text-base font-semibold text-slate-500 uppercase">Categorías</h5>
-        <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation"
-                class="w-8 h-8 flex items-center justify-center text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-900 rounded-lg absolute top-2.5 end-2.5">
-          <fa-icon [icon]="faXmark" class="text-lg"/>
-        </button>
-
-        <div class="py-4 overflow-y-auto">
-          <ul class="space-y-2">
-            <li>
-              <a routerLink="/" class="flex items-center p-2 text-white rounded-lg hover:bg-slate-700 group">
-                <fa-icon [icon]="faHouse" class="text-lg"/>
-                <span class="flex-1 ms-3 whitespace-nowrap group-hover:text-yellow-500">Inicio</span>
-                <span class="inline-flex items-center justify-center px-2 ms-3 text-sm font-medium text-slate-800 bg-slate-100 rounded-full">3</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
     <div *ngIf="loginInfo.isLogged && loginInfo.admin">
-      <a routerLink="/" class="flex items-center gap-2 font-extrabold order-2 sm:order-1 h-full">
+      <a routerLink="/admin" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/frictLogo.png" alt="logo" height="94" width="94"/>
         <span class="hidden sm:inline text-2xl">Frict</span>
       </a>
-      <!-- Admin drawer component -->
-      <div id="drawer-navigation" class="fixed top-18 left-0 z-80 w-84 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-slate-800 text-white" tabindex="-1" aria-labelledby="drawer-navigation-label">
-        <h5 id="drawer-navigation-label" class="text-base font-semibold text-slate-500 uppercase">Categorías</h5>
-        <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation"
-                class="w-8 h-8 flex items-center justify-center text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-900 rounded-lg absolute top-2.5 end-2.5">
-          <fa-icon [icon]="faXmark" class="text-lg"/>
-        </button>
-
-        <div class="py-4 overflow-y-auto">
-          <ul class="space-y-2">
-            <li>
-              <a routerLink="/" class="flex items-center p-2 text-white rounded-lg hover:bg-slate-700 group">
-                <fa-icon [icon]="faHouse" class="text-lg"/>
-                <span class="flex-1 ms-3 whitespace-nowrap group-hover:text-yellow-500">Administración</span>
-                <span class="inline-flex items-center justify-center px-2 ms-3 text-sm font-medium text-slate-800 bg-slate-100 rounded-full">3</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
 
-
     <!-- Sidebar -->
-    <button class="flex items-center justify-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl order-1 sm:order-2 h-10" data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation" aria-controls="drawer-navigation">
-      <fa-icon [icon]="faBars" class="text-lg"/>
-      <span class="hidden md:inline m-1">Menú</span>
-    </button>
+    <p-button (click)="visible = !visible" iconPos="left" styleClass="h-10 !text-surface-900">
+      <ng-template pTemplate="content">
+        <i class="pi pi-bars"></i>
+        <span class="hidden lg:inline ml-1 font-bold">Menú</span>
+      </ng-template>
+    </p-button>
 
     <!-- Search bar -->
     <div class="flex-1 relative max-w-xs sm:max-w-sm lg:max-w-xl order-3 h-full flex items-center">
       <!-- Input and button container -->
-      <div class="flex w-full h-10">
-        <input placeholder="Buscar productos…" class="flex-1 bg-slate-800 focus:bg-slate-900 px-3 text-sm rounded-l-xl"/>
-        <button class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-r-xl px-3 flex items-center">
+      <div class="flex w-full h-11">
+        <input placeholder="Buscar productos…" type="text" [(ngModel)]="searchBarInput" class="flex-1 bg-surface-700 focus:bg-surface-900 px-3 text-sm rounded-l-xl"/>
+        <button class="bg-primary hover:bg-primary-600 text-surface-900 font-bold rounded-r-xl px-3 flex items-center">
           Buscar
         </button>
       </div>
     </div>
 
     <!-- Actions -->
-    <div class="flex items-center order-4 h-full">
-      <!-- Account and cart (registered users) -->
-      <div *ngIf="loginInfo.isLogged" class="flex items-center gap-3">
-        <a id="dropdownInformationButton" data-dropdown-toggle="dropdownInformation" class="flex items-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl h-10" type="button">
-          <img class="w-4 h-4 rounded-full m-1" ngSrc="/favicon.ico" alt="user photo" width="48" height="48"/>
-          <span class="hidden lg:inline m-1">Nombre Apellido</span>
-        </a>
+    <div class="flex items-center order-4 h-full ml-2">
+      <!-- Notifications and cart (registered users) -->
+      <div *ngIf="loginInfo.isLogged" class="flex items-center gap-2">
+        <p-button (click)="menu.toggle($event)" iconPos="left" styleClass="h-10 !text-surface-900">
+          <ng-template pTemplate="content">
+            <i class="pi pi-bell"></i>
+            <span class="hidden lg:inline ml-1 font-bold">Notificaciones</span>
+          </ng-template>
+        </p-button>
+        <p-menu #menu [model]="items" [popup]="true" styleClass="!bg-surface-800 !border-none !mt-4" appendTo="body"/>
 
         <div *ngIf="!loginInfo.admin">
-          <button routerLink="/cart" class="flex items-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl h-10 relative" type="button">
-            <fa-icon [icon]="faCartShopping" class="text-lg" />
-            <span class="hidden lg:inline m-1">Cesta (0)</span>
-            <!-- Small screens product number indicator -->
-            <span class="absolute -top-1 -right-1 bg-red-600 text-xs text-white rounded-full px-1 lg:hidden">0</span>
-          </button>
+          <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/cart">
+            <ng-template pTemplate="content">
+              <i class="pi pi-shopping-cart"></i>
+              <span class="hidden lg:inline ml-1 font-bold">Cesta (0)</span>
+            </ng-template>
+          </p-button>
         </div>
       </div>
 
       <!-- Registration / login  (unregistered users) -->
       <div *ngIf="!loginInfo.isLogged">
-        <button routerLink="/login" class="flex items-center gap-1 px-3 bg-slate-800 hover:bg-slate-900 rounded-xl relative h-10" type="button">
-          <fa-icon [icon]="faUser" class="text-lg"/>
-          <span class="hidden lg:inline m-1">Registrarse / Iniciar sesión</span>
-        </button>
+        <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/login">
+          <ng-template pTemplate="content">
+            <i class="pi pi-sign-in"></i>
+            <span class="hidden lg:inline ml-1 font-bold">Registrarse / Iniciar sesión</span>
+          </ng-template>
+        </p-button>
       </div>
 
-
-      <div id="dropdownInformation" class="z-10 hidden bg-white divide-y divide-slate-100 rounded-lg shadow-sm w-auto dark:bg-slate-700 dark:divide-slate-600">
-        <div class="px-4 py-3 text-sm text-slate-900 dark:text-white">
-          <div>Nombre Apellido</div>
-          <div class="font-medium">nombreapellido.gmail.com</div>
-        </div>
-        <ul class="py-2 text-sm text-slate-700 dark:text-slate-200" aria-labelledby="dropdownInformationButton">
-          <li>
-            <a routerLink="/profile" class="block px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-600 dark:hover:text-white">Perfil</a>
-          </li>
-        </ul>
-        <div class="py-2">
-          <a routerLink="/logout" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">Cerrar sesión</a>
-        </div>
-      </div>
     </div>
 
   </div>
 </nav>
+
+<!-- Sidebar -->
+<p-drawer #drawerRef [(visible)]="visible" styleClass="!bg-surface-800 !border-none !w-90">
+  <ng-template #headless>
+    <div class="mt-22 flex flex-col h-full overflow-y-auto">
+      <div *ngIf="loginInfo.isLogged" class="top-0 w-full">
+        <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
+          <p-avatar image="/favicon.ico" styleClass="mr-2 rounded-border" size="large"/>
+          <div class="flex flex-col">
+            <span class="font-bold">Nombre Apellido</span>
+            <span class="font-light">user</span>
+          </div>
+        </a>
+        <hr class="mx-8 mb-6 border-t border-0 border-surface" />
+      </div>
+
+      <div *ngIf="!loginInfo.isLogged" class="top-0 w-full" >
+        <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/login">
+          <p-avatar icon="pi pi-user" size="large"/>
+          <div class="flex flex-col">
+            <span class="font-bold">¡Hola! Identifícate</span>
+            <span class="font-light">Regístrate o inicia sesión</span>
+          </div>
+        </a>
+        <hr class="mx-8 mb-4 border-t border-0 border-surface" />
+      </div>
+
+      <div class="overflow-y-auto w-full">
+        <ul class="list-none px-4 pb-4 m-0">
+          <li>
+            <div pStyleClass="@next"
+              enterFromClass="hidden"
+              enterActiveClass="animate-slidedown"
+              leaveToClass="hidden"
+              leaveActiveClass="animate-slideup"
+              class="p-4 flex items-center justify-between text-surface-200 cursor-pointer"
+            >
+              <span class="font-medium uppercase">Categorías</span>
+              <i class="pi pi-chevron-down"></i>
+            </div>
+            <ul class="list-none p-0 m-0 overflow-hidden">
+              <li>
+                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <i class="pi pi-microchip mr-2"></i>
+                  <span class="font-medium">Ordenadores</span>
+                </a>
+              </li>
+              <li>
+                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <i class="pi pi-headphones mr-2"></i>
+                  <span class="font-medium">Periféricos</span>
+                </a>
+              </li>
+              <li>
+                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <i class="pi pi-crown mr-2"></i>
+                  <span class="font-medium">Gaming</span>
+                </a>
+              </li>
+              <li>
+                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <i class="pi pi-mobile mr-2"></i>
+                  <span class="font-medium">Smartphone / Tablet</span>
+                </a>
+              </li>
+              <li>
+                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <i class="pi pi-desktop mr-2"></i>
+                  <span class="font-medium">Televisión e imagen</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <div *ngIf="loginInfo.isLogged">
+          <ul class="list-none p-4 m-0">
+            <li>
+              <div
+                pStyleClass="@next"
+                enterFromClass="hidden"
+                enterActiveClass="animate-slidedown"
+                leaveToClass="hidden"
+                leaveActiveClass="animate-slideup"
+                class="p-4 flex items-center justify-between text-surface-200 cursor-pointer"
+              >
+                <span class="font-medium uppercase">Cuenta</span>
+                <i class="pi pi-chevron-down"></i>
+              </div>
+              <ul class="list-none p-0 m-0 overflow-hidden">
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                    <i class="pi pi-user mr-2"></i>
+                    <span class="font-medium">Perfil</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                    <i class="pi pi-bookmark mr-2"></i>
+                    <span class="font-medium">Productos guardados</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                    <i class="pi pi-bell mr-2"></i>
+                    <span class="font-medium">Alertas</span>
+                    <span class="inline-flex items-center justify-center ml-auto bg-primary-400 text-surface-900 rounded-full" style="min-width: 1.5rem; height: 1.5rem">3</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                    <i class="pi pi-sign-out mr-2"></i>
+                    <span class="font-medium">Cerrar sesión</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-drawer>
