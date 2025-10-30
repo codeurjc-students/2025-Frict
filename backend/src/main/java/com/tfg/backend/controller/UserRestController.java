@@ -1,7 +1,9 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.DTO.UserLoginDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,16 +11,31 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
+import java.security.Principal;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserRestController {
+	
+	@Autowired
+	private UserService userService;
 
-    @Autowired
-    private UserService userService;
+	@GetMapping("/me")
+	public ResponseEntity<UserLoginDTO> me(HttpServletRequest request) {
+		
+		Principal principal = request.getUserPrincipal();
+		
+		if(principal != null) {
+            return ResponseEntity.ok(userService.getLoggedUserInfo(principal.getName()));
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
 
     @PutMapping("/{userId}/photo")
     public ResponseEntity<String> updateUserPhoto(@PathVariable Long userId, @RequestPart("photo") MultipartFile photo) {

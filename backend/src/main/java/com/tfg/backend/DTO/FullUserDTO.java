@@ -3,15 +3,12 @@ package com.tfg.backend.DTO;
 import com.tfg.backend.model.User;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class FullUserDTO implements UserDetails {
+public class FullUserDTO {
     private Long id;
     private String name;
     private String username;
@@ -39,45 +36,5 @@ public class FullUserDTO implements UserDetails {
         this.roles = user.getRoles();
         this.id = user.getId();
         this.photo = "/api/users/img/" + user.getId();
-    }
-
-    // UserDetails interface required methods
-
-    @Override
-    public String getUsername() {
-        return this.username;
-    }
-
-    @Override
-    public String getPassword() {
-        return "";
-    }
-
-    @Override
-    public List<SimpleGrantedAuthority> getAuthorities() {
-        // Change roles to an authority list
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return !this.banned;  // The account is blocked is user is banned
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;  // If credentials have not expired returns true
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return !this.banned;  // If user is banned is not enabled
     }
 }

@@ -1,0 +1,231 @@
+<!-- Navbar -->
+<nav class="sticky top-0 z-2000 backdrop-blur bg-surface-800 h-20 text-white">
+  <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
+
+    <!-- Logo -->
+    <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
+      <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
+        <img class="w-8 h-8 m-1" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
+        <span class="hidden sm:inline text-2xl">MiTienda</span>
+      </a>
+    </div>
+    <div *ngIf="authService.isAdmin()">
+      <a routerLink="/admin" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
+        <img class="w-8 h-8 m-1" ngSrc="/frictLogo.png" alt="logo" height="94" width="94"/>
+        <span class="hidden sm:inline text-2xl">Frict</span>
+      </a>
+    </div>
+
+    <!-- Sidebar -->
+    <p-button (click)="visible = !visible" iconPos="left" styleClass="h-10 !text-surface-900">
+      <ng-template pTemplate="content">
+        <i class="pi pi-bars"></i>
+        <span class="hidden lg:inline ml-1 font-bold">Menú</span>
+      </ng-template>
+    </p-button>
+
+    <!-- Search bar -->
+    <div class="flex-1 relative max-w-xs sm:max-w-sm lg:max-w-xl order-3 h-full flex items-center">
+      <!-- Input and button container -->
+      <div class="flex w-full h-11">
+        <input placeholder="Buscar productos…" type="text" [(ngModel)]="searchBarInput" class="flex-1 bg-surface-700 focus:bg-surface-900 px-3 text-sm rounded-l-xl"/>
+        <button class="bg-primary hover:bg-primary-600 text-surface-900 font-bold rounded-r-xl px-3 flex items-center">
+          Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center order-4 h-full ml-2">
+      <!-- Notifications and cart (registered users) -->
+      <div *ngIf="authService.isLogged()" class="flex items-center gap-2">
+        <p-button (click)="menu.toggle($event)" iconPos="left" styleClass="h-10 !text-surface-900">
+          <ng-template pTemplate="content">
+            <i class="pi pi-bell"></i>
+            <span class="hidden lg:inline ml-1 font-bold">Notificaciones</span>
+          </ng-template>
+        </p-button>
+        <p-menu #menu [model]="items" [popup]="true" styleClass="!bg-surface-800 !border-none !mt-4" appendTo="body"/>
+
+        <div *ngIf="!authService.isAdmin()">
+          <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/cart">
+            <ng-template pTemplate="content">
+              <i class="pi pi-shopping-cart"></i>
+              <span class="hidden lg:inline ml-1 font-bold">Cesta (0)</span>
+            </ng-template>
+          </p-button>
+        </div>
+      </div>
+
+      <!-- Registration / login  (unregistered users) -->
+      <div *ngIf="!authService.isLogged()">
+        <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/login">
+          <ng-template pTemplate="content">
+            <i class="pi pi-sign-in"></i>
+            <span class="hidden lg:inline ml-1 font-bold">Registrarse / Iniciar sesión</span>
+          </ng-template>
+        </p-button>
+      </div>
+
+    </div>
+
+  </div>
+</nav>
+
+<!-- Sidebar -->
+<p-drawer #drawerRef [(visible)]="visible" styleClass="!bg-surface-800 !border-none !w-90">
+  <ng-template #headless>
+    <div class="mt-22 flex flex-col h-full overflow-y-auto">
+      <div *ngIf="authService.isLogged()" class="top-0 w-full">
+        <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
+          <p-avatar image="/favicon.ico" styleClass="mr-2 rounded-border" size="large"/>
+          <div class="flex flex-col">
+            <span class="font-bold">Nombre Apellido</span>
+            <span class="font-light">user</span>
+          </div>
+        </a>
+        <hr class="mx-8 mb-6 border-t border-0 border-surface" />
+      </div>
+
+      <div *ngIf="!authService.isLogged()" class="top-0 w-full" >
+        <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/login">
+          <p-avatar icon="pi pi-user" size="large"/>
+          <div class="flex flex-col">
+            <span class="font-bold">¡Hola! Identifícate</span>
+            <span class="font-light">Regístrate o inicia sesión</span>
+          </div>
+        </a>
+        <hr class="mx-8 mb-4 border-t border-0 border-surface" />
+      </div>
+
+      <div class="overflow-y-auto w-full">
+        <ul class="list-none px-4 pb-4 m-0">
+          <li>
+            <div pStyleClass="@next"
+              enterFromClass="hidden"
+              enterActiveClass="animate-slidedown"
+              leaveToClass="hidden"
+              leaveActiveClass="animate-slideup"
+              class="p-4 flex items-center justify-between text-surface-200 cursor-pointer"
+            >
+              <span class="font-medium uppercase">Categorías</span>
+              <i class="pi pi-chevron-down"></i>
+            </div>
+            <ul class="list-none p-0 m-0 overflow-hidden">
+              <div *ngIf="!authService.isAdmin()">
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-microchip mr-2"></i>
+                    <span class="font-medium">Ordenadores</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-headphones mr-2"></i>
+                    <span class="font-medium">Periféricos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-crown mr-2"></i>
+                    <span class="font-medium">Gaming</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-mobile mr-2"></i>
+                    <span class="font-medium">Smartphone / Tablet</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-desktop mr-2"></i>
+                    <span class="font-medium">Televisión e imagen</span>
+                  </a>
+                </li>
+              </div>
+              <div *ngIf="authService.isAdmin()">
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="products">
+                    <i class="pi pi-desktop mr-2"></i>
+                    <span class="font-medium">Productos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="orders">
+                    <i class="pi pi-box mr-2"></i>
+                    <span class="font-medium">Pedidos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="reports">
+                    <i class="pi pi-chart-bar mr-2"></i>
+                    <span class="font-medium">Informes</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="delivery">
+                    <i class="pi pi-truck mr-2"></i>
+                    <span class="font-medium">Reparto</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="users">
+                    <i class="pi pi-users mr-2"></i>
+                    <span class="font-medium">Usuarios</span>
+                  </a>
+                </li>
+              </div>
+            </ul>
+          </li>
+        </ul>
+        <div *ngIf="authService.isLogged()">
+          <ul class="list-none p-4 m-0">
+            <li>
+              <div
+                pStyleClass="@next"
+                enterFromClass="hidden"
+                enterActiveClass="animate-slidedown"
+                leaveToClass="hidden"
+                leaveActiveClass="animate-slideup"
+                class="p-4 flex items-center justify-between text-surface-200 cursor-pointer"
+              >
+                <span class="font-medium uppercase">Cuenta</span>
+                <i class="pi pi-chevron-down"></i>
+              </div>
+              <ul class="list-none p-0 m-0 overflow-hidden">
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
+                    <i class="pi pi-user mr-2"></i>
+                    <span class="font-medium">Perfil</span>
+                  </a>
+                </li>
+                <div *ngIf="authService.isUser()">
+                  <li>
+                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/favourites">
+                      <i class="pi pi-bookmark mr-2"></i>
+                      <span class="font-medium">Productos guardados</span>
+                    </a>
+                  </li>
+                </div>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/alerts">
+                    <i class="pi pi-bell mr-2"></i>
+                    <span class="font-medium">Alertas</span>
+                    <span class="inline-flex items-center justify-center ml-auto bg-primary-400 text-surface-900 rounded-full" style="min-width: 1.5rem; height: 1.5rem">3</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" (click)="logout()">
+                    <i class="pi pi-sign-out mr-2"></i>
+                    <span class="font-medium">Cerrar sesión</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-drawer>

@@ -56,13 +56,8 @@ public class DatabaseInitializer {
             Blob defaultProfileBlob = new SerialBlob(defaultProfilePhotoBytes);
 
             // 2. Independent entities
-            User user1 = new User("Alonso Gómez", "alonsogomez", "korex53699@bulmp1.com", "CallePorDefecto1", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
-            User user2 = new User("Sara García", "saragarcia", "korex53699@bulmp2.com", "CallePorDefecto2", defaultProfileBlob, passwordEncoder.encode("pass"), "USER");
-            User user3 = new User("Admin", "admin", "admin@gmail.com", "CallePorDefecto3", defaultProfileBlob, passwordEncoder.encode("adminpass"), "ADMIN");
-
-            user1 = userRepository.save(user1);
-            user2 = userRepository.save(user2);
-            user3 = userRepository.save(user3);
+            User user1 = userRepository.save(new User("Usuario", "user", "user1@gmail.com", "CallePorDefecto1", passwordEncoder.encode("pass"), "USER"));
+            User user2 = userRepository.save(new User("Administrador", "admin", "admin@gmail.com", "CallePorDefecto2", passwordEncoder.encode("adminpass"), "ADMIN"));
 
             Product product1 = new Product("1A2", "Router portátil", defaultProductBlob, "Conectividad en todas partes", 100);
             Product product2 = new Product("2A3", "Televisor", defaultProductBlob, "Disfruta de tus series favoritas", 800);

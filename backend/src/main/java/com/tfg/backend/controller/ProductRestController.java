@@ -27,6 +27,17 @@ public class ProductRestController {
     private ProductService productService;
 
 
+    @GetMapping("/")
+    public ResponseEntity<AllProductsDTO> showAllProducts() {
+        List<Product> products = productService.findAll();
+        List<ProductDTO> dtos = new ArrayList<>();
+        for (Product p: products) {
+            dtos.add(new ProductDTO(p));
+        }
+        return ResponseEntity.ok(new AllProductsDTO(dtos));
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> showProduct(@PathVariable Long id) {
         Optional<Product> product = productService.findById(id);
@@ -37,16 +48,6 @@ public class ProductRestController {
         }
     }
 
-
-    @GetMapping("/all")
-    public ResponseEntity<AllProductsDTO> showAllProducts() {
-        List<Product> products = productService.findAll();
-        List<ProductDTO> dtos = new ArrayList<>();
-        for (Product p: products) {
-            dtos.add(new ProductDTO(p));
-        }
-        return ResponseEntity.ok(new AllProductsDTO(dtos));
-    }
 
     //Auxiliary method that easily allows to check a product default image
     @GetMapping("/image/{id}")

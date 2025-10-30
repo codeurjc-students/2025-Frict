@@ -5,6 +5,7 @@ import com.tfg.backend.security.jwt.UnauthorizedHandlerJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -16,8 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -26,10 +25,10 @@ public class SecurityConfig {
 	private JwtRequestFilter jwtRequestFilter;
 
 	@Autowired
-    public RepositoryUserDetailsService userDetailService;
+	RepositoryUserDetailsService userDetailsService;
 
 	@Autowired
-  	private UnauthorizedHandlerJwt unauthorizedHandlerJwt;
+	private UnauthorizedHandlerJwt unauthorizedHandlerJwt;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -45,7 +44,7 @@ public class SecurityConfig {
 	public DaoAuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
-		authProvider.setUserDetailsService(userDetailService);
+		authProvider.setUserDetailsService(userDetailsService);
 		authProvider.setPasswordEncoder(passwordEncoder());
 
 		return authProvider;
@@ -53,35 +52,29 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
-
+		
 		http.authenticationProvider(authenticationProvider());
-
+		
 		http
 			.securityMatcher("/api/**")
 			.exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt));
-
+		
 		http
+			.authorizeHttpRequests(authorize -> authorize
+                    // PRIVATE ENDPOINTS
+                    .requestMatchers(HttpMethod.GET,"/api/v1/users/me").hasAnyRole("USER","MANAGER","DRIVER","ADMIN")
 
-            .authorizeHttpRequests(authorize -> authorize
-				// PUBLIC ENDPOINTS
-				.requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                .requestMatchers("/api/products/all").permitAll()
+					// PUBLIC ENDPOINTS
+					.anyRequest().permitAll()
+			);
 
-				// PRIVATE ENDPOINTS (require login)
-				.requestMatchers("/api/user/profile", "/api/auth/logout").permitAll()
-
-				// Additional rules for other specific resources
-				.anyRequest().permitAll()
-		);
-
-
-		// Disable Form login Authentication
+        // Disable Form login Authentication (as JWT authentication is being used)
         http.formLogin(formLogin -> formLogin.disable());
 
-        // Disable CSRF protection (it is difficult to implement in REST APIs)
+        // Disable CSRF protection (as JWT avoids CSRF by storing the tokens in local storage)
         http.csrf(csrf -> csrf.disable());
 
-        // Disable Basic Authentication
+        // Disable Basic Authentication (as JWT authentication is being used)
         http.httpBasic(httpBasic -> httpBasic.disable());
 
         // Stateless session

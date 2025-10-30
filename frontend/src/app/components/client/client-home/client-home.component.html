@@ -1,3 +1,5 @@
+<app-navbar [loginInfo]="loginInfo"></app-navbar>
+
 <div *ngIf="!availableProducts" id="noProducts">
   <div class="noProducts m-4">
     No hay productos disponibles para mostrar.
@@ -7,7 +9,7 @@
 <div *ngIf="availableProducts" id="productList">
   <ng-template ngFor let-product [ngForOf]="products">
     <div class="product m-4">
-      Producto {{product.id}} <br>
+      Producto {{product.id}} <br> <!-- Optional: ? -->
       Número de referencia: {{product.referenceCode}} <br>
       Nombre: {{product.name}} <br>
       Descripción: {{product.description}} <br>
