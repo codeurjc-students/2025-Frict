@@ -38,7 +38,7 @@ export class AuthService {
   }
 
   public logout(): Observable<any> {
-    return this.http.post(this.apiUrl + "/logout", { withCredentials: true }).pipe(
+    return this.http.post(this.apiUrl + "/auth/logout", { withCredentials: true }).pipe(
       tap(() => this.loginInfoSignal.set(this.defaultLoginInfo)),
       catchError(err => {
         this.loginInfoSignal.set(this.defaultLoginInfo);

@@ -112,36 +112,70 @@
               <i class="pi pi-chevron-down"></i>
             </div>
             <ul class="list-none p-0 m-0 overflow-hidden">
-              <li>
-                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
-                  <i class="pi pi-microchip mr-2"></i>
-                  <span class="font-medium">Ordenadores</span>
-                </a>
-              </li>
-              <li>
-                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
-                  <i class="pi pi-headphones mr-2"></i>
-                  <span class="font-medium">Periféricos</span>
-                </a>
-              </li>
-              <li>
-                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
-                  <i class="pi pi-crown mr-2"></i>
-                  <span class="font-medium">Gaming</span>
-                </a>
-              </li>
-              <li>
-                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
-                  <i class="pi pi-mobile mr-2"></i>
-                  <span class="font-medium">Smartphone / Tablet</span>
-                </a>
-              </li>
-              <li>
-                <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
-                  <i class="pi pi-desktop mr-2"></i>
-                  <span class="font-medium">Televisión e imagen</span>
-                </a>
-              </li>
+              <div *ngIf="!authService.isAdmin()">
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-microchip mr-2"></i>
+                    <span class="font-medium">Ordenadores</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-headphones mr-2"></i>
+                    <span class="font-medium">Periféricos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-crown mr-2"></i>
+                    <span class="font-medium">Gaming</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-mobile mr-2"></i>
+                    <span class="font-medium">Smartphone / Tablet</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
+                    <i class="pi pi-desktop mr-2"></i>
+                    <span class="font-medium">Televisión e imagen</span>
+                  </a>
+                </li>
+              </div>
+              <div *ngIf="authService.isAdmin()">
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="products">
+                    <i class="pi pi-desktop mr-2"></i>
+                    <span class="font-medium">Productos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="orders">
+                    <i class="pi pi-box mr-2"></i>
+                    <span class="font-medium">Pedidos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="reports">
+                    <i class="pi pi-chart-bar mr-2"></i>
+                    <span class="font-medium">Informes</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="delivery">
+                    <i class="pi pi-truck mr-2"></i>
+                    <span class="font-medium">Reparto</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="users">
+                    <i class="pi pi-users mr-2"></i>
+                    <span class="font-medium">Usuarios</span>
+                  </a>
+                </li>
+              </div>
             </ul>
           </li>
         </ul>
@@ -161,26 +195,28 @@
               </div>
               <ul class="list-none p-0 m-0 overflow-hidden">
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
                     <i class="pi pi-user mr-2"></i>
                     <span class="font-medium">Perfil</span>
                   </a>
                 </li>
+                <div *ngIf="authService.isUser()">
+                  <li>
+                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/favourites">
+                      <i class="pi pi-bookmark mr-2"></i>
+                      <span class="font-medium">Productos guardados</span>
+                    </a>
+                  </li>
+                </div>
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
-                    <i class="pi pi-bookmark mr-2"></i>
-                    <span class="font-medium">Productos guardados</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/alerts">
                     <i class="pi pi-bell mr-2"></i>
                     <span class="font-medium">Alertas</span>
                     <span class="inline-flex items-center justify-center ml-auto bg-primary-400 text-surface-900 rounded-full" style="min-width: 1.5rem; height: 1.5rem">3</span>
                   </a>
                 </li>
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" (click)="logout()">
                     <i class="pi pi-sign-out mr-2"></i>
                     <span class="font-medium">Cerrar sesión</span>
                   </a>

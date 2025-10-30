@@ -1,6 +1,6 @@
 import {Component, Input, ViewChild} from '@angular/core';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
-import {RouterLink} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {NgIf, NgOptimizedImage} from '@angular/common';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {Avatar} from 'primeng/avatar';
@@ -35,7 +35,8 @@ import {AuthService} from '../../../services/auth.service';
 })
 export class NavbarComponent {
 
-  constructor(protected authService: AuthService) {}
+  constructor(protected authService: AuthService,
+              private router: Router) {}
 
   @ViewChild('drawerRef') drawerRef!: Drawer;
   @ViewChild('menu') menu!: Menu;
@@ -61,4 +62,16 @@ export class NavbarComponent {
       }
     ];
   }
+
+  protected logout() {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: (err) => {
+        this.router.navigate(['/error']);
+      }
+    });
+  }
+
 }
