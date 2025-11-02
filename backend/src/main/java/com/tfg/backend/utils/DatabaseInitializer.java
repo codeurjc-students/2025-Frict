@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class DatabaseInitializer {
@@ -24,6 +25,9 @@ public class DatabaseInitializer {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -47,21 +51,28 @@ public class DatabaseInitializer {
     public void init() throws IOException, SQLException {
         if (initEnabled) {
             // 1. Default images
-            ClassPathResource defaultProductImgFile = new ClassPathResource("static/img/defaultProductPhoto.jpg");
+            ClassPathResource defaultProductImgFile = new ClassPathResource("static/img/defaultProductImage.jpg");
             byte[] defaultProductPhotoBytes = StreamUtils.copyToByteArray(defaultProductImgFile.getInputStream());
             Blob defaultProductBlob = new SerialBlob(defaultProductPhotoBytes);
 
-            ClassPathResource defaultProfileImgFile = new ClassPathResource("static/img/defaultProfilePhoto.jpg");
-            byte[] defaultProfilePhotoBytes = StreamUtils.copyToByteArray(defaultProfileImgFile.getInputStream());
-            Blob defaultProfileBlob = new SerialBlob(defaultProfilePhotoBytes);
+            ClassPathResource defaultCategoryImgFile = new ClassPathResource("static/img/defaultCategoryImage.jpg");
+            byte[] defaultCategoryPhotoBytes = StreamUtils.copyToByteArray(defaultCategoryImgFile.getInputStream());
+            Blob defaultCategoryBlob = new SerialBlob(defaultCategoryPhotoBytes);
 
             // 2. Independent entities
-            User user1 = userRepository.save(new User("Usuario", "user", "user1@gmail.com", "CallePorDefecto1", passwordEncoder.encode("pass"), "USER"));
+            User user1 = userRepository.save(new User("Usuario", "user", "user@gmail.com", "CallePorDefecto1", passwordEncoder.encode("pass"), "USER"));
             User user2 = userRepository.save(new User("Administrador", "admin", "admin@gmail.com", "CallePorDefecto2", passwordEncoder.encode("adminpass"), "ADMIN"));
+
+            Category category1 = categoryRepository.save(new Category("Televisión e Imagen", defaultCategoryBlob));
+            Category category2 = categoryRepository.save(new Category("Periféricos", defaultCategoryBlob));
 
             Product product1 = new Product("1A2", "Router portátil", defaultProductBlob, "Conectividad en todas partes", 100);
             Product product2 = new Product("2A3", "Televisor", defaultProductBlob, "Disfruta de tus series favoritas", 800);
             Product product3 = new Product("3A4", "Smartwatch", defaultProductBlob, "Monitoriza fácilmente tu ejercicio", 300);
+
+            product1.setCategories(Set.of(category1, category2));
+            product2.setCategories(Set.of(category1));
+            product3.setCategories(Set.of(category2));
 
             product1 = productRepository.save(product1);
             product2 = productRepository.save(product2);

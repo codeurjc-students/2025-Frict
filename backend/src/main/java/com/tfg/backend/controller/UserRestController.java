@@ -1,20 +1,18 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.UserService;
+import com.tfg.backend.utils.ImageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.sql.rowset.serial.SerialBlob;
-import java.io.IOException;
 import java.security.Principal;
 import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -36,26 +34,28 @@ public class UserRestController {
 		}
 	}
 
+    @GetMapping("/image/{id}")
+    public ResponseEntity<byte[]> showUserImage(@PathVariable long id) {
+        Optional<User> userOptional = userService.findById(id);
+        if (!userOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        User user = userOptional.get();
+        return ImageUtils.serveImage(user.getProfileImage());
+    }
 
-    @PutMapping("/{userId}/photo")
-    public ResponseEntity<String> updateUserPhoto(@PathVariable Long userId, @RequestPart("photo") MultipartFile photo) {
-        Optional<User> userOptional = userService.findById(userId);
+
+    @PutMapping("/image/{id}")
+    public ResponseEntity<String> updateUserImage(@PathVariable Long id, @RequestPart("photo") MultipartFile image) {
+        Optional<User> userOptional = userService.findById(id);
         if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         User user = userOptional.get();
 
-        try {
-            Blob profilePhoto = new SerialBlob(photo.getBytes());
-            user.setProfilePhoto(profilePhoto);
-            userService.save(user);
-            return ResponseEntity.ok().build();
-        }
-        catch (IOException e) {
-            return ResponseEntity.status(400).build();
-        }
-        catch (SQLException e) {
-            return ResponseEntity.status(404).build();
-        }
+        Blob profilePhoto = ImageUtils.prepareImage(image);
+        user.setProfileImage(profilePhoto);
+        userService.save(user);
+        return ResponseEntity.ok().build();
     }
 }

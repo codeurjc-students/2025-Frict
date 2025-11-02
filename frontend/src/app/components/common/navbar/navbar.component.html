@@ -6,13 +6,13 @@
     <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
       <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
-        <span class="hidden sm:inline text-2xl">MiTienda</span>
+        <span class="hidden md:inline text-2xl">MiTienda</span>
       </a>
     </div>
     <div *ngIf="authService.isAdmin()">
       <a routerLink="/admin" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/frictLogo.png" alt="logo" height="94" width="94"/>
-        <span class="hidden sm:inline text-2xl">Frict</span>
+        <span class="hidden lg:inline text-2xl">Frict</span>
       </a>
     </div>
 
@@ -25,12 +25,13 @@
     </p-button>
 
     <!-- Search bar -->
-    <div class="flex-1 relative max-w-xs sm:max-w-sm lg:max-w-xl order-3 h-full flex items-center">
+    <div class="flex-1 relative w-auto order-3 h-full flex items-center">
       <!-- Input and button container -->
       <div class="flex w-full h-11">
         <input placeholder="Buscar productos…" type="text" [(ngModel)]="searchBarInput" class="flex-1 bg-surface-700 focus:bg-surface-900 px-3 text-sm rounded-l-xl"/>
         <button class="bg-primary hover:bg-primary-600 text-surface-900 font-bold rounded-r-xl px-3 flex items-center">
-          Buscar
+          <i class="pi pi-search"></i>
+          <span class="hidden lg:inline ml-2 font-bold">Buscar</span>
         </button>
       </div>
     </div>

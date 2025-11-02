@@ -3,8 +3,7 @@ package com.tfg.backend.DTO;
 import com.tfg.backend.model.User;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -15,9 +14,9 @@ public class FullUserDTO {
     private String email;
     private String photo;
     private boolean banned;
-    private List<String> roles;
+    private Set<String> roles;
 
-    public FullUserDTO(String name, String username, String email, boolean banned, List<String> roles, Long id) {
+    public FullUserDTO(String name, String username, String email, boolean banned, Set<String> roles, Long id) {
         this.id = id;
         this.name = name;
         this.username = username;

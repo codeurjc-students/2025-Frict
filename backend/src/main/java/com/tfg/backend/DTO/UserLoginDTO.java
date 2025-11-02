@@ -4,8 +4,7 @@ package com.tfg.backend.DTO;
 import com.tfg.backend.model.User;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
+import java.util.Set;
 
 //Basic user auth info sent to frontend after user login (saves it for further requests) or registration (takes only important fields)
 @Getter
@@ -14,7 +13,7 @@ public class UserLoginDTO {
     private Long id;
     private String name;
     private String username;
-    private List<String> roles;
+    private Set<String> roles;
 
     public UserLoginDTO(User u){
         this.id = u.getId();

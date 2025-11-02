@@ -64,7 +64,7 @@ public class ProductServiceIntegrationTest {
         productService.deleteById(productId);
 
         assertAll(
-                () -> assertFalse(productRepository.existsById(productId), "The product has to be deleted fron the database"),
+                () -> assertFalse(productRepository.existsById(productId), "The product has to be deleted from the database"),
                 () -> assertTrue(productRepository.findById(productId).isEmpty(), "The product has already been found in the database")
         );
     }

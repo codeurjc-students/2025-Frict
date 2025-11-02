@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.util.Set;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItems;
 
@@ -31,8 +33,7 @@ public class ProductSystemApiTest {
     //Sample products
     Product product1 = new Product("4I4", "Auriculares inalámbricos", null, "Auriculares con cancelación de ruido y Bluetooth 5.0", 120.0);
     Product product2 = new Product("2G2", "Monitor 24\" Full HD", null, "Monitor con panel IPS y colores precisos", 175.0);
-    Product product3 = new Product("1F1", "Teclado mecánico", null, "Teclado RGB con switches táctiles y anti-ghosting", 95.0
-    );
+    Product product3 = new Product("1F1", "Teclado mecánico", null, "Teclado RGB con switches táctiles y anti-ghosting", 95.0);
 
     private static final String CONTENT_TYPE = "application/json";
 
@@ -58,7 +59,7 @@ public class ProductSystemApiTest {
     public void createAndRetrieveProductsTest() {
         given()
                 .when()
-                .get("/all")
+                .get("/")
                 .then()
                 .statusCode(200)
                 .contentType(CONTENT_TYPE)

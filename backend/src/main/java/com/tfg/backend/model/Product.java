@@ -1,6 +1,6 @@
 package com.tfg.backend.model;
 
-import com.tfg.backend.utils.PhotoUtils;
+import com.tfg.backend.utils.ImageUtils;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,12 +25,16 @@ public class Product {
     private String name;
 
     @Lob
-    private Blob photo;
+    @Column(nullable = false)
+    private Blob productImage = ImageUtils.prepareDefaultImage(Product.class);
 
     @Column (length = 5000)
     private String description;
 
     private double price;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
@@ -44,13 +48,11 @@ public class Product {
     public Product() {
     }
 
-    public Product(String referenceCode, String name, Blob photo, String description, double price) {
+    public Product(String referenceCode, String name, Blob productImage, String description, double price) {
         this.referenceCode = referenceCode;
         this.name = name;
-        if (photo !=null){
-            this.photo = photo;
-        } else {
-            this.photo = PhotoUtils.setDefaultPhoto(Product.class);
+        if (productImage !=null){
+            this.productImage = productImage;
         }
         this.description = description;
         this.price = price;
