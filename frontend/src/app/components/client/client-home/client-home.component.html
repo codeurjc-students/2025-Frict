@@ -1,20 +1,105 @@
-<app-navbar [loginInfo]="loginInfo"></app-navbar>
+<app-navbar></app-navbar>
 
-<div *ngIf="!availableProducts" id="noProducts">
-  <div class="noProducts m-4">
-    No hay productos disponibles para mostrar.
-  </div>
-</div>
+<!-- Contenedor principal de la página -->
+<div class="w-full max-w-7xl mx-auto px-4 mt-10">
 
-<div *ngIf="availableProducts" id="productList">
-  <ng-template ngFor let-product [ngForOf]="products">
-    <div class="product m-4">
-      Producto {{product.id}} <br> <!-- Optional: ? -->
-      Número de referencia: {{product.referenceCode}} <br>
-      Nombre: {{product.name}} <br>
-      Descripción: {{product.description}} <br>
-      Precio: {{product.price}} <br>
+  <!-- Hero principal-->
+  <section class="w-full bg-surface-800 p-6 rounded-2xl shadow-md my-10">
+    <div class="flex flex-col lg:flex-row justify-between items-center gap-6">
+      <div class="flex-1 text-center lg:text-left pl-4">
+        <h1 class="text-3xl sm:text-4xl font-bold text-surface-50 mb-2">
+          Ofertas TOP de la semana
+        </h1>
+        <p class="text-surface-400 mb-4 text-base sm:text-lg">
+          Descubre los mejores productos de tecnología al mejor precio
+        </p>
+        <p-button label="Ver ahora" routerLink="/searchResult" icon="pi pi-arrow-right" iconPos="right" styleClass="!text-surface-900"
+        />
+      </div>
+
+      <!-- Imagen -->
+      <div class="flex-1 my-3">
+        <img src="/frictLogo.png" class="w-full max-w-50 h-auto rounded-xl mx-auto">
+      </div>
+
     </div>
-  </ng-template>
+  </section>
+
+  <!-- Sección Ofertas Top (carrusel) -->
+  <section class="my-10">
+    <h2 class="text-2xl font-bold text-surface-800 mb-8">Destacados de la semana</h2>
+    <p-carousel [value]="products" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
+      <ng-template let-p pTemplate="item">
+        <div class="p-2 h-full w-full">
+          <app-product-card [product]="p" class="max-w-[280px] mx-auto block"/>
+        </div>
+      </ng-template>
+    </p-carousel>
+  </section>
+
+  <!-- Sección Botones Categoría -->
+  <section class="bg-surface-800 py-12 px-4 md:px-8 rounded-2xl my-10 shadow-md">
+    <div class="mx-auto">
+      <h2 class="text-2xl font-bold text-white mb-8">Categorías populares</h2>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div
+          class="bg-surface-600 hover:bg-surface-500 rounded-xl p-6 text-center cursor-pointer shadow-md transition-transform hover:scale-[1.02]">
+          <i class="pi pi-desktop text-primary-300" style="font-size: xx-large"></i>
+          <h4 class="text-white mt-3 font-semibold">Ordenadores</h4>
+        </div>
+        <div
+          class="bg-surface-600 hover:bg-surface-500 rounded-xl p-6 text-center cursor-pointer shadow-md transition-transform hover:scale-[1.02]">
+          <i class="pi pi-cog text-primary-300" style="font-size: xx-large"></i>
+          <h4 class="text-white mt-3 font-semibold">Componentes</h4>
+        </div>
+        <div
+          class="bg-surface-600 hover:bg-surface-500 rounded-xl p-6 text-center cursor-pointer shadow-md transition-transform hover:scale-[1.02]">
+          <i class="pi pi-mobile text-primary-300" style="font-size: xx-large"></i>
+          <h4 class="text-white mt-3 font-semibold">Smartphones</h4>
+        </div>
+        <div
+          class="bg-surface-600 hover:bg-surface-500 rounded-xl p-6 text-center cursor-pointer shadow-md transition-transform hover:scale-[1.02]">
+          <i class="pi pi-headphones text-primary-300" style="font-size: xx-large"></i>
+          <h4 class="text-white mt-3 font-semibold">Periféricos</h4>
+        </div>
+        <div
+          class="bg-surface-600 hover:bg-surface-500 rounded-xl p-6 text-center cursor-pointer shadow-md transition-transform hover:scale-[1.02]">
+          <i class="pi pi-tablet text-primary-300" style="font-size: xx-large"></i>
+          <h4 class="text-white mt-3 font-semibold">Tablets</h4>
+        </div>
+        <div
+          class="bg-surface-600 hover:bg-surface-500 rounded-xl p-6 text-center cursor-pointer shadow-md transition-transform hover:scale-[1.02]">
+          <i class="pi pi-video text-primary-300" style="font-size: xx-large"></i>
+          <h4 class="text-white mt-3 font-semibold">TV y Vídeo</h4>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección Basado en búsqueda (carrusel) -->
+  <section class="my-10">
+    <h2 class="text-2xl font-bold text-surface-800 mb-8">Basado en tus búsquedas</h2>
+    <p-carousel [value]="products" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
+      <ng-template let-p pTemplate="item">
+        <div class="p-2 h-full w-full">
+          <app-product-card [product]="p" class="max-w-[280px] mx-auto block"/>
+        </div>
+      </ng-template>
+    </p-carousel>
+  </section>
+
+  <!-- Sección Productos más vendidos (2 filas) -->
+  <section class="my-10">
+    <h2 class="text-2xl font-bold text-surface-800 mb-8">Productos más vendidos</h2>
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <ng-template ngFor let-p [ngForOf]="products">
+        <app-product-card [product]="p"/>
+      </ng-template>
+    </div>
+  </section>
 </div>
+
+<app-footer></app-footer>
+
 

@@ -1,0 +1,38 @@
+<div routerLink="/product" class="min-w-[240px] max-w-[280px] h-auto bg-white border border-surface-200 rounded-lg shadow p-4 mx-auto flex flex-col gap-3 text-sm cursor-pointer transition-transform hover:scale-[1.02]">  <!-- Descuento -->
+  <div class="flex justify-between items-center w-full">
+    <p-tag [value]="product.discount" severity="danger"/>
+    <p-tag [value]="product.inventoryStatus" [severity]="getSeverity(product.inventoryStatus)"/>
+  </div>
+  <!-- Imagen del producto -->
+  <img src="/frictLogo.png" alt="MSI Sword 16" class="w-full h-35 object-contain" />
+
+  <!-- Nombre del producto -->
+  <h3 class="font-semibold text-gray-900 leading-snug">
+    {{ product.name }}
+  </h3>
+
+  <!-- Precio -->
+  <div class="flex items-center gap-2">
+    <span class="text-red-600 text-xl font-bold">{{ product.price + '€' }}</span>
+    <span class="text-surface-400 line-through text-sm">456€</span>
+  </div>
+
+  <!-- Valoración -->
+  <div class="flex items-center text-primary-500 gap-1 text-sm">
+    <span class="font-semibold">4,6/5</span>
+    <span class="pi pi-star-fill"></span>
+    <span class="text-gray-600">(321 opiniones)</span>
+  </div>
+
+  <!-- Envío -->
+  <div class="flex items-center gap-2 mt-auto">
+    <span class="pi pi-truck"></span>
+    <span class="text-gray-500 text-xs">Envío gratis</span>
+  </div>
+
+  <!-- Colores -->
+  <div class="flex items-center gap-2">
+    <span class="pi pi-sliders-v"></span>
+    <span class="text-gray-500 text-xs">3 opciones disponibles</span>
+  </div>
+</div>

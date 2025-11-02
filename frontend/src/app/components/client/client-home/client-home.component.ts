@@ -1,45 +1,42 @@
-import {Component, OnInit} from '@angular/core';
-import {Product} from '../../../models/product.model';
-import {ProductService} from '../../../services/product.service';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import {NgForOf, NgIf} from '@angular/common';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {NavbarComponent} from '../../common/navbar/navbar.component';
-import {AuthService} from '../../../services/auth.service';
-import {LoginInfo} from '../../../models/loginInfo.model';
+import {ButtonModule} from 'primeng/button';
+import {RouterLink} from '@angular/router';
+import {Carousel} from 'primeng/carousel';
+import {responsiveOptions} from '../../../app.config';
+import {FooterComponent} from '../../common/footer/footer.component';
+import {ProductCardComponent} from '../product-card/product-card.component';
 
 @Component({
   selector: 'app-client-home',
-  imports: [
-    NgForOf,
-    NgIf,
-    FontAwesomeModule,
-    NavbarComponent
-  ],
+  standalone: true,
+  imports: [CommonModule, NavbarComponent, ButtonModule, RouterLink, Carousel, FooterComponent, ProductCardComponent],
   templateUrl: './client-home.component.html',
-  styleUrl: './client-home.component.css'
+  styleUrls: ['./client-home.component.css']
 })
-export class ClientHomeComponent implements OnInit {
+export class ClientHomeComponent {
 
-  products: Product[] = [];
-  availableProducts: boolean = false;
-  loginInfo: LoginInfo;
+  products = [
+    { id: 1, name: 'Producto 1', price: '499', discount: '-10%', image: '/assets/laptop.png', inventoryStatus: 'INSTOCK' },
+    { id: 2, name: 'Producto 2', price: '189', discount: '-15%', image: '/assets/monitor.png', inventoryStatus: 'INSTOCK'  },
+    { id: 3, name: 'Producto 3', price: '699', discount: '-20%', image: '/assets/gpu.png', inventoryStatus: 'INSTOCK'  },
+    { id: 4, name: 'Producto 4', price: '79', discount: '-5%', image: '/assets/keyboard.png', inventoryStatus: 'INSTOCK'  },
+    { id: 5, name: 'Producto 5', price: '499', discount: '-10%', image: '/assets/laptop.png', inventoryStatus: 'INSTOCK' },
+    { id: 6, name: 'Producto 6', price: '189', discount: '-15%', image: '/assets/monitor.png', inventoryStatus: 'INSTOCK'  },
+    { id: 7, name: 'Producto 7', price: '699', discount: '-20%', image: '/assets/gpu.png', inventoryStatus: 'INSTOCK'  },
+    { id: 8, name: 'Producto 8', price: '79', discount: '-5%', image: '/assets/keyboard.png', inventoryStatus: 'INSTOCK'  }
+  ];
 
-  constructor(private productService: ProductService,
-              private authService: AuthService) {
-    this.loginInfo = this.authService.getDefaultLoginInfo();
-  }
+  /*constructor(private productService: ProductService) {}
 
   ngOnInit() {
-    this.authService.getLoginInfo().subscribe(info => {console.log(info); this.loginInfo = info;});
-    this.productService.getAllProducts().subscribe({
-      next: (data) => {
-        this.products = Array.isArray(data) ? data : data.products;
-        this.availableProducts = this.products.length > 0;
-      },
-      error: (err) => {
-        console.error('Error en la llamada:', err);
-      }
+    this.productService.getProductsSmall().then((products) => {
+      this.products = products;
     });
   }
 
+   */
+
+  protected readonly responsiveOptions = responsiveOptions;
 }
