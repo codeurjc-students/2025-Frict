@@ -98,7 +98,7 @@ public class ProductSystemUITest {
         double newPrice = 24.95;
 
         updatingProduct.setName(newName);
-        updatingProduct.setPrice(newPrice);
+        updatingProduct.setCurrentPrice(newPrice);
         productRepository.save(updatingProduct); //Contains the id where the product has been saved previously
 
         driver.get(BASE_URL);
@@ -133,7 +133,7 @@ public class ProductSystemUITest {
             assertFalse(productDivs.get(i).getText().contains(savedProducts.getFirst().getReferenceCode()));
             assertFalse(productDivs.get(i).getText().contains(savedProducts.getFirst().getName()));
             assertFalse(productDivs.get(i).getText().contains(savedProducts.getFirst().getDescription()));
-            assertFalse(productDivs.get(i).getText().contains(String.valueOf(savedProducts.getFirst().getPrice())));
+            assertFalse(productDivs.get(i).getText().contains(String.valueOf(savedProducts.getFirst().getCurrentPrice())));
         }
     }
 
@@ -148,7 +148,7 @@ public class ProductSystemUITest {
             assertTrue(productDivs.get(i).getText().contains(testProducts.get(i).getReferenceCode()));
             assertTrue(productDivs.get(i).getText().contains(testProducts.get(i).getName()));
             assertTrue(productDivs.get(i).getText().contains(testProducts.get(i).getDescription()));
-            assertTrue(productDivs.get(i).getText().contains(String.valueOf(testProducts.get(i).getPrice())));
+            assertTrue(productDivs.get(i).getText().contains(String.valueOf(testProducts.get(i).getCurrentPrice())));
         }
     }
 }

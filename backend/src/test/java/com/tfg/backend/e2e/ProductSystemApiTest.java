@@ -66,7 +66,7 @@ public class ProductSystemApiTest {
                 .body("products.referenceCode", hasItems(product1.getReferenceCode(), product2.getReferenceCode(), product3.getReferenceCode()))
                 .body("products.name", hasItems(product1.getName(), product2.getName(), product3.getName()))
                 .body("products.description", hasItems(product1.getDescription(), product2.getDescription(), product3.getDescription()))
-                .body("products.price", hasItems((float) product1.getPrice(), (float) product2.getPrice(), (float) product3.getPrice()));
+                .body("products.price", hasItems((float) product1.getCurrentPrice(), (float) product2.getCurrentPrice(), (float) product3.getCurrentPrice()));
     }
 
 }

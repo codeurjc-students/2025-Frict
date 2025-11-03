@@ -31,7 +31,9 @@ public class Product {
     @Column (length = 5000)
     private String description;
 
-    private double price;
+    private double previousPrice = 0.00; // when updating products
+
+    private double currentPrice;
 
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Category> categories = new HashSet<>();
@@ -55,6 +57,6 @@ public class Product {
             this.productImage = productImage;
         }
         this.description = description;
-        this.price = price;
+        this.currentPrice = price;
     }
 }

@@ -45,7 +45,7 @@ public class ProductServiceIntegrationTest {
     @Transactional
     void updateProductTest() {
         Product savedProduct = productService.save(testProduct);
-        Product modifiedProduct = new Product(testProduct.getReferenceCode(), "Patinete eléctrico", null, "Desplazamientos rápidos por ciudad", testProduct.getPrice());
+        Product modifiedProduct = new Product(testProduct.getReferenceCode(), "Patinete eléctrico", null, "Desplazamientos rápidos por ciudad", testProduct.getCurrentPrice());
         modifiedProduct.setId(savedProduct.getId());
 
         Product updatedProduct = productService.update(modifiedProduct);
@@ -74,7 +74,7 @@ public class ProductServiceIntegrationTest {
                 () -> assertEquals(p1.getReferenceCode(), p2.getReferenceCode()),
                 () -> assertEquals(p1.getName(), p2.getName()),
                 () -> assertEquals(p1.getDescription(), p2.getDescription()),
-                () -> assertEquals(p1.getPrice(), p2.getPrice())
+                () -> assertEquals(p1.getCurrentPrice(), p2.getCurrentPrice())
         );
     }
 }

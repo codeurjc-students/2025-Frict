@@ -30,7 +30,7 @@ public class ProductRestController {
 
 
     @GetMapping("/")
-    public ResponseEntity<AllProductsDTO> showAllProducts() {
+    public ResponseEntity<AllProductsDTO> getAllProducts() {
         List<Product> products = productService.findAll();
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product p: products) {
@@ -41,19 +41,18 @@ public class ProductRestController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> showProduct(@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> getProduct(@PathVariable Long id) {
         Optional<Product> product = productService.findById(id);
-        if (product.isPresent()) {
-            return ResponseEntity.ok(new ProductDTO(product.get()));
-        } else {
+        if (!product.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.ok(new ProductDTO(product.get()));
     }
 
 
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
-        Product product = new Product(productDTO.getReferenceCode(), productDTO.getName(), null, productDTO.getDescription(), productDTO.getPrice());
+        Product product = new Product(productDTO.getReferenceCode(), productDTO.getName(), null, productDTO.getDescription(), productDTO.getCurrentPrice());
         product.setCategories(new HashSet<>(categoryService.findAllById(productDTO.getCategoriesId())));
         Product savedProduct = productService.save(product);
 
@@ -78,7 +77,7 @@ public class ProductRestController {
         product.setReferenceCode(productDTO.getReferenceCode());
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
-        product.setPrice(productDTO.getPrice());
+        product.setCurrentPrice(productDTO.getCurrentPrice());
 
         Product updatedProduct = productService.update(product);
         return ResponseEntity.accepted().body(new ProductDTO(updatedProduct));
@@ -109,6 +108,7 @@ public class ProductRestController {
         Product product = productOptional.get();
         return ImageUtils.serveImage(product.getProductImage());
     }
+
 
     @PutMapping("/image/{id}")
     public ResponseEntity<String> updateProductImage(@PathVariable Long id, @RequestPart("photo") MultipartFile image) {

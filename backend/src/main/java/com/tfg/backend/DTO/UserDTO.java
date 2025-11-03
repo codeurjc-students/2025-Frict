@@ -7,26 +7,16 @@ import java.util.Set;
 
 @Getter
 @Setter
-public class FullUserDTO {
+public class UserDTO {
     private Long id;
     private String name;
     private String username;
     private String email;
-    private String photo;
+    private String imageUrl;
     private boolean banned;
     private Set<String> roles;
 
-    public FullUserDTO(String name, String username, String email, boolean banned, Set<String> roles, Long id) {
-        this.id = id;
-        this.name = name;
-        this.username = username;
-        this.email = email;
-        this.banned = banned;
-        this.roles = roles;
-        this.photo = "/api/users/img/" + id;
-    }
-
-    public FullUserDTO(User user) {
+    public UserDTO(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.username = user.getUsername();
@@ -34,6 +24,6 @@ public class FullUserDTO {
         this.banned = user.isBanned();
         this.roles = user.getRoles();
         this.id = user.getId();
-        this.photo = "/api/users/img/" + user.getId();
+        this.imageUrl = "/api/users/img/" + user.getId();
     }
 }

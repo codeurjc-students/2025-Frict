@@ -58,7 +58,7 @@ public class ProductService {
         if (p.getName() == null || p.getName().isEmpty()){
             throw new IllegalArgumentException("The title is null or empty");
         }
-        else if (p.getPrice() < 0){
+        else if (p.getCurrentPrice() < 0){
             throw new IllegalArgumentException("The price should be positive or 0");
         }
     }
