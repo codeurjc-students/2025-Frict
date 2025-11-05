@@ -42,6 +42,7 @@ public class User {
     @Column(nullable = false)
     private Blob profileImage = ImageUtils.prepareDefaultImage(User.class);
 
+    @Column(nullable = false)
     private boolean isBanned = false;
 
     @OneToMany(mappedBy = "user")

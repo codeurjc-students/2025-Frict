@@ -1,12 +1,16 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.AllProductsDTO;
+import com.tfg.backend.DTO.ProductsPageDTO;
 import com.tfg.backend.DTO.ProductDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.ImageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,13 +34,15 @@ public class ProductRestController {
 
 
     @GetMapping("/")
-    public ResponseEntity<AllProductsDTO> getAllProducts() {
-        List<Product> products = productService.findAll();
+    public ResponseEntity<ProductsPageDTO> getAllProducts(@RequestParam("page") int page, @RequestParam("size") int pageSize) {
+        Pageable pageable = PageRequest.of(0, Math.max(1, pageSize));
+        Page<Product> products = productService.findAll(pageable);
         List<ProductDTO> dtos = new ArrayList<>();
-        for (Product p: products) {
+        for (Product p : products.getContent()) {
             dtos.add(new ProductDTO(p));
         }
-        return ResponseEntity.ok(new AllProductsDTO(dtos));
+        //Page<ProductDTO> object with necessary fields only
+        return ResponseEntity.ok(new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize()));
     }
 
 
@@ -48,6 +54,7 @@ public class ProductRestController {
         }
         return ResponseEntity.ok(new ProductDTO(product.get()));
     }
+
 
 
     @PostMapping

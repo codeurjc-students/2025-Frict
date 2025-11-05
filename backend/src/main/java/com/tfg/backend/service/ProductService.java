@@ -5,6 +5,10 @@ import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +24,8 @@ public class ProductService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public List<Product> findAll() {
-        return productRepository.findAll();
+    public Page<Product> findAll(Pageable pageInfo) {
+        return productRepository.findAll(pageInfo);
     }
 
     public Optional<Product> findById(Long id) {
