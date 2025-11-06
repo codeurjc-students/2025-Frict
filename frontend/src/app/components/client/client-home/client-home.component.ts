@@ -26,6 +26,7 @@ export class ClientHomeComponent {
   recommendedProducts: Product[] = [];
   topSalesProducts: Product[] = [];
 
+  /*
   constructor(private productService: ProductService) {}
 
   ngOnInit() {
@@ -33,4 +34,6 @@ export class ClientHomeComponent {
       this.products = products;
     });
   }
+
+   */
 }

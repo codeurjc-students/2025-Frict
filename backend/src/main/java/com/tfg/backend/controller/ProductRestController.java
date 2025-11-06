@@ -8,7 +8,6 @@ import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.ImageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +34,7 @@ public class ProductRestController {
 
     @GetMapping("/")
     public ResponseEntity<ProductsPageDTO> getAllProducts(@RequestParam("page") int page, @RequestParam("size") int pageSize) {
-        Pageable pageable = PageRequest.of(0, Math.max(1, pageSize));
+        Pageable pageable = PageRequest.of(page, Math.max(1, pageSize));
         Page<Product> products = productService.findAll(pageable);
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product p : products.getContent()) {
