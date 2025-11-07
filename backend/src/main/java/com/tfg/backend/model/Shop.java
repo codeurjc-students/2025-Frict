@@ -24,8 +24,8 @@ public class Shop {
 
     private String address;
 
-    @ManyToMany(mappedBy = "shopsWithStock")
-    private Set<Product> availableProducts = new HashSet<>();
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ShopStock> availableProducts = new HashSet<>();
 
     @OneToMany(mappedBy = "assignedShop")
     private Set<Truck> assignedTrucks = new HashSet<>();

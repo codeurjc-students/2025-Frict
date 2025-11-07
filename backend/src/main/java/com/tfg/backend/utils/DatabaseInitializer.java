@@ -42,6 +42,9 @@ public class DatabaseInitializer {
     private UserRepository userRepository;
 
     @Autowired
+    private ShopStockRepository shopStockRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Value("${app.db.init}")
@@ -215,15 +218,18 @@ public class DatabaseInitializer {
 
             product1.setShopsWithStock(new HashSet<>());
             product2.setShopsWithStock(new HashSet<>());
-            product1.getShopsWithStock().add(shop1);
-            product2.getShopsWithStock().add(shop1);
             productRepository.save(product1);
             productRepository.save(product2);
 
             shop1.setAvailableProducts(new HashSet<>());
-            shop1.getAvailableProducts().add(product1);
-            shop1.getAvailableProducts().add(product2);
             shopRepository.save(shop1);
+
+            ShopStock ss1 = new ShopStock(shop1, product1, 3);
+            ShopStock ss1f = new ShopStock(shop1, product1, 4);
+            ShopStock ss2 = new ShopStock(shop1, product2, 10);
+
+            shopStockRepository.save(ss1);
+            shopStockRepository.save(ss2);
 
             Review review1 = new Review(user1, product1, 5, "Muy buen producto");
             user1.setPublishedReviews(new HashSet<>());
