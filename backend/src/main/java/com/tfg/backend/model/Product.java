@@ -35,6 +35,8 @@ public class Product {
 
     private double currentPrice;
 
+    private boolean active = true;
+
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Category> categories = new HashSet<>();
 

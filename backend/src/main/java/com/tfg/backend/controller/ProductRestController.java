@@ -31,17 +31,23 @@ public class ProductRestController {
     @Autowired
     private CategoryService categoryService;
 
+    private final int pageSize = 8;
+
 
     @GetMapping("/")
-    public ResponseEntity<ProductsPageDTO> getAllProducts(@RequestParam("page") int page, @RequestParam("size") int pageSize) {
+    public ResponseEntity<ProductsPageDTO> getAllProducts(@RequestParam("page") int page) {
         Pageable pageable = PageRequest.of(page, Math.max(1, pageSize));
         Page<Product> products = productService.findAll(pageable);
-        List<ProductDTO> dtos = new ArrayList<>();
-        for (Product p : products.getContent()) {
-            dtos.add(new ProductDTO(p));
-        }
-        //Page<ProductDTO> object with necessary fields only
-        return ResponseEntity.ok(new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize()));
+        return ResponseEntity.ok(toProductsPageDTO(products));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ProductsPageDTO> getFilteredProducts(@RequestParam("page") int page,
+                                                               @RequestParam(value = "query", required = false) String searchTerm,
+                                                               @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
+        Pageable pageable = PageRequest.of(page, Math.max(1, pageSize));
+        Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
+        return ResponseEntity.ok(toProductsPageDTO(products));
     }
 
 
@@ -128,5 +134,14 @@ public class ProductRestController {
         product.setProductImage(productPhoto);
         productService.save(product);
         return ResponseEntity.ok().build();
+    }
+
+    //Creates Page<ProductDTO> objects with necessary fields only
+    private ProductsPageDTO toProductsPageDTO(Page<Product> products){
+        List<ProductDTO> dtos = new ArrayList<>();
+        for (Product p : products.getContent()) {
+            dtos.add(new ProductDTO(p));
+        }
+        return new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
     }
 }

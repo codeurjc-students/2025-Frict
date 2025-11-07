@@ -28,6 +28,10 @@ public class ProductService {
         return productRepository.findAll(pageInfo);
     }
 
+    public Page<Product> findByFilters(String searchTerm, List<Long> categoryIds, Pageable pageInfo) {
+        return productRepository.findByFilters(searchTerm, categoryIds, pageInfo);
+    }
+
     public Optional<Product> findById(Long id) {
         return productRepository.findById(id);
     }
