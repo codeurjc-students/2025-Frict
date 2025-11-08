@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {ButtonModule} from 'primeng/button';
@@ -18,22 +18,31 @@ import {ProductService} from '../../../services/product.service';
   templateUrl: './client-home.component.html',
   styleUrls: ['./client-home.component.css']
 })
-export class ClientHomeComponent {
+export class ClientHomeComponent implements OnInit {
 
   protected readonly responsiveOptions = responsiveOptions;
 
-  relatedProducts: Product[] = [];
+  featuredProducts: Product[] = [];
   recommendedProducts: Product[] = [];
   topSalesProducts: Product[] = [];
 
-  /*
   constructor(private productService: ProductService) {}
 
   ngOnInit() {
-    this.productService.getProductsSmall().then((products) => {
-      this.products = products;
-    });
+    this.productService.getProductsByCategoryName("Destacado").subscribe({
+      next: (products) => {
+          this.featuredProducts = products.products;
+      }
+    })
+    this.productService.getProductsByCategoryName("Top ventas").subscribe({
+      next: (products) => {
+        this.topSalesProducts = products.products;
+      }
+    })
+    this.productService.getProductsByCategoryName("Recomendado").subscribe({
+      next: (products) => {
+        this.recommendedProducts = products.products;
+      }
+    })
   }
-
-   */
 }

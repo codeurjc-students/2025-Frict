@@ -28,7 +28,7 @@
   <!-- Sección Ofertas Top (carrusel) -->
   <section class="my-10">
     <h2 class="text-2xl font-bold text-surface-800 mb-8">Destacados de la semana</h2>
-    <p-carousel [value]="products" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
+    <p-carousel [value]="featuredProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
       <ng-template let-p pTemplate="item">
         <div class="p-2 h-full w-full">
           <app-product-card [product]="p" class="max-w-[280px] mx-auto block"/>
@@ -80,7 +80,7 @@
   <!-- Sección Basado en búsqueda (carrusel) -->
   <section class="my-10">
     <h2 class="text-2xl font-bold text-surface-800 mb-8">Basado en tus búsquedas</h2>
-    <p-carousel [value]="products" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
+    <p-carousel [value]="recommendedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
       <ng-template let-p pTemplate="item">
         <div class="p-2 h-full w-full">
           <app-product-card [product]="p" class="max-w-[280px] mx-auto block"/>
@@ -93,7 +93,7 @@
   <section class="my-10">
     <h2 class="text-2xl font-bold text-surface-800 mb-8">Productos más vendidos</h2>
     <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      <ng-template ngFor let-p [ngForOf]="products">
+      <ng-template ngFor let-p [ngForOf]="topSalesProducts">
         <app-product-card [product]="p"/>
       </ng-template>
     </div>

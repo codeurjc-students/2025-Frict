@@ -13,8 +13,8 @@
 
   <!-- Precio -->
   <div class="flex items-center gap-2">
-    <span class="text-red-600 text-xl font-bold">{{ product.price + '€' }}</span>
-    <span class="text-surface-400 line-through text-sm">456€</span>
+    <span class="text-red-600 text-xl font-bold">{{ product.currentPrice + '€' }}</span>
+    <span class="text-surface-400 line-through text-sm">{{ product.previousPrice + '€' }}</span>
   </div>
 
   <!-- Valoración -->

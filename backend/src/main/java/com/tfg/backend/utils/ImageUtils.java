@@ -14,17 +14,17 @@ import java.sql.SQLException;
 
 public class ImageUtils {
 
-    public static ResponseEntity<byte[]> serveImage(Blob photoBlob){
-        if (photoBlob == null) {
+    public static ResponseEntity<byte[]> serveImage(Blob imageBlob){
+        if (imageBlob == null) {
             return ResponseEntity.notFound().build();
         }
 
         try {
-            byte[] photoBytes = photoBlob.getBytes(1, (int) photoBlob.length());
+            byte[] imageBytes = imageBlob.getBytes(1, (int) imageBlob.length());
             return ResponseEntity
                     .ok()
                     .contentType(MediaType.IMAGE_JPEG)
-                    .body(photoBytes);
+                    .body(imageBytes);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -51,8 +51,8 @@ public class ImageUtils {
                 default -> throw new IllegalArgumentException("No se ha definido una foto por defecto para la clase: " + entityClass.getSimpleName());
             };
             ClassPathResource imgFile = new ClassPathResource(imagePath);
-            byte[] photoBytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
-            return new SerialBlob(photoBytes);
+            byte[] imageBytes = StreamUtils.copyToByteArray(imgFile.getInputStream());
+            return new SerialBlob(imageBytes);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         }

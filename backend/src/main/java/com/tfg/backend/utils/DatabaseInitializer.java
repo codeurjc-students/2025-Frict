@@ -55,12 +55,12 @@ public class DatabaseInitializer {
         if (initEnabled) {
             // 1. Default images
             ClassPathResource defaultProductImgFile = new ClassPathResource("static/img/defaultProductImage.jpg");
-            byte[] defaultProductPhotoBytes = StreamUtils.copyToByteArray(defaultProductImgFile.getInputStream());
-            Blob defaultProductBlob = new SerialBlob(defaultProductPhotoBytes);
+            byte[] defaultProductImageBytes = StreamUtils.copyToByteArray(defaultProductImgFile.getInputStream());
+            Blob defaultProductBlob = new SerialBlob(defaultProductImageBytes);
 
             ClassPathResource defaultCategoryImgFile = new ClassPathResource("static/img/defaultCategoryImage.jpg");
-            byte[] defaultCategoryPhotoBytes = StreamUtils.copyToByteArray(defaultCategoryImgFile.getInputStream());
-            Blob defaultCategoryBlob = new SerialBlob(defaultCategoryPhotoBytes);
+            byte[] defaultCategoryImageBytes = StreamUtils.copyToByteArray(defaultCategoryImgFile.getInputStream());
+            Blob defaultCategoryBlob = new SerialBlob(defaultCategoryImageBytes);
 
             // 2. Independent entities
             User user1 = userRepository.save(new User("Usuario", "user", "user@gmail.com", "CallePorDefecto1", passwordEncoder.encode("pass"), "USER"));

@@ -123,15 +123,15 @@ public class ProductRestController {
 
 
     @PutMapping("/image/{id}")
-    public ResponseEntity<String> updateProductImage(@PathVariable Long id, @RequestPart("photo") MultipartFile image) {
+    public ResponseEntity<String> updateProductImage(@PathVariable Long id, @RequestPart("image") MultipartFile image) {
         Optional<Product> productOptional = productService.findById(id);
         if (productOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Product product = productOptional.get();
 
-        Blob productPhoto = ImageUtils.prepareImage(image);
-        product.setProductImage(productPhoto);
+        Blob productImage = ImageUtils.prepareImage(image);
+        product.setProductImage(productImage);
         productService.save(product);
         return ResponseEntity.ok().build();
     }

@@ -46,15 +46,15 @@ public class UserRestController {
 
 
     @PutMapping("/image/{id}")
-    public ResponseEntity<String> updateUserImage(@PathVariable Long id, @RequestPart("photo") MultipartFile image) {
+    public ResponseEntity<String> updateUserImage(@PathVariable Long id, @RequestPart("image") MultipartFile image) {
         Optional<User> userOptional = userService.findById(id);
         if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         User user = userOptional.get();
 
-        Blob profilePhoto = ImageUtils.prepareImage(image);
-        user.setProfileImage(profilePhoto);
+        Blob profileImage = ImageUtils.prepareImage(image);
+        user.setProfileImage(profileImage);
         userService.save(user);
         return ResponseEntity.ok().build();
     }
