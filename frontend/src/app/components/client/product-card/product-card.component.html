@@ -1,4 +1,4 @@
-<div routerLink="/product" class="min-w-[240px] max-w-[280px] h-auto bg-white border border-surface-200 rounded-lg shadow p-4 mx-auto flex flex-col gap-3 text-sm cursor-pointer transition-transform hover:scale-[1.02]">
+<div [routerLink]="['/product', product.id]" class="min-w-[240px] max-w-[280px] h-auto bg-white border border-surface-200 rounded-lg shadow p-4 mx-auto flex flex-col gap-3 text-sm cursor-pointer transition-transform hover:scale-[1.02]">
 
   <div class="relative w-full h-auto">
     <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-auto rounded-lg" />
@@ -22,9 +22,9 @@
   </div>
 
   <div class="flex items-center text-primary-500 gap-1 text-sm">
-    <span class="font-semibold">4,6/5</span>
+    <span class="font-semibold">{{ formatRating(product.averageRating) }}/5</span>
     <span class="pi pi-star-fill"></span>
-    <span class="text-gray-600">(321 opiniones)</span>
+    <span class="text-gray-600">({{ product.totalReviews }} opiniones)</span>
   </div>
 
   <div class="flex items-center gap-2 mt-auto">
@@ -34,6 +34,6 @@
 
   <div class="flex items-center gap-2">
     <span class="pi pi-sliders-v"></span>
-    <span class="text-gray-500 text-xs">3 opciones disponibles</span>
+    <span class="text-gray-500 text-xs">Opciones disponibles</span>
   </div>
 </div>

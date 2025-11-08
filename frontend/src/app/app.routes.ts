@@ -14,7 +14,7 @@ const icons: Record<'client' | 'admin', string> = {
 export const routes: Routes = [
   //Client side routes (anon users, registered users and store managers)
   { path: '', component: ClientHomeComponent, data: { title: 'Inicio - MiTienda', icon: icons.client } },
-  { path: 'product', component: ProductInfoComponent, data: { title: 'Producto - MiTienda', icon: icons.client } },
+  { path: 'product/:id', component: ProductInfoComponent, data: { title: 'Producto - MiTienda', icon: icons.client } },
 
 
   //Common routes

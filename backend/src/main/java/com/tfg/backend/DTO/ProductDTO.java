@@ -2,6 +2,8 @@ package com.tfg.backend.DTO;
 
 import com.tfg.backend.model.Category;
 import com.tfg.backend.model.Product;
+import com.tfg.backend.model.Review;
+import com.tfg.backend.model.ShopStock;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.Set;
@@ -18,8 +20,10 @@ public class ProductDTO {
     private double previousPrice;
     private double currentPrice;
     private String discount;
-    private int availableUnits = 0; //Filled outside the constructor (toProductsPageDTO method)
     private Set<Long> categoriesId;
+    private int availableUnits;
+    private double averageRating;
+    private int totalReviews;
 
     public ProductDTO(Product p) {
         this.id = p.getId();
@@ -34,5 +38,24 @@ public class ProductDTO {
         }
         else this.discount = "0%";
         this.categoriesId = p.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toSet());
+
+        //Available units
+        int totalUnits = 0;
+        for (ShopStock s : p.getShopsStock()) {
+            totalUnits += s.getStock();
+        }
+        this.availableUnits = totalUnits;
+
+        //Total reviews and average rating
+        double totalRating = 0.0;
+        Set<Review> reviews = p.getReviews();
+        this.totalReviews = reviews.size();
+        if (!reviews.isEmpty()){
+            for (Review r : reviews) {
+                totalRating += r.getRating();
+            }
+            this.averageRating = totalRating / reviews.size();
+        }
+        else this.averageRating = totalRating;
     }
 }

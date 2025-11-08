@@ -225,20 +225,15 @@ public class DatabaseInitializer {
             shopRepository.save(shop1);
 
             ShopStock ss1 = new ShopStock(shop1, product1, 3);
-            ShopStock ss1f = new ShopStock(shop1, product1, 4);
             ShopStock ss2 = new ShopStock(shop1, product2, 10);
 
             shopStockRepository.save(ss1);
             shopStockRepository.save(ss2);
 
             Review review1 = new Review(user1, product1, 5, "Muy buen producto");
-            user1.setPublishedReviews(new HashSet<>());
-            user1.getPublishedReviews().add(review1);
-
+            Review review2 = new Review(user2, product1, 2, "Desastroso");
             reviewRepository.save(review1);
-            product1.getReviews().add(review1);
-            userRepository.save(user1);
-            productRepository.save(product1);
+            reviewRepository.save(review2);
 
             System.out.println("Base de datos inicializada con datos por defecto.");
         }

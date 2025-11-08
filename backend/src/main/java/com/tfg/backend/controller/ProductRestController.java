@@ -141,7 +141,6 @@ public class ProductRestController {
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product p : products.getContent()) {
             ProductDTO dto = new ProductDTO(p);
-            dto.setAvailableUnits(productService.findAvailableUnits(p.getId()));
             dtos.add(dto);
         }
         return new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());

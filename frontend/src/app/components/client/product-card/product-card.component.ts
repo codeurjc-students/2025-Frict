@@ -3,7 +3,7 @@ import {RouterLink} from "@angular/router";
 import {Tag} from "primeng/tag";
 import {Product} from '../../../models/product.model';
 import {NgIf} from '@angular/common';
-import {formatPrice} from '../../../utils/priceFormat.util';
+import {formatPrice, formatRating} from '../../../utils/numberFormat.util';
 
 @Component({
   selector: 'app-product-card',
@@ -39,4 +39,6 @@ export class ProductCardComponent {
   }
 
   protected readonly formatPrice = formatPrice;
+  protected readonly formatNumber = formatPrice;
+  protected readonly formatRating = formatRating;
 }

@@ -1,6 +1,7 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.Product;
+import com.tfg.backend.model.Review;
 import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.repository.ProductRepository;
@@ -32,19 +33,6 @@ public class ProductService {
 
     public Page<Product> findByFilters(String searchTerm, List<Long> categoryIds, Pageable pageInfo) {
         return productRepository.findByFilters(searchTerm, categoryIds, pageInfo);
-    }
-
-    public int findAvailableUnits(Long id) {
-        Optional<Product> productOptional = productRepository.findById(id);
-        if(!productOptional.isPresent()){
-            return 0;
-        }
-        Set<ShopStock> units = productOptional.get().getShopsStock();
-        int availableUnits = 0;
-        for (ShopStock s : units) {
-            availableUnits += s.getStock();
-        }
-        return availableUnits;
     }
 
     public Optional<Product> findById(Long id) {
