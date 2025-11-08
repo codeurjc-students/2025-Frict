@@ -140,7 +140,9 @@ public class ProductRestController {
     private ProductsPageDTO toProductsPageDTO(Page<Product> products){
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product p : products.getContent()) {
-            dtos.add(new ProductDTO(p));
+            ProductDTO dto = new ProductDTO(p);
+            dto.setAvailableUnits(productService.findAvailableUnits(p.getId()));
+            dtos.add(dto);
         }
         return new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
     }

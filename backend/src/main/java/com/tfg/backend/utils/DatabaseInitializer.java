@@ -216,8 +216,8 @@ public class DatabaseInitializer {
             userRepository.save(user1);
             userRepository.save(user2);
 
-            product1.setShopsWithStock(new HashSet<>());
-            product2.setShopsWithStock(new HashSet<>());
+            product1.setShopsStock(new HashSet<>());
+            product2.setShopsStock(new HashSet<>());
             productRepository.save(product1);
             productRepository.save(product2);
 

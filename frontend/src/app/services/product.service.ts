@@ -35,10 +35,9 @@ export class ProductService {
       params = params.set('query', '');
     }
 
-    if (categoryIds && categoryIds.length > 0) {
-      const idsAsString = categoryIds.join(',');
-      params = params.set('categoryIds', idsAsString);
-    }
+    categoryIds.forEach(id => {
+      params = params.append('categoryId', id.toString());
+    });
 
     return this.http.get<ProductsPage>(this.apiUrl + `/filter`, { params });
   }

@@ -6,5 +6,7 @@ export interface Product {
   description: string;
   previousPrice: number;
   currentPrice: number;
+  discount: string;
+  availableUnits: number;
   categoriesId: number[];
 }

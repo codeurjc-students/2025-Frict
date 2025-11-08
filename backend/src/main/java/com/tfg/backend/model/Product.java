@@ -47,7 +47,7 @@ public class Product {
     private Set<Order> orders = new HashSet<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ShopStock> shopsWithStock = new HashSet<>();
+    private Set<ShopStock> shopsStock = new HashSet<>();
 
     public Product() {
     }
