@@ -1,0 +1,18 @@
+<div *ngIf="loading" class="w-full h-75 rounded-xl bg-surface-100 p-6 flex justify-center items-center text-surface-700">
+  <p-progress-spinner strokeWidth="4" fill="transparent" animationDuration="1s" [style]="{ width: '2rem', height: '2rem' }" />
+  <span class="m-6 font-semibold">{{ loadingText }}</span>
+</div>
+
+<div *ngIf="!loading && error" class="w-full h-75 rounded-xl bg-red-50 p-6 flex justify-center items-center text-red-700">
+
+  <i class="pi pi-exclamation-triangle" style="font-size: 2rem"></i>
+
+  <span class="m-6 font-semibold">{{ errorText }}</span>
+</div>
+
+<div *ngIf="!loading && !error && numElements == 0" class="w-full h-75 rounded-xl bg-blue-50 p-6 flex justify-center items-center text-blue-500">
+
+  <i class="pi pi-info-circle" style="font-size: 2rem"></i>
+
+  <span class="m-6 font-semibold">No hay {{ elementsType }} disponibles.</span>
+</div>
