@@ -28,7 +28,7 @@ public class ProductApiIntegrationTest {
     private String referenceCode = "4A5";
     private String name = "Aspiradora inteligente";
     private String description = "Limpieza sin límites";
-    private double price = 130.99;
+    private double currentPrice = 130.99;
 
     @BeforeEach
     public void setUp() {
@@ -49,7 +49,7 @@ public class ProductApiIntegrationTest {
                 .body("referenceCode", equalTo(referenceCode))
                 .body("name", equalTo(name))
                 .body("description", equalTo(description))
-                .body("price", equalTo((float) price));
+                .body("currentPrice", equalTo((float) currentPrice));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class ProductApiIntegrationTest {
                 .body("referenceCode", equalTo(referenceCode))
                 .body("name", equalTo(name))
                 .body("description", equalTo(description))
-                .body("price", equalTo((float) price));
+                .body("currentPrice", equalTo((float) currentPrice));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class ProductApiIntegrationTest {
 
 
     private Response createProduct() {
-        ProductRequest product = new ProductRequest(referenceCode, name, description, price);
+        ProductRequest product = new ProductRequest(referenceCode, name, description, currentPrice);
         return given()
                 .contentType(CONTENT_TYPE)
                 .body(product) //Serialized with Jackson
@@ -101,7 +101,7 @@ public class ProductApiIntegrationTest {
     }
 
     private Response updateProduct(String productId) {
-        ProductRequest product = new ProductRequest(referenceCode, name, description, price);
+        ProductRequest product = new ProductRequest(referenceCode, name, description, currentPrice);
         return given()
                 .contentType(CONTENT_TYPE)
                 .pathParam("id", productId)
@@ -129,13 +129,13 @@ public class ProductApiIntegrationTest {
         public String referenceCode;
         public String name;
         public String description;
-        public double price;
+        public double currentPrice;
 
-        public ProductRequest(String referenceCode, String name, String description, double price) {
+        public ProductRequest(String referenceCode, String name, String description, double currentPrice) {
             this.referenceCode = referenceCode;
             this.name = name;
             this.description = description;
-            this.price = price;
+            this.currentPrice = currentPrice;
         }
     }
 }

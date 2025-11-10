@@ -14,7 +14,9 @@ import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -197,16 +199,16 @@ public class DatabaseInitializer {
             shop1.getAssignedTrucks().add(truck2);
             shopRepository.save(shop1);
 
-            Order order1 = new Order("23456", truck1, user1, 5000, 192.53f);
-            Order order2 = new Order("56789", truck2, user1, 10000, 83.78f);
+            List<Product> productsOrder1 = new ArrayList<>();
+            productsOrder1.add(product1);
+            productsOrder1.add(product2);
 
-            order1.setProducts(new HashSet<>());
-            order1.getProducts().add(product1);
-            order1.getProducts().add(product2);
+            List<Product> productsOrder2 = new ArrayList<>();
+            productsOrder2.add(product1);
+            productsOrder2.add(product3);
 
-            order2.setProducts(new HashSet<>());
-            order2.getProducts().add(product1);
-            order2.getProducts().add(product3);
+            Order order1 = new Order("23456", user1, productsOrder1, truck1, 5000, 192.53f);
+            Order order2 = new Order("56789", user2, productsOrder2, truck1, 10000, 83.78f);
 
             orderRepository.save(order1);
             orderRepository.save(order2);

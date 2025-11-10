@@ -5,6 +5,7 @@ import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.ProductRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,10 @@ import static org.hamcrest.Matchers.hasItems;
 //SERVER SIDE SYSTEM TESTS
 @SpringBootTest(
         classes = BackendApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "app.db.init=false" // Do not run DatabaseInitializer class in order to make finding created products easier with paginated responses
+        }
 )
 public class ProductSystemApiTest {
 
@@ -58,9 +62,11 @@ public class ProductSystemApiTest {
     @Test
     public void createAndRetrieveProductsTest() {
         given()
+                .queryParam("page", 0) //As default page size is 8, 3 created products will always be in page 0
                 .when()
                 .get("/")
                 .then()
+                //.log().all()
                 .statusCode(200)
                 .contentType(CONTENT_TYPE)
                 .body("products.referenceCode", hasItems(product1.getReferenceCode(), product2.getReferenceCode(), product3.getReferenceCode()))

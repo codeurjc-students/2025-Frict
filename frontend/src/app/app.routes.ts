@@ -3,6 +3,7 @@ import {LoginComponent} from './components/common/login/login.component';
 import {ClientHomeComponent} from './components/client/client-home/client-home.component';
 import {SignupComponent} from './components/common/signup/signup.component';
 import {ErrorComponent} from './components/common/error/error.component';
+import {SearchComponent} from './components/common/search/search.component';
 import {ProductInfoComponent} from './components/client/product-info/product-info.component';
 
 
@@ -14,7 +15,8 @@ const icons: Record<'client' | 'admin', string> = {
 export const routes: Routes = [
   //Client side routes (anon users, registered users and store managers)
   { path: '', component: ClientHomeComponent, data: { title: 'Inicio - MiTienda', icon: icons.client } },
-  { path: 'product/:id', component: ProductInfoComponent, data: { title: 'Producto - MiTienda', icon: icons.client } },
+  { path: 'product', component: ProductInfoComponent, data: { title: 'Producto - MiTienda', icon: icons.client } },
+  { path: 'search', component: SearchComponent, data: { title: 'Búsqueda - MiTienda', icon: icons.client } },
 
 
   //Common routes

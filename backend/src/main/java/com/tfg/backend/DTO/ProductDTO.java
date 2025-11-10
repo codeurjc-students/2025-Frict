@@ -6,6 +6,8 @@ import com.tfg.backend.model.Review;
 import com.tfg.backend.model.ShopStock;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.HashSet;
 import java.util.Set;
 
 //More fields than the original product, as they are calculated and sent from other parts of the backend
@@ -20,10 +22,13 @@ public class ProductDTO {
     private double previousPrice;
     private double currentPrice;
     private String discount;
-    private Set<Long> categoriesId;
+    private Set<Long> categoriesId = new HashSet<>();
     private int availableUnits;
     private double averageRating;
     private int totalReviews;
+
+    public ProductDTO() { //Used by Spring to achieve conversion between JSON responses that do not include all fields
+    }
 
     public ProductDTO(Product p) {
         this.id = p.getId();

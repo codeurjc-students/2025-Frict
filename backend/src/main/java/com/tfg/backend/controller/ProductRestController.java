@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.ProductsPageDTO;
 import com.tfg.backend.DTO.ProductDTO;
+import com.tfg.backend.model.Order;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
@@ -90,6 +91,7 @@ public class ProductRestController {
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setCurrentPrice(productDTO.getCurrentPrice());
+        product.setCategories(new HashSet<>(categoryService.findAllById(productDTO.getCategoriesId())));
 
         Product updatedProduct = productService.update(product);
         return ResponseEntity.accepted().body(new ProductDTO(updatedProduct));
@@ -104,7 +106,11 @@ public class ProductRestController {
         }
         Product product = productOptional.get();
 
-        //For the moment, product relations with orders are not taken into account
+        //Option 1 (active): delete intermediate table relations from Order entities -> Order info will not contain deleted products info
+        //Option 2: Apply soft delete to products by adding a "deleted" boolean field -> No product removal, all orders will access products info, manage not retrieving deleted products info
+        for (Order o : product.getOrders()) {
+            o.getProducts().remove(product); // Quita el producto de la colección
+        }
         productService.deleteById(id);
 
         return ResponseEntity.status(200).body(new ProductDTO(product));
