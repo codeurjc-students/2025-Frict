@@ -1,7 +1,7 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.tfg.backend.utils.PhotoUtils;
+import com.tfg.backend.utils.ImageUtils;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +30,7 @@ public class User {
 	private String encodedPassword;
 
 	@ElementCollection(fetch = FetchType.EAGER)
-	private List<String> roles;
+	private Set<String> roles;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -40,8 +40,9 @@ public class User {
 
     @Lob
     @Column(nullable = false)
-    private Blob profilePhoto = PhotoUtils.setDefaultPhoto(User.class);
+    private Blob profileImage = ImageUtils.prepareDefaultImage(User.class);
 
+    @Column(nullable = false)
     private boolean isBanned = false;
 
     @OneToMany(mappedBy = "user")
@@ -57,7 +58,7 @@ public class User {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
-        this.roles = List.of(roles);
+        this.roles = Set.of(roles);
         this.email = email;
         this.address = address;
     }

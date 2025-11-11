@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,8 +25,10 @@ public class Order {
     @ManyToOne
     private User user;
 
+    private int totalProducts = 0; //If totalProducts does not match products list size, it means some of the associated products were deleted
+
     @ManyToMany
-    private Set<Product> products = new HashSet<>();
+    private List<Product> products = new ArrayList<>(); //Needs to be a list as it must allow saving the same product more than one time
 
     @ManyToOne
     private Truck assignedTruck;
@@ -36,10 +40,12 @@ public class Order {
     public Order() {
     }
 
-    public Order(String referenceCode, Truck assignedTruck, User user, int estimatedCompletionTime, float totalAmount) {
+    public Order(String referenceCode, User user, List<Product> products, Truck assignedTruck, int estimatedCompletionTime, float totalAmount) {
         this.referenceCode = referenceCode;
-        this.assignedTruck = assignedTruck;
         this.user = user;
+        this.products = products;
+        this.totalProducts = products.size();
+        this.assignedTruck = assignedTruck;
         this.estimatedCompletionTime = estimatedCompletionTime;
         this.totalAmount = totalAmount;
     }

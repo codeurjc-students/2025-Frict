@@ -19,7 +19,7 @@ export class SignupComponent {
 
   registerForm: FormGroup;
   showPassword = false;
-  selectedPhoto: File | null = null;
+  selectedImage: File | null = null;
 
   constructor(private fb: FormBuilder, private authService: AuthService, private userService: UserService, private router: Router) {
     this.registerForm = this.fb.nonNullable.group({
@@ -38,7 +38,7 @@ export class SignupComponent {
   onSubmit() {
     this.authService.signup(this.registerForm.value).subscribe({
       next: (response) => { //Backend returns some fields, one of them being the id of the user created
-        if (this.selectedPhoto) { this.uploadUserImage(response.id, this.selectedPhoto);}
+        if (this.selectedImage) { this.uploadUserImage(response.id, this.selectedImage);}
         else{ this.router.navigate(["/login"]); }
       },
       error: () => {
@@ -47,8 +47,8 @@ export class SignupComponent {
     })
   }
 
-  private uploadUserImage(id: string, selectedPhoto: File) {
-    this.userService.uploadUserImage(id, selectedPhoto).subscribe({
+  private uploadUserImage(id: string, selectedImage: File) {
+    this.userService.uploadUserImage(id, selectedImage).subscribe({
       next: () => {
         this.router.navigate([`/login`]);
       },
@@ -59,10 +59,10 @@ export class SignupComponent {
     })
   }
 
-  changeSelectedPhoto(event: Event) {
+  changeSelectedImage(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input && input.files && input.files.length) {
-      this.selectedPhoto = input.files[0];
+      this.selectedImage = input.files[0];
     }
   }
 }

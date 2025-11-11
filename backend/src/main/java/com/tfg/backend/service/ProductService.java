@@ -1,15 +1,22 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.Product;
+import com.tfg.backend.model.Review;
+import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class ProductService {
@@ -20,8 +27,12 @@ public class ProductService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public List<Product> findAll() {
-        return productRepository.findAll();
+    public Page<Product> findAll(Pageable pageInfo) {
+        return productRepository.findAll(pageInfo);
+    }
+
+    public Page<Product> findByFilters(String searchTerm, List<Long> categoryIds, Pageable pageInfo) {
+        return productRepository.findByFilters(searchTerm, categoryIds, pageInfo);
     }
 
     public Optional<Product> findById(Long id) {
@@ -58,7 +69,7 @@ public class ProductService {
         if (p.getName() == null || p.getName().isEmpty()){
             throw new IllegalArgumentException("The title is null or empty");
         }
-        else if (p.getPrice() < 0){
+        else if (p.getCurrentPrice() < 0){
             throw new IllegalArgumentException("The price should be positive or 0");
         }
     }

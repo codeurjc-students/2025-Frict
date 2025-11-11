@@ -44,7 +44,7 @@ public class ProductServiceTest {
         assertEquals(testProduct.getReferenceCode(), savedProduct.getReferenceCode());
         assertEquals(testProduct.getName(), savedProduct.getName());
         assertEquals(testProduct.getDescription(), savedProduct.getDescription());
-        assertEquals(testProduct.getPrice(), savedProduct.getPrice());
+        assertEquals(testProduct.getCurrentPrice(), savedProduct.getCurrentPrice());
 
         verify(productRepository, times(1)).save(testProduct);
     }
@@ -91,7 +91,7 @@ public class ProductServiceTest {
         assertEquals("5A6", savedProduct.getReferenceCode());
         assertEquals("Ratón inalámbrico", savedProduct.getName());
         assertEquals("Sin necesidad de cable", savedProduct.getDescription());
-        assertEquals(89.95, savedProduct.getPrice());
+        assertEquals(89.95, savedProduct.getCurrentPrice());
 
         verify(productRepository, times(1)).save(updatedProduct);
     }

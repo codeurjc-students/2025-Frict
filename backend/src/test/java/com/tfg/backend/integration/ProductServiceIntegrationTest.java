@@ -45,7 +45,7 @@ public class ProductServiceIntegrationTest {
     @Transactional
     void updateProductTest() {
         Product savedProduct = productService.save(testProduct);
-        Product modifiedProduct = new Product(testProduct.getReferenceCode(), "Patinete eléctrico", null, "Desplazamientos rápidos por ciudad", testProduct.getPrice());
+        Product modifiedProduct = new Product(testProduct.getReferenceCode(), "Patinete eléctrico", null, "Desplazamientos rápidos por ciudad", testProduct.getCurrentPrice());
         modifiedProduct.setId(savedProduct.getId());
 
         Product updatedProduct = productService.update(modifiedProduct);
@@ -64,7 +64,7 @@ public class ProductServiceIntegrationTest {
         productService.deleteById(productId);
 
         assertAll(
-                () -> assertFalse(productRepository.existsById(productId), "The product has to be deleted fron the database"),
+                () -> assertFalse(productRepository.existsById(productId), "The product has to be deleted from the database"),
                 () -> assertTrue(productRepository.findById(productId).isEmpty(), "The product has already been found in the database")
         );
     }
@@ -74,7 +74,7 @@ public class ProductServiceIntegrationTest {
                 () -> assertEquals(p1.getReferenceCode(), p2.getReferenceCode()),
                 () -> assertEquals(p1.getName(), p2.getName()),
                 () -> assertEquals(p1.getDescription(), p2.getDescription()),
-                () -> assertEquals(p1.getPrice(), p2.getPrice())
+                () -> assertEquals(p1.getCurrentPrice(), p2.getCurrentPrice())
         );
     }
 }

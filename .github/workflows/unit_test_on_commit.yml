@@ -40,4 +40,4 @@ jobs:
         run: npm ci
 
       - name: Run client unit tests
-        run: ng test --watch=false
+        run: ng test --watch=false --browsers=ChromeHeadlessNoSandbox

@@ -50,7 +50,7 @@ export class NavbarComponent {
   items: MenuItem[] | undefined;
 
   ngOnInit() {
-    window.addEventListener('scroll', () => this.menu.hide());
+    //window.addEventListener('scroll', () => this.menu.hide());
     this.items = [
       {
         label: 'Notificación 1',

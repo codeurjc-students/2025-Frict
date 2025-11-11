@@ -4,3 +4,8 @@
 @import "primeicons/primeicons.css";
 @plugin "tailwindcss-primeui";
 @layer tailwind, primeng;
+
+.p-progress-spinner .p-progress-spinner-spin .p-progress-spinner-circle {
+  stroke: #ef4444 !important; /* Tailwind's red-500 */
+  animation: none !important;
+}

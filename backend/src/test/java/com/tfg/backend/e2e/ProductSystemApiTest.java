@@ -5,6 +5,7 @@ import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.ProductRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,13 +13,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.util.Set;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItems;
 
 //SERVER SIDE SYSTEM TESTS
 @SpringBootTest(
         classes = BackendApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "app.db.init=false" // Do not run DatabaseInitializer class in order to make finding created products easier with paginated responses
+        }
 )
 public class ProductSystemApiTest {
 
@@ -31,8 +37,7 @@ public class ProductSystemApiTest {
     //Sample products
     Product product1 = new Product("4I4", "Auriculares inalámbricos", null, "Auriculares con cancelación de ruido y Bluetooth 5.0", 120.0);
     Product product2 = new Product("2G2", "Monitor 24\" Full HD", null, "Monitor con panel IPS y colores precisos", 175.0);
-    Product product3 = new Product("1F1", "Teclado mecánico", null, "Teclado RGB con switches táctiles y anti-ghosting", 95.0
-    );
+    Product product3 = new Product("1F1", "Teclado mecánico", null, "Teclado RGB con switches táctiles y anti-ghosting", 95.0);
 
     private static final String CONTENT_TYPE = "application/json";
 
@@ -57,15 +62,17 @@ public class ProductSystemApiTest {
     @Test
     public void createAndRetrieveProductsTest() {
         given()
+                .queryParam("page", 0) //As default page size is 8, 3 created products will always be in page 0
                 .when()
-                .get("/all")
+                .get("/")
                 .then()
+                //.log().all()
                 .statusCode(200)
                 .contentType(CONTENT_TYPE)
                 .body("products.referenceCode", hasItems(product1.getReferenceCode(), product2.getReferenceCode(), product3.getReferenceCode()))
                 .body("products.name", hasItems(product1.getName(), product2.getName(), product3.getName()))
                 .body("products.description", hasItems(product1.getDescription(), product2.getDescription(), product3.getDescription()))
-                .body("products.price", hasItems((float) product1.getPrice(), (float) product2.getPrice(), (float) product3.getPrice()));
+                .body("products.currentPrice", hasItems((float) product1.getCurrentPrice(), (float) product2.getCurrentPrice(), (float) product3.getCurrentPrice()));
     }
 
 }

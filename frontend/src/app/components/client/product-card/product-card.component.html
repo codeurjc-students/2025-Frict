@@ -1,0 +1,41 @@
+<div class="p-2">
+  <div [routerLink]="['/product', product.id]" [attr.id]="elementId" class="min-w-[240px] max-w-[280px] h-auto bg-white border border-surface-200 rounded-lg shadow p-4 mx-auto flex flex-col gap-3 text-sm cursor-pointer transition-transform hover:scale-[1.02]">
+
+    <div class="relative w-full h-auto">
+      <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-auto rounded-lg" />
+
+      <div *ngIf="product.discount.startsWith('-')" class="absolute top-2 left-2">
+        <p-tag [value]="product.discount" [severity]="product.discount.startsWith('-') ? 'danger' : 'success'"></p-tag>
+      </div>
+
+      <div *ngIf="product.availableUnits <= 10" class="absolute top-2 right-2">
+        <p-tag [value]="getStockMessage()" [severity]="product.availableUnits < 10 ? 'danger' : 'warn'"></p-tag>
+      </div>
+    </div>
+
+    <h3 class="font-semibold text-gray-900 leading-snug">
+      {{ product.name }}
+    </h3>
+
+    <div class="flex items-center gap-2">
+      <span class="text-red-600 text-xl font-bold">{{ formatPrice(product.currentPrice) }}</span>
+      <span *ngIf="product.previousPrice > product.currentPrice" class="text-surface-400 line-through text-sm">{{ formatPrice(product.previousPrice) }}</span>
+    </div>
+
+    <div class="flex items-center text-primary-500 gap-1 text-sm">
+      <span class="font-semibold">{{ formatRating(product.averageRating) }}/5</span>
+      <span class="pi pi-star-fill"></span>
+      <span class="text-gray-600">({{ product.totalReviews }} opiniones)</span>
+    </div>
+
+    <div class="flex items-center gap-2 mt-auto">
+      <span class="pi pi-truck"></span>
+      <span class="text-gray-500 text-xs">Envío gratis</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="pi pi-sliders-v"></span>
+      <span class="text-gray-500 text-xs">Opciones disponibles</span>
+    </div>
+  </div>
+</div>

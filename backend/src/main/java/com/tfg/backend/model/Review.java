@@ -20,13 +20,13 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
 
-    private int rating;
+    private double rating;
 
     private String text;
 
     public Review() {}
 
-    public Review(User user, Product product, int rating, String text) {
+    public Review(User user, Product product, double rating, String text) {
         this.user = user;
         this.product = product;
         this.rating = rating;
