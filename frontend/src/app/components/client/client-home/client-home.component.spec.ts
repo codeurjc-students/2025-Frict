@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ClientHomeComponent } from './client-home.component';
 import { ProductService } from '../../../services/product.service';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
+import {ClientHomeComponent} from './client-home.component';
 
 describe('ClientHomeComponent', () => {
   let fixture: ComponentFixture<ClientHomeComponent>;
