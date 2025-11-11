@@ -25,21 +25,22 @@
     </div>
   </section>
 
-  <!-- Sección Ofertas Top (carrusel) -->
+  <!-- Sección Destacados (carrusel) -->
   <section class="my-10">
     <h2 class="text-2xl font-bold text-surface-800 mb-8">Destacados de la semana</h2>
-    <ng-container *ngIf="!featuredLoading && !featuredError && featuredProducts.length; else noFeatured">
-      <p-carousel [value]="featuredProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
-        <ng-template let-p pTemplate="item">
-          <div class="p-2 h-full w-full">
-            <app-product-card [product]="p"/>
-          </div>
-        </ng-template>
-      </p-carousel>
-    </ng-container>
-    <ng-template #noFeatured>
-      <app-loading [loading]="featuredLoading" [error]="featuredError" [numElements]="featuredProducts.length" elementsType="productos destacados"/>
-    </ng-template>
+    <div id="featured-content" class="content">
+      <ng-container *ngIf="!featuredLoading && !featuredError && featuredProducts.length; else noFeatured">
+        <p-carousel [value]="featuredProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
+          <ng-template let-p pTemplate="item">
+            <app-product-card [product]="p" [elementId]="'featuredProduct-' + p.id"/>
+          </ng-template>
+        </p-carousel>
+      </ng-container>
+      <ng-template #noFeatured>
+        <app-loading [loading]="featuredLoading" [error]="featuredError" [numElements]="featuredProducts.length" elementsType="productos destacados"/>
+      </ng-template>
+    </div>
+
 
 
   </section>
@@ -81,35 +82,36 @@
   <!-- Sección Basado en búsqueda (carrusel) -->
   <section class="my-10">
     <h2 class="text-2xl font-bold text-surface-800 mb-8">Basado en tus búsquedas</h2>
-    <ng-container *ngIf="!recommendedLoading && !recommendedError && recommendedProducts.length; else noRecommended">
-      <p-carousel [value]="recommendedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
-        <ng-template let-p pTemplate="item">
-          <div class="p-2 h-full w-full">
-            <app-product-card [product]="p"/>
-          </div>
-        </ng-template>
-      </p-carousel>
-    </ng-container>
-    <ng-template #noRecommended>
-      <app-loading [loading]="recommendedLoading" [error]="recommendedError" [numElements]="recommendedProducts.length" elementsType="productos recomendados"/>
-    </ng-template>
+    <div id="recommended-content" class="content">
+      <ng-container *ngIf="!recommendedLoading && !recommendedError && recommendedProducts.length; else noRecommended">
+        <p-carousel [value]="recommendedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions">
+          <ng-template let-p pTemplate="item">
+              <app-product-card [product]="p" [elementId]="'recommendedProduct-' + p.id"/>
+          </ng-template>
+        </p-carousel>
+      </ng-container>
+      <ng-template #noRecommended>
+        <app-loading [loading]="recommendedLoading" [error]="recommendedError" [numElements]="recommendedProducts.length" elementsType="productos recomendados"/>
+      </ng-template>
+    </div>
 
   </section>
 
   <!-- Sección Productos más vendidos (2 filas) -->
   <section class="my-10">
     <h2 class="text-2xl font-bold text-surface-800 mb-8">Productos más vendidos</h2>
-    <ng-container *ngIf="!topSalesLoading && !topSalesError && topSalesProducts.length; else noTopSales">
-      <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <ng-template ngFor let-p [ngForOf]="topSalesProducts">
-          <app-product-card [product]="p"/>
-        </ng-template>
-      </div>
-    </ng-container>
-    <ng-template #noTopSales>
-      <app-loading [loading]="topSalesLoading" [error]="topSalesError" [numElements]="topSalesProducts.length" elementsType="productos top ventas"/>
-    </ng-template>
-
+    <div id="topSales-content" class="content">
+      <ng-container *ngIf="!topSalesLoading && !topSalesError && topSalesProducts.length; else noTopSales">
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <ng-template ngFor let-p [ngForOf]="topSalesProducts">
+            <app-product-card [product]="p" [elementId]="'topSalesProduct-' + p.id"/>
+          </ng-template>
+        </div>
+      </ng-container>
+      <ng-template #noTopSales>
+        <app-loading [loading]="topSalesLoading" [error]="topSalesError" [numElements]="topSalesProducts.length" elementsType="productos top ventas"/>
+      </ng-template>
+    </div>
   </section>
 </div>
 

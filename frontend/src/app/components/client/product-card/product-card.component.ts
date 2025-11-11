@@ -19,6 +19,8 @@ export class ProductCardComponent {
 
   @Input() product!: Product;
 
+  @Input() elementId: string = 'product';
+
   getStockMessage():string {
     let units = this.product.availableUnits;
     if (units <= 10 && units > 5) {

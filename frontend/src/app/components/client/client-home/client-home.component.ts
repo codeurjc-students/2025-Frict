@@ -7,7 +7,6 @@ import {Carousel} from 'primeng/carousel';
 import {responsiveOptions} from '../../../app.config';
 import {FooterComponent} from '../../common/footer/footer.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
-import {ProductsPage} from '../../../models/productsPage.model';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {LoadingComponent} from '../../common/loading/loading.component';
