@@ -11,6 +11,7 @@ import {AuthService} from '../../../services/auth.service';
     NgIf
   ],
   templateUrl: './footer.component.html',
+  standalone: true,
   styleUrl: './footer.component.css'
 })
 export class FooterComponent {

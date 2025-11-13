@@ -1,8 +1,8 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.CategoryDTO;
+import com.tfg.backend.DTO.CategoryListDTO;
 import com.tfg.backend.model.Category;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.utils.ImageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Blob;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -21,7 +23,17 @@ public class CategoryRestController {
     private CategoryService categoryService;
 
     @GetMapping("/")
-    public ResponseEntity<CategoryDTO> getCategoryByName(@RequestParam("name") String name) {
+    public ResponseEntity<CategoryListDTO> showAllProducts() {
+        List<Category> categories = categoryService.findAll();
+        List<CategoryDTO> dtos = new ArrayList<>();
+        for (Category c : categories) {
+            dtos.add(new CategoryDTO(c));
+        }
+        return ResponseEntity.ok(new CategoryListDTO(dtos));
+    }
+
+    @GetMapping("/{name}")
+    public ResponseEntity<CategoryDTO> getCategoryByName(@PathVariable String name) {
         Optional<Category> category = categoryService.findByName(name);
         if (!category.isPresent()) {
             return ResponseEntity.notFound().build();

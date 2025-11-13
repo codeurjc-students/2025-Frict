@@ -9,6 +9,7 @@ import {LoginInfo} from './models/loginInfo.model';
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.component.html',
+  standalone: true,
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {

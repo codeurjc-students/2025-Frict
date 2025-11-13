@@ -13,6 +13,7 @@ import {formatPrice, formatRating} from '../../../utils/numberFormat.util';
     NgIf
   ],
   templateUrl: './product-card.component.html',
+  standalone: true,
   styleUrl: './product-card.component.css'
 })
 export class ProductCardComponent {
