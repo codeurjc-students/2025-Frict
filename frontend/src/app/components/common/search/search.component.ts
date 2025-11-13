@@ -13,6 +13,7 @@ import {Button} from 'primeng/button';
 import {FormsModule} from '@angular/forms';
 import {Checkbox} from 'primeng/checkbox';
 import {CategoryService} from '../../../services/category.service';
+import {Drawer} from 'primeng/drawer';
 
 interface SortOption {
   name: string; // Etiqueta que se muestra
@@ -32,7 +33,8 @@ interface SortOption {
     Select,
     FormsModule,
     Button,
-    Checkbox
+    Checkbox,
+    Drawer
   ],
   templateUrl: './search.component.html',
   standalone: true,
@@ -54,6 +56,7 @@ export class SearchComponent implements OnInit {
     //In order to be able to filter by rating, as only ProductDTO objects include it after being processed, the sorting should be done in the frontend for the moment
   ];
   selectedSortOption: SortOption = this.sortOptions[0];
+  visibleDrawer: boolean = false;
 
   categories: any[] = [];
   selectedCategories: any[] = [];

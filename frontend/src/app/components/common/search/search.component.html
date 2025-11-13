@@ -34,9 +34,21 @@
     <section class="flex flex-col gap-6 w-full">
       <!-- Sorting bar -->
       <div class="flex flex-wrap justify-between items-center bg-surface-0 border border-surface-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300">
-        <p-button label="Filtrar" icon="pi pi-filter" class="xl:hidden" />
+        <p-button (click)="visibleDrawer = true" label="Filtrar" icon="pi pi-filter" class="xl:hidden" />
+        <p-drawer header="Drawer" [(visible)]="visibleDrawer" position="right" styleClass="!w-90">
+          <div class="mt-12 flex flex-col h-full overflow-y-auto">
+            <div class="flex flex-col gap-4">
+              <h2 class="font-semibold text-xl">Categorías</h2>
+              <div *ngFor="let category of categories" class="flex items-center">
+                <p-checkbox [inputId]="category.id" name="group" [value]="category" [(ngModel)]="selectedCategories" (onChange)="onCategoryChange($event)" />
+                <label [for]="category.id" class="ml-2"> {{ category.name }} </label>
+              </div>
+              <div *ngIf="!categories.length" class="text-slate-500">No hay categorías disponibles.</div>
+            </div>
+          </div>
+        </p-drawer>
         <div class="flex items-center gap-2 justify-end">
-          <label for="sort-by" class="text-sm font-medium text-surface-700 hidden sm:block">Ordenar por:</label>
+          <label for="sort-by" class="text-md font-medium text-surface-700 hidden sm:block">Ordenar por:</label>
           <p-select
             [options]="sortOptions"
             [(ngModel)]="selectedSortOption"
