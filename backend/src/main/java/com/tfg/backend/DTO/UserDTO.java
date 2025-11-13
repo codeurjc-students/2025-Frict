@@ -24,6 +24,6 @@ public class UserDTO {
         this.banned = user.isBanned();
         this.roles = user.getRoles();
         this.id = user.getId();
-        this.imageUrl = "/api/users/img/" + user.getId();
+        this.imageUrl = "/api/v1/users/image/" + user.getId();
     }
 }

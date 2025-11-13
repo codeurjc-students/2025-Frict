@@ -1,0 +1,89 @@
+<app-navbar></app-navbar>
+
+<!-- Search results bar -->
+<div class="sticky top-0 z-30 w-full border-b border-surface-200 bg-surface-50 backdrop-blur-sm shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 sm:px-8 py-4 flex items-center justify-between">
+    <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-surface-900">
+      <span class="text-primary-500 font-extrabold">{{ foundProducts.totalProducts }}</span> resultados
+      <ng-container *ngIf="searchQuery">
+        para <span class="italic text-surface-600">"{{ searchQuery }}"</span>
+      </ng-container>
+    </h1>
+  </div>
+</div>
+
+<main class="max-w-[88rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  <!-- Main grid: filters column (fixed) + content -->
+  <div class="grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-10 items-start">
+
+    <!-- Filter sidebar -->
+    <aside class="hidden xl:block sticky top-28 self-start">
+      <div class="bg-surface-0 p-6 rounded-2xl shadow-md border border-surface-200 hover:shadow-lg transition-all duration-300">
+        <div class="flex flex-col gap-4">
+          <h2 class="font-semibold text-xl">Categorías</h2>
+          <div *ngFor="let category of categories" class="flex items-center">
+            <p-checkbox [inputId]="category.id" name="group" [value]="category" [(ngModel)]="selectedCategories" (onChange)="onCategoryChange($event)" />
+            <label [for]="category.id" class="ml-2"> {{ category.name }} </label>
+          </div>
+          <div *ngIf="!categories.length" class="text-slate-500">No hay categorías disponibles.</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Products -->
+    <section class="flex flex-col gap-6 w-full">
+      <!-- Sorting bar -->
+      <div class="flex flex-wrap justify-between items-center bg-surface-0 border border-surface-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300">
+        <p-button (click)="visibleDrawer = true" label="Filtrar" icon="pi pi-filter" class="xl:hidden" />
+        <p-drawer header="Drawer" [(visible)]="visibleDrawer" position="right" styleClass="!w-90">
+          <div class="mt-12 flex flex-col h-full overflow-y-auto">
+            <div class="flex flex-col gap-4">
+              <h2 class="font-semibold text-xl">Categorías</h2>
+              <div *ngFor="let category of categories" class="flex items-center">
+                <p-checkbox [inputId]="category.id" name="group" [value]="category" [(ngModel)]="selectedCategories" (onChange)="onCategoryChange($event)" />
+                <label [for]="category.id" class="ml-2"> {{ category.name }} </label>
+              </div>
+              <div *ngIf="!categories.length" class="text-slate-500">No hay categorías disponibles.</div>
+            </div>
+          </div>
+        </p-drawer>
+        <div class="flex items-center gap-2 justify-end">
+          <label for="sort-by" class="text-md font-medium text-surface-700 hidden sm:block">Ordenar por:</label>
+          <p-select
+            [options]="sortOptions"
+            [(ngModel)]="selectedSortOption"
+            (onChange)="onSortChange()"
+            optionLabel="name"
+            styleClass="p-inputtext-sm"
+            class="w-44 sm:w-52"
+          ></p-select>
+        </div>
+      </div>
+
+      <!-- Products grid -->
+      <ng-container *ngIf="!loading && !error && foundProducts.products.length; else noProducts">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 auto-rows-[1fr] place-items-stretch">
+          <ng-template ngFor let-product [ngForOf]="foundProducts.products">
+            <app-product-card [product]="product" class="h-full"></app-product-card>
+          </ng-template>
+        </div>
+      </ng-container>
+      <ng-template #noProducts>
+        <app-loading [loading]="loading" [error]="error" [numElements]="foundProducts.products.length" elementsType="productos que coincidan con la búsqueda"></app-loading>
+      </ng-template>
+
+      <!-- Pagination menu -->
+      <div class="flex justify-center items-center mt-2 sm:mt-8 p-4 bg-surface-0 border border-surface-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+        <p-paginator
+          (onPageChange)="onPageChange($event)"
+          [first]="first"
+          [rows]="rows"
+          [totalRecords]="foundProducts.totalProducts"
+          [rowsPerPageOptions]="[10, 20, 30]"
+        ></p-paginator>
+      </div>
+    </section>
+  </div>
+</main>
+
+<app-footer></app-footer>

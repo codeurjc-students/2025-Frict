@@ -36,17 +36,15 @@ public class ProductRestController {
 
 
     @GetMapping("/")
-    public ResponseEntity<ProductsPageDTO> getAllProducts(@RequestParam("page") int page) {
-        Pageable pageable = PageRequest.of(page, Math.max(1, pageSize));
+    public ResponseEntity<ProductsPageDTO> getAllProducts(Pageable pageable) {
         Page<Product> products = productService.findAll(pageable);
         return ResponseEntity.ok(toProductsPageDTO(products));
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<ProductsPageDTO> getFilteredProducts(@RequestParam("page") int page,
+    public ResponseEntity<ProductsPageDTO> getFilteredProducts(Pageable pageable,
                                                                @RequestParam(value = "query", required = false) String searchTerm,
                                                                @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
-        Pageable pageable = PageRequest.of(page, Math.max(1, pageSize));
         Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
         return ResponseEntity.ok(toProductsPageDTO(products));
     }

@@ -29,7 +29,7 @@
       <!-- Input and button container -->
       <div class="flex w-full h-11">
         <input placeholder="Buscar productos…" type="text" [(ngModel)]="searchBarInput" class="flex-1 bg-surface-700 focus:bg-surface-900 px-3 text-sm rounded-l-xl"/>
-        <button class="bg-primary hover:bg-primary-600 text-surface-900 font-bold rounded-r-xl px-3 flex items-center">
+        <button [routerLink]="['/search']" [queryParams]="{ query: searchBarInput }" class="bg-primary hover:bg-primary-600 text-surface-900 font-bold rounded-r-xl px-3 flex items-center">
           <i class="pi pi-search"></i>
           <span class="hidden lg:inline ml-2 font-bold">Buscar</span>
         </button>
