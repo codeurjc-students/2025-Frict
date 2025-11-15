@@ -15,7 +15,7 @@ import {provideHttpClient} from '@angular/common/http';
 import {AuthService} from './services/auth.service';
 import {finalize} from 'rxjs';
 
-export const responsiveOptions = [
+export const carouselResponsiveOptions = [
   {
     breakpoint: '1400px',
     numVisible: 4,
@@ -36,6 +36,17 @@ export const responsiveOptions = [
     numVisible: 1,
     numScroll: 1,
   },
+];
+
+export const galleryResponsiveOptions = [
+  {
+    breakpoint: '1300px',
+    numVisible: 4
+  },
+  {
+    breakpoint: '575px',
+    numVisible: 2
+  }
 ];
 
 

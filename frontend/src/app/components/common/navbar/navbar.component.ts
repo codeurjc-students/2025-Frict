@@ -1,8 +1,7 @@
-import {Component, Input, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
-import {Router, RouterLink} from '@angular/router';
+import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NgIf, NgOptimizedImage} from '@angular/common';
-import {LoginInfo} from '../../../models/loginInfo.model';
 import {Avatar} from 'primeng/avatar';
 import {Button} from 'primeng/button';
 import {Drawer} from 'primeng/drawer';
@@ -27,7 +26,8 @@ import {AuthService} from '../../../services/auth.service';
     StyleClass,
     PrimeTemplate,
     FormsModule,
-    Menu
+    Menu,
+    RouterLinkActive
   ],
   templateUrl: './navbar.component.html',
   standalone: true,
@@ -36,7 +36,7 @@ import {AuthService} from '../../../services/auth.service';
 export class NavbarComponent {
 
   constructor(protected authService: AuthService,
-              private router: Router) {}
+              protected router: Router) {}
 
   @ViewChild('drawerRef') drawerRef!: Drawer;
   @ViewChild('menu') menu!: Menu;

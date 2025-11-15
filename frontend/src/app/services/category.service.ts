@@ -19,8 +19,7 @@ export class CategoryService {
   }
 
   public getCategoryByName(name: string): Observable<Category> {
-    let params = new HttpParams().set('name', name);
-    return this.http.get<Category>(this.apiUrl + `/` + {name});
+    return this.http.get<Category>(this.apiUrl + `/${name}`);
   }
 
 }

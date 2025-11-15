@@ -1,6 +1,6 @@
 <!-- Navbar -->
 <nav class="sticky top-0 z-2000 backdrop-blur bg-surface-800 h-20 text-white">
-  <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
+  <div class="max-w-9/12 mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
 
     <!-- Logo -->
     <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
@@ -196,21 +196,21 @@
               </div>
               <ul class="list-none p-0 m-0 overflow-hidden">
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-user mr-2"></i>
                     <span class="font-medium">Perfil</span>
                   </a>
                 </li>
                 <div *ngIf="authService.isUser()">
                   <li>
-                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/favourites">
+                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/favourites" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                       <i class="pi pi-bookmark mr-2"></i>
                       <span class="font-medium">Productos guardados</span>
                     </a>
                   </li>
                 </div>
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/alerts">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/alerts" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-bell mr-2"></i>
                     <span class="font-medium">Alertas</span>
                     <span class="inline-flex items-center justify-center ml-auto bg-primary-400 text-surface-900 rounded-full" style="min-width: 1.5rem; height: 1.5rem">3</span>

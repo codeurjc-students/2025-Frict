@@ -23,7 +23,7 @@ public class CategoryRestController {
     private CategoryService categoryService;
 
     @GetMapping("/")
-    public ResponseEntity<CategoryListDTO> showAllProducts() {
+    public ResponseEntity<CategoryListDTO> showAllCategories() {
         List<Category> categories = categoryService.findAll();
         List<CategoryDTO> dtos = new ArrayList<>();
         for (Category c : categories) {
