@@ -1,12 +1,12 @@
 <!-- Navbar -->
 <nav class="sticky top-0 z-2000 backdrop-blur bg-surface-800 h-20 text-white">
-  <div class="max-w-9/12 mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
+  <div class="w-full md:max-w-9/12 mx-auto flex items-center justify-between gap-2 px-2 lg:gap-4 lg:px-3 h-full">
 
     <!-- Logo -->
     <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
       <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full">
         <img class="w-8 h-8 m-1" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
-        <span class="hidden md:inline text-2xl">MiTienda</span>
+        <span class="hidden md:inline text-2xl mr-4">MiTienda</span>
       </a>
     </div>
     <div *ngIf="authService.isAdmin()">

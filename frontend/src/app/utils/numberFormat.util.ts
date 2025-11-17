@@ -1,22 +1,15 @@
 //Formats numbers to adapt them to a country digits system
-export function formatPrice(price: number): string {
-  if (price == null) {
-    return '';
-  }
+export function formatPrice(price: number | null | undefined): string {
+  if (price == null) return '';
 
-  const isExactPrice = price % 1 === 0;
+  const isExactPrice = Math.floor(price) === price;
+  const fractionDigits = isExactPrice ? 0 : 2;
+  const fixed = price.toFixed(fractionDigits);
+  const [intPart, decPart] = fixed.split('.');
 
-  if (isExactPrice) {
-    return price.toLocaleString('es', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }) + '€';
-  } else {
-    return price.toLocaleString('es', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }) + '€';
-  }
+  const intWithDots = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  return decPart ? `${intWithDots},${decPart}€` : `${intWithDots}€`;
 }
 
 

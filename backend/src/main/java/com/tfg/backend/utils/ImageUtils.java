@@ -20,7 +20,7 @@ public class ImageUtils {
         }
 
         try {
-            byte[] imageBytes = imageBlob.getBytes(1, (int) imageBlob.length());
+            byte[] imageBytes = imageBlob.getBinaryStream().readAllBytes();
             return ResponseEntity
                     .ok()
                     .contentType(MediaType.IMAGE_JPEG)

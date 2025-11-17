@@ -32,6 +32,15 @@ public class CategoryRestController {
         return ResponseEntity.ok(new CategoryListDTO(dtos));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
+        Optional<Category> category = categoryService.findById(id);
+        if (!category.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(new CategoryDTO(category.get()));
+    }
+
     @GetMapping("/{name}")
     public ResponseEntity<CategoryDTO> getCategoryByName(@PathVariable String name) {
         Optional<Category> category = categoryService.findByName(name);

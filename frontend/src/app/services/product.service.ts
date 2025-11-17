@@ -3,6 +3,7 @@ import {Injectable} from '@angular/core';
 import {catchError, Observable, of, switchMap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {ProductsPage} from '../models/productsPage.model';
+import {Product} from '../models/product.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +22,10 @@ export class ProductService {
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
     return this.http.get<ProductsPage>(this.apiUrl + `/`, { params });
+  }
+
+  public getProductById(id: string): Observable<Product> {
+    return this.http.get<Product>(this.apiUrl + `/${id}`);
   }
 
   public getFilteredProducts(
@@ -52,18 +57,30 @@ export class ProductService {
     return this.http.get<ProductsPage>(this.apiUrl + `/filter`, { params });
   }
 
+  public getProductsByCategoryId(id: string): Observable<ProductsPage> {
+    return this.categoryService.getCategoryById(id).pipe(
+      switchMap((category: any) => {
+        if (category && category.id) {
+          return this.getFilteredProducts(0, 8, '', [category.id], "");
+        }
+        return throwError(() => new Error(`${name} category not found.`));
+      }),
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
   public getProductsByCategoryName(name: string): Observable<ProductsPage> {
     return this.categoryService.getCategoryByName(name).pipe(
       switchMap((category: any) => {
         if (category && category.id) {
-          return this.getFilteredProducts(0, 8,'',[category.id], "")
+          return this.getFilteredProducts(0, 8, '', [category.id], "");
         }
-        return throwError(() => new Error(name + 'category not found.'));
+        return throwError(() => new Error(`${name} category not found.`));
       }),
-
       catchError((error) => {
-        console.error('Error retrieving products with category "' + name + '"', error);
-        return of(this.defaultProductPage);
+        return throwError(() => error);
       })
     );
   }

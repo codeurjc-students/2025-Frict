@@ -1,5 +1,5 @@
 export interface Product {
-  id: number;
+  id: string; //It will be automatically converted to long when reaching the backend
   referenceCode: string;
   name: string;
   imageUrl: string;

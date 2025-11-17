@@ -5,16 +5,18 @@ import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
 import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
-import {Select} from 'primeng/select';
 import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Button} from 'primeng/button';
 import {Carousel} from 'primeng/carousel';
 import {LoadingComponent} from '../../common/loading/loading.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
-import {RouterLink} from '@angular/router';
+import {ActivatedRoute} from '@angular/router';
 import {Breadcrumb} from 'primeng/breadcrumb';
 import {MenuItem} from 'primeng/api';
+import {ProductService} from '../../../services/product.service';
+import {formatPrice} from '../../../utils/numberFormat.util';
+import {CategoryService} from '../../../services/category.service';
 
 
 @Component({
@@ -29,14 +31,12 @@ import {MenuItem} from 'primeng/api';
     TabPanels,
     Tab,
     TabPanel,
-    Select,
     FormsModule,
     InputNumber,
     Button,
     Carousel,
     LoadingComponent,
     ProductCardComponent,
-    RouterLink,
     Breadcrumb
   ],
   templateUrl: './product-info.component.html'
@@ -44,67 +44,39 @@ import {MenuItem} from 'primeng/api';
 export class ProductInfoComponent implements OnInit {
 
   images: any[] = [];
-  product!: Product;
-
-  constructor() {
-    this.images = [
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria1.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria1s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria2.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria2s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria3.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria3s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria4.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria4s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria5.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria5s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria6.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria6s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria7.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria7s.jpg'
-      },
-      {
-        itemImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria8.jpg',
-        thumbnailImageSrc: 'https://primefaces.org/cdn/primeng/images/galleria/galleria8s.jpg'
-      }
-    ];
-
-  }
 
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;
 
-  protected productModels: any[] = [
-    { name: 'Modelo 1', code: 'M1' },
-    { name: 'Modelo 2', code: 'M2' },
-    { name: 'Modelo 3', code: 'M3' },
-    { name: 'Modelo 4', code: 'M4' },
-    { name: 'Modelo 5', code: 'M5' },
-  ];
-  protected selectedModel: any = this.productModels[0];
   protected quantity: number = 1;
 
   protected loading: boolean = true;
   protected error: boolean = false;
   protected categoryProducts: Product[] = [];
 
-  previousPages: MenuItem[] | undefined;
+  previousPages: any[] = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Buscar' }, { label: 'Ordenadores', route: '/inputtext' }];
   homePage: MenuItem | undefined;
 
+  product!: Product;
+
+  constructor(private productService: ProductService,
+              private route: ActivatedRoute) {}
+
   ngOnInit() {
-    this.previousPages = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Buscar' }, { label: 'Ordenadores', route: '/inputtext' }];
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.productService.getProductById(id).subscribe({
+        next: (product) => {
+          this.product = product;
+          this.images.push({itemImageSrc: product.imageUrl,
+                            thumbnailImageSrc: product.imageUrl
+          });
+        }
+      });
+    }
+
+
   }
+
+  protected readonly formatPrice = formatPrice;
 }

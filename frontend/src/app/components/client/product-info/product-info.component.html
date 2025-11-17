@@ -8,7 +8,7 @@
 
   <!-- Product title -->
   <div class="flex flex-wrap gap-3 justify-between items-center mt-2">
-    <h1 class="text-3xl font-bold">Portátil XYZ Pro 15" · i7 · 16GB · 1TB SSD · RTX 3050</h1>
+    <h1 class="text-3xl font-bold">{{ product.name }}</h1>
   </div>
 
   <!-- Main grid -->
@@ -19,7 +19,7 @@
 
       <!-- Gallery -->
       <div class="xl:w-3/5 space-y-4">
-        <div class="bg-white flex">
+        <div class="flex justify-center">
           <p-galleria
             [value]="images"
             [responsiveOptions]="galleryResponsiveOptions"
@@ -43,15 +43,17 @@
       <div class="w-full xl:w-2/5 bg-surface-800 p-4 rounded-2xl shadow border border-surface-800 space-y-4 h-fit">
 
         <div class="flex items-baseline gap-2">
-          <span class="text-3xl font-extrabold text-white">1849,99€</span>
-          <span class="line-through text-surface-400 text-lg">2.379,98€</span>
-          <span class="bg-red-600 text-white rounded px-2 text-sm font-bold">-22%</span>
-          <span class="px-3 py-1 bg-surface-800 text-surface-400 text-xs">Cód. referencia: </span>
+          <span class="text-3xl font-extrabold text-white">{{formatPrice(product.currentPrice)}}</span>
+          <div *ngIf="product.previousPrice > 0 && product.discount != '0%'">
+            <span class="line-through text-surface-400 text-lg">{{formatPrice(product.previousPrice)}}</span>
+            <span class="bg-red-600 text-white rounded px-2 text-sm font-bold"> {{product.discount}} </span>
+          </div>
+          <span class="px-3 py-1 bg-surface-800 text-surface-400 text-xs">Cód. referencia: {{ product.referenceCode }}</span>
         </div>
 
         <div class="bg-primary-500/20 border-l-4 border-primary-500 text-primary-200 px-3 py-2 rounded text-sm">
           <i class="pi pi-star-fill" style="font-size: 0.75rem"></i>
-          4,5/5 · 800 opiniones · 143 preguntas
+          {{ product.averageRating }}/5 · {{product.totalReviews }} opiniones · 143 preguntas
         </div>
 
         <div class="text-sm text-surface-300 mt-8 space-y-8 gap-2">
@@ -61,10 +63,12 @@
 
         <!-- Model and quantity dropdowns -->
         <div class="space-y-1">
+          <!-- Later in development...
           <label class="block text-sm text-surface-300 mt-8">Modelo:</label>
           <p-select [(ngModel)]="selectedModel" [options]="productModels" optionLabel="name" placeholder="Large" class="w-full mt-0"/>
+          -->
 
-          <p class="text-sm text-surface-300 mt-4">Cantidad</p>
+          <p class="text-sm text-surface-300 mt-4">Cantidad:</p>
           <p-inputnumber [(ngModel)]="quantity" [showButtons]="true" inputId="minmax-buttons" [min]="0" [max]="50" class="w-full"></p-inputnumber>
         </div>
 
@@ -85,11 +89,7 @@
       <p-tabpanels>
         <p-tabpanel value="0">
           <p class="mt-2">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-            ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-            nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-            anim id est laborum.
+            {{ product.description }}
           </p>
         </p-tabpanel>
         <p-tabpanel value="1">
@@ -112,6 +112,12 @@
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
+
+    <!-- Users opinions and rating for the product -->
+    <div class="mt-8">
+      <h2 class="text-2xl font-bold text-surface-800 mb-8">Valoraciones y reseñas</h2>
+
+    </div>
 
     <!-- Related products (for now, those with the same category) -->
     <div class="mt-8">
