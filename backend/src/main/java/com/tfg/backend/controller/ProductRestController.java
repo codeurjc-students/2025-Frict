@@ -121,7 +121,17 @@ public class ProductRestController {
             return ResponseEntity.notFound().build();
         }
         Product product = productOptional.get();
-        return ImageUtils.serveImage(product.getProductImage());
+        return ImageUtils.serveImage(product.getProductImage(), false);
+    }
+
+    @GetMapping("/thumbnail/{id}")
+    public ResponseEntity<byte[]> showProductThumbnail(@PathVariable long id) {
+        Optional<Product> productOptional = productService.findById(id);
+        if (!productOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+        return ImageUtils.serveImage(product.getProductImage(), true);
     }
 
 

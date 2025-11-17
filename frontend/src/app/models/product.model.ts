@@ -3,6 +3,7 @@ export interface Product {
   referenceCode: string;
   name: string;
   imageUrl: string;
+  thumbnailUrl: string;
   description: string;
   previousPrice: number;
   currentPrice: number;

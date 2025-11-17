@@ -57,7 +57,7 @@ public class CategoryRestController {
             return ResponseEntity.notFound().build();
         }
         Category category = categoryOptional.get();
-        return ImageUtils.serveImage(category.getCategoryImage());
+        return ImageUtils.serveImage(category.getCategoryImage(), false);
     }
 
 

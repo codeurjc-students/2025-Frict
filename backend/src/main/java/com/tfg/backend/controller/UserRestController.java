@@ -1,7 +1,6 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.ImageUtils;
@@ -41,7 +40,7 @@ public class UserRestController {
             return ResponseEntity.notFound().build();
         }
         User user = userOptional.get();
-        return ImageUtils.serveImage(user.getProfileImage());
+        return ImageUtils.serveImage(user.getProfileImage(), false);
     }
 
 

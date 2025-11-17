@@ -1,5 +1,6 @@
 package com.tfg.backend.utils;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -8,19 +9,26 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.rowset.serial.SerialBlob;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
 
 public class ImageUtils {
 
-    public static ResponseEntity<byte[]> serveImage(Blob imageBlob){
+    public static ResponseEntity<byte[]> serveImage(Blob imageBlob, boolean isThumbnail){
         if (imageBlob == null) {
             return ResponseEntity.notFound().build();
         }
 
         try {
             byte[] imageBytes = imageBlob.getBinaryStream().readAllBytes();
+
+            if(isThumbnail){
+                imageBytes = generateThumbnail(imageBytes, 80); //80px width
+            }
+
             return ResponseEntity
                     .ok()
                     .contentType(MediaType.IMAGE_JPEG)
@@ -55,6 +63,23 @@ public class ImageUtils {
             return new SerialBlob(imageBytes);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] generateThumbnail(byte[] imageBytes, int width) {
+        try {
+            ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+            Thumbnails.of(input)
+                    .size(width, width)   // mantiene proporción
+                    .outputFormat("jpeg")
+                    .toOutputStream(output);
+
+            return output.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error generating thumbnail", e);
         }
     }
 }

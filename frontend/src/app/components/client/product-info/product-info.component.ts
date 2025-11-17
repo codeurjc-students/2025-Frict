@@ -69,7 +69,7 @@ export class ProductInfoComponent implements OnInit {
         next: (product) => {
           this.product = product;
           this.images.push({itemImageSrc: product.imageUrl,
-                            thumbnailImageSrc: product.imageUrl
+                            thumbnailImageSrc: product.thumbnailUrl
           });
         }
       });
