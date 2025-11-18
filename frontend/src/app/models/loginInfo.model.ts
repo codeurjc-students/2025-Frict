@@ -1,6 +1,6 @@
 export interface LoginInfo {
   isLogged: boolean;
-  id: number;
+  id: string;
   name: string;
   username: string;
   roles: string[];

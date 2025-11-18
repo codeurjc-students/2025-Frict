@@ -8,7 +8,7 @@ export interface Product {
   previousPrice: number;
   currentPrice: number;
   discount: string;
-  categoriesId: number[];
+  categoriesId: string[];
   availableUnits: number;
   averageRating: number;
   totalReviews: number;

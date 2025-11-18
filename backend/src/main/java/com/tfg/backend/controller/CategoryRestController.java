@@ -41,15 +41,6 @@ public class CategoryRestController {
         return ResponseEntity.ok(new CategoryDTO(category.get()));
     }
 
-    @GetMapping("/{name}")
-    public ResponseEntity<CategoryDTO> getCategoryByName(@PathVariable String name) {
-        Optional<Category> category = categoryService.findByName(name);
-        if (!category.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new CategoryDTO(category.get()));
-    }
-
     @GetMapping("/image/{id}")
     public ResponseEntity<byte[]> showCategoryImage(@PathVariable long id) {
         Optional<Category> categoryOptional = categoryService.findById(id);

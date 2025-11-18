@@ -63,7 +63,7 @@ export class ProductService {
         if (category && category.id) {
           return this.getFilteredProducts(0, 8, '', [category.id], "");
         }
-        return throwError(() => new Error(`${name} category not found.`));
+        return throwError(() => new Error(`Category with id ${id} not found.`));
       }),
       catchError((error) => {
         return throwError(() => error);
@@ -74,10 +74,7 @@ export class ProductService {
   public getProductsByCategoryName(name: string): Observable<ProductsPage> {
     return this.categoryService.getCategoryByName(name).pipe(
       switchMap((category: any) => {
-        if (category && category.id) {
-          return this.getFilteredProducts(0, 8, '', [category.id], "");
-        }
-        return throwError(() => new Error(`${name} category not found.`));
+        return this.getFilteredProducts(0, 8, '', [category.id], "");
       }),
       catchError((error) => {
         return throwError(() => error);

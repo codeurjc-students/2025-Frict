@@ -121,17 +121,17 @@
 
     <!-- Related products (for now, those with the same category) -->
     <div class="mt-8">
-      <h2 class="text-2xl font-bold text-surface-800 mb-8">Más en Ordenadores</h2>
+      <h2 class="text-2xl font-bold text-surface-800 mb-8">Más en {{ productCategory.name }}</h2>
       <div id="category-content" class="content">
-        <ng-container *ngIf="!loading && !error && categoryProducts.length; else noRelated">
-          <p-carousel [value]="categoryProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="carouselResponsiveOptions">
+        <ng-container *ngIf="!loading && !error && relatedProducts.length; else noRelated">
+          <p-carousel [value]="relatedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="carouselResponsiveOptions">
             <ng-template let-p pTemplate="item">
               <app-product-card [product]="p" [elementId]="'recommendedProduct-' + p.id"/>
             </ng-template>
           </p-carousel>
         </ng-container>
         <ng-template #noRelated>
-          <app-loading [loading]="loading" [error]="error" [numElements]="categoryProducts.length" elementsType="productos relacionados"/>
+          <app-loading [loading]="loading" [error]="error" [numElements]="relatedProducts.length" elementsType="productos relacionados"/>
         </ng-template>
       </div>
     </div>
