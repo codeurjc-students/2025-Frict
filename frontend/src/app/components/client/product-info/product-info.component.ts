@@ -18,6 +18,11 @@ import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
+import {Dialog} from 'primeng/dialog';
+import {Panel} from 'primeng/panel';
+import {Avatar} from 'primeng/avatar';
+import {Rating} from 'primeng/rating';
+import {MeterGroupModule} from 'primeng/metergroup';
 
 
 @Component({
@@ -38,7 +43,12 @@ import {Category} from '../../../models/category.model';
     Carousel,
     LoadingComponent,
     ProductCardComponent,
-    Breadcrumb
+    Breadcrumb,
+    Dialog,
+    Panel,
+    Avatar,
+    Rating,
+    MeterGroupModule
   ],
   templateUrl: './product-info.component.html'
 })
@@ -61,6 +71,17 @@ export class ProductInfoComponent implements OnInit {
 
   product!: Product;
   productCategory!: Category;
+  protected visibleShippingDialog: boolean = false;
+
+  maxReviews = 30;  // Máximo para calcular proporción
+
+  stars = [
+    { value: 5, count: 26 },
+    { value: 4, count: 2 },
+    { value: 3, count: 0 },
+    { value: 2, count: 0 },
+    { value: 1, count: 2 }
+  ];
 
   constructor(private productService: ProductService,
               private categoryService: CategoryService,
@@ -109,5 +130,9 @@ export class ProductInfoComponent implements OnInit {
         this.error = true;
       }
     })
+  }
+
+  protected showShippingDialog() {
+    this.visibleShippingDialog = true;
   }
 }

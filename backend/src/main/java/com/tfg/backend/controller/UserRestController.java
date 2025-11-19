@@ -1,6 +1,7 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.ImageUtils;
@@ -41,6 +42,16 @@ public class UserRestController {
         }
         User user = userOptional.get();
         return ImageUtils.serveImage(user.getProfileImage(), false);
+    }
+
+    @GetMapping("/thumbnail/{id}")
+    public ResponseEntity<byte[]> showUserThumbnail(@PathVariable long id) {
+        Optional<User> userOptional = userService.findById(id);
+        if (!userOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        User user = userOptional.get();
+        return ImageUtils.serveImage(user.getProfileImage(), true);
     }
 
 
