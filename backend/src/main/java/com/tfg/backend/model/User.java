@@ -45,6 +45,9 @@ public class User {
     @Column(nullable = false)
     private boolean isBanned = false;
 
+    @ManyToMany
+    private Set<Product> favouriteProducts = new HashSet<>();
+
     @OneToMany(mappedBy = "user")
     private Set<Order> registeredOrders = new HashSet<>();
 

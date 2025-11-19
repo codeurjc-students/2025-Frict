@@ -3,6 +3,9 @@ package com.tfg.backend.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -20,16 +23,23 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
 
-    private double rating;
+    private int rating;
 
     private String text;
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    private boolean recommended;
+
     public Review() {}
 
-    public Review(User user, Product product, double rating, String text) {
+    public Review(User user, Product product, int rating, String text, boolean recommended) {
         this.user = user;
         this.product = product;
         this.rating = rating;
         this.text = text;
+        this.recommended = recommended;
     }
 }

@@ -15,8 +15,6 @@ export class ProductService {
 
   private apiUrl = '/api/v1/products';
 
-  private defaultProductPage = {products: [], totalProducts: 0, currentPage: 0, lastPage: -1, pageSize: 0};
-
   public getAllProducts(page: number, size: number): Observable<ProductsPage> {
     let params = new HttpParams();
     params = params.append('page', page.toString());

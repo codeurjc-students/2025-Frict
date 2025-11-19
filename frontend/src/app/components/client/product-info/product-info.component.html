@@ -53,7 +53,7 @@
 
         <div class="bg-primary-500/20 border-l-4 border-primary-500 text-primary-200 px-3 py-2 rounded text-sm">
           <i class="pi pi-star-fill" style="font-size: 0.75rem"></i>
-          {{ product.averageRating }}/5 · {{product.totalReviews }} opiniones · 143 preguntas
+          {{ product.averageRating }}/5 · {{product.totalReviews }} opiniones
         </div>
 
         <div class="text-sm text-surface-300 mt-8 space-y-8 gap-2">
@@ -125,18 +125,18 @@
       <div class="flex gap-10">
 
           <div class="flex flex-wrap gap-4">
-            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center">
-              <p class="text-4xl font-bold">{{ product.averageRating }}</p>
-              <p-rating [ngModel]="product.averageRating" [readonly]="true"></p-rating>
+            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center justify-center h-full">
+              <p class="text-4xl font-bold mb-3">{{ product.averageRating }}</p>
+              <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true"></p-rating>
               <p class="text-sm text-gray-500 mt-1">
                 {{ product.totalReviews }} Opiniones
               </p>
             </div>
 
-            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center">
-              <p class="text-4xl font-bold">30%</p>
+            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center justify-center h-full">
+              <p class="text-4xl font-bold mb-2">{{ recommendationPercentage }}%</p>
               <p class="font-semibold">Recomiendan</p>
-              <p class="text-sm text-gray-500 mt-1">3 positivas</p>
+              <p class="text-sm text-gray-500 mt-1">{{ recommendedCount }} positivas</p>
             </div>
 
             <div class="p-5 bg-gray-100 rounded-xl w-80 gap-3">
@@ -145,7 +145,7 @@
                 <i class="pi pi-star" style="font-size: 0.7rem"></i>
 
                 <div class="flex-1">
-                  <p-metergroup [value]="[{value: star.count, icon:'pi pi-star', color: '#111' }]" [max]="maxReviews" labelPosition="start" orientation="horizontal">
+                  <p-metergroup [value]="[{value: star.count, icon:'pi pi-star', color: '#111' }]" [max]="product.totalReviews" labelPosition="start" orientation="horizontal">
                     <ng-template pTemplate="label" let-valueItems>
                       <ol class="p-metergroup-labels p-component p-metergroup-labels-horizontal">
                         <li *ngFor="let item of valueItems; let i = index" class="p-metergroup-label">
@@ -166,7 +166,7 @@
       <!-- BARRA DE ESCRITURA DE RESEÑA -->
       <div class="mt-10">
 
-        <h2 class="text-xl font-bold text-surface-800">Opiniones de usuarios</h2>
+        <h2 class="text-xl font-bold text-surface-800"> {{ product.totalReviews }} Opiniones de usuarios</h2>
         <p class="text-gray-600 text-sm">Comprueba qué piensan otros usuarios sobre el producto o, si no lo has hecho, escribe tu reseña.</p>
 
         <div class="flex items-center gap-4 my-4 p-4 border border-gray-300 rounded-xl bg-white shadow-sm">
@@ -176,24 +176,21 @@
         </div>
       </div>
 
-      <p-panel [toggleable]="true">
+      <p-panel *ngFor="let review of productReviews" [toggleable]="true" styleClass="mb-4">
         <ng-template #header>
-          <div class="flex items-center justify-between gap-2 m-3 w-full">
+          <div class="flex items-center justify-between gap-2 my-3 w-full">
             <div class="flex items-center gap-3">
-              <p-avatar image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png" shape="circle"></p-avatar>
-              <span class="font-bold">Amy Elsner</span>
+              <p-avatar [image]="review.creatorImageUrl" shape="circle"></p-avatar>
+              <span class="font-bold">{{ review.creatorName }}</span>
             </div>
             <div class="flex items-center gap-3">
-              <span class="text-surface-400 hidden md:flex">Hace 2 días</span>
-              <p-rating [ngModel]="product.averageRating" [readonly]="true"></p-rating>
+              <span class="text-surface-400 hidden md:flex">{{ review.createdAt }}</span>
+              <p-rating [ngModel]="review.rating" [readonly]="true"></p-rating>
             </div>
           </div>
         </ng-template>
         <p class="m-0">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-          aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
-          aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-          occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          {{ review.text }}
         </p>
       </p-panel>
     </div>

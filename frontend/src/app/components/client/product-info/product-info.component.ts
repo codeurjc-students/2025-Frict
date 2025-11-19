@@ -23,6 +23,9 @@ import {Panel} from 'primeng/panel';
 import {Avatar} from 'primeng/avatar';
 import {Rating} from 'primeng/rating';
 import {MeterGroupModule} from 'primeng/metergroup';
+import {ReviewService} from '../../../services/review.service';
+import {Review} from '../../../models/review.model';
+import {AuthService} from '../../../services/auth.service';
 
 
 @Component({
@@ -54,11 +57,12 @@ import {MeterGroupModule} from 'primeng/metergroup';
 })
 export class ProductInfoComponent implements OnInit {
 
-  images: any[] = [];
-
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;
   protected readonly formatPrice = formatPrice;
+  protected readonly Math = Math;
+
+  protected images: any[] = [];
 
   protected quantity: number = 1;
 
@@ -66,25 +70,23 @@ export class ProductInfoComponent implements OnInit {
   protected error: boolean = false;
   protected relatedProducts: Product[] = []; //Products related to products first category
 
-  previousPages: any[] = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Buscar' }, { label: 'Ordenadores', route: '/inputtext' }];
-  homePage: MenuItem | undefined;
+  protected previousPages: any[] = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Buscar' }, { label: 'Ordenadores', route: '/inputtext' }];
+  protected homePage: MenuItem | undefined;
 
-  product!: Product;
-  productCategory!: Category;
+  protected product!: Product;
+  protected productCategory!: Category;
+
   protected visibleShippingDialog: boolean = false;
 
-  maxReviews = 30;  // Máximo para calcular proporción
-
-  stars = [
-    { value: 5, count: 26 },
-    { value: 4, count: 2 },
-    { value: 3, count: 0 },
-    { value: 2, count: 0 },
-    { value: 1, count: 2 }
-  ];
+  protected stars: any[] = [];
+  protected recommendedCount: number = 0;
+  protected recommendationPercentage: number = 0;
+  protected productReviews: Review[] = [];
 
   constructor(private productService: ProductService,
               private categoryService: CategoryService,
+              private reviewService: ReviewService,
+              protected authService: AuthService,
               private route: ActivatedRoute) {}
 
   ngOnInit() {
@@ -104,12 +106,13 @@ export class ProductInfoComponent implements OnInit {
             thumbnailImageSrc: product.thumbnailUrl
           });
           this.loadProductCategory();
+          this.loadReviews();
         }
       });
     }
   }
 
-  loadProductCategory() {
+  loadProductCategory() { //Only the first category is taken into account in related products
     this.categoryService.getCategoryById(this.product.categoriesId[0]).subscribe({
       next: (category) => {
         this.productCategory = category;
@@ -132,7 +135,38 @@ export class ProductInfoComponent implements OnInit {
     })
   }
 
-  protected showShippingDialog() {
+  showShippingDialog() {
     this.visibleShippingDialog = true;
+  }
+
+
+  loadReviews() {
+    this.reviewService.getReviewsByProductId(this.product.id).subscribe({
+      next: (reviews) => {
+        this.productReviews = reviews.reviews;
+        console.log(this.productReviews);
+        const stars = [
+          { value: 5, count: 0 },
+          { value: 4, count: 0 },
+          { value: 3, count: 0 },
+          { value: 2, count: 0 },
+          { value: 1, count: 0 },
+        ];
+
+        this.productReviews.forEach((review: any) => {
+          const star = stars.find(s => s.value === review.rating);
+          if (star) {
+            star.count += 1;
+          }
+        });
+
+        this.stars = stars;
+
+        if(this.productReviews.length > 0){
+          this.recommendedCount = this.productReviews.filter(r => r.recommended).length;
+          this.recommendationPercentage = (this.recommendedCount / this.productReviews.length) * 100;
+        }
+      }
+    });
   }
 }

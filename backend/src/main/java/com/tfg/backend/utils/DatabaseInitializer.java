@@ -232,8 +232,8 @@ public class DatabaseInitializer {
             shopStockRepository.save(ss1);
             shopStockRepository.save(ss2);
 
-            Review review1 = new Review(user1, product1, 5, "Muy buen producto");
-            Review review2 = new Review(user2, product1, 2, "Desastroso");
+            Review review1 = new Review(user1, product1, 5, "Muy buen producto", true);
+            Review review2 = new Review(user2, product1, 2, "Desastroso", false);
             reviewRepository.save(review1);
             reviewRepository.save(review2);
 

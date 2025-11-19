@@ -43,6 +43,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
 
+    @ManyToMany(mappedBy = "favouriteProducts")
+    private Set<User> usersAsFavourite = new HashSet<>();
+
     @ManyToMany(mappedBy = "products")
     private Set<Order> orders = new HashSet<>();
 
