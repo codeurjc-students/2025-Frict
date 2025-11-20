@@ -125,7 +125,7 @@
       <div class="flex gap-10">
 
           <div class="flex flex-wrap gap-4">
-            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center justify-center h-full">
+            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center">
               <p class="text-4xl font-bold mb-3">{{ product.averageRating }}</p>
               <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true"></p-rating>
               <p class="text-sm text-gray-500 mt-1">
@@ -133,7 +133,7 @@
               </p>
             </div>
 
-            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center justify-center h-full">
+            <div class="p-5 bg-gray-100 rounded-xl w-38 flex flex-col items-center">
               <p class="text-4xl font-bold mb-2">{{ recommendationPercentage }}%</p>
               <p class="font-semibold">Recomiendan</p>
               <p class="text-sm text-gray-500 mt-1">{{ recommendedCount }} positivas</p>
@@ -169,18 +169,18 @@
         <h2 class="text-xl font-bold text-surface-800"> {{ product.totalReviews }} Opiniones de usuarios</h2>
         <p class="text-gray-600 text-sm">Comprueba qué piensan otros usuarios sobre el producto o, si no lo has hecho, escribe tu reseña.</p>
 
-        <div class="flex items-center gap-4 my-4 p-4 border border-gray-300 rounded-xl bg-white shadow-sm">
-          <p-avatar image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png" shape="circle" class="shrink-0"></p-avatar>
+        <div *ngIf="authService.isLogged() && authService.isUser() && !userReviewed" class="flex items-center gap-4 my-4 p-4 border border-gray-300 rounded-xl bg-white shadow-sm">
+          <p-avatar [image]="loggedUserInfo.thumbnailUrl" shape="circle" class="shrink-0"></p-avatar>
           <input type="text" placeholder="Escribe tu reseña..." class="flex-1 p-2 border border-gray-300 rounded-lg outline-none focus:border-primary-500"/>
           <p-button icon="pi pi-send" aria-label="Save"/>
         </div>
       </div>
 
-      <p-panel *ngFor="let review of productReviews" [toggleable]="true" styleClass="mb-4">
+      <p-panel *ngFor="let review of productReviews" [toggleable]="true" styleClass="my-4">
         <ng-template #header>
           <div class="flex items-center justify-between gap-2 my-3 w-full">
             <div class="flex items-center gap-3">
-              <p-avatar [image]="review.creatorImageUrl" shape="circle"></p-avatar>
+              <p-avatar [image]="review.creatorThumbnailUrl" shape="circle"></p-avatar>
               <span class="font-bold">{{ review.creatorName }}</span>
             </div>
             <div class="flex items-center gap-3">

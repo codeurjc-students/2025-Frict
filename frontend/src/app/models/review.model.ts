@@ -1,7 +1,8 @@
 export interface Review {
   id: string;
+  creatorId: string;
   creatorName: string;
-  creatorImageUrl: string;
+  creatorThumbnailUrl: string;
   text: string;
   rating: number;
   createdAt: string;

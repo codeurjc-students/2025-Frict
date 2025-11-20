@@ -10,6 +10,7 @@ import {MenuItem, PrimeTemplate} from 'primeng/api';
 import {FormsModule} from '@angular/forms';
 import {Menu} from 'primeng/menu';
 import {AuthService} from '../../../services/auth.service';
+import {LoginInfo} from '../../../models/loginInfo.model';
 
 
 
@@ -48,6 +49,7 @@ export class NavbarComponent {
   visible: boolean = false;
   searchBarInput: string = '';
   items: MenuItem[] | undefined;
+  loggedUserInfo!: LoginInfo;
 
   ngOnInit() {
     //window.addEventListener('scroll', () => this.menu.hide());
@@ -61,6 +63,11 @@ export class NavbarComponent {
         icon: 'pi pi-bell'
       }
     ];
+    this.authService.getLoginInfo().subscribe({
+      next: (loginInfo) => {
+        this.loggedUserInfo = loginInfo;
+      }
+    })
   }
 
   protected logout() {

@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 public class ReviewDTO {
 
     private Long id; //Review id
+    private Long creatorId;
     private String creatorName;
-    private String creatorImageUrl;
+    private String creatorThumbnailUrl;
     private String text;
     private int rating;
     private String createdAt;
@@ -24,8 +25,9 @@ public class ReviewDTO {
 
     public ReviewDTO(Review r){
         this.id = r.getId();
+        this.creatorId = r.getUser().getId();
         this.creatorName = r.getUser().getName();
-        this.creatorImageUrl = "/api/v1/users/thumbnail/" + r.getUser().getId();
+        this.creatorThumbnailUrl = "/api/v1/users/thumbnail/" + r.getUser().getId();
         this.text = r.getText();
         this.rating = r.getRating();
         this.createdAt = this.formatRelativeTime(r.getCreatedAt());

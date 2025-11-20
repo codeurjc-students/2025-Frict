@@ -26,6 +26,7 @@ import {MeterGroupModule} from 'primeng/metergroup';
 import {ReviewService} from '../../../services/review.service';
 import {Review} from '../../../models/review.model';
 import {AuthService} from '../../../services/auth.service';
+import {LoginInfo} from '../../../models/loginInfo.model';
 
 
 @Component({
@@ -82,6 +83,9 @@ export class ProductInfoComponent implements OnInit {
   protected recommendedCount: number = 0;
   protected recommendationPercentage: number = 0;
   protected productReviews: Review[] = [];
+
+  protected userReviewed: boolean = false;
+  protected loggedUserInfo!: LoginInfo;
 
   constructor(private productService: ProductService,
               private categoryService: CategoryService,
@@ -166,6 +170,13 @@ export class ProductInfoComponent implements OnInit {
           this.recommendedCount = this.productReviews.filter(r => r.recommended).length;
           this.recommendationPercentage = (this.recommendedCount / this.productReviews.length) * 100;
         }
+
+        this.authService.getLoginInfo().subscribe({
+          next: (loginInfo) => {
+            this.userReviewed = this.productReviews.some(r => r.creatorId === loginInfo.id)
+            this.loggedUserInfo = loginInfo;
+          }
+        })
       }
     });
   }

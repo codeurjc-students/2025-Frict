@@ -8,7 +8,7 @@ import { Observable, tap, catchError, map, of } from 'rxjs';
 })
 export class AuthService {
 
-  private defaultLoginInfo: LoginInfo = {isLogged: false, id: '0', name: '', username: '', roles: []};
+  private defaultLoginInfo: LoginInfo = {isLogged: false, thumbnailUrl: '', id: '0', name: '', username: '', roles: []};
   private loginInfoSignal: WritableSignal<LoginInfo> = signal(this.defaultLoginInfo);
 
   public isLogged = computed(() => this.loginInfoSignal().isLogged);

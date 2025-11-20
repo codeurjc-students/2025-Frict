@@ -81,8 +81,8 @@
         <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile">
           <p-avatar image="/favicon.ico" styleClass="mr-2 rounded-border" size="large"/>
           <div class="flex flex-col">
-            <span class="font-bold">Nombre Apellido</span>
-            <span class="font-light">user</span>
+            <span class="font-bold">{{ loggedUserInfo.name }}</span>
+            <span class="font-light">{{ loggedUserInfo.username }}</span>
           </div>
         </a>
         <hr class="mx-8 mb-6 border-t border-0 border-surface" />
