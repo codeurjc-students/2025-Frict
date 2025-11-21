@@ -11,7 +11,7 @@ import {Button} from 'primeng/button';
 import {Carousel} from 'primeng/carousel';
 import {LoadingComponent} from '../../common/loading/loading.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {Breadcrumb} from 'primeng/breadcrumb';
 import {MenuItem} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
@@ -91,10 +91,11 @@ export class ProductInfoComponent implements OnInit {
               private categoryService: CategoryService,
               private reviewService: ReviewService,
               protected authService: AuthService,
-              private route: ActivatedRoute) {}
+              private route: ActivatedRoute,
+              private router: Router) {}
 
   ngOnInit() {
-    this.route.params.subscribe(() => {
+    this.route.params.subscribe(() => { //If a related product is clicked when visualizing a product, the page should refresh the information
       this.loadProduct();
     });
   }
@@ -179,5 +180,17 @@ export class ProductInfoComponent implements OnInit {
         })
       }
     });
+  }
+
+  addToCart() {
+    if(!this.authService.isLogged()){
+      this.router.navigate(['/login']);
+    }
+  }
+
+  addToFavourites() {
+    if(!this.authService.isLogged()){
+      this.router.navigate(['/login']);
+    }
   }
 }

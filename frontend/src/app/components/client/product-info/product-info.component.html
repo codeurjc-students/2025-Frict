@@ -78,8 +78,8 @@
         </div>
 
         <div class="mt-8 grid gap-2">
-          <p-button label="Añadir a la cesta" icon="pi pi-cart-plus" styleClass="w-full"/>
-          <p-button label="Añadir a la lista de deseos" icon="pi pi-bookmark" severity="secondary" styleClass="w-full"/>
+          <p-button (click)="addToCart()" label="Añadir a la cesta" icon="pi pi-cart-plus" styleClass="w-full"/>
+          <p-button (click)="addToFavourites()" label="Añadir a la lista de deseos" icon="pi pi-bookmark" severity="secondary" styleClass="w-full"/>
         </div>
       </div>
     </div>

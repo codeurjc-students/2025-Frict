@@ -31,8 +31,6 @@ public class ProductRestController {
     @Autowired
     private CategoryService categoryService;
 
-    private final int pageSize = 8;
-
 
     @GetMapping("/")
     public ResponseEntity<ProductsPageDTO> getAllProducts(Pageable pageable) {
@@ -59,6 +57,12 @@ public class ProductRestController {
     }
 
 
+    @GetMapping("/add/{id}")
+    public ResponseEntity<ProductDTO> addProductToCart(@PathVariable Long id) {
+        //Get logged user info (User class)
+        //...
+        return ResponseEntity.ok().build();
+    }
 
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
