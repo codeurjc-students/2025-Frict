@@ -24,14 +24,11 @@ public class UserRestController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserLoginDTO> me(HttpServletRequest request) {
-		
-		Principal principal = request.getUserPrincipal();
-		
-		if(principal != null) {
-            return ResponseEntity.ok(userService.getLoggedUserInfo(principal.getName()));
-		} else {
-			return ResponseEntity.notFound().build();
+        Optional<UserLoginDTO> loginInfoOptional = userService.getLoggedUserInfo(request);
+		if(loginInfoOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
 		}
+        return ResponseEntity.ok(loginInfoOptional.get());
 	}
 
     @GetMapping("/image/{id}")
