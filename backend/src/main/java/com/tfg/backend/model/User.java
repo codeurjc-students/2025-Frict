@@ -46,8 +46,8 @@ public class User {
     @Column(nullable = false)
     private boolean isBanned = false;
 
-    @ManyToMany
-    private List<Product> productsInCart = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> itemsInCart = new ArrayList<>();
 
     @ManyToMany
     private Set<Product> favouriteProducts = new HashSet<>();

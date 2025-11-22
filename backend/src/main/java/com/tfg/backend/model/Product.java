@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.sql.Blob;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -35,8 +36,6 @@ public class Product {
 
     private double currentPrice;
 
-    private int quantity = 0; //Used when adding a product to the cart
-
     private boolean active = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -45,14 +44,12 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
 
-    @ManyToMany(mappedBy = "productsInCart")
-    private Set<User> usersAsInCart = new HashSet<>();
-
     @ManyToMany(mappedBy = "favouriteProducts")
     private Set<User> usersAsFavourite = new HashSet<>();
 
-    @ManyToMany(mappedBy = "products")
-    private Set<Order> orders = new HashSet<>();
+    //Controlled by the intermediate entities OrderItem and ShopStock
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ShopStock> shopsStock = new HashSet<>();

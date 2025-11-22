@@ -2,10 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.ProductsPageDTO;
 import com.tfg.backend.DTO.ProductDTO;
-import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.model.Order;
-import com.tfg.backend.model.Product;
-import com.tfg.backend.model.User;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
@@ -85,9 +82,8 @@ public class ProductRestController {
             return ResponseEntity.notFound().build();
         }
         Product product = productOptional.get();
-        product.setQuantity(quantity);
-
-        loggedUser.getProductsInCart().add(product);
+        OrderItem item = new OrderItem(null, product, loggedUser, quantity);
+        loggedUser.getItemsInCart().add(item);
         userRepository.save(loggedUser);
 
         return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
@@ -162,11 +158,12 @@ public class ProductRestController {
 
         //Option 1 (active): delete intermediate table relations from Order entities -> Order info will not contain deleted products info
         //Option 2: Apply soft delete to products by adding a "deleted" boolean field -> No product removal, all orders will access products info, manage not retrieving deleted products info
-        for (Order o : product.getOrders()) {
-            o.getProducts().remove(product); // Quita el producto de la colección
-        }
-        productService.deleteById(id);
 
+        //Remove the relations not marked as CascadeType.ALL in Product
+        product.getCategories().clear();
+        product.getOrderItems().clear();
+
+        productService.deleteById(id);
         return ResponseEntity.status(200).body(new ProductDTO(product));
     }
 
