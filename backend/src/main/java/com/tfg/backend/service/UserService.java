@@ -40,13 +40,21 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-	public Optional<UserLoginDTO> getLoggedUserInfo(HttpServletRequest request) {
+	public Optional<UserLoginDTO> getLoginInfo(HttpServletRequest request) {
         Principal principal = request.getUserPrincipal();
         if(principal == null) {
             return Optional.empty();
         }
         return Optional.of(new UserLoginDTO(userRepository.findByUsername(principal.getName()).orElseThrow()));
 	}
+
+    public Optional<User> getLoggedUser(HttpServletRequest request) {
+        Optional<UserLoginDTO> loginInfo = this.getLoginInfo(request);
+        if(loginInfo.isEmpty()){
+            return Optional.empty();
+        }
+        return userRepository.findById(loginInfo.get().getId());
+    }
 
     public User registerUser(UserRegisterDTO dto) {
         User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), dto.getAddress(), passwordEncoder.encode(dto.getPassword()), "USER");

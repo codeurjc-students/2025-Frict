@@ -1,6 +1,6 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {catchError, Observable, of, switchMap, throwError} from 'rxjs';
+import {catchError, Observable, switchMap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {ProductsPage} from '../models/productsPage.model';
 import {Product} from '../models/product.model';
@@ -78,5 +78,15 @@ export class ProductService {
         return throwError(() => error);
       })
     );
+  }
+
+  public addProductToCart(id: string, units: number): Observable<Product> {
+    let params = new HttpParams();
+    params = params.append('quantity', units);
+    return this.http.post<Product>(this.apiUrl + `/cart/${id}`, { params });
+  }
+
+  public addProductToFavourites(id: string): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl + `/favourites/${id}`, null);
   }
 }

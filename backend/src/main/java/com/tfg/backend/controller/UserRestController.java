@@ -1,7 +1,6 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.ImageUtils;
@@ -11,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
 import java.sql.Blob;
 import java.util.Optional;
 
@@ -24,7 +22,7 @@ public class UserRestController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserLoginDTO> me(HttpServletRequest request) {
-        Optional<UserLoginDTO> loginInfoOptional = userService.getLoggedUserInfo(request);
+        Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
 		if(loginInfoOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
 		}

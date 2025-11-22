@@ -35,6 +35,8 @@ public class Product {
 
     private double currentPrice;
 
+    private int quantity = 0; //Used when adding a product to the cart
+
     private boolean active = true;
 
     @ManyToMany(fetch = FetchType.EAGER)

@@ -62,6 +62,8 @@ public class SecurityConfig {
 		http
 			.authorizeHttpRequests(authorize -> authorize
                     // PRIVATE ENDPOINTS
+                    .requestMatchers(HttpMethod.POST, "/api/v1/products/cart/*").hasRole("USER")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/products/favourites/*").hasRole("USER")
 
 					// PUBLIC ENDPOINTS
 					.anyRequest().permitAll()

@@ -9,12 +9,12 @@ import {FooterComponent} from '../../common/footer/footer.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
-import {LoadingComponent} from '../../common/loading/loading.component';
+import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 
 @Component({
   selector: 'app-client-home',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, ButtonModule, RouterLink, Carousel, FooterComponent, ProductCardComponent, LoadingComponent],
+  imports: [CommonModule, NavbarComponent, ButtonModule, RouterLink, Carousel, FooterComponent, ProductCardComponent, LoadingSectionComponent],
   templateUrl: './client-home.component.html',
   styleUrls: ['./client-home.component.css']
 })

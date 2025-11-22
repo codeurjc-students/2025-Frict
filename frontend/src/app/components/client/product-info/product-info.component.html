@@ -1,6 +1,13 @@
 <app-navbar></app-navbar>
 
-<div class="max-w-9/12 mx-auto p-4">
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="resetError()"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="max-w-9/12 mx-auto p-4">
+  <!-- Information messages -->
+  <p-toast position="top-right" pStyleClass="position-top: 70px"></p-toast>
+
   <!-- Breadcrumbs -->
   <nav class="flex flex-wrap items-center gap-2 text-md text-surface-400 py-2">
     <p-breadcrumb [home]="homePage" [model]="previousPages"/>
@@ -199,7 +206,7 @@
     <div class="mt-8">
       <h2 class="text-2xl font-bold text-surface-800 mb-8">Más en {{ productCategory.name }}</h2>
       <div id="category-content" class="content">
-        <ng-container *ngIf="!loading && !error && relatedProducts.length; else noRelated">
+        <ng-container *ngIf="!relatedLoading && !relatedError && relatedProducts.length; else noRelated">
           <p-carousel [value]="relatedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="carouselResponsiveOptions">
             <ng-template let-p pTemplate="item">
               <app-product-card [product]="p" [elementId]="'recommendedProduct-' + p.id"/>
@@ -207,7 +214,7 @@
           </p-carousel>
         </ng-container>
         <ng-template #noRelated>
-          <app-loading [loading]="loading" [error]="error" [numElements]="relatedProducts.length" elementsType="productos relacionados"/>
+          <app-loading [loading]="relatedLoading" [error]="relatedError" [numElements]="relatedProducts.length" elementsType="productos relacionados"/>
         </ng-template>
       </div>
     </div>

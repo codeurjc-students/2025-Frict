@@ -2,11 +2,16 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.ProductsPageDTO;
 import com.tfg.backend.DTO.ProductDTO;
+import com.tfg.backend.DTO.UserLoginDTO;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.Product;
+import com.tfg.backend.model.User;
+import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
+import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.ImageUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,8 +33,14 @@ public class ProductRestController {
 
     @Autowired
     private ProductService productService;
+
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
 
     @GetMapping("/")
@@ -57,12 +68,54 @@ public class ProductRestController {
     }
 
 
-    @GetMapping("/add/{id}")
-    public ResponseEntity<ProductDTO> addProductToCart(@PathVariable Long id) {
-        //Get logged user info (User class)
-        //...
-        return ResponseEntity.ok().build();
+    @PostMapping("/cart/{id}")
+    public ResponseEntity<ProductDTO> addProductToCart(HttpServletRequest request,
+                                                       @PathVariable Long id,
+                                                       @RequestParam int quantity) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Find the product and, if exists, add it to user cart
+        Optional<Product> productOptional = productService.findById(id);
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+        product.setQuantity(quantity);
+
+        loggedUser.getProductsInCart().add(product);
+        userRepository.save(loggedUser);
+
+        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
     }
+
+
+    @PostMapping("/favourites/{id}")
+    public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Find the product and, if exists, add it to user cart
+        Optional<Product> productOptional = productService.findById(id);
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+
+        loggedUser.getFavouriteProducts().add(product);
+        userRepository.save(loggedUser);
+
+        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
+    }
+
 
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {

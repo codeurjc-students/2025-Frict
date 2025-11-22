@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import {LoginComponent} from './components/common/login/login.component';
 import {SignupComponent} from './components/common/signup/signup.component';
-import {ErrorComponent} from './components/common/error/error.component';
 import {SearchComponent} from './components/common/search/search.component';
 import {ProductInfoComponent} from './components/client/product-info/product-info.component';
 
@@ -22,7 +21,6 @@ export const routes: Routes = [
   //Common routes
   { path: 'login', component: LoginComponent, data: { title: 'Iniciar sesión - MiTienda', icon: icons.client } },
   { path: 'signup', component: SignupComponent, data: { title: 'Registro - MiTienda', icon: icons.client } },
-  { path: 'error', component: ErrorComponent, data: { title: 'Error', icon: icons.client } },
 
   //Inexistent routes
   {path: '**', redirectTo: ''},

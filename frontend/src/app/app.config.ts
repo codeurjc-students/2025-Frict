@@ -4,7 +4,7 @@ import {
   provideAppInitializer,
   provideZoneChangeDetection
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {provideRouter, withRouterConfig} from '@angular/router';
 
 import { routes } from './app.routes';
 
@@ -60,7 +60,7 @@ function initializeAuth(authService: AuthService): () => Promise<any> {
 }
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), provideHttpClient(),
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes, withRouterConfig({ onSameUrlNavigation: 'reload' })), provideHttpClient(),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
