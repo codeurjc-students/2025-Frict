@@ -83,10 +83,10 @@ export class ProductService {
   public addProductToCart(id: string, units: number): Observable<Product> {
     let params = new HttpParams();
     params = params.append('quantity', units);
-    return this.http.post<Product>(this.apiUrl + `/cart/${id}`, { params });
+    return this.http.post<Product>(this.apiUrl + `/cart/${id}`, null, { params }); //Null body, required query params
   }
 
   public addProductToFavourites(id: string): Observable<Product> {
-    return this.http.post<Product>(this.apiUrl + `/favourites/${id}`, null);
+    return this.http.post<Product>(this.apiUrl + `/favourites/${id}`, {});
   }
 }
