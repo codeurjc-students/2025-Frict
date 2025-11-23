@@ -67,6 +67,58 @@ public class ReviewRestController {
 
         Review review = new Review(loggedUser, productOptional.get(), reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
         reviewService.save(review);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(new ReviewDTO(review));
+    }
+
+
+    @PutMapping
+    public ResponseEntity<ReviewDTO> updateReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
+        //Check that the logged user and the review creator match
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
+            return ResponseEntity.status(401).build(); //Unauthorized as not matched
+        }
+
+        //Check that the review exists
+        Optional<Review> reviewOptional = reviewService.findById(reviewDTO.getId());
+        if(reviewOptional.isEmpty()){
+            return ResponseEntity.notFound().build(); //Review not found
+        }
+        Review review = reviewOptional.get();
+
+        review.setText(reviewDTO.getText());
+        review.setRating(reviewDTO.getRating());
+        review.setRecommended(reviewDTO.isRecommended());
+        reviewService.save(review);
+        return ResponseEntity.ok().body(new ReviewDTO(review));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ReviewDTO> deleteReview(HttpServletRequest request, @PathVariable Long id) {
+        //Check that the review exists
+        Optional<Review> reviewOptional = reviewService.findById(id);
+        if(reviewOptional.isEmpty()){
+            return ResponseEntity.notFound().build(); //Review not found
+        }
+        Review review = reviewOptional.get();
+
+        //Check that the logged user and the review creator match
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        if (!loggedUser.getId().equals(review.getUser().getId())){
+            return ResponseEntity.status(401).build(); //Unauthorized as not matched
+        }
+
+        reviewService.deleteById(id);
+        return ResponseEntity.ok().body(new ReviewDTO(review));
     }
 }

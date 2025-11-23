@@ -31,6 +31,10 @@ import {StyleClass} from 'primeng/styleclass';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Textarea} from 'primeng/textarea';
 import {FloatLabel} from 'primeng/floatlabel';
+import {Tooltip} from 'primeng/tooltip';
+import {TableModule} from 'primeng/table';
+import {ShopStock} from '../../../models/shopStock.model';
+import {Tag} from 'primeng/tag';
 
 
 @Component({
@@ -60,7 +64,10 @@ import {FloatLabel} from 'primeng/floatlabel';
     StyleClass,
     LoadingScreenComponent,
     Textarea,
-    FloatLabel
+    FloatLabel,
+    Tooltip,
+    TableModule,
+    Tag
   ],
   providers: [MessageService],
   templateUrl: './product-info.component.html'
@@ -87,6 +94,7 @@ export class ProductInfoComponent implements OnInit {
   protected productCategory!: Category;
 
   protected visibleShippingDialog: boolean = false;
+  protected visibleAvailabilityDialog: boolean = false;
 
   protected stars: any[] = [];
   protected recommendedCount: number = 0;
@@ -95,6 +103,8 @@ export class ProductInfoComponent implements OnInit {
 
   protected userReviewed: boolean = false;
   protected newReview: Partial<Review> = { rating: 5, recommended: true };
+
+  protected stocks: ShopStock[] = []
 
   protected loggedUserInfo!: LoginInfo;
 
@@ -112,13 +122,33 @@ export class ProductInfoComponent implements OnInit {
     });
   }
 
-  submitReview(){
-    console.log("Botón de enviar review pulsado");
+  //If the Partial<Review> object does not include a value in the field id, then it is a new review
+  protected submitReview(){
     this.newReview.productId = this.product.id;
     this.newReview.creatorId = this.loggedUserInfo.id;
-    this.reviewService.createReview(this.newReview).subscribe({
-      next: (review) => {
+    this.reviewService.submitReview(this.newReview).subscribe({
+      next: () => {
         this.userReviewed = true;
+        this.loadReviews();
+      }
+    })
+  }
+
+  protected editReview(id: string) {
+    const publishedReview = this.productReviews.find(r => r.id === id);
+    if(publishedReview){
+      this.newReview = { ...publishedReview }; //Deep copy, in order to be able to delete the old one from reviews array
+      this.productReviews = this.productReviews.filter(r => r.id !== id);
+      this.userReviewed = false;
+    }
+  }
+
+  protected deleteReview(id: string) {
+    console.log("Botón de borrar review pulsado");
+    this.reviewService.deleteReviewById(id).subscribe({
+      next: () => {
+        this.newReview = {};
+        this.userReviewed = false;
         this.loadReviews();
       }
     })
@@ -134,7 +164,18 @@ export class ProductInfoComponent implements OnInit {
     this.loadProduct();
   }
 
-  loadProduct(){
+  protected getStockMessage(): string {
+    let units = this.product.availableUnits;
+    if (units <= 10 && units > 5) {
+      return 'Quedan ' + units;
+    } else if (units <= 5 && units > 0) {
+      return '¡Solo quedan ' + units + '!';
+    } else {
+      return 'Agotado';
+    }
+  }
+
+  protected loadProduct(){
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.productService.getProductById(id).subscribe({
@@ -145,6 +186,7 @@ export class ProductInfoComponent implements OnInit {
             thumbnailImageSrc: product.thumbnailUrl
           });
           this.loadProductCategory();
+          this.loadShopStocks();
           this.loadReviews();
         },
         error: () => {
@@ -155,7 +197,7 @@ export class ProductInfoComponent implements OnInit {
     }
   }
 
-  loadProductCategory() { //Only the first category is taken into account in related products
+  protected loadProductCategory() { //Only the first category is taken into account in related products
     this.categoryService.getCategoryById(this.product.categoriesId[0]).subscribe({
       next: (category) => {
         this.productCategory = category;
@@ -168,7 +210,7 @@ export class ProductInfoComponent implements OnInit {
     });
   }
 
-  loadRelatedProducts() {
+  protected loadRelatedProducts() {
     const currentProductId = this.route.snapshot.paramMap.get('id');
     this.productService.getProductsByCategoryName(this.productCategory.name).subscribe({
       next: (products) => {
@@ -182,12 +224,16 @@ export class ProductInfoComponent implements OnInit {
     })
   }
 
-  showShippingDialog() {
+  protected showShippingDialog() {
     this.visibleShippingDialog = true;
   }
 
+  protected showAvailabilityDialog() {
+    this.visibleAvailabilityDialog = true;
+  }
 
-  loadReviews() {
+
+  protected loadReviews() {
     this.reviewService.getReviewsByProductId(this.product.id).subscribe({
       next: (reviews) => {
         this.productReviews = reviews.reviews;
@@ -232,7 +278,16 @@ export class ProductInfoComponent implements OnInit {
     });
   }
 
-  addToCart() {
+  protected loadShopStocks() {
+    this.productService.getStockByProductId(this.product.id).subscribe({
+      next: (s) => {
+        console.log(s);
+        this.stocks = s.stocks;
+      }
+    })
+  }
+
+  protected addToCart() {
     if(!this.authService.isLogged()){
       this.router.navigate(['/login']);
     }
@@ -246,7 +301,7 @@ export class ProductInfoComponent implements OnInit {
     })
   }
 
-  addToFavourites() {
+  protected addToFavourites() {
     if(!this.authService.isLogged()){
       this.router.navigate(['/login']);
     }

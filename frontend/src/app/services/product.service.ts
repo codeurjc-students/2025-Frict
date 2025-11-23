@@ -4,6 +4,7 @@ import {catchError, Observable, switchMap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {ProductsPage} from '../models/productsPage.model';
 import {Product} from '../models/product.model';
+import {ShopStockList} from '../models/shopStockList.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,10 @@ export class ProductService {
 
   public getProductById(id: string): Observable<Product> {
     return this.http.get<Product>(this.apiUrl + `/${id}`);
+  }
+
+  public getStockByProductId(id: string): Observable<ShopStockList> {
+    return this.http.get<ShopStockList>(this.apiUrl + `/stock/${id}`)
   }
 
   public getFilteredProducts(

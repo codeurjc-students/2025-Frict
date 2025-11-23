@@ -2,6 +2,8 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.ProductsPageDTO;
 import com.tfg.backend.DTO.ProductDTO;
+import com.tfg.backend.DTO.ShopStockDTO;
+import com.tfg.backend.DTO.ShopStockListDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.CategoryService;
@@ -62,6 +64,22 @@ public class ProductRestController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(new ProductDTO(product.get()));
+    }
+
+
+    @GetMapping("/stock/{id}")
+    public ResponseEntity<ShopStockListDTO> getProductStock(@PathVariable Long id) {
+        Optional<Product> productOptional = productService.findById(id);
+        if (!productOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+
+        List<ShopStockDTO> dtos = new ArrayList<>();
+        for (ShopStock s : product.getShopsStock()) {
+            dtos.add(new ShopStockDTO(s));
+        }
+        return ResponseEntity.ok(new ShopStockListDTO(dtos));
     }
 
 

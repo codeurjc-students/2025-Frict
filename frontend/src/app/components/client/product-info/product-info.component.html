@@ -16,8 +16,15 @@
   -->
 
   <!-- Product title -->
-  <div class="flex flex-wrap gap-3 justify-between items-center mt-2">
+  <div class="flex flex-wrap items-center gap-3 mt-2">
     <h1 class="text-3xl font-bold">{{ product.name }}</h1>
+
+    <div *ngIf="product.availableUnits <= 10">
+      <p-tag
+        [value]="getStockMessage()"
+        [severity]="product.availableUnits < 10 ? 'danger' : 'warn'">
+      </p-tag>
+    </div>
   </div>
 
   <!-- Main grid -->
@@ -62,16 +69,34 @@
 
         <div class="bg-primary-500/20 border-l-4 border-primary-500 text-primary-200 px-3 py-2 rounded text-sm">
           <i class="pi pi-star-fill" style="font-size: 0.75rem"></i>
-          {{ product.averageRating }}/5 · {{product.totalReviews }} opiniones
+          {{ product.averageRating }}/5 · {{product.totalReviews}} {{ product.totalReviews === 1 ? 'opinión' : 'opiniones' }}
         </div>
 
         <div class="text-sm text-surface-300 mt-8 space-y-8 gap-2">
           <p-button (click)="showShippingDialog()" label="Envío: Gratis (en compras superiores a 50€)" icon="pi pi-truck" styleClass="w-full !justify-start !bg-surface-700 !border-0 !text-left"/>
-          <p-button label="Consultar disponibilidad en tienda" icon="pi pi-box" styleClass="w-full !justify-start !bg-surface-700 !border-0 !text-left !mt-4"/>
+          <p-button (click)="showAvailabilityDialog()" label="Consultar disponibilidad en tienda" icon="pi pi-box" styleClass="w-full !justify-start !bg-surface-700 !border-0 !text-left !mt-4"/>
           <p-dialog header="Envíos" [modal]="true" [(visible)]="visibleShippingDialog" [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
             <p>
               Todos los envíos son gratuitos para pedidos superiores a 50€, tanto en Península, Baleares y Canarias.
             </p>
+          </p-dialog>
+          <p-dialog header="Disponibilidad en tiendas físicas" [modal]="true" [(visible)]="visibleAvailabilityDialog" [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+            <p-table [value]="stocks" [tableStyle]="{ 'min-width': '50rem' }">
+              <ng-template #header>
+                <tr>
+                  <th>Tienda</th>
+                  <th>Dirección</th>
+                  <th>Cantidad</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-stock>
+                <tr>
+                  <td>{{ stock.shopName }}</td>
+                  <td>{{ stock.shopAddress }}</td>
+                  <td>{{ stock.units }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
           </p-dialog>
         </div>
 
@@ -87,7 +112,7 @@
         </div>
 
         <div class="mt-8 grid gap-2">
-          <p-button (click)="addToCart()" label="Añadir a la cesta" icon="pi pi-cart-plus" styleClass="w-full"/>
+          <p-button (click)="addToCart()" [label]="product.availableUnits ? 'Añadir a la cesta' : 'Agotado'" [disabled]="!product.availableUnits" [icon]="product.availableUnits ? 'pi pi-cart-plus' : 'pi pi-times'" styleClass="w-full"/>
           <p-button (click)="addToFavourites()" label="Añadir a la lista de deseos" icon="pi pi-bookmark" severity="secondary" styleClass="w-full"/>
         </div>
       </div>
@@ -130,7 +155,7 @@
               <p class="text-4xl font-bold mb-3">{{ product.averageRating }}</p>
               <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true"></p-rating>
               <p class="text-sm text-gray-500 mt-1">
-                {{ product.totalReviews }} Opiniones
+                {{product.totalReviews}} {{ product.totalReviews === 1 ? 'opinión' : 'opiniones' }}
               </p>
             </div>
 
@@ -165,24 +190,25 @@
 
 
       <!-- BARRA DE ESCRITURA DE RESEÑA -->
-      <div class="mt-10">
+      <div class="my-10" *ngIf="authService.isLogged() && authService.isUser() && !userReviewed">
+        <h2 class="text-xl font-bold text-surface-800"> Publicar una reseña</h2>
+        <p class="text-gray-600 text-sm mb-4">Escribe tu opinión sobre este producto.</p>
 
-        <h2 class="text-xl font-bold text-surface-800"> {{ productReviews.length }} Opiniones de usuarios</h2>
-        <p class="text-gray-600 text-sm">Comprueba qué piensan otros usuarios sobre el producto o, si no lo has hecho, escribe tu reseña.</p>
-
-        <div *ngIf="authService.isLogged() && authService.isUser() && !userReviewed" class=" mt-8 p-4 border border-gray-300 rounded-xl bg-white shadow-sm w-full mx-auto">
-          <!-- Arriba: foto, rating y botón -->
+        <div class="p-4 border border-gray-300 rounded-xl bg-white shadow-sm w-full mx-auto">
           <div class="flex items-center justify-between mb-4">
-            <!-- Foto de perfil -->
-            <p-avatar [image]="loggedUserInfo.thumbnailUrl" shape="circle" class="shrink-0"></p-avatar>
+            <!-- Profile photo -->
+            <div class="flex items-center gap-3">
+              <p-avatar [image]="loggedUserInfo.thumbnailUrl" shape="circle" class="shrink-0"></p-avatar>
+              <span class="text-surface-800 hidden sm:inline font-bold">{{ loggedUserInfo.name }}</span>
+            </div>
 
-            <!-- Rating editable centrado -->
+            <!-- Editable centered rating -->
             <div class="flex-1 flex justify-center">
               <span class="hidden sm:inline mr-2 text-surface-500">Valoración:</span>
               <p-rating [(ngModel)]="newReview.rating"></p-rating>
             </div>
 
-            <!-- Botón Publicar reseña -->
+            <!-- Publish review button -->
             <p-button
               class="ml-2 flex items-center justify-center h-10"
               (onClick)="submitReview()"
@@ -197,19 +223,19 @@
             </p-button>
           </div>
 
-          <!-- Cuadro de texto grande -->
+          <!-- Large textarea -->
           <p-floatlabel variant="on">
-            <textarea
-              pTextarea
-              [(ngModel)]="newReview.text"
-              [autoResize]="true"
-              rows="6"
-              id="description"
-              class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:border-primary-500 mb-4"></textarea>
+          <textarea
+            pTextarea
+            [(ngModel)]="newReview.text"
+            [autoResize]="true"
+            rows="6"
+            id="description"
+            class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:border-primary-500 mb-4"></textarea>
             <label for="description">Descripción...</label>
           </p-floatlabel>
 
-          <!-- Recomendación: pregunta + botones -->
+          <!-- Recommendation: question + buttons -->
           <div class="flex items-center gap-4">
             <span class="text-surface-500">¿Recomiendas el producto?</span>
             <p-button icon="pi pi-thumbs-up" (onClick)="setRecommendation(true)" [severity]="newReview.recommended ? 'success' : 'secondary'" class="p-button-outlined"></p-button>
@@ -218,24 +244,39 @@
         </div>
       </div>
 
-      <p-panel *ngFor="let review of productReviews" [toggleable]="true" styleClass="my-4">
-        <ng-template #header>
-          <div class="flex items-center justify-between gap-2 my-3 w-full">
-            <div class="flex items-center gap-3">
-              <p-avatar [image]="review.creatorThumbnailUrl" shape="circle"></p-avatar>
-              <span class="font-bold">{{ review.creatorName }}</span>
+      <div class="my-10" *ngIf="productReviews.length">
+        <h2 class="text-xl font-bold text-surface-800">Reseñas de otros usuarios</h2>
+        <p class="text-gray-600 text-sm">Mira qué piensan otros usuarios del producto.</p>
+        <p-panel *ngFor="let review of productReviews" [toggleable]="true" styleClass="my-4 bg-surface-100">
+          <ng-template #header>
+            <div class="flex items-center justify-between gap-2 my-3 w-full">
+              <div class="flex items-center gap-3">
+                <p-avatar [image]="review.creatorThumbnailUrl" shape="circle"></p-avatar>
+                <span class="hidden sm:inline font-bold">{{ review.creatorName }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-surface-400 hidden md:flex">{{ review.createdAt }}</span>
+                <p-rating [ngModel]="review.rating" [readonly]="true"></p-rating>
+                <p-button [icon]="review.recommended ? 'pi pi-thumbs-up' : 'pi pi-thumbs-down'" [disabled]="true" [rounded]="true" [severity]="review.recommended ? 'success' : 'danger'" class="p-button-outlined mx-2"></p-button>
+              </div>
             </div>
-            <div class="flex items-center gap-3">
-              <span class="text-surface-400 hidden md:flex">{{ review.createdAt }}</span>
-              <p-rating [ngModel]="review.rating" [readonly]="true"></p-rating>
-              <p-button [icon]="review.recommended ? 'pi pi-thumbs-up' : 'pi pi-thumbs-down'" [disabled]="true" [rounded]="true" [severity]="review.recommended ? 'success' : 'danger'" class="p-button-outlined mx-2"></p-button>
+          </ng-template>
+          <p class="m-0">
+            {{ review.text }}
+          </p>
+          <ng-template #footer>
+            <div class="flex flex-wrap items-center justify-end gap-4">
+              <div class="flex items-center gap-2">
+                <div *ngIf="authService.isLogged() && authService.isUser() && userReviewed && (loggedUserInfo.id == review.creatorId)">
+                  <p-button (click)="editReview(review.id)" icon="pi pi-pencil" severity="secondary" showDelay="750" pTooltip="Modificar reseña" tooltipPosition="top" class="p-button-outlined mx-2"></p-button>
+                  <p-button (click)="deleteReview(review.id)" icon="pi pi-trash" severity="secondary" showDelay="750" pTooltip="Borrar reseña" tooltipPosition="top" class="p-button-outlined mx-2"></p-button>
+                </div>
+              </div>
             </div>
-          </div>
-        </ng-template>
-        <p class="m-0">
-          {{ review.text }}
-        </p>
-      </p-panel>
+          </ng-template>
+        </p-panel>
+      </div>
+
     </div>
 
     <!-- Related products (for now, those with the same category) -->

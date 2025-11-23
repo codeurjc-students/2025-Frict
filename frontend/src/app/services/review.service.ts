@@ -20,7 +20,15 @@ export class ReviewService {
     return this.http.get<ReviewList>(this.apiUrl + `/`, { params });
   }
 
-  public createReview(review: Partial<Review>): Observable<Review> {
-    return this.http.post<Review>(this.apiUrl, review);
+  //Creates and edits reviews
+  public submitReview(review: Partial<Review>): Observable<Review> {
+    if (review.id){
+      return this.http.put<Review>(this.apiUrl, review); //Edit a review
+    }
+    return this.http.post<Review>(this.apiUrl, review); //Create a review
+  }
+
+  public deleteReviewById(id: string): Observable<Review> {
+    return this.http.delete<Review>(this.apiUrl + `/${id}`);
   }
 }
