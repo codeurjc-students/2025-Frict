@@ -11,6 +11,7 @@ import {NgIf} from '@angular/common';
     NgIf
   ],
   templateUrl: './loading-screen.component.html',
+  standalone: true,
   styleUrl: './loading-screen.component.css'
 })
 export class LoadingScreenComponent {

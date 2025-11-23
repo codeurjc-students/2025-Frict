@@ -94,7 +94,7 @@ export class ProductInfoComponent implements OnInit {
   protected productReviews: Review[] = [];
 
   protected userReviewed: boolean = false;
-  protected newReview: Partial<Review> = {};
+  protected newReview: Partial<Review> = { rating: 5, recommended: true };
 
   protected loggedUserInfo!: LoginInfo;
 
@@ -118,7 +118,6 @@ export class ProductInfoComponent implements OnInit {
     this.newReview.creatorId = this.loggedUserInfo.id;
     this.reviewService.createReview(this.newReview).subscribe({
       next: (review) => {
-        //this.productReviews.push(review); //Does not update live
         this.userReviewed = true;
         this.loadReviews();
       }
@@ -200,6 +199,10 @@ export class ProductInfoComponent implements OnInit {
           { value: 1, count: 0 },
         ];
 
+        this.product.totalReviews = this.productReviews.length;
+        this.product.averageRating = this.productReviews.length
+          ? this.productReviews.reduce((acc, r) => acc + r.rating, 0) / this.productReviews.length
+          : 0;
         this.productReviews.forEach((review: any) => {
           const star = stars.find(s => s.value === review.rating);
           if (star) {
