@@ -57,7 +57,7 @@ public class ProductSystemUITest {
     public static void setUp()  {
         ChromeOptions options = new ChromeOptions();
         options.setAcceptInsecureCerts(true);
-        //options.addArguments("--headless=new");
+        options.addArguments("--headless=new");
         driver = new ChromeDriver(options);
         wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
