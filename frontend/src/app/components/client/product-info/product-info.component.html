@@ -280,10 +280,10 @@
     </div>
 
     <!-- Related products (for now, those with the same category) -->
-    <div class="mt-8">
+    <div class="mt-8" *ngIf="relatedProducts.length">
       <h2 class="text-2xl font-bold text-surface-800 mb-8">Más en {{ productCategory.name }}</h2>
       <div id="category-content" class="content">
-        <ng-container *ngIf="!relatedLoading && !relatedError && relatedProducts.length; else noRelated">
+        <ng-container *ngIf="!relatedLoading && !relatedError; else noRelated">
           <p-carousel [value]="relatedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="carouselResponsiveOptions">
             <ng-template let-p pTemplate="item">
               <app-product-card [product]="p" [elementId]="'recommendedProduct-' + p.id"/>
