@@ -1,5 +1,6 @@
 package com.tfg.backend.model;
 
+import com.tfg.backend.DTO.ReviewDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

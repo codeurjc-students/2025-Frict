@@ -1,5 +1,6 @@
 export interface Review {
   id: string;
+  productId: string;
   creatorId: string;
   creatorName: string;
   creatorThumbnailUrl: string;

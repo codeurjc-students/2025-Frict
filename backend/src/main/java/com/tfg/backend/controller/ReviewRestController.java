@@ -1,20 +1,22 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.DTO.ProductDTO;
 import com.tfg.backend.DTO.ReviewDTO;
 import com.tfg.backend.DTO.ReviewListDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
+import com.tfg.backend.model.User;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.ReviewService;
+import com.tfg.backend.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -26,6 +28,9 @@ public class ReviewRestController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private UserService userService;
 
     //Get all the reviews of a product
     @GetMapping("/")
@@ -39,5 +44,29 @@ public class ReviewRestController {
             dtos.add(new ReviewDTO(r));
         }
         return ResponseEntity.ok(new ReviewListDTO(dtos));
+    }
+
+    @PostMapping
+    public ResponseEntity<ReviewDTO> createReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
+        //Check that the logged user and the review creator match
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
+            return ResponseEntity.status(401).build(); //Unauthorized as not matched
+        }
+
+        //Check that the product exists
+        Optional<Product> productOptional = productService.findById(reviewDTO.getProductId());
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build(); //Product not found
+        }
+
+        Review review = new Review(loggedUser, productOptional.get(), reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
+        reviewService.save(review);
+        return ResponseEntity.ok().build();
     }
 }

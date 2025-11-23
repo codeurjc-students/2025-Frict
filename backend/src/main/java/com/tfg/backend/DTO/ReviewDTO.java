@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ReviewDTO {
 
     private Long id; //Review id
+    private Long productId;
     private Long creatorId;
     private String creatorName;
     private String creatorThumbnailUrl;
@@ -25,6 +26,7 @@ public class ReviewDTO {
 
     public ReviewDTO(Review r){
         this.id = r.getId();
+        this.productId = r.getProduct().getId();
         this.creatorId = r.getUser().getId();
         this.creatorName = r.getUser().getName();
         this.creatorThumbnailUrl = "/api/v1/users/thumbnail/" + r.getUser().getId();

@@ -12,7 +12,6 @@ import {Carousel} from 'primeng/carousel';
 import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Breadcrumb} from 'primeng/breadcrumb';
 import {MenuItem, MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
@@ -30,6 +29,8 @@ import {LoginInfo} from '../../../models/loginInfo.model';
 import {Toast} from 'primeng/toast';
 import {StyleClass} from 'primeng/styleclass';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {Textarea} from 'primeng/textarea';
+import {FloatLabel} from 'primeng/floatlabel';
 
 
 @Component({
@@ -50,7 +51,6 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
     Carousel,
     LoadingSectionComponent,
     ProductCardComponent,
-    Breadcrumb,
     Dialog,
     Panel,
     Avatar,
@@ -58,7 +58,9 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
     MeterGroupModule,
     Toast,
     StyleClass,
-    LoadingScreenComponent
+    LoadingScreenComponent,
+    Textarea,
+    FloatLabel
   ],
   providers: [MessageService],
   templateUrl: './product-info.component.html'
@@ -81,9 +83,6 @@ export class ProductInfoComponent implements OnInit {
   protected relatedError: boolean = false;
   protected relatedProducts: Product[] = []; //Products related to products first category
 
-  protected previousPages: any[] = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Buscar' }, { label: 'Ordenadores', route: '/inputtext' }];
-  protected homePage: MenuItem | undefined;
-
   protected product!: Product;
   protected productCategory!: Category;
 
@@ -95,6 +94,8 @@ export class ProductInfoComponent implements OnInit {
   protected productReviews: Review[] = [];
 
   protected userReviewed: boolean = false;
+  protected newReview: Partial<Review> = {};
+
   protected loggedUserInfo!: LoginInfo;
 
   constructor(private productService: ProductService,
@@ -109,6 +110,23 @@ export class ProductInfoComponent implements OnInit {
     this.route.params.subscribe(() => { //If a related product is clicked when visualizing a product, the page should refresh the information
       this.loadProduct();
     });
+  }
+
+  submitReview(){
+    console.log("Botón de enviar review pulsado");
+    this.newReview.productId = this.product.id;
+    this.newReview.creatorId = this.loggedUserInfo.id;
+    this.reviewService.createReview(this.newReview).subscribe({
+      next: (review) => {
+        //this.productReviews.push(review); //Does not update live
+        this.userReviewed = true;
+        this.loadReviews();
+      }
+    })
+  }
+
+  protected setRecommendation(b: boolean) {
+    this.newReview.recommended = b;
   }
 
   protected resetError() {
@@ -238,4 +256,5 @@ export class ProductInfoComponent implements OnInit {
       }
     })
   }
+
 }
