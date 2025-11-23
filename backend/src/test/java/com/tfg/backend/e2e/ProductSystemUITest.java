@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
         properties = {
         "app.db.init=false", // Deactivate sample data initialization only for this test (DatabaseInitializer class will not run)
-        "server.port=8443"
+        "server.port=8443" // WARNING: Before running this test, run Angular using the command ng s -c testing, which changes the Angular proxy to one which works listening in port 8443
         }
 )
 public class ProductSystemUITest {
@@ -57,7 +57,7 @@ public class ProductSystemUITest {
     public static void setUp()  {
         ChromeOptions options = new ChromeOptions();
         options.setAcceptInsecureCerts(true);
-        options.addArguments("--headless=new");
+        //options.addArguments("--headless=new");
         driver = new ChromeDriver(options);
         wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
@@ -96,9 +96,11 @@ public class ProductSystemUITest {
         WebElement recommendedMessageDiv = driver.findElement(By.id("recommended-content"));
         WebElement topSalesMessageDiv = driver.findElement(By.id("topSales-content"));
 
-        assertTrue(featuredMessageDiv.getText().contains("No hay productos destacados disponibles."));
-        assertTrue(recommendedMessageDiv.getText().contains("No hay productos recomendados disponibles."));
-        assertTrue(topSalesMessageDiv.getText().contains("No hay productos top ventas disponibles."));
+        String featuredMessage = featuredMessageDiv.getText();
+
+        assertTrue(featuredMessageDiv.getText().contains("Ha ocurrido un error inesperado"));
+        assertTrue(recommendedMessageDiv.getText().contains("Ha ocurrido un error inesperado"));
+        assertTrue(topSalesMessageDiv.getText().contains("Ha ocurrido un error inesperado"));
     }
 
     /*

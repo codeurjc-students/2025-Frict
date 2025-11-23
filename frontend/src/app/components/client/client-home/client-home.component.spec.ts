@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {ClientHomeComponent} from './client-home.component';
+import {Product} from '../../../models/product.model';
 
 describe('ClientHomeComponent', () => {
   let fixture: ComponentFixture<ClientHomeComponent>;
@@ -53,9 +54,9 @@ describe('ClientHomeComponent', () => {
   });
 
   it('debe mostrar los productos cuando el servicio devuelve datos', async () => {
-    const allMockProducts = [
-      { id: 1, referenceCode: 'ABC', name: 'Producto 1', description: 'Desc 1', currentPrice: 100, imageUrl: '', previousPrice: 0.0, discount: "0%", categoriesId: [14], availableUnits: 0, averageRating: 0.0, totalReviews: 0 },
-      { id: 2, referenceCode: 'DEF', name: 'Producto 2', description: 'Desc 2', currentPrice: 200, imageUrl: '', previousPrice: 0.0, discount: "0%", categoriesId: [14], availableUnits: 0, averageRating: 0.0, totalReviews: 0 }
+    const allMockProducts: Product[] = [
+      { id: '1', referenceCode: 'ABC', name: 'Producto 1', description: 'Desc 1', currentPrice: 100, imageUrl: '', previousPrice: 0.0, discount: "0%", categoriesId: ["14"], availableUnits: 0, averageRating: 0.0, totalReviews: 0, thumbnailUrl: '' },
+      { id: '2', referenceCode: 'DEF', name: 'Producto 2', description: 'Desc 2', currentPrice: 200, imageUrl: '', previousPrice: 0.0, discount: "0%", categoriesId: ["14"], availableUnits: 0, averageRating: 0.0, totalReviews: 0, thumbnailUrl: '' }
     ];
 
     mockProductService.getAllProducts.and.returnValue(
@@ -63,10 +64,10 @@ describe('ClientHomeComponent', () => {
     );
 
     mockProductService.getProductsByCategoryName.and.callFake((name: string) => {
-      const productsCopy = allMockProducts.map(p => ({ ...p })); // copias independientes para evitar duplicados
+      const productsCopy = allMockProducts.map(p => ({ ...p })); // Deepcopy to avoid duplicates
       switch (name) {
         case 'Destacado':
-          return of({ products: productsCopy.filter(p => p.categoriesId.includes(14)), totalProducts: 2, currentPage: 0, lastPage: 0, pageSize: 8 });
+          return of({ products: productsCopy.filter(p => p.categoriesId.includes("14")), totalProducts: 2, currentPage: 0, lastPage: 0, pageSize: 8 });
         case 'Top ventas':
           return of({ products: [], totalProducts: 0, currentPage: 0, lastPage: -1, pageSize: 8 });
         case 'Recomendado':
@@ -80,7 +81,7 @@ describe('ClientHomeComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Solo seleccionamos la sección de productos destacados
+    // Only featured products is selected
     const items = fixture.debugElement.queryAll(
       By.css('#featured-content [id^="featuredProduct-"]')
     );
@@ -98,17 +99,17 @@ describe('ClientHomeComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Los arrays deben quedar vacíos
+    // The arrays should be empty
     expect(component.featuredProducts.length).toBe(0);
     expect(component.topSalesProducts.length).toBe(0);
     expect(component.recommendedProducts.length).toBe(0);
 
-    // Los flags de error deben activarse
+    // The error flags should be activated
     expect(component.featuredError).toBeTrue();
     expect(component.topSalesError).toBeTrue();
     expect(component.recommendedError).toBeTrue();
 
-    // El loading debe terminar
+    // The loading process should end
     expect(component.featuredLoading).toBeFalse();
     expect(component.topSalesLoading).toBeFalse();
     expect(component.recommendedLoading).toBeFalse();

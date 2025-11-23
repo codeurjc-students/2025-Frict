@@ -21,6 +21,8 @@ export class LoadingSectionComponent {
 
   @Input() numElements: number = 0;
 
+  @Input() idType: string = 'elements';
+
   @Input() elementsType: string = 'elementos';
 
   @Input() loadingText: string = 'Cargando, por favor espera...';
