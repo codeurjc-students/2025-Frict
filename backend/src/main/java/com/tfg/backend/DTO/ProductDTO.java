@@ -18,6 +18,7 @@ public class ProductDTO {
     private String referenceCode;
     private String name;
     private String imageUrl;
+    private String thumbnailUrl;
     private String description;
     private double previousPrice;
     private double currentPrice;
@@ -35,6 +36,7 @@ public class ProductDTO {
         this.name = p.getName();
         this.referenceCode = p.getReferenceCode();
         this.imageUrl = "/api/v1/products/image/" + id;
+        this.thumbnailUrl = "/api/v1/products/thumbnail/" + id;
         this.description = p.getDescription();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();

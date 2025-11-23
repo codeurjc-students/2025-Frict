@@ -13,6 +13,7 @@ import {NgIf, NgOptimizedImage} from '@angular/common';
     NgIf,
   ],
   templateUrl: './login.component.html',
+  standalone: true,
   styleUrl: './login.component.css'
 })
 export class LoginComponent {

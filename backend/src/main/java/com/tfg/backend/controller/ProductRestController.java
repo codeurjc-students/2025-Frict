@@ -2,14 +2,17 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.ProductsPageDTO;
 import com.tfg.backend.DTO.ProductDTO;
-import com.tfg.backend.model.Order;
-import com.tfg.backend.model.Product;
+import com.tfg.backend.DTO.ShopStockDTO;
+import com.tfg.backend.DTO.ShopStockListDTO;
+import com.tfg.backend.model.*;
+import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
+import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.ImageUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +32,14 @@ public class ProductRestController {
 
     @Autowired
     private ProductService productService;
+
     @Autowired
     private CategoryService categoryService;
 
-    private final int pageSize = 8;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
 
     @GetMapping("/")
@@ -51,7 +58,7 @@ public class ProductRestController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> getProduct(@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         Optional<Product> product = productService.findById(id);
         if (!product.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -59,6 +66,69 @@ public class ProductRestController {
         return ResponseEntity.ok(new ProductDTO(product.get()));
     }
 
+
+    @GetMapping("/stock/{id}")
+    public ResponseEntity<ShopStockListDTO> getProductStock(@PathVariable Long id) {
+        Optional<Product> productOptional = productService.findById(id);
+        if (!productOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+
+        List<ShopStockDTO> dtos = new ArrayList<>();
+        for (ShopStock s : product.getShopsStock()) {
+            dtos.add(new ShopStockDTO(s));
+        }
+        return ResponseEntity.ok(new ShopStockListDTO(dtos));
+    }
+
+
+    @PostMapping("/cart/{id}")
+    public ResponseEntity<ProductDTO> addProductToCart(HttpServletRequest request,
+                                                       @PathVariable Long id,
+                                                       @RequestParam int quantity) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Find the product and, if exists, add it to user cart
+        Optional<Product> productOptional = productService.findById(id);
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+        OrderItem item = new OrderItem(null, product, loggedUser, quantity);
+        loggedUser.getItemsInCart().add(item);
+        userRepository.save(loggedUser);
+
+        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
+    }
+
+
+    @PostMapping("/favourites/{id}")
+    public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Find the product and, if exists, add it to user cart
+        Optional<Product> productOptional = productService.findById(id);
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+
+        loggedUser.getFavouriteProducts().add(product);
+        userRepository.save(loggedUser);
+
+        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
+    }
 
 
     @PostMapping
@@ -106,11 +176,12 @@ public class ProductRestController {
 
         //Option 1 (active): delete intermediate table relations from Order entities -> Order info will not contain deleted products info
         //Option 2: Apply soft delete to products by adding a "deleted" boolean field -> No product removal, all orders will access products info, manage not retrieving deleted products info
-        for (Order o : product.getOrders()) {
-            o.getProducts().remove(product); // Quita el producto de la colección
-        }
-        productService.deleteById(id);
 
+        //Remove the relations not marked as CascadeType.ALL in Product
+        product.getCategories().clear();
+        product.getOrderItems().clear();
+
+        productService.deleteById(id);
         return ResponseEntity.status(200).body(new ProductDTO(product));
     }
 
@@ -122,7 +193,17 @@ public class ProductRestController {
             return ResponseEntity.notFound().build();
         }
         Product product = productOptional.get();
-        return ImageUtils.serveImage(product.getProductImage());
+        return ImageUtils.serveImage(product.getProductImage(), false);
+    }
+
+    @GetMapping("/thumbnail/{id}")
+    public ResponseEntity<byte[]> showProductThumbnail(@PathVariable long id) {
+        Optional<Product> productOptional = productService.findById(id);
+        if (!productOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+        return ImageUtils.serveImage(product.getProductImage(), true);
     }
 
 

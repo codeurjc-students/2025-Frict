@@ -199,16 +199,19 @@ public class DatabaseInitializer {
             shop1.getAssignedTrucks().add(truck2);
             shopRepository.save(shop1);
 
-            List<Product> productsOrder1 = new ArrayList<>();
-            productsOrder1.add(product1);
-            productsOrder1.add(product2);
+            Order order1 = new Order("23456", user1, truck1);
+            Order order2 = new Order("56789", user2, truck1);
 
-            List<Product> productsOrder2 = new ArrayList<>();
-            productsOrder2.add(product1);
-            productsOrder2.add(product3);
+            List<OrderItem> orderItems1 = new ArrayList<>();
+            orderItems1.add(new OrderItem(order1, product1, user1, 12));
+            orderItems1.add(new OrderItem(order1, product3, user1, 3));
 
-            Order order1 = new Order("23456", user1, productsOrder1, truck1, 5000, 192.53f);
-            Order order2 = new Order("56789", user2, productsOrder2, truck1, 10000, 83.78f);
+            List<OrderItem> orderItems2 = new ArrayList<>();
+            orderItems2.add(new OrderItem(order2, product4, user2, 2));
+            orderItems2.add(new OrderItem(order2, product8, user2, 1));
+
+            order1.setItems(orderItems1);
+            order2.setItems(orderItems2);
 
             orderRepository.save(order1);
             orderRepository.save(order2);
@@ -218,8 +221,6 @@ public class DatabaseInitializer {
             userRepository.save(user1);
             userRepository.save(user2);
 
-            product1.setShopsStock(new HashSet<>());
-            product2.setShopsStock(new HashSet<>());
             productRepository.save(product1);
             productRepository.save(product2);
 
@@ -232,8 +233,8 @@ public class DatabaseInitializer {
             shopStockRepository.save(ss1);
             shopStockRepository.save(ss2);
 
-            Review review1 = new Review(user1, product1, 5, "Muy buen producto");
-            Review review2 = new Review(user2, product1, 2, "Desastroso");
+            Review review1 = new Review(user1, product1, 5, "Muy buen producto", true);
+            Review review2 = new Review(user2, product1, 2, "Desastroso", false);
             reviewRepository.save(review1);
             reviewRepository.save(review2);
 

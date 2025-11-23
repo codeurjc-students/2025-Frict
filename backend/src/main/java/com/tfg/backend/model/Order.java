@@ -5,9 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -27,26 +25,22 @@ public class Order {
 
     private int totalProducts = 0; //If totalProducts does not match products list size, it means some of the associated products were deleted
 
-    @ManyToMany
-    private List<Product> products = new ArrayList<>(); //Needs to be a list as it must allow saving the same product more than one time
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>(); //Needs to be a list as it must allow saving the same product more than one time
 
     @ManyToOne
     private Truck assignedTruck;
 
-    private int estimatedCompletionTime;
+    private int estimatedCompletionTime = 0;
 
-    private float totalAmount;
+    private double totalAmount = 0.0;
 
     public Order() {
     }
 
-    public Order(String referenceCode, User user, List<Product> products, Truck assignedTruck, int estimatedCompletionTime, float totalAmount) {
+    public Order(String referenceCode, User user, Truck assignedTruck) {
         this.referenceCode = referenceCode;
         this.user = user;
-        this.products = products;
-        this.totalProducts = products.size();
         this.assignedTruck = assignedTruck;
-        this.estimatedCompletionTime = estimatedCompletionTime;
-        this.totalAmount = totalAmount;
     }
 }

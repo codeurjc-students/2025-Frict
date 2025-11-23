@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Blob;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,11 +45,15 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
 
-    @ManyToMany(mappedBy = "products")
-    private Set<Order> orders = new HashSet<>();
+    @ManyToMany(mappedBy = "favouriteProducts")
+    private Set<User> usersAsFavourite = new HashSet<>();
+
+    //Controlled by the intermediate entities OrderItem and ShopStock
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ShopStock> shopsStock = new HashSet<>();
+    private List<ShopStock> shopsStock = new ArrayList<>();
 
     public Product() {
     }

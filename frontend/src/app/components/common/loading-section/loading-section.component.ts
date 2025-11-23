@@ -10,16 +10,18 @@ import {ProgressSpinner} from 'primeng/progressspinner';
     NgIf,
     ProgressSpinner
   ],
-  templateUrl: './loading.component.html',
-  styleUrl: './loading.component.css'
+  templateUrl: './loading-section.component.html',
+  styleUrl: './loading-section.component.css'
 })
-export class LoadingComponent {
+export class LoadingSectionComponent {
 
   @Input() loading: boolean = false;
 
   @Input() error: boolean = false;
 
   @Input() numElements: number = 0;
+
+  @Input() idType: string = 'elements';
 
   @Input() elementsType: string = 'elementos';
 

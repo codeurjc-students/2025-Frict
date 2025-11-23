@@ -1,6 +1,7 @@
 export interface LoginInfo {
   isLogged: boolean;
-  id: number;
+  thumbnailUrl: string;
+  id: string;
   name: string;
   username: string;
   roles: string[];

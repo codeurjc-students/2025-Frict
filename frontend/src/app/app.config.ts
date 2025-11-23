@@ -4,7 +4,7 @@ import {
   provideAppInitializer,
   provideZoneChangeDetection
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {provideRouter, withRouterConfig} from '@angular/router';
 
 import { routes } from './app.routes';
 
@@ -15,7 +15,7 @@ import {provideHttpClient} from '@angular/common/http';
 import {AuthService} from './services/auth.service';
 import {finalize} from 'rxjs';
 
-export const responsiveOptions = [
+export const carouselResponsiveOptions = [
   {
     breakpoint: '1400px',
     numVisible: 4,
@@ -38,6 +38,17 @@ export const responsiveOptions = [
   },
 ];
 
+export const galleryResponsiveOptions = [
+  {
+    breakpoint: '1300px',
+    numVisible: 4
+  },
+  {
+    breakpoint: '575px',
+    numVisible: 2
+  }
+];
+
 
 function initializeAuth(authService: AuthService): () => Promise<any> {
   return () =>
@@ -49,7 +60,7 @@ function initializeAuth(authService: AuthService): () => Promise<any> {
 }
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), provideHttpClient(),
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes, withRouterConfig({ onSameUrlNavigation: 'reload' })), provideHttpClient(),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {

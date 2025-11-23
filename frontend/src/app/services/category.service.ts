@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {map, Observable, tap} from 'rxjs';
 import {Category} from '../models/category.model';
 import {CategoryList} from '../models/categoryList.model';
 
@@ -18,9 +18,21 @@ export class CategoryService {
     return this.http.get<CategoryList>(this.apiUrl + `/`);
   }
 
-  public getCategoryByName(name: string): Observable<Category> {
-    let params = new HttpParams().set('name', name);
-    return this.http.get<Category>(this.apiUrl + `/` + {name});
+  public getCategoryById(id: string): Observable<Category> {
+    return this.http.get<Category>(this.apiUrl + `/${id}`);
   }
 
+  public getCategoryByName(name: string): Observable<Category> {
+    return this.http.get<{ categories: Category[] }>(this.apiUrl + `/`).pipe(
+      map((resp) => {
+        const category = resp.categories.find(c => c.name === name);
+
+        if (!category) {
+          throw new Error(`Category '${name}' not found`);
+        }
+
+        return category;
+      })
+    );
+  }
 }

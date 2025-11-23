@@ -22,10 +22,6 @@ public class CategoryService {
         return categoryRepository.findAllById(ids);
     }
 
-    public Optional<Category> findByName(String name) {
-        return categoryRepository.findByName(name);
-    }
-
     public Optional<Category> findById(long id) {
         return categoryRepository.findById(id);
     }

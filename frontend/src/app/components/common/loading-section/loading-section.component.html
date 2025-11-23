@@ -7,12 +7,12 @@
 
   <i class="pi pi-exclamation-triangle" style="font-size: 2rem"></i>
 
-  <span class="m-6 font-semibold">{{ errorText }}</span>
+  <span [id]="idType + '-error'" class="m-6 font-semibold">{{ errorText }}</span>
 </div>
 
 <div *ngIf="!loading && !error && numElements == 0" class="w-full h-75 rounded-xl bg-blue-50 p-6 flex justify-center items-center text-blue-500">
 
   <i class="pi pi-info-circle" style="font-size: 2rem"></i>
 
-  <span class="m-6 font-semibold">No hay {{ elementsType }} disponibles.</span>
+  <span [id]="idType + '-noProducts'" class="m-6 font-semibold">No hay {{ elementsType }} disponibles.</span>
 </div>

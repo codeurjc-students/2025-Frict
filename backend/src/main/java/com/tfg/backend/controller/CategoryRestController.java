@@ -23,7 +23,7 @@ public class CategoryRestController {
     private CategoryService categoryService;
 
     @GetMapping("/")
-    public ResponseEntity<CategoryListDTO> showAllProducts() {
+    public ResponseEntity<CategoryListDTO> showAllCategories() {
         List<Category> categories = categoryService.findAll();
         List<CategoryDTO> dtos = new ArrayList<>();
         for (Category c : categories) {
@@ -32,9 +32,9 @@ public class CategoryRestController {
         return ResponseEntity.ok(new CategoryListDTO(dtos));
     }
 
-    @GetMapping("/{name}")
-    public ResponseEntity<CategoryDTO> getCategoryByName(@PathVariable String name) {
-        Optional<Category> category = categoryService.findByName(name);
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
+        Optional<Category> category = categoryService.findById(id);
         if (!category.isPresent()) {
             return ResponseEntity.notFound().build();
         }
@@ -48,7 +48,7 @@ public class CategoryRestController {
             return ResponseEntity.notFound().build();
         }
         Category category = categoryOptional.get();
-        return ImageUtils.serveImage(category.getCategoryImage());
+        return ImageUtils.serveImage(category.getCategoryImage(), false);
     }
 
 

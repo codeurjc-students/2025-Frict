@@ -1,7 +1,6 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.ImageUtils;
@@ -11,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
 import java.sql.Blob;
 import java.util.Optional;
 
@@ -24,14 +22,11 @@ public class UserRestController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserLoginDTO> me(HttpServletRequest request) {
-		
-		Principal principal = request.getUserPrincipal();
-		
-		if(principal != null) {
-            return ResponseEntity.ok(userService.getLoggedUserInfo(principal.getName()));
-		} else {
-			return ResponseEntity.notFound().build();
+        Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
+		if(loginInfoOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
 		}
+        return ResponseEntity.ok(loginInfoOptional.get());
 	}
 
     @GetMapping("/image/{id}")
@@ -41,7 +36,17 @@ public class UserRestController {
             return ResponseEntity.notFound().build();
         }
         User user = userOptional.get();
-        return ImageUtils.serveImage(user.getProfileImage());
+        return ImageUtils.serveImage(user.getProfileImage(), false);
+    }
+
+    @GetMapping("/thumbnail/{id}")
+    public ResponseEntity<byte[]> showUserThumbnail(@PathVariable long id) {
+        Optional<User> userOptional = userService.findById(id);
+        if (!userOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        User user = userOptional.get();
+        return ImageUtils.serveImage(user.getProfileImage(), true);
     }
 
 

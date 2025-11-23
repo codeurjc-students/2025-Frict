@@ -30,7 +30,6 @@ public class Truck {
     }
 
     public Truck(String referenceCode) {
-        this.id = id;
         this.referenceCode = referenceCode;
     }
 }

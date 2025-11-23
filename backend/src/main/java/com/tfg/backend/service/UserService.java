@@ -4,10 +4,12 @@ import com.tfg.backend.DTO.UserLoginDTO;
 import com.tfg.backend.DTO.UserRegisterDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,9 +40,21 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-	public UserLoginDTO getLoggedUserInfo(String name) {
-		return new UserLoginDTO(userRepository.findByUsername(name).orElseThrow());
+	public Optional<UserLoginDTO> getLoginInfo(HttpServletRequest request) {
+        Principal principal = request.getUserPrincipal();
+        if(principal == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new UserLoginDTO(userRepository.findByUsername(principal.getName()).orElseThrow()));
 	}
+
+    public Optional<User> getLoggedUser(HttpServletRequest request) {
+        Optional<UserLoginDTO> loginInfo = this.getLoginInfo(request);
+        if(loginInfo.isEmpty()){
+            return Optional.empty();
+        }
+        return userRepository.findById(loginInfo.get().getId());
+    }
 
     public User registerUser(UserRegisterDTO dto) {
         User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), dto.getAddress(), passwordEncoder.encode(dto.getPassword()), "USER");

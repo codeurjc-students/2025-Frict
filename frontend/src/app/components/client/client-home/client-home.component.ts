@@ -4,23 +4,23 @@ import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {ButtonModule} from 'primeng/button';
 import {RouterLink} from '@angular/router';
 import {Carousel} from 'primeng/carousel';
-import {responsiveOptions} from '../../../app.config';
+import {carouselResponsiveOptions} from '../../../app.config';
 import {FooterComponent} from '../../common/footer/footer.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
-import {LoadingComponent} from '../../common/loading/loading.component';
+import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 
 @Component({
   selector: 'app-client-home',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, ButtonModule, RouterLink, Carousel, FooterComponent, ProductCardComponent, LoadingComponent],
+  imports: [CommonModule, NavbarComponent, ButtonModule, RouterLink, Carousel, FooterComponent, ProductCardComponent, LoadingSectionComponent],
   templateUrl: './client-home.component.html',
   styleUrls: ['./client-home.component.css']
 })
 export class ClientHomeComponent implements OnInit {
 
-  protected readonly responsiveOptions = responsiveOptions;
+  protected readonly responsiveOptions = carouselResponsiveOptions;
 
   featuredProducts: Product[] = [];
   recommendedProducts: Product[] = [];

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Blob;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +45,12 @@ public class User {
 
     @Column(nullable = false)
     private boolean isBanned = false;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> itemsInCart = new ArrayList<>();
+
+    @ManyToMany
+    private Set<Product> favouriteProducts = new HashSet<>();
 
     @OneToMany(mappedBy = "user")
     private Set<Order> registeredOrders = new HashSet<>();
