@@ -3,6 +3,8 @@ package com.tfg.backend.controller;
 import com.tfg.backend.DTO.OrderItemDTO;
 import com.tfg.backend.DTO.OrderItemsPageDTO;
 import com.tfg.backend.model.OrderItem;
+import com.tfg.backend.model.Product;
+import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.OrderItemService;
 import com.tfg.backend.service.ProductService;
@@ -36,7 +38,7 @@ public class OrderRestController {
     //Custom method to achieve retrieving the order items from a list as a page given by the repository
     //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
     @GetMapping("/cart")
-    public ResponseEntity<OrderItemsPageDTO> getCartProducts(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<OrderItemsPageDTO> getCartItems(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
@@ -49,20 +51,81 @@ public class OrderRestController {
     }
 
     @DeleteMapping("/cart")
-    public ResponseEntity<Void> clearCartProducts(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<Void> clearCartItems(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
             return ResponseEntity.status(401).build(); //Unauthorized as not logged
         }
         User loggedUser = userOptional.get();
-        loggedUser.getAllOrderItems().clear();
-        userService.save(loggedUser);
+
+        List<OrderItem> itemsToRemove = loggedUser.getItemsInCart();
+
+        if (!itemsToRemove.isEmpty()) {
+            loggedUser.getAllOrderItems().removeAll(itemsToRemove);
+            userService.save(loggedUser);
+        }
+
         return ResponseEntity.ok().build();
     }
 
+
+    @PostMapping("/cart/{id}")
+    public ResponseEntity<OrderItemDTO> addItemToCart(HttpServletRequest request,
+                                                       @PathVariable Long id,
+                                                       @RequestParam int quantity) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Check the product exists
+        Optional<Product> productOptional = productService.findById(id);
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+
+        //Check there is stock left to complete the operation (in cart + quantity <= stock?)
+        List<OrderItem> inCartItems = orderItemService.findProductUnitsInCart(id);
+        int inCartUnits = inCartItems.stream()
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+
+        int inStockUnits = 0;
+        for (ShopStock s : product.getShopsStock()) {
+            inStockUnits += s.getStock();
+        }
+
+        if(inCartUnits + quantity > inStockUnits){
+            return ResponseEntity.status(405).build(); //Not allowed, as there is not enough stock. Code linked in frontend
+        }
+
+        //Check if the product is in user's cart, and if so, update item quantity
+        Optional<OrderItem> itemInCart = loggedUser.getItemsInCart().stream()
+                .filter(item -> item.getProduct().getId().equals(id))
+                .findFirst();
+
+        OrderItem resultItem;
+
+        if (itemInCart.isPresent()) {
+            // Item in cart -> Update quantity
+            resultItem = itemInCart.get();
+            resultItem.setQuantity(resultItem.getQuantity() + quantity);
+        } else {
+            // Item not found -> Create item
+            resultItem = new OrderItem(null, productOptional.get(), loggedUser, quantity);
+            loggedUser.getAllOrderItems().add(resultItem);
+        }
+
+        userService.save(loggedUser);
+        return ResponseEntity.ok(new OrderItemDTO(resultItem)); //Returns the added item (optional)
+    }
+
     @DeleteMapping("/cart/{id}")
-    public ResponseEntity<Void> deleteCartProduct(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<Void> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){

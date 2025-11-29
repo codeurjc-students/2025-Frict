@@ -7,6 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+//Inactive constraint, as NULL objects are not considered equal between each other
 @Table(
         name = "order_items",
         uniqueConstraints = @UniqueConstraint(

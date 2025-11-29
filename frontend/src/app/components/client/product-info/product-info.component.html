@@ -18,13 +18,7 @@
   <!-- Product title -->
   <div class="flex flex-wrap items-center gap-3 mt-2">
     <h1 class="text-3xl font-bold">{{ product.name }}</h1>
-
-    <div *ngIf="product.availableUnits <= 10">
-      <p-tag
-        [value]="getStockMessage()"
-        [severity]="product.availableUnits < 10 ? 'danger' : 'warn'">
-      </p-tag>
-    </div>
+    <app-stock-tag [units]="product.availableUnits"></app-stock-tag>
   </div>
 
   <!-- Main grid -->
@@ -115,11 +109,11 @@
           -->
 
           <p class="text-sm text-surface-300 mt-4">Cantidad:</p>
-          <p-inputnumber [(ngModel)]="quantity" [showButtons]="true" inputId="minmax-buttons" [min]="0" [max]="product.availableUnits" class="w-full"></p-inputnumber>
+          <p-inputnumber [(ngModel)]="quantity" [showButtons]="true" inputId="minmax-buttons" [min]="1" [max]="product.availableUnits" class="w-full"></p-inputnumber>
         </div>
 
         <div class="mt-8 grid gap-2">
-          <p-button (click)="addToCart()" [label]="product.availableUnits ? 'Añadir a la cesta' : 'Agotado'" [disabled]="!product.availableUnits" [icon]="product.availableUnits ? 'pi pi-cart-plus' : 'pi pi-times'" styleClass="w-full"/>
+          <p-button (click)="addItemToCart()" [label]="product.availableUnits ? 'Añadir a la cesta' : 'Agotado'" [disabled]="!product.availableUnits || quantity == 0" [icon]="product.availableUnits ? 'pi pi-cart-plus' : 'pi pi-times'" styleClass="w-full"/>
           <p-button (click)="addToFavourites()" label="Añadir a la lista de deseos" icon="pi pi-bookmark" severity="secondary" styleClass="w-full"/>
         </div>
       </div>

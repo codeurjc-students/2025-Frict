@@ -13,6 +13,7 @@ import {formatPrice} from '../../../utils/numberFormat.util';
 import {InputNumber} from 'primeng/inputnumber';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
+import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 // Interfaces
 export interface Product {
@@ -34,7 +35,7 @@ export interface CartItem {
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, InputNumber, RouterLink, Select, Paginator],
+  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, InputNumber, RouterLink, Select, Paginator, StockTagComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
@@ -167,7 +168,7 @@ export class CartComponent implements OnInit {
       return 0;
     }
 
-    return this.foundItems.orderItems.reduce((acumulador, item) => {
+    let totalSum = this.foundItems.orderItems.reduce((acumulador, item) => {
       const quantity = item.quantity ?? 0;
 
       let usedPrice: number;
@@ -185,6 +186,11 @@ export class CartComponent implements OnInit {
       return acumulador + (usedPrice * quantity);
 
     }, 0);
+
+    if (isTotal && totalSum < 50) {
+      totalSum += 5;
+    }
+    return totalSum;
   }
 
   protected calculateDiscount(): number {

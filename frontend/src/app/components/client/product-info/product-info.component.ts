@@ -12,7 +12,7 @@ import {Carousel} from 'primeng/carousel';
 import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {ActivatedRoute, Router} from '@angular/router';
-import {MenuItem, MessageService} from 'primeng/api';
+import {MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
 import {CategoryService} from '../../../services/category.service';
@@ -34,7 +34,9 @@ import {FloatLabel} from 'primeng/floatlabel';
 import {Tooltip} from 'primeng/tooltip';
 import {TableModule} from 'primeng/table';
 import {ShopStock} from '../../../models/shopStock.model';
-import {Tag} from 'primeng/tag';
+import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
+import {OrderService} from '../../../services/order.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 
 @Component({
@@ -67,7 +69,7 @@ import {Tag} from 'primeng/tag';
     FloatLabel,
     Tooltip,
     TableModule,
-    Tag
+    StockTagComponent
   ],
   providers: [MessageService],
   templateUrl: './product-info.component.html'
@@ -111,6 +113,7 @@ export class ProductInfoComponent implements OnInit {
   constructor(private productService: ProductService,
               private categoryService: CategoryService,
               private reviewService: ReviewService,
+              private orderService: OrderService,
               protected authService: AuthService,
               private route: ActivatedRoute,
               private router: Router,
@@ -162,17 +165,6 @@ export class ProductInfoComponent implements OnInit {
     this.loading = true;
     this.error = false;
     this.loadProduct();
-  }
-
-  protected getStockMessage(): string {
-    let units = this.product.availableUnits;
-    if (units <= 10 && units > 5) {
-      return 'Quedan ' + units;
-    } else if (units <= 5 && units > 0) {
-      return '¡Solo quedan ' + units + '!';
-    } else {
-      return 'Agotado';
-    }
   }
 
   protected loadProduct(){
@@ -287,18 +279,29 @@ export class ProductInfoComponent implements OnInit {
     })
   }
 
-  protected addToCart() {
+  protected addItemToCart() {
     if(!this.authService.isLogged()){
       this.router.navigate(['/login']);
     }
-    this.productService.addProductToCart(this.product.id, this.quantity).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error añadiendo el producto al carrito' });
-      }
-    })
+
+    if(this.quantity == 0){
+      this.messageService.add({ severity: 'info', summary: 'Cantidad no válida', detail: 'Introduce una cantidad válida' });
+    }
+    else{
+      this.orderService.addItemToCart(this.product.id, this.quantity).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
+        },
+        error: (error: HttpErrorResponse) => {
+          if (error.status === 405){
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No hay suficiente stock disponible' });
+          }
+          else{
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error añadiendo el producto al carrito' });
+          }
+        }
+      })
+    }
   }
 
   protected addToFavourites() {

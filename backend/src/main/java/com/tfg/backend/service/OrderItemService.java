@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class OrderItemService {
 
@@ -15,4 +17,5 @@ public class OrderItemService {
 
     public Page<OrderItem> findUserCartItemsPage(Long id, Pageable pageable) { return orderItemRepository.findByUserIdAndOrderIsNull(id, pageable); }
 
+    public List<OrderItem> findProductUnitsInCart(Long id) { return orderItemRepository.findByProductIdAndOrderIsNull(id); }
 }

@@ -74,7 +74,7 @@ public class User {
 
     public List<OrderItem> getItemsInCart() {
         return this.allOrderItems.stream()
-            .filter(item -> item.getOrder().getId() == null)
+            .filter(item -> item.getOrder() == null && item.getUser().getId().equals(this.id))
             .collect(Collectors.toList());
     }
 }

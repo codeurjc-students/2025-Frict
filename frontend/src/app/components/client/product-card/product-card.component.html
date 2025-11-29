@@ -8,8 +8,8 @@
         <p-tag [value]="product.discount" [severity]="product.discount.startsWith('-') ? 'danger' : 'success'"></p-tag>
       </div>
 
-      <div *ngIf="product.availableUnits <= 10" class="absolute top-2 right-2">
-        <p-tag [value]="getStockMessage()" [severity]="product.availableUnits < 10 ? 'danger' : 'warn'"></p-tag>
+      <div class="absolute top-2 right-2">
+        <app-stock-tag [units]="product.availableUnits"></app-stock-tag>
       </div>
     </div>
 

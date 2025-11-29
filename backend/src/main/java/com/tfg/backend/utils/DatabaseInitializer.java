@@ -230,9 +230,11 @@ public class DatabaseInitializer {
 
             ShopStock ss1 = new ShopStock(shop1, product1, 3);
             ShopStock ss2 = new ShopStock(shop1, product2, 10);
+            ShopStock ss3 = new ShopStock(shop1, product26, 5);
 
             shopStockRepository.save(ss1);
             shopStockRepository.save(ss2);
+            shopStockRepository.save(ss3);
 
             Review review1 = new Review(user1, product1, 5, "Muy buen producto", true);
             Review review2 = new Review(user2, product1, 2, "Desastroso", false);

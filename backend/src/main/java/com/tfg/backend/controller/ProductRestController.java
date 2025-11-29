@@ -2,7 +2,6 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.*;
 import com.tfg.backend.model.*;
-import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.UserService;
@@ -32,8 +31,6 @@ public class ProductRestController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private UserRepository userRepository;
 
 
     @GetMapping("/")
@@ -51,7 +48,7 @@ public class ProductRestController {
     }
 
     @GetMapping("/favourites")
-    public ResponseEntity<ProductsPageDTO> getCartProducts(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<ProductsPageDTO> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
@@ -89,31 +86,6 @@ public class ProductRestController {
     }
 
 
-    @PostMapping("/cart/{id}")
-    public ResponseEntity<ProductDTO> addProductToCart(HttpServletRequest request,
-                                                       @PathVariable Long id,
-                                                       @RequestParam int quantity) {
-        //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
-
-        //Find the product and, if exists, add it to user cart
-        Optional<Product> productOptional = productService.findById(id);
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        Product product = productOptional.get();
-        OrderItem item = new OrderItem(null, product, loggedUser, quantity);
-        loggedUser.getAllOrderItems().add(item);
-        userRepository.save(loggedUser);
-
-        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
-    }
-
-
     @PostMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -131,7 +103,7 @@ public class ProductRestController {
         Product product = productOptional.get();
 
         loggedUser.getFavouriteProducts().add(product);
-        userRepository.save(loggedUser);
+        userService.save(loggedUser);
 
         return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
     }
