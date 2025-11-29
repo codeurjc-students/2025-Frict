@@ -25,7 +25,7 @@ public class ProductDTO {
     private double currentPrice;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
-    private int availableUnits;
+    private int availableUnits; //Available units will be all units stock which are not in any user cart yet
     private double averageRating;
     private int totalReviews;
 
@@ -52,12 +52,12 @@ public class ProductDTO {
         }
         this.categories = dtos;
 
-        //Available units
+        //Available units (total - reserved)
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {
             totalUnits += s.getStock();
         }
-        this.availableUnits = totalUnits;
+        this.availableUnits = totalUnits - p.getReservedUnits();
 
         //Total reviews and average rating
         double totalRating = 0.0;

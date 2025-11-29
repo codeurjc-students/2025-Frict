@@ -2,8 +2,10 @@ package com.tfg.backend.model;
 
 import com.tfg.backend.utils.ImageUtils;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Formula;
 
 import java.sql.Blob;
 import java.util.ArrayList;
@@ -38,6 +40,11 @@ public class Product {
     private double currentPrice;
 
     private boolean active = true;
+
+    //It is NOT a column in Product table, and Hibernate automatically calculates its value
+    @Formula("(SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = id AND oi.order_id IS NULL)")
+    @Setter(AccessLevel.NONE)
+    private int reservedUnits; //Contains the exact number of items with this product id that are in all users carts
 
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Category> categories = new ArrayList<>();

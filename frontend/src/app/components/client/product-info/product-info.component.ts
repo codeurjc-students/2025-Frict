@@ -291,6 +291,7 @@ export class ProductInfoComponent implements OnInit {
       this.orderService.addItemToCart(this.product.id, this.quantity).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
+          this.product.availableUnits -= this.quantity;
         },
         error: (error: HttpErrorResponse) => {
           if (error.status === 405){
