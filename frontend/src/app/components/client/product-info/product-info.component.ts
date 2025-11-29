@@ -198,7 +198,7 @@ export class ProductInfoComponent implements OnInit {
   }
 
   protected loadProductCategory() { //Only the first category is taken into account in related products
-    this.categoryService.getCategoryById(this.product.categoriesId[0]).subscribe({
+    this.categoryService.getCategoryById(this.product.categories[0].id).subscribe({
       next: (category) => {
         this.productCategory = category;
         this.loadRelatedProducts();

@@ -3,6 +3,7 @@ package com.tfg.backend.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tfg.backend.utils.ImageUtils;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
@@ -47,7 +49,7 @@ public class User {
     private boolean isBanned = false;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> itemsInCart = new ArrayList<>();
+    private List<OrderItem> allOrderItems = new ArrayList<>();
 
     @ManyToMany
     private Set<Product> favouriteProducts = new HashSet<>();
@@ -68,5 +70,11 @@ public class User {
         this.roles = Set.of(roles);
         this.email = email;
         this.address = address;
+    }
+
+    public List<OrderItem> getItemsInCart() {
+        return this.allOrderItems.stream()
+            .filter(item -> item.getOrder().getId() == null)
+            .collect(Collectors.toList());
     }
 }

@@ -1,15 +1,11 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.repository.OrderItemRepository;
-import com.tfg.backend.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class OrderItemService {

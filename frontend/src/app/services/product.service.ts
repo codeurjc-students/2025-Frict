@@ -5,6 +5,7 @@ import {CategoryService} from './category.service';
 import {ProductsPage} from '../models/productsPage.model';
 import {Product} from '../models/product.model';
 import {ShopStockList} from '../models/shopStockList.model';
+import {OrderItemsPage} from '../models/orderItemsPage.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,8 +24,19 @@ export class ProductService {
     return this.http.get<ProductsPage>(this.apiUrl + `/`, { params });
   }
 
+  public getUserFavouriteProductsPage(page: number, size: number): Observable<ProductsPage> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<ProductsPage>(this.apiUrl + `/favourites`, { params });
+  }
+
   public getProductById(id: string): Observable<Product> {
     return this.http.get<Product>(this.apiUrl + `/${id}`);
+  }
+
+  public deleteProductFromFavourites(id: string): Observable<void> {
+    return this.http.delete<void>(this.apiUrl + `/favourites/${id}`);
   }
 
   public getStockByProductId(id: string): Observable<ShopStockList> {

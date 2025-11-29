@@ -1,3 +1,5 @@
+import {Category} from './category.model';
+
 export interface Product {
   id: string; //It will be automatically converted to long when reaching the backend
   referenceCode: string;
@@ -8,7 +10,7 @@ export interface Product {
   previousPrice: number;
   currentPrice: number;
   discount: string;
-  categoriesId: string[];
+  categories: Category[];
   availableUnits: number;
   averageRating: number;
   totalReviews: number;

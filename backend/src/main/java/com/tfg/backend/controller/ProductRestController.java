@@ -1,9 +1,6 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.ProductsPageDTO;
-import com.tfg.backend.DTO.ProductDTO;
-import com.tfg.backend.DTO.ShopStockDTO;
-import com.tfg.backend.DTO.ShopStockListDTO;
+import com.tfg.backend.DTO.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.CategoryService;
@@ -21,10 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.sql.Blob;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -56,6 +50,18 @@ public class ProductRestController {
         return ResponseEntity.ok(toProductsPageDTO(products));
     }
 
+    @GetMapping("/favourites")
+    public ResponseEntity<ProductsPageDTO> getCartProducts(HttpServletRequest request, Pageable pageable) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
+        return ResponseEntity.ok(toProductsPageDTO(favouriteProducts));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
@@ -101,7 +107,7 @@ public class ProductRestController {
         }
         Product product = productOptional.get();
         OrderItem item = new OrderItem(null, product, loggedUser, quantity);
-        loggedUser.getItemsInCart().add(item);
+        loggedUser.getAllOrderItems().add(item);
         userRepository.save(loggedUser);
 
         return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
@@ -131,10 +137,42 @@ public class ProductRestController {
     }
 
 
+    @DeleteMapping("/favourites/{id}")
+    public ResponseEntity<ProductDTO> deleteProductFromFavourites(HttpServletRequest request, @PathVariable Long id) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Optional<Product> productOptional = productService.findById(id);
+
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+
+        Set<Product> favouriteProducts = loggedUser.getFavouriteProducts();
+        favouriteProducts.remove(productOptional.get());
+        userService.save(loggedUser);
+        return ResponseEntity.ok().build();
+    }
+
+
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         Product product = new Product(productDTO.getReferenceCode(), productDTO.getName(), null, productDTO.getDescription(), productDTO.getCurrentPrice());
-        product.setCategories(new HashSet<>(categoryService.findAllById(productDTO.getCategoriesId())));
+
+        List<Category> categories = new ArrayList<>();
+        for (CategoryDTO c : productDTO.getCategories()) {
+            Optional<Category> categoryOptional = categoryService.findById(c.getId());
+            if(categoryOptional.isEmpty()){
+                return ResponseEntity.badRequest().build();
+            }
+            categories.add(categoryOptional.get());
+        }
+        product.setCategories(categories);
+
         Product savedProduct = productService.save(product);
 
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
@@ -159,7 +197,16 @@ public class ProductRestController {
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setCurrentPrice(productDTO.getCurrentPrice());
-        product.setCategories(new HashSet<>(categoryService.findAllById(productDTO.getCategoriesId())));
+
+        List<Category> categories = new ArrayList<>();
+        for (CategoryDTO c : productDTO.getCategories()) {
+            Optional<Category> categoryOptional = categoryService.findById(c.getId());
+            if(categoryOptional.isEmpty()){
+                return ResponseEntity.badRequest().build();
+            }
+            categories.add(categoryOptional.get());
+        }
+        product.setCategories(categories);
 
         Product updatedProduct = productService.update(product);
         return ResponseEntity.accepted().body(new ProductDTO(updatedProduct));

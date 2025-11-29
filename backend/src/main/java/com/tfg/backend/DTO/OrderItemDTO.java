@@ -11,25 +11,19 @@ public class OrderItemDTO {
     private Long id;
     private Long orderId;
 
-    private Long productId;
-    private double previousPrice;
-    private double currentPrice;
+    private ProductDTO product;
 
     private Long userId;
     private int quantity;
-    private double totalPrice;
 
     public OrderItemDTO() {
     }
 
     public OrderItemDTO(OrderItem i){
         this.id = i.getId();
-        this.orderId = i.getOrder().getId();
-        this.productId = i.getProduct().getId();
-        this.previousPrice = i.getProduct().getPreviousPrice();
-        this.currentPrice = i.getProduct().getCurrentPrice();
+        this.orderId = (i.getOrder() != null) ? i.getOrder().getId() : null;
+        this.product = new ProductDTO(i.getProduct());
         this.userId = i.getUser().getId();
         this.quantity = i.getQuantity();
-        this.totalPrice = i.getProduct().getCurrentPrice() * i.getQuantity();
     }
 }

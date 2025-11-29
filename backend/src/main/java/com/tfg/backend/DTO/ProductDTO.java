@@ -7,7 +7,8 @@ import com.tfg.backend.model.ShopStock;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 //More fields than the original product, as they are calculated and sent from other parts of the backend
@@ -23,7 +24,7 @@ public class ProductDTO {
     private double previousPrice;
     private double currentPrice;
     private String discount;
-    private Set<Long> categoriesId = new HashSet<>();
+    private List<CategoryDTO> categories = new ArrayList<>();
     private int availableUnits;
     private double averageRating;
     private int totalReviews;
@@ -44,7 +45,12 @@ public class ProductDTO {
             this.discount = "-" + String.valueOf((int) Math.floor(((this.previousPrice - this.currentPrice) / this.previousPrice) * 100)) + "%";
         }
         else this.discount = "0%";
-        this.categoriesId = p.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toSet());
+
+        List<CategoryDTO> dtos = new ArrayList<>();
+        for (Category c : p.getCategories()) {
+            dtos.add(new CategoryDTO(c));
+        }
+        this.categories = dtos;
 
         //Available units
         int totalUnits = 0;

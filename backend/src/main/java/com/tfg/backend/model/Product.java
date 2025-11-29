@@ -40,7 +40,7 @@ public class Product {
     private boolean active = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Category> categories = new HashSet<>();
+    private List<Category> categories = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();

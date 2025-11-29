@@ -73,4 +73,8 @@ public class ProductService {
             throw new IllegalArgumentException("The price should be positive or 0");
         }
     }
+
+    public Page<Product> findUserFavouriteProductsPage(Long id, Pageable pageable) {
+        return productRepository.findFavouritesByUserId(id, pageable);
+    }
 }
