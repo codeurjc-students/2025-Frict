@@ -38,8 +38,12 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String address;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
+    private List<Address> addresses = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PaymentCard> cards = new ArrayList<>();
 
     @Lob
     @Column(nullable = false)
@@ -63,13 +67,12 @@ public class User {
 	public User() {
 	}
 
-    public User(String name, String username, String email, String address, String encodedPassword, String... roles) {
+    public User(String name, String username, String email, String encodedPassword, String... roles) {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
         this.roles = Set.of(roles);
         this.email = email;
-        this.address = address;
     }
 
     public List<OrderItem> getItemsInCart() {

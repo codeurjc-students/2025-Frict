@@ -42,6 +42,14 @@ export const routes: Routes = [
     data: { title: 'Carrito - MiTienda', icon: icons.client }
   },
 
+  {
+    path: 'summary',
+    loadComponent: () =>
+      import('./components/client/order-summary/order-summary.component')
+        .then(m => m.OrderSummaryComponent),
+    data: { title: 'Resumen del pedido - MiTienda', icon: icons.client }
+  },
+
   // -------------------------
   // AUTH ROUTES
   // -------------------------

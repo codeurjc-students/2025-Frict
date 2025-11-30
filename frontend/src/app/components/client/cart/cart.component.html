@@ -224,7 +224,7 @@
           </div>
 
           <div class="space-y-3">
-            <button class="w-full bg-primary-400 hover:bg-primary-300 text-surface-900 font-bold rounded-xl py-4 text-lg shadow-md transition-all transform hover:scale-[1.02]">
+            <button [disabled]="foundItems.totalItems == 0" routerLink="/summary" class="w-full bg-primary-400 hover:bg-primary-300 text-surface-900 font-bold rounded-xl py-4 text-lg shadow-md transition-all transform hover:scale-[1.02]">
               Tramitar pedido
             </button>
             <button routerLink="/" class="w-full bg-white hover:bg-surface-50 text-surface-700 font-bold rounded-xl py-3 border border-surface-300 transition-colors">

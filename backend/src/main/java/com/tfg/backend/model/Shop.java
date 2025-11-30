@@ -22,7 +22,9 @@ public class Shop {
 
     private String name;
 
-    private String address;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "address_id")
+    private Address address;
 
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ShopStock> availableProducts = new HashSet<>();
@@ -33,7 +35,7 @@ public class Shop {
     public Shop() {
     }
 
-    public Shop(String referenceCode, String name, String address) {
+    public Shop(String referenceCode, String name, Address address) {
         this.referenceCode = referenceCode;
         this.name = name;
         this.address = address;

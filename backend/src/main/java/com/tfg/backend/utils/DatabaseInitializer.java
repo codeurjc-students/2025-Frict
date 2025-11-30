@@ -14,6 +14,7 @@ import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -65,8 +66,11 @@ public class DatabaseInitializer {
             Blob defaultCategoryBlob = new SerialBlob(defaultCategoryImageBytes);
 
             // 2. Independent entities
-            User user1 = userRepository.save(new User("Usuario", "user", "user@gmail.com", "CallePorDefecto1", passwordEncoder.encode("pass"), "USER"));
-            User user2 = userRepository.save(new User("Administrador", "admin", "admin@gmail.com", "CallePorDefecto2", passwordEncoder.encode("adminpass"), "ADMIN"));
+            User user1 = userRepository.save(new User("Usuario", "user", "user@gmail.com", passwordEncoder.encode("pass"), "USER"));
+            User user2 = userRepository.save(new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN"));
+            PaymentCard paymentCard = new PaymentCard("Usuario 1", "1234567890123456","000", YearMonth.of(2027,3));
+            user1.getCards().add(paymentCard);
+
 
             // Hardware categories
             Category gaming = categoryRepository.save(new Category("Gaming y PC", defaultCategoryBlob));
@@ -185,7 +189,9 @@ public class DatabaseInitializer {
             product29 = productRepository.save(product29);
             product30 = productRepository.save(product30);
 
-            Shop shop1 = new Shop("52552", "Madrid-Recoletos", "CallePorDefecto4");
+            Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
+
+            Shop shop1 = new Shop("52552", "Madrid-Recoletos", address1);
             shop1 = shopRepository.save(shop1);
 
             Truck truck1 = new Truck("2C4RD");

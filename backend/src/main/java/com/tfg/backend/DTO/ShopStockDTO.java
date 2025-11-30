@@ -22,7 +22,7 @@ public class ShopStockDTO {
         this.id = s.getId();
         this.shopId = s.getShop().getId();
         this.shopName = s.getShop().getName();
-        this.shopAddress = s.getShop().getAddress();
+        this.shopAddress = s.getShop().getAddress().toString();
         this.productId = s.getProduct().getId();
         this.units = s.getStock();
         this.active = s.isActive();
