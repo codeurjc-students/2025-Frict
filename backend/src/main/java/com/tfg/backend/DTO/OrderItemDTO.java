@@ -14,6 +14,9 @@ public class OrderItemDTO {
     private ProductDTO product;
 
     private Long userId;
+
+    //Maximum number of items of this product that a user can select (cart)
+    private int maxQuantity; // units selected by the user + (stock - reserved)
     private int quantity;
 
     public OrderItemDTO() {
@@ -25,5 +28,6 @@ public class OrderItemDTO {
         this.product = new ProductDTO(i.getProduct());
         this.userId = i.getUser().getId();
         this.quantity = i.getQuantity();
+        this.maxQuantity = this.quantity + (this.product.getAvailableUnits()); // availableUnits = total - reserved
     }
 }

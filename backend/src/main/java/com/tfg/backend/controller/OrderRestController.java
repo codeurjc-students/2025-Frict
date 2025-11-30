@@ -124,6 +124,62 @@ public class OrderRestController {
         return ResponseEntity.ok(new OrderItemDTO(resultItem)); //Returns the added item (optional)
     }
 
+    @PutMapping("/cart/{id}")
+    public ResponseEntity<OrderItemDTO> updateItemQuantity(HttpServletRequest request,
+                                                           @PathVariable Long id,
+                                                           @RequestParam int quantity) {
+        // 1. Get user
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if (userOptional.isEmpty()) return ResponseEntity.status(401).build();
+        User loggedUser = userOptional.get();
+
+        // 2. Get the cart item (needed to know how many items of this product does the user already have)
+        Optional<OrderItem> itemInCartOptional = loggedUser.getItemsInCart().stream()
+                .filter(item -> item.getProduct().getId().equals(id))
+                .findFirst();
+
+        if (itemInCartOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        OrderItem itemToUpdate = itemInCartOptional.get();
+
+        // 3. Get product (to check total stock)
+        Product product = itemToUpdate.getProduct();
+        int totalStock = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
+
+        // 4. Get all carts item units
+        int totalInAllCarts = orderItemService.findProductUnitsInCart(id).stream()
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+
+        // 5. Limits
+        // Free stock = Total stock - Stock in carts
+        int freeStock = totalStock - totalInAllCarts;
+
+        // Maximum items for this user: Current units + Free units
+        int maxAchievableQuantity = itemToUpdate.getQuantity() + freeStock;
+
+        // CASE A: Quantity is bigger than available
+        if (quantity > maxAchievableQuantity) {
+            quantity = maxAchievableQuantity; // Maximum available units
+        }
+        // CASE B: Negative quantity
+        else if (quantity < 0) {
+            quantity = 0;
+        }
+
+        // Validation: If after adjustments quantity is 0, throw an error
+        if (quantity == 0) {
+            return ResponseEntity.status(405).build();
+        }
+
+        // 6. Directly update quantity
+        itemToUpdate.setQuantity(quantity);
+        userService.save(loggedUser);
+
+        return ResponseEntity.ok(new OrderItemDTO(itemToUpdate));
+    }
+
     @DeleteMapping("/cart/{id}")
     public ResponseEntity<Void> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)

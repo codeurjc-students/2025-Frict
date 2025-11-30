@@ -7,5 +7,7 @@ export interface OrderItem {
   product: Product;
 
   userId: string;
+
+  maxQuantity: number;
   quantity: number;
 }

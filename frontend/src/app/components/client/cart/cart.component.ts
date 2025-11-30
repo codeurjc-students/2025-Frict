@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {FooterComponent} from '../../common/footer/footer.component';
@@ -14,6 +14,9 @@ import {InputNumber} from 'primeng/inputnumber';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
+import {Tag} from 'primeng/tag';
+import {OrderItem} from '../../../models/orderItem.model';
+import {catchError, debounceTime, of, Subject, switchMap} from 'rxjs';
 
 // Interfaces
 export interface Product {
@@ -27,19 +30,14 @@ export interface Product {
   shipping: string;
 }
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
-
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, InputNumber, RouterLink, Select, Paginator, StockTagComponent],
+  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, InputNumber, RouterLink, Select, Paginator, Tag],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
-export class CartComponent implements OnInit {
+export class CartComponent implements OnInit, OnDestroy {
 
   protected readonly formatPrice = formatPrice;
 
@@ -63,15 +61,46 @@ export class CartComponent implements OnInit {
   firstProduct: number = 0;
   productsRows: number = 10;
 
+  private quantityUpdateSubject = new Subject<{item: OrderItem, quantity: number}>();
+
   constructor(private orderService: OrderService,
               private productService: ProductService,
               private authService: AuthService) {}
 
   ngOnInit(){
+    this.quantityUpdateSubject.pipe(
+      debounceTime(750),
+      switchMap(data => {
+        return this.orderService.updateItemQuantity(data.item.product.id, data.quantity).pipe(
+          catchError(error => {
+            data.item.quantity = 1;
+            return of(null);
+          })
+        );
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response) {
+          const itemToUpdate = this.foundItems.orderItems.find(
+            item => item.product.id === response.product.id
+          );
+
+          if (itemToUpdate) {
+            itemToUpdate.quantity = response.quantity;
+            console.log(`Sincronizado item ${response.product.name} a cantidad: ${response.quantity}`);
+            console.log(`Cantidad máxima calculada en frontend: ${itemToUpdate.maxQuantity}`);
+          }
+        }
+      }
+    });
+
     this.getUserCartItems();
     this.getUserFavouriteProducts();
   }
 
+  ngOnDestroy() {
+    this.quantityUpdateSubject.complete();
+  }
 
   protected getTotalItems(): number {
     if (!this.foundItems || !this.foundItems.orderItems || this.foundItems.orderItems.length === 0) {
@@ -87,6 +116,11 @@ export class CartComponent implements OnInit {
     return totalUnits;
   }
 
+  protected updateItemQuantity(item: OrderItem, newQuantity: number) {
+    if (!newQuantity) return;
+    console.log("Enviando al backend:", newQuantity);
+    this.quantityUpdateSubject.next({ item, quantity: newQuantity });
+  }
 
   public formatCategories(categories: any[]): string {
     if (!categories || categories.length === 0) {
@@ -104,7 +138,7 @@ export class CartComponent implements OnInit {
   onFavouriteProductsPageChange(event: PaginatorState) {
     this.firstProduct = event.first ?? 0;
     this.productsRows = event.rows ?? 10;
-    this.getUserCartItems();
+    this.getUserFavouriteProducts();
   }
 
   protected clearCart() {
@@ -214,5 +248,4 @@ export class CartComponent implements OnInit {
 
     }, 0.0);
   }
-
 }

@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {OrderItemsPage} from '../models/orderItemsPage.model';
-import {Product} from '../models/product.model';
+import {OrderItem} from '../models/orderItem.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,10 +24,16 @@ export class OrderService {
     return this.http.delete<void>(this.apiUrl + `/cart`);
   }
 
-  public addItemToCart(id: string, units: number): Observable<Product> {
+  public addItemToCart(productId: string, units: number): Observable<OrderItem> {
     let params = new HttpParams();
     params = params.append('quantity', units);
-    return this.http.post<Product>(this.apiUrl + `/cart/${id}`, null, { params }); //Null body, required query params
+    return this.http.post<OrderItem>(this.apiUrl + `/cart/${productId}`, null, { params }); //Null body, required query params
+  }
+
+  public updateItemQuantity(productId: string, units: number): Observable<OrderItem> {
+    let params = new HttpParams();
+    params = params.append('quantity', units);
+    return this.http.put<OrderItem>(this.apiUrl + `/cart/${productId}`, null, { params }); //Null body, required query params
   }
 
   public deleteItem(id: string): Observable<void> {
