@@ -37,6 +37,7 @@ import {ShopStock} from '../../../models/shopStock.model';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {OrderService} from '../../../services/order.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import {Image} from 'primeng/image';
 
 
 @Component({
@@ -69,7 +70,8 @@ import { HttpErrorResponse } from '@angular/common/http';
     FloatLabel,
     Tooltip,
     TableModule,
-    StockTagComponent
+    StockTagComponent,
+    Image
   ],
   providers: [MessageService],
   templateUrl: './product-info.component.html'
@@ -93,6 +95,7 @@ export class ProductInfoComponent implements OnInit {
   protected relatedProducts: Product[] = []; //Products related to products first category
 
   protected product!: Product;
+  protected inFavourites: boolean = false;
   protected productCategory!: Category;
 
   protected visibleShippingDialog: boolean = false;
@@ -177,14 +180,14 @@ export class ProductInfoComponent implements OnInit {
 
           if (product.imageUrls && Array.isArray(product.imageUrls)) {
             this.images = product.imageUrls.map((imgUrl) => ({
-              itemImageSrc: imgUrl,
-              thumbnailImageSrc: imgUrl
+              itemImageSrc: imgUrl
             }));
           } else {
             this.images = [];
           }
 
           this.loadProductCategory();
+          this.checkInFavourites();
           this.loadShopStocks();
           this.loadReviews();
         },
@@ -312,18 +315,45 @@ export class ProductInfoComponent implements OnInit {
     }
   }
 
-  protected addToFavourites() {
+  protected checkInFavourites() {
+    this.productService.checkInFavourites(this.product.id).subscribe({
+      next: () => {
+        this.inFavourites = true;
+      },
+      error: () => { //The only error that could be caught is 400 (bad request), as other errors will have stopped this method from running
+        this.inFavourites = false;
+      }
+    })
+  }
+
+  protected toggleInFavourites() {
     if(!this.authService.isLogged()){
       this.router.navigate(['/login']);
     }
-    this.productService.addProductToFavourites(this.product.id).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'info', summary: 'Añadido', detail: 'Producto añadido a tus favoritos' });
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error añadiendo el producto a tus favoritos' });
-      }
-    })
+
+    if(!this.inFavourites){
+      this.productService.addProductToFavourites(this.product.id).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'info', summary: 'Añadido', detail: 'Producto añadido a tus favoritos' });
+          this.inFavourites = true;
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error añadiendo el producto a tus favoritos' });
+        }
+      })
+    }
+    else{
+      this.productService.deleteProductFromFavourites(this.product.id).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'info', summary: 'Añadido', detail: 'Producto eliminado de tus favoritos' });
+          this.inFavourites = false;
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error eliminando el producto de tus favoritos' });
+        }
+      })
+    }
+
   }
 
 }

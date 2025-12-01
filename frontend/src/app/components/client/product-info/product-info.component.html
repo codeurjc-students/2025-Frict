@@ -33,16 +33,34 @@
           <p-galleria
             [value]="images"
             [responsiveOptions]="galleryResponsiveOptions"
-            [containerStyle]="{ 'width': '100%' }"
-            [numVisible]="4"
-            [circular]="true">
+            [containerStyle]="{ 'width': '100%', 'max-width': '800px', 'margin': '0 auto' }"
+            [numVisible]="5"
+            [circular]="true"
+            [showThumbnails]="true">
 
             <ng-template pTemplate="item" let-item>
-              <img [src]="item.itemImageSrc" style="width: 100%; display: block;" alt="1"/>
+              <div class="w-full h-[300px] md:h-[500px] bg-gray-50 flex items-center justify-center rounded-lg overflow-hidden">
+
+                <p-image
+                  [src]="item.itemImageSrc"
+                  [alt]="item.alt"
+                  [preview]="true"
+                  appendTo="body"
+                  imageClass="w-full h-full object-contain block max-h-[300px] md:max-h-[500px]">
+                </p-image>
+
+              </div>
             </ng-template>
 
             <ng-template pTemplate="thumbnail" let-item>
-              <img [src]="item.thumbnailImageSrc" style="width: 100%;" alt="2"/>
+              <div class="grid grid-nogutter justify-center h-full">
+                <img
+                  [src]="item.itemImageSrc"
+                  [alt]="item.alt"
+                  class="w-20 h-20 object-cover block rounded border border-transparent hover:border-primary transition-colors cursor-pointer"
+                  loading="lazy"
+                />
+              </div>
             </ng-template>
 
           </p-galleria>
@@ -114,7 +132,7 @@
 
         <div class="mt-8 grid gap-2">
           <p-button (click)="addItemToCart()" [label]="product.availableUnits ? 'Añadir a la cesta' : 'Agotado'" [disabled]="!product.availableUnits || quantity == 0" [icon]="product.availableUnits ? 'pi pi-cart-plus' : 'pi pi-times'" styleClass="w-full"/>
-          <p-button (click)="addToFavourites()" label="Añadir a la lista de deseos" icon="pi pi-bookmark" severity="secondary" styleClass="w-full"/>
+          <p-button (click)="toggleInFavourites()" [label]="inFavourites ? 'En la lista de deseos': 'Añadir a la lista de deseos'" [icon]="inFavourites ? 'pi pi-check' : 'pi pi-bookmark'" [severity]="inFavourites ? 'success' : 'secondary'" styleClass="w-full"/>
         </div>
       </div>
     </div>

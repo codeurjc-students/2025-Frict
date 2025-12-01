@@ -63,6 +63,28 @@ public class ProductRestController {
         return ResponseEntity.ok(toProductsPageDTO(favouriteProducts));
     }
 
+    @GetMapping("/favourites/{id}")
+    public ResponseEntity<ProductDTO> checkProductInFavourites(HttpServletRequest request, @PathVariable Long id) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Optional<Product> productOptional = productService.findById(id);
+        if(productOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Product product = productOptional.get();
+        boolean inFavourites = loggedUser.getFavouriteProducts().contains(product);
+
+        if (!inFavourites){
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(new ProductDTO(product));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         Optional<Product> product = productService.findById(id);

@@ -72,6 +72,7 @@ public class User {
         this.email = email;
     }
 
+    //Retrieves only the items that are currently in user cart
     public List<OrderItem> getItemsInCart() {
         return this.allOrderItems.stream()
             .filter(item -> item.getOrder() == null && item.getUser().getId().equals(this.id))

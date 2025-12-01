@@ -5,3 +5,8 @@
 @plugin "tailwindcss-primeui";
 @layer tailwind, primeng;
 
+.p-image-mask {
+  z-index: 2100 !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+

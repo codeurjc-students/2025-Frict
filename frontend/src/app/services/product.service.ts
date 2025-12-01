@@ -35,10 +35,6 @@ export class ProductService {
     return this.http.get<Product>(this.apiUrl + `/${id}`);
   }
 
-  public deleteProductFromFavourites(id: string): Observable<void> {
-    return this.http.delete<void>(this.apiUrl + `/favourites/${id}`);
-  }
-
   public getStockByProductId(id: string): Observable<ShopStockList> {
     return this.http.get<ShopStockList>(this.apiUrl + `/stock/${id}`)
   }
@@ -97,8 +93,15 @@ export class ProductService {
     );
   }
 
+  public checkInFavourites(id: string): Observable<Product> {
+    return this.http.get<Product>(this.apiUrl + `/favourites/${id}`, {});
+  }
+
   public addProductToFavourites(id: string): Observable<Product> {
     return this.http.post<Product>(this.apiUrl + `/favourites/${id}`, {});
   }
 
+  public deleteProductFromFavourites(id: string): Observable<void> {
+    return this.http.delete<void>(this.apiUrl + `/favourites/${id}`);
+  }
 }
