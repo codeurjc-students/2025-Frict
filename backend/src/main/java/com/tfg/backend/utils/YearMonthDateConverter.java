@@ -11,14 +11,14 @@ public class YearMonthDateConverter implements AttributeConverter<YearMonth, Dat
     @Override
     public Date convertToDatabaseColumn(YearMonth attribute) {
         if (attribute == null) return null;
-        // Truco: Guardamos el YearMonth como el PRIMER día de ese mes en la BD
+        // Save the YearMonth as the first day of that month in DB
         return Date.valueOf(attribute.atDay(1));
     }
 
     @Override
     public YearMonth convertToEntityAttribute(Date dbData) {
         if (dbData == null) return null;
-        // Al leer, ignoramos el día y nos quedamos solo con Mes y Año
+        // To read, ignore the day and get month and year only
         return YearMonth.from(dbData.toLocalDate());
     }
 }

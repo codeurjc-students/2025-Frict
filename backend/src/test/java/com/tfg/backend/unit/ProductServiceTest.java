@@ -30,7 +30,7 @@ public class ProductServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        testProduct = new Product("5A6","Cámara reflex",null, "Fotografías profesionales al instante", 799.99);
+        testProduct = new Product("5A6","Cámara reflex", "Fotografías profesionales al instante", 799.99);
     }
 
     @Test
@@ -52,10 +52,10 @@ public class ProductServiceTest {
     @Test
     public void createProduct_InvalidFieldTest(){
 
-        Product invalidRefCode = new Product("1A2", "Portátil Gamer", null, "Potente equipo para gaming y trabajo", 1499.99);
-        Product emptyName = new Product("3C4", "", null, "Sonido envolvente y cancelación de ruido", 199.99);
-        Product nullName = new Product("7D8", null, null, "Monitoriza tu salud y notificaciones al instante", 249.99);
-        Product negativePrice = new Product("9E0", "Tablet 10\"", null, "Perfecta para leer, ver series y tomar notas", -329.99);
+        Product invalidRefCode = new Product("1A2", "Portátil Gamer", "Potente equipo para gaming y trabajo", 1499.99);
+        Product emptyName = new Product("3C4", "", "Sonido envolvente y cancelación de ruido", 199.99);
+        Product nullName = new Product("7D8", null, "Monitoriza tu salud y notificaciones al instante", 249.99);
+        Product negativePrice = new Product("9E0", "Tablet 10\"", "Perfecta para leer, ver series y tomar notas", -329.99);
 
         when(productRepository.existsByReferenceCode(invalidRefCode.getReferenceCode())).thenReturn(true);
 
@@ -79,7 +79,7 @@ public class ProductServiceTest {
     public void updateExistentProductTest(){
         testProduct.setId(5L);
         Optional<Product> productOpt = Optional.of(testProduct);
-        Product updatedProduct = new Product("5A6", "Ratón inalámbrico", null, "Sin necesidad de cable", 89.95);
+        Product updatedProduct = new Product("5A6", "Ratón inalámbrico", "Sin necesidad de cable", 89.95);
         updatedProduct.setId(testProduct.getId());
 
         when(productRepository.existsById(updatedProduct.getId())).thenReturn(true);

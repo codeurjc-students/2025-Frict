@@ -1,16 +1,19 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
+import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.User;
+import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.utils.ImageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Blob;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -19,6 +22,9 @@ public class UserRestController {
 	
 	@Autowired
 	private UserService userService;
+
+    @Autowired
+    private StorageService storageService;
 
 	@GetMapping("/me")
 	public ResponseEntity<UserLoginDTO> me(HttpServletRequest request) {
@@ -29,38 +35,48 @@ public class UserRestController {
         return ResponseEntity.ok(loginInfoOptional.get());
 	}
 
-    @GetMapping("/image/{id}")
-    public ResponseEntity<byte[]> showUserImage(@PathVariable long id) {
-        Optional<User> userOptional = userService.findById(id);
-        if (!userOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
+    @PostMapping("/image/{id}")
+    public ResponseEntity<User> uploadUserAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
+        User user = userService.findById(id).orElseThrow();
+
+        // Clean previous image
+        if (user.getUserImage() != null) {
+            storageService.deleteFile(user.getUserImage().getS3Key());
         }
-        User user = userOptional.get();
-        return ImageUtils.serveImage(user.getProfileImage(), false);
+
+        // Upload
+        Map<String, String> res = storageService.uploadFile(file, "users");
+
+        // Create ImageInfo object (not an entity)
+        ImageInfo avatarInfo = new ImageInfo(
+                res.get("url"),
+                res.get("key"),
+                file.getOriginalFilename()
+        );
+
+        // Add to user
+        user.setUserImage(avatarInfo);
+
+        return ResponseEntity.ok(userService.save(user));
     }
 
-    @GetMapping("/thumbnail/{id}")
-    public ResponseEntity<byte[]> showUserThumbnail(@PathVariable long id) {
-        Optional<User> userOptional = userService.findById(id);
-        if (!userOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
+    @DeleteMapping("/{id}/avatar")
+    public ResponseEntity<User> deleteAvatar(@PathVariable Long id) {
+        User user = userService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Check if there is something to delete
+        if (user.getUserImage() != null) {
+            // Delete from MinIO
+            storageService.deleteFile(user.getUserImage().getS3Key());
+
+            // Unlink (orphanRemoval deletes it from DB)
+            user.setUserImage(null);
+
+            // Save changes
+            return ResponseEntity.ok(userService.save(user));
         }
-        User user = userOptional.get();
-        return ImageUtils.serveImage(user.getProfileImage(), true);
-    }
 
-
-    @PutMapping("/image/{id}")
-    public ResponseEntity<String> updateUserImage(@PathVariable Long id, @RequestPart("image") MultipartFile image) {
-        Optional<User> userOptional = userService.findById(id);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        User user = userOptional.get();
-
-        Blob profileImage = ImageUtils.prepareImage(image);
-        user.setProfileImage(profileImage);
-        userService.save(user);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(user); // Return original user if did not have image
     }
 }

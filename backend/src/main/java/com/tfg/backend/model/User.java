@@ -1,13 +1,11 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.tfg.backend.utils.ImageUtils;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Blob;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -45,9 +43,8 @@ public class User {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PaymentCard> cards = new ArrayList<>();
 
-    @Lob
-    @Column(nullable = false)
-    private Blob profileImage = ImageUtils.prepareDefaultImage(User.class);
+    @Embedded
+    private ImageInfo userImage;
 
     @Column(nullable = false)
     private boolean isBanned = false;

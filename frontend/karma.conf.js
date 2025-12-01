@@ -23,7 +23,7 @@ module.exports = function (config) {
     },
     reporters: ['progress', 'kjhtml'],
 
-    // ***** CLAVE PARA GH ACTIONS *****
+    // ***** KEY FOR GH ACTIONS *****
     browsers: ['ChromeHeadlessNoSandbox'],
     customLaunchers: {
       ChromeHeadlessNoSandbox: {

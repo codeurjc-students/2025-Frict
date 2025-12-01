@@ -147,7 +147,6 @@ export class ProductInfoComponent implements OnInit {
   }
 
   protected deleteReview(id: string) {
-    console.log("Botón de borrar review pulsado");
     this.reviewService.deleteReviewById(id).subscribe({
       next: () => {
         this.newReview = {};
@@ -167,16 +166,24 @@ export class ProductInfoComponent implements OnInit {
     this.loadProduct();
   }
 
-  protected loadProduct(){
+  protected loadProduct() {
     const id = this.route.snapshot.paramMap.get('id');
+
     if (id) {
       this.productService.getProductById(id).subscribe({
         next: (product) => {
+          console.log(product);
           this.product = product;
-          this.images.push({
-            itemImageSrc: product.imageUrl,
-            thumbnailImageSrc: product.thumbnailUrl
-          });
+
+          if (product.imageUrls && Array.isArray(product.imageUrls)) {
+            this.images = product.imageUrls.map((imgUrl) => ({
+              itemImageSrc: imgUrl,
+              thumbnailImageSrc: imgUrl
+            }));
+          } else {
+            this.images = [];
+          }
+
           this.loadProductCategory();
           this.loadShopStocks();
           this.loadReviews();
@@ -260,6 +267,7 @@ export class ProductInfoComponent implements OnInit {
             this.userReviewed = this.productReviews.some(r => r.creatorId === loginInfo.id)
             this.loggedUserInfo = loginInfo;
             this.loading = false;
+            console.log(this.images);
           }
         })
       },
@@ -273,7 +281,6 @@ export class ProductInfoComponent implements OnInit {
   protected loadShopStocks() {
     this.productService.getStockByProductId(this.product.id).subscribe({
       next: (s) => {
-        console.log(s);
         this.stocks = s.stocks;
       }
     })

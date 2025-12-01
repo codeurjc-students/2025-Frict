@@ -1,6 +1,6 @@
 package com.tfg.backend.model;
 
-import com.tfg.backend.utils.ImageUtils;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,9 +22,8 @@ public class Category {
     @Column(unique = true)
     private String name;
 
-    @Lob
-    @Column(nullable = false)
-    private Blob categoryImage = ImageUtils.prepareDefaultImage(Category.class);
+    @Embedded
+    private ImageInfo categoryImage;
 
     @ManyToMany(mappedBy = "categories")
     private Set<Product> products = new HashSet<>();
@@ -32,10 +31,7 @@ public class Category {
     public Category() {
     }
 
-    public Category(String name, Blob image) {
+    public Category(String name) {
         this.name = name;
-        if (image != null){
-            this.categoryImage = image;
-        }
     }
 }

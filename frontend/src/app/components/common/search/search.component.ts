@@ -16,8 +16,8 @@ import {CategoryService} from '../../../services/category.service';
 import {Drawer} from 'primeng/drawer';
 
 interface SortOption {
-  name: string; // Etiqueta que se muestra
-  value: string; // Valor que se usa para ordenar (ej: 'relevance,desc')
+  name: string; // Shown tag
+  value: string; // Real sort value (ex: 'relevance,desc')
 }
 
 @Component({

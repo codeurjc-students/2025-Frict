@@ -1,13 +1,12 @@
 package com.tfg.backend.model;
 
-import com.tfg.backend.utils.ImageUtils;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Formula;
 
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,9 +27,9 @@ public class Product {
 
     private String name;
 
-    @Lob
-    @Column(nullable = false)
-    private Blob productImage = ImageUtils.prepareDefaultImage(Product.class);
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ProductImageInfo> images = new ArrayList<>();
 
     @Column (length = 5000)
     private String description;
@@ -66,12 +65,9 @@ public class Product {
     public Product() {
     }
 
-    public Product(String referenceCode, String name, Blob productImage, String description, double price) {
+    public Product(String referenceCode, String name, String description, double price) {
         this.referenceCode = referenceCode;
         this.name = name;
-        if (productImage !=null){
-            this.productImage = productImage;
-        }
         this.description = description;
         this.currentPrice = price;
     }

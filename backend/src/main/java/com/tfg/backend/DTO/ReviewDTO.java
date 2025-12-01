@@ -29,7 +29,7 @@ public class ReviewDTO {
         this.productId = r.getProduct().getId();
         this.creatorId = r.getUser().getId();
         this.creatorName = r.getUser().getName();
-        this.creatorThumbnailUrl = "/api/v1/users/thumbnail/" + r.getUser().getId();
+        this.creatorThumbnailUrl = r.getUser().getUserImage().getImageUrl();
         this.text = r.getText();
         this.rating = r.getRating();
         this.createdAt = this.formatRelativeTime(r.getCreatedAt());

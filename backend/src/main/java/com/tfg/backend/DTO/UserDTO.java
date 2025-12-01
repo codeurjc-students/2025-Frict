@@ -13,7 +13,6 @@ public class UserDTO {
     private String username;
     private String email;
     private String imageUrl;
-    private String thumbnailUrl;
     private boolean banned;
     private Set<String> roles;
 
@@ -25,7 +24,6 @@ public class UserDTO {
         this.banned = user.isBanned();
         this.roles = user.getRoles();
         this.id = user.getId();
-        this.imageUrl = "/api/v1/users/image/" + user.getId();
-        this.thumbnailUrl = "/api/v1/users/thumbnail/" + user.getId();
+        this.imageUrl = user.getUserImage().getImageUrl();
     }
 }

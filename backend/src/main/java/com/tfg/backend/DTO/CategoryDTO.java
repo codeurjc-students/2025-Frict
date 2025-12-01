@@ -18,6 +18,6 @@ public class CategoryDTO {
     public CategoryDTO(Category c) {
         this.id = c.getId();
         this.name = c.getName();
-        this.imageUrl = "/api/v1/categories/image/" + id;
+        this.imageUrl = c.getCategoryImage().getImageUrl();
     }
 }

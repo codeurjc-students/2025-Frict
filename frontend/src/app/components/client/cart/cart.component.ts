@@ -175,7 +175,6 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   protected removeItem(id: string) {
-    //Llamar a removeItem
     this.orderService.deleteItem(id).subscribe({
       next: () => {
         this.foundItems.orderItems = this.foundItems.orderItems.filter(item => item.id !== id);
@@ -185,7 +184,7 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   protected moveToCart(id: string) {
-    //Mover al carrito
+    //Move to cart button implementation
   }
 
   protected removeFavorite(id: string) {

@@ -24,12 +24,11 @@ public class AttributeEncryptor implements AttributeConverter<String, String> {
 
     @Override
     public String convertToDatabaseColumn(String attribute) {
-        // DE JAVA A BASE DE DATOS (Cifrar)
+        // Encrypt
         if (attribute == null) return null;
         try {
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, key);
-            // Ciframos y convertimos a Base64 para guardarlo como texto legible
             return Base64.getEncoder().encodeToString(cipher.doFinal(attribute.getBytes()));
         } catch (Exception e) {
             throw new IllegalStateException("Error al cifrar datos", e);
@@ -38,7 +37,7 @@ public class AttributeEncryptor implements AttributeConverter<String, String> {
 
     @Override
     public String convertToEntityAttribute(String dbData) {
-        // DE BASE DE DATOS A JAVA (Descifrar)
+        // Decrypt
         if (dbData == null) return null;
         try {
             Cipher cipher = Cipher.getInstance(ALGORITHM);

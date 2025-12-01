@@ -1,9 +1,6 @@
 package com.tfg.backend.DTO;
 
-import com.tfg.backend.model.Category;
-import com.tfg.backend.model.Product;
-import com.tfg.backend.model.Review;
-import com.tfg.backend.model.ShopStock;
+import com.tfg.backend.model.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,8 +15,7 @@ public class ProductDTO {
     private Long id;
     private String referenceCode;
     private String name;
-    private String imageUrl;
-    private String thumbnailUrl;
+    private ArrayList<String> imageUrls = new ArrayList<>();
     private String description;
     private double previousPrice;
     private double currentPrice;
@@ -36,8 +32,9 @@ public class ProductDTO {
         this.id = p.getId();
         this.name = p.getName();
         this.referenceCode = p.getReferenceCode();
-        this.imageUrl = "/api/v1/products/image/" + id;
-        this.thumbnailUrl = "/api/v1/products/thumbnail/" + id;
+        for (ProductImageInfo image : p.getImages()) {
+            this.imageUrls.add(image.getImageUrl());
+        }
         this.description = p.getDescription();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();

@@ -15,7 +15,7 @@ import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {FooterComponent} from '../../common/footer/footer.component';
 import {formatPrice} from '../../../utils/numberFormat.util';
 
-// Interfaces (Igual que antes)
+// Interfaces
 interface Address {
   id: number;
   alias: string;
@@ -41,7 +41,7 @@ interface PaymentMethod {
     CommonModule,
     FormsModule,
     RouterModule,
-    StepperModule, // Esto importa p-stepper, p-step-list, p-step, p-step-panels, p-step-panel
+    StepperModule, // This imports p-stepper, p-step-list, p-step, p-step-panels, p-step-panel
     ButtonModule,
     RadioButtonModule,
     TagModule,
@@ -57,7 +57,7 @@ interface PaymentMethod {
 })
 export class OrderSummaryComponent implements OnInit {
 
-  // Datos simulados (Igual que antes)
+  // Sample data
   orderItems = [
     { id: 1, name: 'Smartphone Plegable X', thumbnailUrl: 'https://via.placeholder.com/150', price: 750, quantity: 1, variant: 'Negro Espacial' },
     { id: 2, name: 'Funda Protectora', thumbnailUrl: 'https://via.placeholder.com/150', price: 25, quantity: 1, variant: 'Transparente' }
@@ -84,7 +84,7 @@ export class OrderSummaryComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  // Cálculos
+  // Main functions
   getSubtotal(): number {
     return this.orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   }

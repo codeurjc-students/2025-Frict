@@ -13,6 +13,6 @@ export class UserService {
   public uploadUserImage(id: string, selectedImage: File) {
     const formData = new FormData();
     formData.append('image', selectedImage);
-    return this.http.put(this.apiUrl + `/users/image/${id}`, formData);
+    return this.http.post(this.apiUrl + `/users/image/${id}`, formData);
   }
 }
