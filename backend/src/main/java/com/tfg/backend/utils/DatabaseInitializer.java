@@ -200,24 +200,24 @@ public class DatabaseInitializer {
             shop1.getAssignedTrucks().add(truck2);
             shopRepository.save(shop1);
 
-            // Retrieve saved products (now have id)
-            Product p1 = products.get(0);
-            Product p2 = products.get(1);
-            Product p3 = products.get(2);
-            Product p4 = products.get(3);
-            Product p8 = products.get(7);
-            Product p26 = products.get(25);
-
             Order order1 = new Order("23456", user1, truck1);
             Order order2 = new Order("56789", user2, truck1);
 
             List<OrderItem> orderItems1 = new ArrayList<>();
-            orderItems1.add(new OrderItem(order1, p1, user1, 12));
-            orderItems1.add(new OrderItem(order1, p3, user1, 3));
+            orderItems1.add(new OrderItem(order1, products.get(0), user1, 12));
+            orderItems1.add(new OrderItem(order1, products.get(2), user1, 3));
+            orderItems1.add(new OrderItem(null, products.get(3), user1, 1)); //Item in user1 cart
+            orderItems1.add(new OrderItem(null, products.get(8), user1, 4));
+            orderItems1.add(new OrderItem(null, products.get(12), user1, 2));
+            orderItems1.add(new OrderItem(null, products.get(15), user1, 3));
+            orderItems1.add(new OrderItem(null, products.get(18), user1, 6));
+            orderItems1.add(new OrderItem(null, products.get(22), user1, 20));
+            orderItems1.add(new OrderItem(null, products.get(23), user1, 15));
+            orderItems1.add(new OrderItem(null, products.get(28), user1, 14));
 
             List<OrderItem> orderItems2 = new ArrayList<>();
-            orderItems2.add(new OrderItem(order2, p4, user2, 2));
-            orderItems2.add(new OrderItem(order2, p8, user2, 1));
+            orderItems2.add(new OrderItem(order2, products.get(3), user2, 2));
+            orderItems2.add(new OrderItem(order2, products.get(7), user2, 1));
 
             order1.setItems(orderItems1);
             order2.setItems(orderItems2);
@@ -234,12 +234,41 @@ public class DatabaseInitializer {
             shop1.setAvailableProducts(new HashSet<>());
             shopRepository.save(shop1);
 
-            shopStockRepository.save(new ShopStock(shop1, p1, 3));
-            shopStockRepository.save(new ShopStock(shop1, p2, 10));
-            shopStockRepository.save(new ShopStock(shop1, p26, 5));
+            List<ShopStock> shopStocks = new ArrayList<>();
+            shopStocks.add(new ShopStock(shop1, products.get(0), 0));
+            shopStocks.add(new ShopStock(shop1, products.get(1), 1));
+            shopStocks.add(new ShopStock(shop1, products.get(2), 2));
+            shopStocks.add(new ShopStock(shop1, products.get(3), 3));
+            shopStocks.add(new ShopStock(shop1, products.get(4), 4));
+            shopStocks.add(new ShopStock(shop1, products.get(5), 5));
+            shopStocks.add(new ShopStock(shop1, products.get(6), 6));
+            shopStocks.add(new ShopStock(shop1, products.get(7), 7));
+            shopStocks.add(new ShopStock(shop1, products.get(8), 8));
+            shopStocks.add(new ShopStock(shop1, products.get(9), 9));
+            shopStocks.add(new ShopStock(shop1, products.get(10), 10));
+            shopStocks.add(new ShopStock(shop1, products.get(11), 11));
+            shopStocks.add(new ShopStock(shop1, products.get(12), 12));
+            shopStocks.add(new ShopStock(shop1, products.get(13), 13));
+            shopStocks.add(new ShopStock(shop1, products.get(14), 14));
+            shopStocks.add(new ShopStock(shop1, products.get(15), 15));
+            shopStocks.add(new ShopStock(shop1, products.get(16), 16));
+            shopStocks.add(new ShopStock(shop1, products.get(17), 17));
+            shopStocks.add(new ShopStock(shop1, products.get(18), 18));
+            shopStocks.add(new ShopStock(shop1, products.get(19), 19));
+            shopStocks.add(new ShopStock(shop1, products.get(20), 20));
+            shopStocks.add(new ShopStock(shop1, products.get(21), 21));
+            shopStocks.add(new ShopStock(shop1, products.get(22), 22));
+            shopStocks.add(new ShopStock(shop1, products.get(23), 23));
+            shopStocks.add(new ShopStock(shop1, products.get(24), 24));
+            shopStocks.add(new ShopStock(shop1, products.get(25), 25));
+            shopStocks.add(new ShopStock(shop1, products.get(26), 26));
+            shopStocks.add(new ShopStock(shop1, products.get(27), 27));
+            shopStocks.add(new ShopStock(shop1, products.get(28), 28));
+            shopStocks.add(new ShopStock(shop1, products.get(29), 29));
+            shopStockRepository.saveAll(shopStocks);
 
-            reviewRepository.save(new Review(user1, p1, 5, "Muy buen producto", true));
-            reviewRepository.save(new Review(user2, p1, 2, "Desastroso", false));
+            reviewRepository.save(new Review(user1, products.get(0), 5, "Muy buen producto", true));
+            reviewRepository.save(new Review(user2, products.get(0), 2, "Desastroso", false));
 
             System.out.println("---- DATABASE SUCCESSFULLY INITIALIZED ----");
         }

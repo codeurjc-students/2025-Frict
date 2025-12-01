@@ -53,6 +53,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   //Cart items pagination
   foundItems : OrderItemsPage = {orderItems: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  totalItems: number = 0;
   firstItem: number = 0;
   itemsRows: number = 10;
 
@@ -69,7 +70,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   ngOnInit(){
     this.quantityUpdateSubject.pipe(
-      debounceTime(750),
+      debounceTime(500),
       switchMap(data => {
         return this.orderService.updateItemQuantity(data.item.product.id, data.quantity).pipe(
           catchError(error => {
@@ -90,6 +91,8 @@ export class CartComponent implements OnInit, OnDestroy {
             console.log(`Sincronizado item ${response.product.name} a cantidad: ${response.quantity}`);
             console.log(`Cantidad máxima calculada en frontend: ${itemToUpdate.maxQuantity}`);
           }
+
+          this.getTotalItems();
         }
       }
     });
@@ -112,7 +115,8 @@ export class CartComponent implements OnInit, OnDestroy {
       return acumulador + quantity;
 
     }, 0);
-
+    this.totalItems = totalUnits;
+    this.orderService.setItemsCount(totalUnits);
     return totalUnits;
   }
 
@@ -149,6 +153,7 @@ export class CartComponent implements OnInit, OnDestroy {
         this.foundItems.currentPage = 0;
         this.foundItems.lastPage = -1;
         this.foundItems.pageSize = 0;
+        this.totalItems = 0;
       }
     })
   }
@@ -159,6 +164,7 @@ export class CartComponent implements OnInit, OnDestroy {
         next: (items) => {
           console.log(items);
           this.foundItems = items;
+          this.getTotalItems();
         }
       })
     }
@@ -175,10 +181,15 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   protected removeItem(id: string) {
+    const itemToDelete = this.foundItems.orderItems.find(item => item.id === id);
+    const quantityToDelete = itemToDelete?.quantity ?? 0;
+
     this.orderService.deleteItem(id).subscribe({
       next: () => {
         this.foundItems.orderItems = this.foundItems.orderItems.filter(item => item.id !== id);
         this.foundItems.totalItems = this.foundItems.totalItems > 0 ? this.foundItems.totalItems - 1 : 0;
+        this.orderService.decrementItemsCount(quantityToDelete);
+        this.totalItems -= quantityToDelete;
       }
     })
   }

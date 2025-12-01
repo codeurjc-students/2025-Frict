@@ -52,7 +52,7 @@
           <p-button iconPos="left" styleClass="h-10 !text-surface-900" routerLink="/cart">
             <ng-template pTemplate="content">
               <i class="pi pi-shopping-cart"></i>
-              <span class="hidden lg:inline ml-1 font-bold">Cesta (0)</span>
+              <span class="hidden lg:inline ml-1 font-bold">Cesta ({{ orderService.itemsCount() }})</span>
             </ng-template>
           </p-button>
         </div>

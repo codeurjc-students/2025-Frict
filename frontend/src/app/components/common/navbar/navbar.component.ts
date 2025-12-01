@@ -11,6 +11,7 @@ import {FormsModule} from '@angular/forms';
 import {Menu} from 'primeng/menu';
 import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
+import {OrderService} from '../../../services/order.service';
 
 
 
@@ -37,6 +38,7 @@ import {LoginInfo} from '../../../models/loginInfo.model';
 export class NavbarComponent {
 
   constructor(protected authService: AuthService,
+              protected orderService: OrderService,
               protected router: Router) {}
 
   @ViewChild('drawerRef') drawerRef!: Drawer;
@@ -80,5 +82,4 @@ export class NavbarComponent {
       }
     });
   }
-
 }

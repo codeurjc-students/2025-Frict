@@ -50,6 +50,23 @@ public class OrderRestController {
         return ResponseEntity.ok(toOrderItemPageDTO(cartItems));
     }
 
+    @GetMapping("/cart/count")
+    public ResponseEntity<Integer> countCartItems(HttpServletRequest request, Pageable pageable) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Page<OrderItem> cartItems = orderItemService.findUserCartItemsPage(loggedUser.getId(), pageable);
+        int totalItems = 0;
+        for (OrderItem i : cartItems) {
+            totalItems += i.getQuantity();
+        }
+        return ResponseEntity.ok(totalItems);
+    }
+
     @DeleteMapping("/cart")
     public ResponseEntity<Void> clearCartItems(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
