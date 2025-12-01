@@ -61,8 +61,8 @@ describe('ClientHomeComponent', () => {
     ];
 
     const allMockProducts: Product[] = [
-      { id: '1', referenceCode: 'ABC', name: 'Producto 1', description: 'Desc 1', currentPrice: 100, imageUrl: '', previousPrice: 0.0, discount: "0%", categories: [allMockCategories[0]], availableUnits: 0, averageRating: 0.0, totalReviews: 0, thumbnailUrl: '' },
-      { id: '2', referenceCode: 'DEF', name: 'Producto 2', description: 'Desc 2', currentPrice: 200, imageUrl: '', previousPrice: 0.0, discount: "0%", categories: [allMockCategories[0]], availableUnits: 0, averageRating: 0.0, totalReviews: 0, thumbnailUrl: '' }
+      { id: '1', referenceCode: 'ABC', name: 'Producto 1', description: 'Desc 1', currentPrice: 100, imageUrls: [], previousPrice: 0.0, discount: "0%", categories: [allMockCategories[0]], availableUnits: 0, averageRating: 0.0, totalReviews: 0},
+      { id: '2', referenceCode: 'DEF', name: 'Producto 2', description: 'Desc 2', currentPrice: 200, imageUrls: [], previousPrice: 0.0, discount: "0%", categories: [allMockCategories[0]], availableUnits: 0, averageRating: 0.0, totalReviews: 0}
     ];
 
     mockProductService.getAllProducts.and.returnValue(

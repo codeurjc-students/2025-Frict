@@ -3,7 +3,7 @@ export interface Review {
   productId: string;
   creatorId: string;
   creatorName: string;
-  creatorThumbnailUrl: string;
+  creatorImage: string;
   text: string;
   rating: number;
   createdAt: string;
