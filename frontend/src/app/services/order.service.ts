@@ -3,6 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {OrderItemsPage} from '../models/orderItemsPage.model';
 import {OrderItem} from '../models/orderItem.model';
+import {CartSummary} from '../models/cartSummary.model';
 
 @Injectable({
   providedIn: 'root'
@@ -27,10 +28,6 @@ export class OrderService {
     this.itemsCount.update(current => current - n);
   }
 
-  public getUserCartItemsCount(): Observable<number> {
-    return this.http.get<number>(this.apiUrl + `/cart/count`);
-  }
-
   public getUserCartItemsPage(page: number, size: number): Observable<OrderItemsPage> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
@@ -38,8 +35,12 @@ export class OrderService {
     return this.http.get<OrderItemsPage>(this.apiUrl + `/cart`, { params });
   }
 
-  public clearUserCartItems(): Observable<void> {
-    return this.http.delete<void>(this.apiUrl + `/cart`);
+  public getUserCartSummary(): Observable<CartSummary> {
+    return this.http.get<CartSummary>(this.apiUrl + `/cart/summary`);
+  }
+
+  public clearUserCartItems(): Observable<CartSummary> {
+    return this.http.delete<CartSummary>(this.apiUrl + `/cart`);
   }
 
   public addItemToCart(productId: string, units: number): Observable<OrderItem> {
@@ -48,13 +49,14 @@ export class OrderService {
     return this.http.post<OrderItem>(this.apiUrl + `/cart/${productId}`, null, { params }); //Null body, required query params
   }
 
-  public updateItemQuantity(productId: string, units: number): Observable<OrderItem> {
+  public updateItemQuantity(productId: string, units: number): Observable<CartSummary> {
     let params = new HttpParams();
     params = params.append('quantity', units);
-    return this.http.put<OrderItem>(this.apiUrl + `/cart/${productId}`, null, { params }); //Null body, required query params
+    return this.http.put<CartSummary>(this.apiUrl + `/cart/${productId}`, null, { params }); //Null body, required query params
   }
 
-  public deleteItem(id: string): Observable<void> {
-    return this.http.delete<void>(this.apiUrl + `/cart/${id}`)
+  public deleteItem(id: string): Observable<CartSummary> {
+    return this.http.delete<CartSummary>(this.apiUrl + `/cart/${id}`)
   }
+
 }

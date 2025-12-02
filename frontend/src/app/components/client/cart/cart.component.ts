@@ -4,7 +4,6 @@ import {FormsModule} from '@angular/forms';
 import {FooterComponent} from '../../common/footer/footer.component';
 import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {OrderService} from '../../../services/order.service';
-import {AuthService} from '../../../services/auth.service';
 import {ProductsPage} from '../../../models/productsPage.model';
 import {OrderItemsPage} from '../../../models/orderItemsPage.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
@@ -13,27 +12,17 @@ import {formatPrice} from '../../../utils/numberFormat.util';
 import {InputNumber} from 'primeng/inputnumber';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
-import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {Tag} from 'primeng/tag';
 import {OrderItem} from '../../../models/orderItem.model';
-import {catchError, debounceTime, of, Subject, switchMap} from 'rxjs';
-
-// Interfaces
-export interface Product {
-  id: string;
-  name: string;
-  specs: string;
-  price: number;
-  originalPrice: number;
-  image: string;
-  stock: boolean;
-  shipping: string;
-}
+import {catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap} from 'rxjs';
+import {CartSummary} from '../../../models/cartSummary.model';
+import {Button} from 'primeng/button';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, InputNumber, RouterLink, Select, Paginator, Tag],
+  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, InputNumber, RouterLink, Select, Paginator, Tag, Button, LoadingScreenComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
@@ -53,7 +42,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   //Cart items pagination
   foundItems : OrderItemsPage = {orderItems: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
-  totalItems: number = 0;
+  cartSummary!: CartSummary;
   firstItem: number = 0;
   itemsRows: number = 10;
 
@@ -65,39 +54,32 @@ export class CartComponent implements OnInit, OnDestroy {
   private quantityUpdateSubject = new Subject<{item: OrderItem, quantity: number}>();
 
   constructor(private orderService: OrderService,
-              private productService: ProductService,
-              private authService: AuthService) {}
+              private productService: ProductService) {}
 
   ngOnInit(){
     this.quantityUpdateSubject.pipe(
-      debounceTime(500),
+      debounceTime(250),
+      distinctUntilChanged((prev, curr) => {
+        return prev.item.product.id === curr.item.product.id && prev.quantity === curr.quantity;
+      }),
       switchMap(data => {
         return this.orderService.updateItemQuantity(data.item.product.id, data.quantity).pipe(
           catchError(error => {
-            data.item.quantity = 1;
             return of(null);
           })
         );
       })
     ).subscribe({
-      next: (response) => {
-        if (response) {
-          const itemToUpdate = this.foundItems.orderItems.find(
-            item => item.product.id === response.product.id
-          );
-
-          if (itemToUpdate) {
-            itemToUpdate.quantity = response.quantity;
-            console.log(`Sincronizado item ${response.product.name} a cantidad: ${response.quantity}`);
-            console.log(`Cantidad máxima calculada en frontend: ${itemToUpdate.maxQuantity}`);
-          }
-
-          this.getTotalItems();
+      next: (summary) => {
+        if(summary){
+          this.cartSummary = summary;
+          this.orderService.setItemsCount(summary.totalItems);
         }
       }
     });
 
-    this.getUserCartItems();
+    this.getUserCartItemsPage();
+    this.getUserCartSummary();
     this.getUserFavouriteProducts();
   }
 
@@ -105,25 +87,28 @@ export class CartComponent implements OnInit, OnDestroy {
     this.quantityUpdateSubject.complete();
   }
 
-  protected getTotalItems(): number {
-    if (!this.foundItems || !this.foundItems.orderItems || this.foundItems.orderItems.length === 0) {
-      return 0;
+  protected updateItemQuantity(item: OrderItem, newQuantity: number) {
+    if (newQuantity === null || newQuantity === undefined) {
+      return;
     }
 
-    const totalUnits = this.foundItems.orderItems.reduce((acumulador, item) => {
-      const quantity = item.quantity ?? 0;
-      return acumulador + quantity;
+    let finalQuantity = newQuantity;
 
-    }, 0);
-    this.totalItems = totalUnits;
-    this.orderService.setItemsCount(totalUnits);
-    return totalUnits;
-  }
+    if (newQuantity < 1) {
+      finalQuantity = 1;
+    } else if (newQuantity > item.maxQuantity) {
+      finalQuantity = item.maxQuantity;
+    }
 
-  protected updateItemQuantity(item: OrderItem, newQuantity: number) {
-    if (!newQuantity) return;
-    console.log("Enviando al backend:", newQuantity);
-    this.quantityUpdateSubject.next({ item, quantity: newQuantity });
+    if (finalQuantity !== newQuantity) {
+      setTimeout(() => {
+        item.quantity = finalQuantity;
+      }, 0);
+    } else {
+      item.quantity = finalQuantity;
+    }
+
+    this.quantityUpdateSubject.next({ item, quantity: finalQuantity });
   }
 
   public formatCategories(categories: any[]): string {
@@ -136,7 +121,7 @@ export class CartComponent implements OnInit, OnDestroy {
   onCartItemsPageChange(event: PaginatorState) {
     this.firstItem = event.first ?? 0;
     this.itemsRows = event.rows ?? 10;
-    this.getUserCartItems();
+    this.getUserCartItemsPage();
   }
 
   onFavouriteProductsPageChange(event: PaginatorState) {
@@ -147,49 +132,62 @@ export class CartComponent implements OnInit, OnDestroy {
 
   protected clearCart() {
     this.orderService.clearUserCartItems().subscribe({
-      next: () => {
+      next: (summary) => {
+        this.cartSummary = summary;
+        this.orderService.setItemsCount(summary.totalItems);
         this.foundItems.orderItems = [];
         this.foundItems.totalItems = 0;
         this.foundItems.currentPage = 0;
         this.foundItems.lastPage = -1;
         this.foundItems.pageSize = 0;
-        this.totalItems = 0;
       }
     })
   }
 
-  protected getUserCartItems(){
-    if(this.authService.isLogged()){
-      this.orderService.getUserCartItemsPage(this.firstItem/this.itemsRows, this.itemsRows).subscribe({
-        next: (items) => {
-          console.log(items);
-          this.foundItems = items;
-          this.getTotalItems();
-        }
-      })
-    }
+  protected getUserCartItemsPage(){
+    this.orderService.getUserCartItemsPage(this.firstItem/this.itemsRows, this.itemsRows).subscribe({
+      next: (items) => {
+        this.foundItems = items;
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    })
+  }
+
+  protected getUserCartSummary(){
+    this.orderService.getUserCartSummary().subscribe({
+      next: (summary) => {
+        this.cartSummary = summary;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    })
   }
 
   protected getUserFavouriteProducts(){
-    if(this.authService.isLogged()){
-      this.productService.getUserFavouriteProductsPage(this.firstProduct/this.productsRows, this.productsRows).subscribe({
-        next: (items) => {
-          this.foundProducts = items;
-        }
-      })
-    }
+    this.productService.getUserFavouriteProductsPage(this.firstProduct/this.productsRows, this.productsRows).subscribe({
+      next: (items) => {
+        this.foundProducts = items;
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    })
   }
 
   protected removeItem(id: string) {
-    const itemToDelete = this.foundItems.orderItems.find(item => item.id === id);
-    const quantityToDelete = itemToDelete?.quantity ?? 0;
-
     this.orderService.deleteItem(id).subscribe({
-      next: () => {
+      next: (summary) => {
         this.foundItems.orderItems = this.foundItems.orderItems.filter(item => item.id !== id);
         this.foundItems.totalItems = this.foundItems.totalItems > 0 ? this.foundItems.totalItems - 1 : 0;
-        this.orderService.decrementItemsCount(quantityToDelete);
-        this.totalItems -= quantityToDelete;
+        this.cartSummary = summary;
+        this.orderService.setItemsCount(summary.totalItems);
       }
     })
   }
@@ -207,55 +205,5 @@ export class CartComponent implements OnInit, OnDestroy {
     })
   }
 
-  protected calculateSum(isTotal: boolean): number {
-    if (!this.foundItems || !this.foundItems.orderItems || this.foundItems.orderItems.length === 0) {
-      return 0;
-    }
-
-    let totalSum = this.foundItems.orderItems.reduce((acumulador, item) => {
-      const quantity = item.quantity ?? 0;
-
-      let usedPrice: number;
-      const previousPrice = item.product?.previousPrice ?? 0;
-      const currentPrice = item.product?.currentPrice ?? 0;
-
-      if (!isTotal) {
-        if (previousPrice === 0) {
-          usedPrice = currentPrice;
-        } else {
-          usedPrice = previousPrice;
-        }
-      } else usedPrice = currentPrice;
-
-      return acumulador + (usedPrice * quantity);
-
-    }, 0);
-
-    if (isTotal && totalSum < 50) {
-      totalSum += 5;
-    }
-    return totalSum;
-  }
-
-  protected calculateDiscount(): number {
-    if (!this.foundItems || !this.foundItems.orderItems || this.foundItems.orderItems.length === 0) {
-      return 0.0;
-    }
-
-    return this.foundItems.orderItems.reduce((acumulador, item) => {
-
-      const previousPrice = item.product?.previousPrice ?? 0;
-      const currentPrice = item.product?.currentPrice ?? 0;
-      const quantity = item.quantity ?? 0;
-
-      if (previousPrice > 0 && quantity > 0) {
-        const descuentoUnidad = previousPrice - currentPrice;
-        const descuentoTotalItem = descuentoUnidad * quantity;
-        return acumulador + descuentoTotalItem;
-      } else {
-        return acumulador;
-      }
-
-    }, 0.0);
-  }
+  protected readonly catchError = catchError;
 }

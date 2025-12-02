@@ -9,8 +9,9 @@ import java.util.List;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
-    //Retrieves cart items for the specified user id (cart page)
-    Page<OrderItem> findByUserIdAndOrderIsNull(Long userId, Pageable pageable);
+    //Retrieve cart items for the specified user id
+    List<OrderItem> findByUserIdAndOrderIsNull(Long userId); //For cart summary
+    Page<OrderItem> findByUserIdAndOrderIsNull(Long userId, Pageable pageable); //For cart page visualization
 
     //Retrieves all the items of the same product that are in all users carts (stock check)
     List<OrderItem> findByProductIdAndOrderIsNull(Long productId);

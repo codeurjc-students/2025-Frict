@@ -49,10 +49,10 @@ export class AppComponent implements OnInit {
 
   //Init signal variable in OrderService which contains the number of items in cart (useful for navbar cart items count)
   private initItemsCount() {
-    this.orderService.getUserCartItemsCount().subscribe({ //The elements do not matter, but totalElements page field does
-      next: (count) => {
-        console.log(count);
-        this.orderService.setItemsCount(count);
+    this.orderService.getUserCartSummary().subscribe({ //The elements do not matter, but totalElements page field does
+      next: (summary) => {
+        console.log(summary);
+        this.orderService.setItemsCount(summary.totalItems);
       }
     })
   }

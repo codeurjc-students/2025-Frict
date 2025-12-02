@@ -1,5 +1,6 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.DTO.CartSummaryDTO;
 import com.tfg.backend.DTO.OrderItemDTO;
 import com.tfg.backend.DTO.OrderItemsPageDTO;
 import com.tfg.backend.model.OrderItem;
@@ -33,12 +34,57 @@ public class OrderRestController {
     @Autowired
     private OrderItemService orderItemService;
 
-    
 
-    //Custom method to achieve retrieving the order items from a list as a page given by the repository
+    @GetMapping("/cart/summary")
+    public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
+
+        int totalItems = 0;
+        double subtotal = 0.0;
+        double totalDiscount = 0.0;
+        double total = 0.0;
+
+        for (OrderItem item : cartItems) {
+            Product p = item.getProduct();
+            int quantity = item.getQuantity();
+            totalItems += quantity;
+
+            double currentPrice = p.getCurrentPrice();
+            double previousPrice = p.getPreviousPrice();
+
+            // Subtotal
+            double unitSubtotal = (previousPrice > 0) ? previousPrice : currentPrice;
+            subtotal += unitSubtotal * quantity;
+
+            // Total
+            total += currentPrice * quantity;
+
+            // Discount
+            if (previousPrice > currentPrice) {
+                totalDiscount += (previousPrice - currentPrice) * quantity;
+            }
+        }
+
+        double shippingCost = (total > 50.0) ? 0.0 : 5.0;
+
+        //Rounded to 2 decimals, as it is currency
+        return ResponseEntity.ok(new CartSummaryDTO(totalItems,
+                Math.round(subtotal * 100.0) / 100.0,
+                Math.round(totalDiscount * 100.0) / 100.0,
+                shippingCost,
+                Math.round(total * 100.0) / 100.0));
+    }
+
     //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
     @GetMapping("/cart")
-    public ResponseEntity<OrderItemsPageDTO> getCartItems(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<OrderItemsPageDTO> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
@@ -50,25 +96,8 @@ public class OrderRestController {
         return ResponseEntity.ok(toOrderItemPageDTO(cartItems));
     }
 
-    @GetMapping("/cart/count")
-    public ResponseEntity<Integer> countCartItems(HttpServletRequest request, Pageable pageable) {
-        //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
-
-        Page<OrderItem> cartItems = orderItemService.findUserCartItemsPage(loggedUser.getId(), pageable);
-        int totalItems = 0;
-        for (OrderItem i : cartItems) {
-            totalItems += i.getQuantity();
-        }
-        return ResponseEntity.ok(totalItems);
-    }
-
     @DeleteMapping("/cart")
-    public ResponseEntity<Void> clearCartItems(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<CartSummaryDTO> clearCartItems(HttpServletRequest request) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
@@ -83,7 +112,7 @@ public class OrderRestController {
             userService.save(loggedUser);
         }
 
-        return ResponseEntity.ok().build();
+        return this.getCartSummary(request);
     }
 
 
@@ -142,7 +171,7 @@ public class OrderRestController {
     }
 
     @PutMapping("/cart/{id}")
-    public ResponseEntity<OrderItemDTO> updateItemQuantity(HttpServletRequest request,
+    public ResponseEntity<CartSummaryDTO> updateItemQuantity(HttpServletRequest request,
                                                            @PathVariable Long id,
                                                            @RequestParam int quantity) {
         // 1. Get user
@@ -180,9 +209,13 @@ public class OrderRestController {
         if (quantity > maxAchievableQuantity) {
             quantity = maxAchievableQuantity; // Maximum available units
         }
-        // CASE B: Negative quantity
         else if (quantity < 0) {
-            quantity = 0;
+            if(itemToUpdate.getQuantity() > 0 || freeStock > 0){
+                quantity = 1;
+            }
+            else{
+                quantity = 0;
+            }
         }
 
         // Validation: If after adjustments quantity is 0, throw an error
@@ -194,11 +227,11 @@ public class OrderRestController {
         itemToUpdate.setQuantity(quantity);
         userService.save(loggedUser);
 
-        return ResponseEntity.ok(new OrderItemDTO(itemToUpdate));
+        return this.getCartSummary(request);
     }
 
     @DeleteMapping("/cart/{id}")
-    public ResponseEntity<Void> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<CartSummaryDTO> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
@@ -219,8 +252,7 @@ public class OrderRestController {
         if(!removed){
             return ResponseEntity.notFound().build();
         }
-
-        return ResponseEntity.ok().build();
+        return this.getCartSummary(request);
     }
 
 
