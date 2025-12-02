@@ -1,41 +1,61 @@
-<div class="p-2">
-  <div [routerLink]="['/product', product.id]" [attr.id]="elementId" class="min-w-[3rem] max-w-[260px] h-full bg-white border border-surface-200 rounded-lg shadow p-4 mx-auto flex flex-col gap-3 text-sm cursor-pointer transition-transform hover:scale-[1.02]">
+<div class="p-2 h-full">
+  <div
+    [routerLink]="['/product', product.id]"
+    [attr.id]="elementId"
+    class="group relative flex flex-col h-full w-full min-w-[16rem] max-w-[320px] mx-auto bg-white rounded-xl border border-surface-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer overflow-hidden"
+  >
 
-    <div class="relative w-full h-full">
-      <img [src]="product.imageUrls[0]" [alt]="product.name" class="w-full h-auto rounded-lg" />
+    <div class="relative w-full aspect-[4/3] bg-surface-50 shrink-0">
+      <img
+        [src]="product.imageUrls[0]"
+        [alt]="product.name"
+        class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 mix-blend-multiply"
+      />
 
-      <div *ngIf="product.discount.startsWith('-')" class="absolute top-2 left-2">
-        <p-tag [value]="product.discount" [severity]="product.discount.startsWith('-') ? 'danger' : 'success'"></p-tag>
-      </div>
-
-      <div class="absolute top-2 right-2">
+      <div class="absolute top-0 right-0 w-full p-3 flex justify-end items-start pointer-events-none">
         <app-stock-tag [units]="product.availableUnits"></app-stock-tag>
       </div>
     </div>
 
-    <h3 class="font-semibold text-gray-900 leading-snug">
-      {{ product.name }}
-    </h3>
+    <div class="p-4 flex flex-col gap-3 flex-1 bg-white relative z-10">
 
-    <div class="flex items-center gap-2">
-      <span class="text-red-600 text-xl font-bold">{{ formatPrice(product.currentPrice) }}</span>
-      <span *ngIf="product.previousPrice > product.currentPrice" class="text-surface-400 line-through text-sm">{{ formatPrice(product.previousPrice) }}</span>
-    </div>
+      <div class="space-y-1">
+        <h3 class="font-bold text-surface-900 text-[0.95rem] leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors" [title]="product.name">
+          {{ product.name }}
+        </h3>
+      </div>
 
-    <div class="flex items-center text-primary-500 gap-1 text-sm">
-      <span class="font-semibold">{{ formatRating(product.averageRating) }}/5</span>
-      <span class="pi pi-star-fill"></span>
-      <span class="text-gray-600">({{ product.totalReviews }} opiniones)</span>
-    </div>
+      <div class="mt-auto pt-2">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-surface-900 text-xl font-bold tracking-tight">{{ formatPrice(product.currentPrice) }}</span>
+          <span class="text-surface-400 line-through text-xs font-medium">
+            {{ formatPrice(product.previousPrice) }}
+          </span>
 
-    <div class="flex items-center gap-2 mt-auto">
-      <span class="pi pi-truck"></span>
-      <span class="text-gray-500 text-xs">Envío gratis</span>
-    </div>
+          <span *ngIf="product.discount.startsWith('-')" class="text-[0.65rem] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
+            {{ product.discount }}
+          </span>
+        </div>
 
-    <div class="flex items-center gap-2">
-      <span class="pi pi-sliders-v"></span>
-      <span class="text-gray-500 text-xs">Opciones disponibles</span>
+        <div class="flex items-center gap-1 text-xs mt-2">
+          <i class="pi pi-star-fill text-yellow-400 text-[0.7rem]"></i>
+          <span class="font-bold text-surface-700">{{ formatRating(product.averageRating) }}</span>
+          <span class="text-surface-400">({{ product.totalReviews }})</span>
+        </div>
+      </div>
+
+      <div class="border-t border-surface-100 pt-3 flex items-center justify-between text-[0.7rem] text-surface-500 font-medium tracking-wide uppercase mt-2">
+        <div class="flex items-center gap-1.5">
+          <i class="pi pi-truck text-xs"></i>
+          <span>Gratis</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 group/opt hover:text-surface-900 transition-colors">
+          <span>Opciones</span>
+          <i class="pi pi-arrow-right text-[0.6rem] transition-transform group-hover/opt:translate-x-0.5"></i>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

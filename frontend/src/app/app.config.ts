@@ -17,25 +17,30 @@ import {finalize} from 'rxjs';
 
 export const carouselResponsiveOptions = [
   {
-    breakpoint: '1400px',
+    breakpoint: '1600px',
     numVisible: 5,
-    numScroll: 1,
+    numScroll: 1
   },
   {
-    breakpoint: '1199px',
+    breakpoint: '1400px',
     numVisible: 4,
-    numScroll: 1,
+    numScroll: 1
   },
   {
-    breakpoint: '767px',
+    breakpoint: '1024px',
     numVisible: 3,
-    numScroll: 1,
+    numScroll: 1
   },
   {
-    breakpoint: '575px',
+    breakpoint: '768px',
     numVisible: 2,
-    numScroll: 1,
+    numScroll: 1
   },
+  {
+    breakpoint: '560px',
+    numVisible: 1,
+    numScroll: 1
+  }
 ];
 
 export const galleryResponsiveOptions = [
