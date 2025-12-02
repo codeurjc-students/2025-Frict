@@ -18,7 +18,6 @@ import {formatPrice} from '../../../utils/numberFormat.util';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
 import {Dialog} from 'primeng/dialog';
-import {Panel} from 'primeng/panel';
 import {Avatar} from 'primeng/avatar';
 import {Rating} from 'primeng/rating';
 import {MeterGroupModule} from 'primeng/metergroup';
@@ -27,11 +26,8 @@ import {Review} from '../../../models/review.model';
 import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {Toast} from 'primeng/toast';
-import {StyleClass} from 'primeng/styleclass';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Textarea} from 'primeng/textarea';
-import {FloatLabel} from 'primeng/floatlabel';
-import {Tooltip} from 'primeng/tooltip';
 import {TableModule} from 'primeng/table';
 import {ShopStock} from '../../../models/shopStock.model';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
@@ -59,16 +55,12 @@ import {Image} from 'primeng/image';
     LoadingSectionComponent,
     ProductCardComponent,
     Dialog,
-    Panel,
     Avatar,
     Rating,
     MeterGroupModule,
     Toast,
-    StyleClass,
     LoadingScreenComponent,
     Textarea,
-    FloatLabel,
-    Tooltip,
     TableModule,
     StockTagComponent,
     Image
