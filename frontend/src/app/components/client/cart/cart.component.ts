@@ -9,10 +9,7 @@ import {OrderItemsPage} from '../../../models/orderItemsPage.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
-import {InputNumber} from 'primeng/inputnumber';
 import {RouterLink} from '@angular/router';
-import {Select} from 'primeng/select';
-import {Tag} from 'primeng/tag';
 import {OrderItem} from '../../../models/orderItem.model';
 import {catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap} from 'rxjs';
 import {CartSummary} from '../../../models/cartSummary.model';
@@ -130,6 +127,10 @@ export class CartComponent implements OnInit, OnDestroy {
     this.getUserFavouriteProducts();
   }
 
+  isProductInCart(productId: string): boolean {
+    return this.foundItems?.orderItems?.some(item => item.product.id === productId) ?? false;
+  }
+
   protected clearCart() {
     this.orderService.clearUserCartItems().subscribe({
       next: (summary) => {
@@ -193,7 +194,13 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   protected moveToCart(id: string) {
-    //Move to cart button implementation
+    this.orderService.addItemToCart(id, 1).subscribe({
+      next: (item) => {
+        this.removeFavorite(id);
+        this.getUserCartItemsPage();
+        this.getUserCartSummary();
+      }
+    })
   }
 
   protected removeFavorite(id: string) {
@@ -204,6 +211,4 @@ export class CartComponent implements OnInit, OnDestroy {
       }
     })
   }
-
-  protected readonly catchError = catchError;
 }

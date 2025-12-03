@@ -14,6 +14,7 @@ import {FormsModule} from '@angular/forms';
 import {Checkbox} from 'primeng/checkbox';
 import {CategoryService} from '../../../services/category.service';
 import {Drawer} from 'primeng/drawer';
+import {PrimeTemplate} from 'primeng/api';
 
 interface SortOption {
   name: string; // Shown tag
@@ -28,13 +29,13 @@ interface SortOption {
     Paginator,
     NgIf,
     ProductCardComponent,
-    LoadingSectionComponent,
     NgForOf,
     Select,
     FormsModule,
     Button,
     Checkbox,
-    Drawer
+    Drawer,
+    PrimeTemplate
   ],
   templateUrl: './search.component.html',
   standalone: true,

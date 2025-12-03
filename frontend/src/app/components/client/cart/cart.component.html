@@ -13,7 +13,7 @@
       </h1>
       <p class="text-surface-500 font-medium flex items-center gap-2">
         <span class="bg-primary-50 text-primary-700 px-2 py-0.5 rounded-md text-sm font-bold border border-primary-100">{{ foundItems.totalItems }}</span>
-        productos listos para envío
+        productos
       </p>
     </div>
 
@@ -120,7 +120,7 @@
       <div class="pt-8 border-t border-surface-200">
         <div class="flex items-center gap-3 mb-6">
           <h2 class="text-xl font-bold text-surface-900 flex items-center gap-2">
-            <i class="pi pi-bookmark text-primary-500"></i> Guardado para más tarde
+            <i class="pi pi-bookmark text-primary-500"></i> Productos favoritos
             <span class="text-surface-400 font-normal text-base ml-1">({{foundProducts.totalProducts}})</span>
           </h2>
         </div>
@@ -136,12 +136,23 @@
             </div>
             <div class="flex-1 flex flex-col justify-between">
               <div>
-                <h3 [routerLink]="['/product', product.id]" class="text-sm font-bold text-surface-900 line-clamp-2 hover:text-primary-600 cursor-pointer mb-1">{{ product.name }}</h3>
-                <div class="text-lg font-bold text-surface-900">{{ formatPrice(product.currentPrice) }}</div>
+                <h3 [routerLink]="['/product', product.id]" class="text-sm font-bold text-surface-900 line-clamp-2 hover:text-primary-600 cursor-pointer mb-2">{{ product.name }}</h3>
+                <div class="flex items-center justify-start gap-3">
+                  <div class="text-lg font-bold text-surface-900">{{ formatPrice(product.currentPrice) }}</div>
+                  <ng-container>
+                    <div *ngIf="product.availableUnits > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 shrink-0">
+                      <i class="pi pi-check-circle text-[10px]"></i> Disponible
+                    </div>
+
+                    <div *ngIf="!(product.availableUnits > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 shrink-0">
+                      <i class="pi pi-times-circle text-[10px]"></i> Agotado
+                    </div>
+                  </ng-container>
+                </div>
               </div>
 
               <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-50">
-                <button (click)="moveToCart(product.id)" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors">
+                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.availableUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
                   <i class="pi pi-cart-plus"></i> Mover al carro
                 </button>
                 <button (click)="removeFavorite(product.id)" class="text-surface-400 hover:text-red-500 transition-colors p-1" pTooltip="Eliminar" tooltipPosition="top">
@@ -170,7 +181,7 @@
 
         <div class="space-y-3 text-sm mb-6 font-medium">
           <div class="flex justify-between text-surface-600">
-            <span>Subtotal ({{ cartSummary.totalItems }} items)</span>
+            <span>Subtotal ({{ cartSummary.totalItems }} artículos)</span>
             <span class="font-bold text-surface-900">{{ formatPrice(cartSummary.subtotalCost) }}</span>
           </div>
           <div *ngIf="cartSummary.totalDiscount > 0" class="flex justify-between text-green-700 bg-green-50 px-2 py-1 rounded-lg">
