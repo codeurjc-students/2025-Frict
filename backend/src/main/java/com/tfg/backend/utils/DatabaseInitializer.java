@@ -116,6 +116,7 @@ public class DatabaseInitializer {
             products.add(new Product("A101", "Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
             products.getFirst().setPreviousPrice(1000.00);
             products.add(new Product("B202", "Laptop Ultradelgada 13\"", "Máxima portabilidad y rendimiento", 1250.50));
+            products.get(1).setPreviousPrice(1500.00);
             products.add(new Product("C303", "Tarjeta Gráfica RTX 5080", "Gráficos de siguiente generación para gaming", 780.25));
             products.add(new Product("D404", "Router WiFi 6E Mesh", "Cobertura total y velocidad Gigabit", 185.70));
             products.add(new Product("E505", "Monitor Curvo Ultrawide", "Experiencia inmersiva para profesionales", 499.00));
