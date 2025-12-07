@@ -41,12 +41,12 @@ export class CartComponent implements OnInit, OnDestroy {
   foundItems : OrderItemsPage = {orderItems: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   cartSummary!: CartSummary;
   firstItem: number = 0;
-  itemsRows: number = 10;
+  itemsRows: number = 5;
 
   //Favourite products pagination
   foundProducts : ProductsPage = {products: [], totalProducts: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstProduct: number = 0;
-  productsRows: number = 10;
+  productsRows: number = 5;
 
   private quantityUpdateSubject = new Subject<{item: OrderItem, quantity: number}>();
 

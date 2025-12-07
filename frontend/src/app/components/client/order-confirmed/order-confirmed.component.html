@@ -1,0 +1,54 @@
+<app-navbar></app-navbar>
+
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error" loadingText="Cargando información..."></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-[80vh] bg-surface-50 flex items-center justify-center p-4 relative overflow-hidden">
+
+  <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+  <div class="max-w-lg w-full bg-white rounded-[2.5rem] shadow-2xl border border-surface-200 relative overflow-hidden animate-fade-in-up text-center p-8 md:p-12 z-10">
+
+    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-primary-500"></div>
+
+    <div class="mb-8 relative inline-block">
+      <div class="absolute inset-0 bg-green-100 rounded-full scale-150 animate-pulse"></div>
+      <div class="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 relative z-10 mx-auto">
+        <i class="pi pi-check text-5xl text-white font-bold"></i>
+      </div>
+    </div>
+
+    <h1 class="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight mb-4">
+      ¡Pedido Confirmado!
+    </h1>
+
+    <p class="text-surface-500 text-lg mb-8 leading-relaxed">
+      Muchas gracias por tu compra. Hemos enviado un email de confirmación a <span class="font-bold text-surface-900">{{ this.user?.email }}</span>.
+    </p>
+
+    <div class="bg-surface-50 border border-surface-200 rounded-2xl p-6 mb-8 relative group cursor-pointer hover:border-primary-300 transition-colors">
+      <p class="text-xs font-bold text-surface-400 uppercase tracking-widest mb-1">Referencia del pedido</p>
+      <div class="flex items-center justify-center gap-2">
+            <span class="text-2xl md:text-3xl font-mono font-bold text-surface-900 tracking-tight select-all">
+                {{ orderRefCode }}
+            </span>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <button [routerLink]="['/profile/orders', orderId]" class="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+        <span>Ver detalles del pedido</span>
+        <i class="pi pi-arrow-right"></i>
+      </button>
+
+      <button routerLink="/" class="w-full bg-white border border-surface-200 text-surface-600 hover:text-surface-900 hover:bg-surface-50 font-bold py-3 rounded-xl transition-colors">
+        Volver a la tienda
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<app-footer></app-footer>

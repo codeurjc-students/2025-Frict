@@ -50,6 +50,14 @@ export const routes: Routes = [
     data: { title: 'Resumen del pedido - MiTienda', icon: icons.client }
   },
 
+  {
+    path: 'success',
+    loadComponent: () =>
+      import('./components/client/order-confirmed/order-confirmed.component')
+        .then(m => m.OrderConfirmedComponent),
+    data: { title: 'Pedido confirmado', icon: icons.client }
+  },
+
   // -------------------------
   // AUTH ROUTES
   // -------------------------

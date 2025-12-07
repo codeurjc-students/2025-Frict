@@ -15,7 +15,7 @@ public class ProductDTO {
     private Long id;
     private String referenceCode;
     private String name;
-    private ArrayList<String> imageUrls = new ArrayList<>();
+    private List<String> imageUrls = new ArrayList<>();
     private String description;
     private double previousPrice;
     private double currentPrice;

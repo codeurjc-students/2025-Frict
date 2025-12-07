@@ -30,9 +30,9 @@ public class StorageService {
     private String bucketName; // "images"
 
     /**
-     * Se ejecuta al arrancar.
-     * 1. Vacía el bucket 'images' para sincronizar con la BDD vacía (create-drop).
-     * 2. Establece la política pública para el bucket completo.
+     * Runs at application start.
+     * 1. Empties the bucket 'images' in order to synchronize it with the empty DB (create-drop schema)
+     * 2. Establishes the public reading policy for the entire bucket
      */
     @PostConstruct
     public void init() {

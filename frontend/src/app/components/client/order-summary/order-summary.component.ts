@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import {Router, RouterModule} from '@angular/router';
 import { StepperModule } from 'primeng/stepper';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
@@ -72,6 +72,7 @@ export class OrderSummaryComponent implements OnInit {
 
   loading: boolean = true;
   error: boolean = false;
+  loadingText: string = "Cargando, por favor espera...";
 
   loadingAddresses: boolean = true;
   loadingCards: boolean = true;
@@ -80,14 +81,29 @@ export class OrderSummaryComponent implements OnInit {
 
   constructor(private orderService: OrderService,
               private userService: UserService,
-              private messageService: MessageService) {}
+              private messageService: MessageService,
+              private router: Router) {}
 
   ngOnInit() {
     this.getUserInfo();
   }
 
   protected confirmOrder() {
-    console.log("Pedido confirmado!");
+    if(this.selectedPaymentCard && this.selectedAddress){
+      this.loadingText = 'Realizando tu pedido...'
+      this.loading = true;
+      this.orderService.createOrder(this.selectedAddress.id, this.selectedPaymentCard.id).subscribe({
+        next: (order) => {
+          this.orderService.setItemsCount(0);
+          this.router.navigate(['/success'], {
+            queryParams: { id: order.id, ref: order.referenceCode }
+          });
+        }
+      })
+    }
+    else{
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debes seleccionar una dirección y una tarjeta' });
+    }
   }
 
   onCartItemsPageChange(event: PaginatorState) {
@@ -185,7 +201,6 @@ export class OrderSummaryComponent implements OnInit {
     }
     else {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El mes de caducidad no puede ser mayor a 12' });
-      console.log("El formato de fecha no es correcto");
     }
 
   }

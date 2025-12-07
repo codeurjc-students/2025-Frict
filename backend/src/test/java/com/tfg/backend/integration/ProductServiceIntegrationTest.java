@@ -26,7 +26,7 @@ public class ProductServiceIntegrationTest {
 
     @BeforeEach
     void setUp(){
-        testProduct = new Product("4A5", "Portátil Gamer", "Potente equipo para gaming y trabajo", 1499.99);
+        testProduct = new Product("Portátil Gamer", "Potente equipo para gaming y trabajo", 1499.99);
     }
 
     @Test
@@ -45,7 +45,7 @@ public class ProductServiceIntegrationTest {
     @Transactional
     void updateProductTest() {
         Product savedProduct = productService.save(testProduct);
-        Product modifiedProduct = new Product(testProduct.getReferenceCode(), "Patinete eléctrico", "Desplazamientos rápidos por ciudad", testProduct.getCurrentPrice());
+        Product modifiedProduct = new Product("Patinete eléctrico", "Desplazamientos rápidos por ciudad", testProduct.getCurrentPrice());
         modifiedProduct.setId(savedProduct.getId());
 
         Product updatedProduct = productService.update(modifiedProduct);

@@ -1,13 +1,9 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.CartSummaryDTO;
-import com.tfg.backend.DTO.OrderItemDTO;
-import com.tfg.backend.DTO.OrderItemsPageDTO;
-import com.tfg.backend.model.OrderItem;
-import com.tfg.backend.model.Product;
-import com.tfg.backend.model.ShopStock;
-import com.tfg.backend.model.User;
+import com.tfg.backend.DTO.*;
+import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderItemService;
+import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +29,47 @@ public class OrderRestController {
 
     @Autowired
     private OrderItemService orderItemService;
+
+    @Autowired
+    private OrderService orderService;
+
+    //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
+    //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
+    @PostMapping
+    public ResponseEntity<OrderDTO> createOrder(HttpServletRequest request,
+                                                @RequestParam Long addressId,
+                                                @RequestParam Long cardId){
+
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Find cart items
+        List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
+        Order newOrder = new Order(loggedUser, cartItems);
+
+        //Find address info and card info
+        Optional<Address> addressOptional = loggedUser.getAddresses().stream()
+                .filter(addr -> addr.getId().equals(addressId))
+                .findFirst();
+
+        Optional<PaymentCard> cardOptional = loggedUser.getCards().stream()
+                .filter(card -> card.getId().equals(cardId))
+                .findFirst();
+
+        if (addressOptional.isEmpty() || cardOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+
+        newOrder.setFullSendingAddress(addressOptional.get().toString());
+        PaymentCard card = cardOptional.get();
+        newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
+        Order savedOrder = orderService.save(newOrder);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
 
 
     @GetMapping("/cart/summary")
@@ -162,7 +199,7 @@ public class OrderRestController {
             resultItem.setQuantity(resultItem.getQuantity() + quantity);
         } else {
             // Item not found -> Create item
-            resultItem = new OrderItem(null, productOptional.get(), loggedUser, quantity);
+            resultItem = new OrderItem(productOptional.get(), loggedUser, quantity);
             loggedUser.getAllOrderItems().add(resultItem);
         }
 

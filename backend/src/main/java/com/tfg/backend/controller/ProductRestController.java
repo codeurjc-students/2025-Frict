@@ -158,7 +158,7 @@ public class ProductRestController {
 
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
-        Product product = new Product(productDTO.getReferenceCode(), productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
+        Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
 
         List<Category> categories = new ArrayList<>();
         for (CategoryDTO c : productDTO.getCategories()) {
@@ -189,8 +189,7 @@ public class ProductRestController {
         }
 
         Product product = productOptional.get();
-
-        product.setReferenceCode(productDTO.getReferenceCode());
+        
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setCurrentPrice(productDTO.getCurrentPrice());

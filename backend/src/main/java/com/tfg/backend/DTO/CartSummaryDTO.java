@@ -3,6 +3,7 @@ package com.tfg.backend.DTO;
 import lombok.Getter;
 import lombok.Setter;
 
+//This intermediate class between OrderItem and Order helps to send the cart information to frontend, which will send this information to the backend once order is confirmed.
 @Getter
 @Setter
 public class CartSummaryDTO {

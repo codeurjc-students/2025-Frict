@@ -1,6 +1,7 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class Product {
     private Long id;
 
     @Column(unique = true, nullable = false)
+    @Setter(AccessLevel.NONE)
     private String referenceCode;
 
     private String name;
@@ -65,8 +67,8 @@ public class Product {
     public Product() {
     }
 
-    public Product(String referenceCode, String name, String description, double price) {
-        this.referenceCode = referenceCode;
+    public Product(String name, String description, double price) {
+        this.referenceCode = ReferenceNumberGenerator.generateProductReferenceNumber();
         this.name = name;
         this.description = description;
         this.currentPrice = price;

@@ -39,4 +39,9 @@ public class AddressDTO {
         this.city = address.getCity();
         this.country = address.getCountry();
     }
+
+    @Override
+    public String toString(){
+        return this.street + ", " + this.number + " " + this.postalCode + " " + this.city + " (" + this.country + ")";
+    }
 }

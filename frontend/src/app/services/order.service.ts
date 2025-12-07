@@ -4,6 +4,9 @@ import {Observable} from 'rxjs';
 import {OrderItemsPage} from '../models/orderItemsPage.model';
 import {OrderItem} from '../models/orderItem.model';
 import {CartSummary} from '../models/cartSummary.model';
+import {Address} from '../models/address.model';
+import {PaymentCard} from '../models/paymentCard.model';
+import {Order} from '../models/order.model';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +29,13 @@ export class OrderService {
 
   decrementItemsCount(n: number) {
     this.itemsCount.update(current => current - n);
+  }
+
+  public createOrder(addressId: string, cardId: string): Observable<Order> {
+    let params = new HttpParams();
+    params = params.append('addressId', addressId);
+    params = params.append('cardId', cardId);
+    return this.http.post<Order>(this.apiUrl, null, { params });
   }
 
   public getUserCartItemsPage(page: number, size: number): Observable<OrderItemsPage> {

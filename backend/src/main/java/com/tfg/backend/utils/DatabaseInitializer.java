@@ -42,6 +42,9 @@ public class DatabaseInitializer {
     @Value("${app.db.init}")
     private boolean initEnabled;
 
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
     @PostConstruct
     public void init() {
         if (initEnabled) {
@@ -117,38 +120,38 @@ public class DatabaseInitializer {
             // 4. PRODUCTS (with ProductImage Entity)
             // --------------------------------------------------------------------------------
             List<Product> products = new ArrayList<>();
-            products.add(new Product("A101", "Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
+            products.add(new Product("Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
             products.getFirst().setPreviousPrice(1000.00);
-            products.add(new Product("B202", "Laptop Ultradelgada 13\"", "Máxima portabilidad y rendimiento", 1250.50));
+            products.add(new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad y rendimiento", 1250.50));
             products.get(1).setPreviousPrice(1500.00);
-            products.add(new Product("C303", "Tarjeta Gráfica RTX 5080", "Gráficos de siguiente generación para gaming", 780.25));
-            products.add(new Product("D404", "Router WiFi 6E Mesh", "Cobertura total y velocidad Gigabit", 185.70));
-            products.add(new Product("E505", "Monitor Curvo Ultrawide", "Experiencia inmersiva para profesionales", 499.00));
-            products.add(new Product("F606", "Cámara Mirrorless 4K", "Fotografía y video de alta resolución", 1120.40));
-            products.add(new Product("G707", "Disco SSD NVMe 2TB", "Velocidad extrema de lectura/escritura", 155.99));
-            products.add(new Product("H808", "Teclado Mecánico RGB", "Switches táctiles para gamers y coders", 89.65));
-            products.add(new Product("I909", "Altavoz Inteligente con IA", "Asistente de voz y sonido premium", 75.30));
-            products.add(new Product("J010", "Auriculares con Cancelación de Ruido", "Inmersión total en música y llamadas", 199.50));
-            products.add(new Product("K111", "Smartwatch con ECG", "Monitor de salud avanzado en tu muñeca", 220.00));
-            products.add(new Product("L212", "Drone Plegable con GPS", "Tomas aéreas estables y de calidad", 345.80));
-            products.add(new Product("M313", "Batería Externa USB-PD 65W", "Carga tu laptop y móvil en cualquier lugar", 55.45));
-            products.add(new Product("N414", "Lector de Ebooks con Luz", "Miles de libros sin fatiga visual", 129.90));
-            products.add(new Product("O515", "Sistema de Alarma Inteligente", "Seguridad para el hogar con control remoto", 240.75));
-            products.add(new Product("P616", "Convertidor HDMI a USB-C", "Conecta tu laptop a cualquier pantalla", 18.25));
-            products.add(new Product("Q717", "Mini PC Industrial", "Potencia y tamaño reducido para automatización", 510.10));
-            products.add(new Product("R818", "Gafas de Realidad Mixta", "El futuro de la interacción digital y el trabajo", 2400.00));
-            products.add(new Product("S919", "Tableta Gráfica Pro 16\"", "Precisión y sensibilidad para el diseño", 390.60));
-            products.add(new Product("T020", "Impresora 3D de Resina", "Crea prototipos de alta definición en casa", 425.99));
-            products.add(new Product("U121", "Estación de Carga Inalámbrica Triple", "Carga rápida para tus tres dispositivos Apple/Android", 45.00));
-            products.add(new Product("V222", "Extensor de Rango Powerline", "Red estable a través de la instalación eléctrica", 68.35));
-            products.add(new Product("W323", "Consola de Juegos Portátil", "Juegos AAA en tus manos, donde vayas", 450.70));
-            products.add(new Product("X424", "Sensor de Humedad y Temperatura IoT", "Monitorización ambiental a distancia", 12.88));
-            products.add(new Product("Y525", "Tarjeta de Sonido Externa USB", "Audio de estudio para PC o laptop", 79.95));
-            products.add(new Product("Z626", "Cable Ethernet Cat 8", "Máxima velocidad para redes cableadas", 15.15));
-            products.add(new Product("A727", "Ventilador de Laptop con RGB", "Refrigeración eficiente para sesiones largas", 29.50));
-            products.add(new Product("B828", "Kit de Raspberry Pi 5 Avanzado", "Microcomputadora para proyectos de electrónica", 85.60));
-            products.add(new Product("C929", "Medidor de Calidad de Aire Digital", "Monitorea CO2 y partículas en tiempo real", 115.20));
-            products.add(new Product("D030", "Sistema de Iluminación Inteligente", "Control de color y brillo por voz o app", 60.99));
+            products.add(new Product("Tarjeta Gráfica RTX 5080", "Gráficos de siguiente generación para gaming", 780.25));
+            products.add(new Product("Router WiFi 6E Mesh", "Cobertura total y velocidad Gigabit", 185.70));
+            products.add(new Product("Monitor Curvo Ultrawide", "Experiencia inmersiva para profesionales", 499.00));
+            products.add(new Product("Cámara Mirrorless 4K", "Fotografía y video de alta resolución", 1120.40));
+            products.add(new Product("Disco SSD NVMe 2TB", "Velocidad extrema de lectura/escritura", 155.99));
+            products.add(new Product("Teclado Mecánico RGB", "Switches táctiles para gamers y coders", 89.65));
+            products.add(new Product("Altavoz Inteligente con IA", "Asistente de voz y sonido premium", 75.30));
+            products.add(new Product("Auriculares con Cancelación de Ruido", "Inmersión total en música y llamadas", 199.50));
+            products.add(new Product("Smartwatch con ECG", "Monitor de salud avanzado en tu muñeca", 220.00));
+            products.add(new Product("Drone Plegable con GPS", "Tomas aéreas estables y de calidad", 345.80));
+            products.add(new Product("Batería Externa USB-PD 65W", "Carga tu laptop y móvil en cualquier lugar", 55.45));
+            products.add(new Product("Lector de Ebooks con Luz", "Miles de libros sin fatiga visual", 129.90));
+            products.add(new Product("Sistema de Alarma Inteligente", "Seguridad para el hogar con control remoto", 240.75));
+            products.add(new Product("Convertidor HDMI a USB-C", "Conecta tu laptop a cualquier pantalla", 18.25));
+            products.add(new Product("Mini PC Industrial", "Potencia y tamaño reducido para automatización", 510.10));
+            products.add(new Product("Gafas de Realidad Mixta", "El futuro de la interacción digital y el trabajo", 2400.00));
+            products.add(new Product("Tableta Gráfica Pro 16\"", "Precisión y sensibilidad para el diseño", 390.60));
+            products.add(new Product("Impresora 3D de Resina", "Crea prototipos de alta definición en casa", 425.99));
+            products.add(new Product("Estación de Carga Inalámbrica Triple", "Carga rápida para tus tres dispositivos Apple/Android", 45.00));
+            products.add(new Product("Extensor de Rango Powerline", "Red estable a través de la instalación eléctrica", 68.35));
+            products.add(new Product("Consola de Juegos Portátil", "Juegos AAA en tus manos, donde vayas", 450.70));
+            products.add(new Product("Sensor de Humedad y Temperatura IoT", "Monitorización ambiental a distancia", 12.88));
+            products.add(new Product("Tarjeta de Sonido Externa USB", "Audio de estudio para PC o laptop", 79.95));
+            products.add(new Product("Cable Ethernet Cat 8", "Máxima velocidad para redes cableadas", 15.15));
+            products.add(new Product("Ventilador de Laptop con RGB", "Refrigeración eficiente para sesiones largas", 29.50));
+            products.add(new Product("Kit de Raspberry Pi 5 Avanzado", "Microcomputadora para proyectos de electrónica", 85.60));
+            products.add(new Product("Medidor de Calidad de Aire Digital", "Monitorea CO2 y partículas en tiempo real", 115.20));
+            products.add(new Product("Sistema de Iluminación Inteligente", "Control de color y brillo por voz o app", 60.99));
 
             // Assign categories
             products.get(0).setCategories(List.of(mobile, topSales, featured));
@@ -205,30 +208,33 @@ public class DatabaseInitializer {
             shop1.getAssignedTrucks().add(truck2);
             shopRepository.save(shop1);
 
-            Order order1 = new Order("23456", user1, truck1);
-            Order order2 = new Order("56789", user2, truck1);
-
             List<OrderItem> orderItems1 = new ArrayList<>();
-            orderItems1.add(new OrderItem(order1, products.get(0), user1, 12));
-            orderItems1.add(new OrderItem(order1, products.get(2), user1, 3));
-            orderItems1.add(new OrderItem(null, products.get(3), user1, 1)); //Item in user1 cart
-            orderItems1.add(new OrderItem(null, products.get(8), user1, 4));
-            orderItems1.add(new OrderItem(null, products.get(12), user1, 2));
-            orderItems1.add(new OrderItem(null, products.get(15), user1, 3));
-            orderItems1.add(new OrderItem(null, products.get(18), user1, 6));
-            orderItems1.add(new OrderItem(null, products.get(22), user1, 20));
-            orderItems1.add(new OrderItem(null, products.get(23), user1, 15));
-            orderItems1.add(new OrderItem(null, products.get(28), user1, 14));
-
             List<OrderItem> orderItems2 = new ArrayList<>();
-            orderItems2.add(new OrderItem(order2, products.get(3), user2, 2));
-            orderItems2.add(new OrderItem(order2, products.get(7), user2, 1));
 
-            order1.setItems(orderItems1);
-            order2.setItems(orderItems2);
+            orderItems1.add(new OrderItem(products.get(0), user1, 12));
+            orderItems1.add(new OrderItem(products.get(2), user1, 3));
+            orderItems2.add(new OrderItem(products.get(3), user2, 2));
+            orderItems2.add(new OrderItem(products.get(7), user2, 1));
+
+            Order order1 = new Order(user1, orderItems1);
+            Order order2 = new Order(user2, orderItems2);
 
             orderRepository.save(order1);
             orderRepository.save(order2);
+
+            //Cart products
+            List<OrderItem> cartItems = new ArrayList<>();
+            cartItems.add(new OrderItem(products.get(0), user1, 12)); //Item in user1 cart
+            cartItems.add(new OrderItem(products.get(2), user1, 3));
+            cartItems.add(new OrderItem(products.get(3), user1, 1));
+            cartItems.add(new OrderItem(products.get(8), user1, 4));
+            cartItems.add(new OrderItem(products.get(12), user1, 2));
+            cartItems.add(new OrderItem(products.get(15), user1, 3));
+            cartItems.add(new OrderItem(products.get(18), user1, 6));
+            cartItems.add(new OrderItem(products.get(22), user1, 20));
+            cartItems.add(new OrderItem(products.get(23), user1, 15));
+            cartItems.add(new OrderItem(products.get(28), user1, 14));
+            orderItemRepository.saveAll(cartItems);
 
             user1.getRegisteredOrders().add(order1);
             user2.getRegisteredOrders().add(order2);

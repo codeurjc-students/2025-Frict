@@ -1,6 +1,7 @@
 package com.tfg.backend.integration;
 
 import com.tfg.backend.BackendApplication;
+import com.tfg.backend.utils.ReferenceNumberGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,14 +26,12 @@ public class ProductApiIntegrationTest {
     private static final String CONTENT_TYPE = "application/json";
 
     // Sample product data
-    private String referenceCode = "4A5";
     private String name = "Aspiradora inteligente";
     private String description = "Limpieza sin límites";
     private double currentPrice = 130.99;
 
     @BeforeEach
     public void setUp() {
-        referenceCode = "RC-" + System.currentTimeMillis();
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.basePath = "/api/v1/products";
         RestAssured.useRelaxedHTTPSValidation();
@@ -46,7 +45,6 @@ public class ProductApiIntegrationTest {
         Response getResponse = getProduct(postResponse.jsonPath().getString("id"));
         getResponse.then()
                 .statusCode(200)
-                .body("referenceCode", equalTo(referenceCode))
                 .body("name", equalTo(name))
                 .body("description", equalTo(description))
                 .body("currentPrice", equalTo((float) currentPrice));
@@ -62,7 +60,6 @@ public class ProductApiIntegrationTest {
     @Test
     public void updateProductTest() {
         //As all test runs under the same DB, previous tests may have already created the product with reference code 4A5, so this data needs to be changed in order to be unique
-        referenceCode = "6A7";
         Response postResponse = createProduct(); //Now there will be 2 products with the same name, description and price, but not with the same reference code
 
         description = "Hasta 30 horas de reproducción de vídeo";
@@ -72,7 +69,6 @@ public class ProductApiIntegrationTest {
         Response getResponse = getProduct(postResponse.jsonPath().getString("id"));
         getResponse.then()
                 .statusCode(200)
-                .body("referenceCode", equalTo(referenceCode))
                 .body("name", equalTo(name))
                 .body("description", equalTo(description))
                 .body("currentPrice", equalTo((float) currentPrice));
@@ -80,7 +76,6 @@ public class ProductApiIntegrationTest {
 
     @Test
     public void deleteProductTest() {
-        referenceCode = "7A8";
         Response postResponse = createProduct();
 
         Response deleteResponse = deleteProduct(postResponse.jsonPath().getString("id"));
@@ -92,7 +87,7 @@ public class ProductApiIntegrationTest {
 
 
     private Response createProduct() {
-        ProductRequest product = new ProductRequest(referenceCode, name, description, currentPrice);
+        ProductRequest product = new ProductRequest(name, description, currentPrice);
         return given()
                 .contentType(CONTENT_TYPE)
                 .body(product) //Serialized with Jackson
@@ -101,7 +96,7 @@ public class ProductApiIntegrationTest {
     }
 
     private Response updateProduct(String productId) {
-        ProductRequest product = new ProductRequest(referenceCode, name, description, currentPrice);
+        ProductRequest product = new ProductRequest(name, description, currentPrice);
         return given()
                 .contentType(CONTENT_TYPE)
                 .pathParam("id", productId)
@@ -126,13 +121,11 @@ public class ProductApiIntegrationTest {
 
     //DTO class to make the JSON request
     private static class ProductRequest {
-        public String referenceCode;
         public String name;
         public String description;
         public double currentPrice;
 
-        public ProductRequest(String referenceCode, String name, String description, double currentPrice) {
-            this.referenceCode = referenceCode;
+        public ProductRequest(String name, String description, double currentPrice) {
             this.name = name;
             this.description = description;
             this.currentPrice = currentPrice;
