@@ -51,7 +51,6 @@ export class AppComponent implements OnInit {
   private initItemsCount() {
     this.orderService.getUserCartSummary().subscribe({ //The elements do not matter, but totalElements page field does
       next: (summary) => {
-        console.log(summary);
         this.orderService.setItemsCount(summary.totalItems);
       }
     })

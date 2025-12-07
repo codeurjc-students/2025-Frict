@@ -56,16 +56,20 @@ public class DatabaseInitializer {
             // 2. USERS (With Image - ImageInfo Embedded)
             // --------------------------------------------------------------------------------
             User user1 = new User("Usuario", "user", "user@gmail.com", passwordEncoder.encode("pass"), "USER");
+            PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
+            PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
+            Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
+            Address address2 = new Address("Trabajo","Dirección del trabajo", "8", "", "23456", "Ciudad de Ejemplo", "España");
+            user1.getCards().add(paymentCard);
+            user1.getCards().add(paymentCard2);
+            user1.getAddresses().add(address);
+            user1.getAddresses().add(address2);
             asignarAvatar(user1, defaultProfileRes);
             user1 = userRepository.save(user1);
 
             User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
             asignarAvatar(user2, defaultProfileRes);
             user2 = userRepository.save(user2);
-
-            PaymentCard paymentCard = new PaymentCard("Usuario 1", "1234567890123456", "000", YearMonth.of(2027, 3));
-            user1.getCards().add(paymentCard);
-            userRepository.save(user1);
 
             // --------------------------------------------------------------------------------
             // 3. CATEGORY (With Image - ImageInfo Embedded)

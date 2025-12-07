@@ -31,7 +31,7 @@ public class AttributeEncryptor implements AttributeConverter<String, String> {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             return Base64.getEncoder().encodeToString(cipher.doFinal(attribute.getBytes()));
         } catch (Exception e) {
-            throw new IllegalStateException("Error al cifrar datos", e);
+            throw new IllegalStateException("Error al cifrar datos de tarjeta:", e);
         }
     }
 
@@ -44,7 +44,7 @@ public class AttributeEncryptor implements AttributeConverter<String, String> {
             cipher.init(Cipher.DECRYPT_MODE, key);
             return new String(cipher.doFinal(Base64.getDecoder().decode(dbData)));
         } catch (Exception e) {
-            throw new IllegalStateException("Error al descifrar datos", e);
+            throw new IllegalStateException("Error al descifrar datos de tarjeta: ", e);
         }
     }
 }

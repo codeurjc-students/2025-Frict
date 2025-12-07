@@ -30,7 +30,7 @@ export class AuthService {
   }
 
   public getLoginInfo(): Observable<LoginInfo> {
-    return this.http.get<LoginInfo>(this.apiUrl + "/users/me", { withCredentials: true }).pipe(
+    return this.http.get<LoginInfo>(this.apiUrl + "/users/session", { withCredentials: true }).pipe(
       map(info => ({...info, isLogged: true})),
       catchError(() => of(this.defaultLoginInfo)),
       tap(info => this.loginInfoSignal.set(info))

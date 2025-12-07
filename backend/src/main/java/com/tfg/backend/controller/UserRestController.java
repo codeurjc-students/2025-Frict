@@ -1,7 +1,12 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.DTO.AddressDTO;
+import com.tfg.backend.DTO.PaymentCardDTO;
+import com.tfg.backend.DTO.UserDTO;
 import com.tfg.backend.DTO.UserLoginDTO;
+import com.tfg.backend.model.Address;
 import com.tfg.backend.model.ImageInfo;
+import com.tfg.backend.model.PaymentCard;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
@@ -13,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.Blob;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,8 +33,8 @@ public class UserRestController {
     @Autowired
     private StorageService storageService;
 
-	@GetMapping("/me")
-	public ResponseEntity<UserLoginDTO> me(HttpServletRequest request) {
+	@GetMapping("/session")
+	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
         Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
 		if(loginInfoOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -35,13 +42,28 @@ public class UserRestController {
         return ResponseEntity.ok(loginInfoOptional.get());
 	}
 
-    @PostMapping("/image/{id}")
-    public ResponseEntity<User> uploadUserAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
-        User user = userService.findById(id).orElseThrow();
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request) {
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        return ResponseEntity.ok(new UserDTO(loggedUser));
+    }
+
+    @PostMapping("/image")
+    public ResponseEntity<UserDTO> uploadUserAvatar(HttpServletRequest request, @RequestParam("file") MultipartFile file) throws IOException {
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
 
         // Clean previous image
-        if (user.getUserImage() != null) {
-            storageService.deleteFile(user.getUserImage().getS3Key());
+        if (loggedUser.getUserImage() != null) {
+            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
         }
 
         // Upload
@@ -55,28 +77,64 @@ public class UserRestController {
         );
 
         // Add to user
-        user.setUserImage(avatarInfo);
+        loggedUser.setUserImage(avatarInfo);
 
-        return ResponseEntity.ok(userService.save(user));
+        return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
     }
 
-    @DeleteMapping("/{id}/avatar")
-    public ResponseEntity<User> deleteAvatar(@PathVariable Long id) {
-        User user = userService.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    @DeleteMapping("/avatar")
+    public ResponseEntity<UserDTO> deleteAvatar(HttpServletRequest request) {
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
 
         // Check if there is something to delete
-        if (user.getUserImage() != null) {
+        if (loggedUser.getUserImage() != null) {
             // Delete from MinIO
-            storageService.deleteFile(user.getUserImage().getS3Key());
+            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
 
             // Unlink (orphanRemoval deletes it from DB)
-            user.setUserImage(null);
+            loggedUser.setUserImage(null);
 
             // Save changes
-            return ResponseEntity.ok(userService.save(user));
+            return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
         }
 
-        return ResponseEntity.ok(user); // Return original user if did not have image
+        return ResponseEntity.ok(new UserDTO(loggedUser)); // Return original user if did not have image
+    }
+
+
+    @PostMapping("/addresses")
+    public ResponseEntity<UserDTO> createAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Address address = new Address(addressDTO.getAlias(), addressDTO.getStreet(), addressDTO.getNumber(), addressDTO.getFloor(), addressDTO.getPostalCode(), addressDTO.getCity(), addressDTO.getCountry());
+        loggedUser.getAddresses().add(address);
+        User savedUser = userService.save(loggedUser);
+
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+
+    @PostMapping("/cards")
+    public ResponseEntity<UserDTO> createPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO cardDTO){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+        PaymentCard card = new PaymentCard(cardDTO.getAlias(), cardDTO.getCardOwnerName(), cardDTO.getNumber(), cardDTO.getCvv(), YearMonth.parse(cardDTO.getDueDate(), formatter));
+        loggedUser.getCards().add(card);
+        User savedUser = userService.save(loggedUser);
+
+        return ResponseEntity.ok(new UserDTO(savedUser));
     }
 }

@@ -18,6 +18,8 @@ public class PaymentCard {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String alias;
+
     private String cardOwnerName;
 
     @Convert(converter = AttributeEncryptor.class)
@@ -31,7 +33,8 @@ public class PaymentCard {
     public PaymentCard() {
     }
 
-    public PaymentCard(String cardOwnerName, String number, String cvv, YearMonth dueDate) {
+    public PaymentCard(String alias, String cardOwnerName, String number, String cvv, YearMonth dueDate) {
+        this.alias = alias;
         this.cardOwnerName = cardOwnerName;
         this.number = number;
         this.cvv = cvv;

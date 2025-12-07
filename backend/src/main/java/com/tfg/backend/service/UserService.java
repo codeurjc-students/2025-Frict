@@ -1,7 +1,7 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.DTO.UserRegisterDTO;
+import com.tfg.backend.DTO.UserSignupDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,7 +56,7 @@ public class UserService {
         return userRepository.findById(loginInfo.get().getId());
     }
 
-    public User registerUser(UserRegisterDTO dto) {
+    public User registerUser(UserSignupDTO dto) {
         User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), dto.getAddress(), passwordEncoder.encode(dto.getPassword()), "USER");
         return this.save(newUser);
     }

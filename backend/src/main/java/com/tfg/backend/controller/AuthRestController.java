@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.DTO.UserRegisterDTO;
+import com.tfg.backend.DTO.UserSignupDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.security.jwt.AuthResponse;
 import com.tfg.backend.security.jwt.AuthResponse.Status;
@@ -32,9 +32,9 @@ public class AuthRestController {
 		return loginService.login(response, loginRequest);
 	}
 
-    //Spring automatically matches the form fields with the same name and generates an UserRegisterDTO object
+    //Spring automatically matches the form fields with the same name and generates an UserSignupDTO object
     @PostMapping("/signup")
-    public ResponseEntity<UserLoginDTO> registerUser(@RequestBody UserRegisterDTO registerDTO) {
+    public ResponseEntity<UserLoginDTO> registerUser(@RequestBody UserSignupDTO registerDTO) {
         if (userService.isUsernameTaken(registerDTO.getUsername()) || userService.isEmailTaken(registerDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
