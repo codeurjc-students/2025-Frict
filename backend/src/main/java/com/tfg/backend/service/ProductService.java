@@ -41,7 +41,7 @@ public class ProductService {
 
     //Check that the reference code is not being used yet and all product fields are valid
     public Product save(Product p) {
-        //Comprueba que el número de referencia es único
+        //Check the reference code is unique
         if(productRepository.existsByReferenceCode(p.getReferenceCode())){
             throw new IllegalArgumentException("The reference code is already taken");
         }
@@ -72,5 +72,9 @@ public class ProductService {
         else if (p.getCurrentPrice() < 0){
             throw new IllegalArgumentException("The price should be positive or 0");
         }
+    }
+
+    public Page<Product> findUserFavouriteProductsPage(Long id, Pageable pageable) {
+        return productRepository.findFavouritesByUserId(id, pageable);
     }
 }

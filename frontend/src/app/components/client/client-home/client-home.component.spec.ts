@@ -7,6 +7,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {ClientHomeComponent} from './client-home.component';
 import {Product} from '../../../models/product.model';
+import {Category} from '../../../models/category.model';
 
 describe('ClientHomeComponent', () => {
   let fixture: ComponentFixture<ClientHomeComponent>;
@@ -54,9 +55,14 @@ describe('ClientHomeComponent', () => {
   });
 
   it('debe mostrar los productos cuando el servicio devuelve datos', async () => {
+
+    const allMockCategories: Category[] = [
+      { id: '1', name: 'Categoría 1', imageUrl: '/api/v1/categories/image/1' }
+    ];
+
     const allMockProducts: Product[] = [
-      { id: '1', referenceCode: 'ABC', name: 'Producto 1', description: 'Desc 1', currentPrice: 100, imageUrl: '', previousPrice: 0.0, discount: "0%", categoriesId: ["14"], availableUnits: 0, averageRating: 0.0, totalReviews: 0, thumbnailUrl: '' },
-      { id: '2', referenceCode: 'DEF', name: 'Producto 2', description: 'Desc 2', currentPrice: 200, imageUrl: '', previousPrice: 0.0, discount: "0%", categoriesId: ["14"], availableUnits: 0, averageRating: 0.0, totalReviews: 0, thumbnailUrl: '' }
+      { id: '1', referenceCode: 'ABC', name: 'Producto 1', description: 'Desc 1', currentPrice: 100, imageUrls: [], previousPrice: 0.0, discount: "0%", categories: [allMockCategories[0]], availableUnits: 0, averageRating: 0.0, totalReviews: 0},
+      { id: '2', referenceCode: 'DEF', name: 'Producto 2', description: 'Desc 2', currentPrice: 200, imageUrls: [], previousPrice: 0.0, discount: "0%", categories: [allMockCategories[0]], availableUnits: 0, averageRating: 0.0, totalReviews: 0}
     ];
 
     mockProductService.getAllProducts.and.returnValue(
@@ -67,7 +73,7 @@ describe('ClientHomeComponent', () => {
       const productsCopy = allMockProducts.map(p => ({ ...p })); // Deepcopy to avoid duplicates
       switch (name) {
         case 'Destacado':
-          return of({ products: productsCopy.filter(p => p.categoriesId.includes("14")), totalProducts: 2, currentPage: 0, lastPage: 0, pageSize: 8 });
+          return of({ products: productsCopy.filter(p => p.categories.includes(allMockCategories[0])), totalProducts: 2, currentPage: 0, lastPage: 0, pageSize: 8 });
         case 'Top ventas':
           return of({ products: [], totalProducts: 0, currentPage: 0, lastPage: -1, pageSize: 8 });
         case 'Recomendado':

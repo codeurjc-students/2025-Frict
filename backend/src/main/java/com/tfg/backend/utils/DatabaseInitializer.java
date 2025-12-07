@@ -2,243 +2,381 @@ package com.tfg.backend.utils;
 
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
+import com.tfg.backend.service.StorageService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.InputStream;
+import java.time.YearMonth;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DatabaseInitializer {
 
-    @Autowired
-    private OrderRepository orderRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private ReviewRepository reviewRepository;
+    @Autowired private ShopRepository shopRepository;
+    @Autowired private TruckRepository truckRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private ShopStockRepository shopStockRepository;
+    @Autowired private OrderItemRepository orderItemRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private StorageService storageService;
 
-    @Autowired
-    private ProductRepository productRepository;
+    // Cambiado para leer una lista separada por comas. Default: lista vacía
+    @Value("#{'${app.db.init:}'.split(',')}")
+    private List<String> initEntities;
 
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private ReviewRepository reviewRepository;
-
-    @Autowired
-    private ShopRepository shopRepository;
-
-    @Autowired
-    private TruckRepository truckRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ShopStockRepository shopStockRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Value("${app.db.init}")
-    private boolean initEnabled;
+    // Recursos estáticos definidos como campos para reutilizarlos
+    private final ClassPathResource defaultProductRes = new ClassPathResource("static/img/defaultProductImage.jpg");
+    private final ClassPathResource defaultCategoryRes = new ClassPathResource("static/img/defaultCategoryImage.jpg");
+    private final ClassPathResource defaultProfileRes = new ClassPathResource("static/img/defaultProfileImage.jpg");
 
     @PostConstruct
-    public void init() throws IOException, SQLException {
-        if (initEnabled) {
-            // 1. Default images
-            ClassPathResource defaultProductImgFile = new ClassPathResource("static/img/defaultProductImage.jpg");
-            byte[] defaultProductImageBytes = StreamUtils.copyToByteArray(defaultProductImgFile.getInputStream());
-            Blob defaultProductBlob = new SerialBlob(defaultProductImageBytes);
+    @Transactional
+    public void init() {
+        // Normalize input (trim blank spaces and lower cases)
+        List<String> entities = initEntities.stream()
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .toList();
 
-            ClassPathResource defaultCategoryImgFile = new ClassPathResource("static/img/defaultCategoryImage.jpg");
-            byte[] defaultCategoryImageBytes = StreamUtils.copyToByteArray(defaultCategoryImgFile.getInputStream());
-            Blob defaultCategoryBlob = new SerialBlob(defaultCategoryImageBytes);
+        // Exit is the list is empty or "none"
+        if (entities.isEmpty() || (entities.size() == 1 && (entities.getFirst().isEmpty() || entities.getFirst().equals("none")))) {
+            return;
+        }
 
-            // 2. Independent entities
-            User user1 = userRepository.save(new User("Usuario", "user", "user@gmail.com", "CallePorDefecto1", passwordEncoder.encode("pass"), "USER"));
-            User user2 = userRepository.save(new User("Administrador", "admin", "admin@gmail.com", "CallePorDefecto2", passwordEncoder.encode("adminpass"), "ADMIN"));
+        System.out.println("---- STARTING DATA LOADING FOR: " + entities + " ----");
 
-            // Hardware categories
-            Category gaming = categoryRepository.save(new Category("Gaming y PC", defaultCategoryBlob));
-            Category storage = categoryRepository.save(new Category("Almacenamiento", defaultCategoryBlob));
-            Category connectivity = categoryRepository.save(new Category("Conectividad y Redes", defaultCategoryBlob));
-            Category power = categoryRepository.save(new Category("Energía y Carga", defaultCategoryBlob));
+        boolean loadAll = entities.contains("all");
 
-            // Devices categories
-            Category mobile = categoryRepository.save(new Category("Móviles y Tablets", defaultCategoryBlob));
-            Category audio = categoryRepository.save(new Category("Audio y Sonido", defaultCategoryBlob));
-            Category smartHome = categoryRepository.save(new Category("Hogar Inteligente", defaultCategoryBlob));
-            Category photography = categoryRepository.save(new Category("Fotografía y Video", defaultCategoryBlob));
-            Category tvImage = categoryRepository.save(new Category("Televisión e Imagen", defaultCategoryBlob));
-            Category peripherals = categoryRepository.save(new Category("Periféricos", defaultCategoryBlob));
+        // The order matters for the foreign keys
+        if (loadAll || entities.contains("users")) {
+            initUsers();
+        }
 
-            // Software and others categories
-            Category software = categoryRepository.save(new Category("Software y Servicios", defaultCategoryBlob));
-            Category tools = categoryRepository.save(new Category("Herramientas y Accesorios", defaultCategoryBlob));
+        if (loadAll || entities.contains("categories")) {
+            initCategories();
+        }
 
-            //Will later be managed by the recommendation system
-            Category recommended = categoryRepository.save(new Category("Recomendado", defaultCategoryBlob));
-            Category featured = categoryRepository.save(new Category("Destacado", defaultCategoryBlob));
-            Category topSales = categoryRepository.save(new Category("Top ventas", defaultCategoryBlob));
-            
-            Product product1 = new Product("A101", "Smartphone Plegable X", defaultProductBlob, "Innovación en diseño y potencia", 999.99);
-            Product product2 = new Product("B202", "Laptop Ultradelgada 13\"", defaultProductBlob, "Máxima portabilidad y rendimiento", 1250.50);
-            Product product3 = new Product("C303", "Tarjeta Gráfica RTX 5080", defaultProductBlob, "Gráficos de siguiente generación para gaming", 780.25);
-            Product product4 = new Product("D404", "Router WiFi 6E Mesh", defaultProductBlob, "Cobertura total y velocidad Gigabit", 185.70);
-            Product product5 = new Product("E505", "Monitor Curvo Ultrawide", defaultProductBlob, "Experiencia inmersiva para profesionales", 499.00);
-            Product product6 = new Product("F606", "Cámara Mirrorless 4K", defaultProductBlob, "Fotografía y video de alta resolución", 1120.40);
-            Product product7 = new Product("G707", "Disco SSD NVMe 2TB", defaultProductBlob, "Velocidad extrema de lectura/escritura", 155.99);
-            Product product8 = new Product("H808", "Teclado Mecánico RGB", defaultProductBlob, "Switches táctiles para gamers y coders", 89.65);
-            Product product9 = new Product("I909", "Altavoz Inteligente con IA", defaultProductBlob, "Asistente de voz y sonido premium", 75.30);
-            Product product10 = new Product("J010", "Auriculares con Cancelación de Ruido", defaultProductBlob, "Inmersión total en música y llamadas", 199.50);
-            Product product11 = new Product("K111", "Smartwatch con ECG", defaultProductBlob, "Monitor de salud avanzado en tu muñeca", 220.00);
-            Product product12 = new Product("L212", "Drone Plegable con GPS", defaultProductBlob, "Tomas aéreas estables y de calidad", 345.80);
-            Product product13 = new Product("M313", "Batería Externa USB-PD 65W", defaultProductBlob, "Carga tu laptop y móvil en cualquier lugar", 55.45);
-            Product product14 = new Product("N414", "Lector de Ebooks con Luz", defaultProductBlob, "Miles de libros sin fatiga visual", 129.90);
-            Product product15 = new Product("O515", "Sistema de Alarma Inteligente", defaultProductBlob, "Seguridad para el hogar con control remoto", 240.75);
-            Product product16 = new Product("P616", "Convertidor HDMI a USB-C", defaultProductBlob, "Conecta tu laptop a cualquier pantalla", 18.25);
-            Product product17 = new Product("Q717", "Mini PC Industrial", defaultProductBlob, "Potencia y tamaño reducido para automatización", 510.10);
-            Product product18 = new Product("R818", "Gafas de Realidad Mixta", defaultProductBlob, "El futuro de la interacción digital y el trabajo", 2400.00);
-            Product product19 = new Product("S919", "Tableta Gráfica Pro 16\"", defaultProductBlob, "Precisión y sensibilidad para el diseño", 390.60);
-            Product product20 = new Product("T020", "Impresora 3D de Resina", defaultProductBlob, "Crea prototipos de alta definición en casa", 425.99);
-            Product product21 = new Product("U121", "Estación de Carga Inalámbrica Triple", defaultProductBlob, "Carga rápida para tus tres dispositivos Apple/Android", 45.00);
-            Product product22 = new Product("V222", "Extensor de Rango Powerline", defaultProductBlob, "Red estable a través de la instalación eléctrica", 68.35);
-            Product product23 = new Product("W323", "Consola de Juegos Portátil", defaultProductBlob, "Juegos AAA en tus manos, donde vayas", 450.70);
-            Product product24 = new Product("X424", "Sensor de Humedad y Temperatura IoT", defaultProductBlob, "Monitorización ambiental a distancia", 12.88);
-            Product product25 = new Product("Y525", "Tarjeta de Sonido Externa USB", defaultProductBlob, "Audio de estudio para PC o laptop", 79.95);
-            Product product26 = new Product("Z626", "Cable Ethernet Cat 8", defaultProductBlob, "Máxima velocidad para redes cableadas", 15.15);
-            Product product27 = new Product("A727", "Ventilador de Laptop con RGB", defaultProductBlob, "Refrigeración eficiente para sesiones largas", 29.50);
-            Product product28 = new Product("B828", "Kit de Raspberry Pi 5 Avanzado", defaultProductBlob, "Microcomputadora para proyectos de electrónica", 85.60);
-            Product product29 = new Product("C929", "Medidor de Calidad de Aire Digital", defaultProductBlob, "Monitorea CO2 y partículas en tiempo real", 115.20);
-            Product product30 = new Product("D030", "Sistema de Iluminación Inteligente", defaultProductBlob, "Control de color y brillo por voz o app", 60.99);
+        if (loadAll || entities.contains("products")) {
+            initProducts();
+        }
 
-            product1.setCategories(Set.of(mobile, topSales, featured));
-            product2.setCategories(Set.of(gaming, recommended, peripherals));
-            product3.setCategories(Set.of(gaming, peripherals, topSales));
-            product4.setCategories(Set.of(connectivity, smartHome));
-            product5.setCategories(Set.of(tvImage, peripherals, featured));
-            product6.setCategories(Set.of(photography, recommended));
-            product7.setCategories(Set.of(storage, gaming, topSales));
-            product8.setCategories(Set.of(peripherals, gaming, topSales));
-            product9.setCategories(Set.of(audio, smartHome, featured));
-            product10.setCategories(Set.of(audio, peripherals, topSales));
-            product11.setCategories(Set.of(mobile, recommended));
-            product12.setCategories(Set.of(photography, tools));
-            product13.setCategories(Set.of(power, mobile, tools));
-            product14.setCategories(Set.of(mobile, recommended));
-            product15.setCategories(Set.of(smartHome, featured));
-            product16.setCategories(Set.of(connectivity, tools));
-            product17.setCategories(Set.of(gaming, connectivity));
-            product18.setCategories(Set.of(gaming, featured, peripherals));
-            product19.setCategories(Set.of(peripherals, photography));
-            product20.setCategories(Set.of(tools, recommended));
-            product21.setCategories(Set.of(power, mobile));
-            product22.setCategories(Set.of(connectivity, smartHome));
-            product23.setCategories(Set.of(gaming, topSales, featured));
-            product24.setCategories(Set.of(smartHome, tools));
-            product25.setCategories(Set.of(audio, peripherals));
-            product26.setCategories(Set.of(connectivity, tools, topSales));
-            product27.setCategories(Set.of(gaming, tools));
-            product28.setCategories(Set.of(gaming, smartHome, tools));
-            product29.setCategories(Set.of(smartHome, recommended));
-            product30.setCategories(Set.of(smartHome, tvImage, featured));
+        if (loadAll || entities.contains("shops")) {
+            initShopsAndTrucks();
+        }
 
-            product1 = productRepository.save(product1);
-            product2 = productRepository.save(product2);
-            product3 = productRepository.save(product3);
-            product4 = productRepository.save(product4);
-            product5 = productRepository.save(product5);
-            product6 = productRepository.save(product6);
-            product7 = productRepository.save(product7);
-            product8 = productRepository.save(product8);
-            product9 = productRepository.save(product9);
-            product10 = productRepository.save(product10);
-            product11 = productRepository.save(product11);
-            product12 = productRepository.save(product12);
-            product13 = productRepository.save(product13);
-            product14 = productRepository.save(product14);
-            product15 = productRepository.save(product15);
-            product16 = productRepository.save(product16);
-            product17 = productRepository.save(product17);
-            product18 = productRepository.save(product18);
-            product19 = productRepository.save(product19);
-            product20 = productRepository.save(product20);
-            product21 = productRepository.save(product21);
-            product22 = productRepository.save(product22);
-            product23 = productRepository.save(product23);
-            product24 = productRepository.save(product24);
-            product25 = productRepository.save(product25);
-            product26 = productRepository.save(product26);
-            product27 = productRepository.save(product27);
-            product28 = productRepository.save(product28);
-            product29 = productRepository.save(product29);
-            product30 = productRepository.save(product30);
+        if (loadAll || entities.contains("orders")) {
+            initOrdersAndCart();
+        }
 
-            Shop shop1 = new Shop("52552", "Madrid-Recoletos", "CallePorDefecto4");
-            shop1 = shopRepository.save(shop1);
+        if (loadAll || entities.contains("stock")) {
+            initStock();
+        }
 
-            Truck truck1 = new Truck("2C4RD");
-            Truck truck2 = new Truck("5U7TH");
-            truck1.setAssignedShop(shop1);
-            truck2.setAssignedShop(shop1);
+        if (loadAll || entities.contains("reviews")) {
+            initReviews();
+        }
 
-            truck1 = truckRepository.save(truck1);
-            truck2 = truckRepository.save(truck2);
+        System.out.println("---- DATABASE INITIALIZATION FINISHED ----");
+    }
 
-            shop1.getAssignedTrucks().add(truck1);
-            shop1.getAssignedTrucks().add(truck2);
-            shopRepository.save(shop1);
+    // --------------------------------------------------------------------------------
+    // INITIALIZATION METHODS FOR EACH ENTITY
+    // --------------------------------------------------------------------------------
 
-            Order order1 = new Order("23456", user1, truck1);
-            Order order2 = new Order("56789", user2, truck1);
+    private void initUsers() {
+        if (userRepository.count() > 0) return;
+        System.out.println(">>> Initializing Users...");
 
-            List<OrderItem> orderItems1 = new ArrayList<>();
-            orderItems1.add(new OrderItem(order1, product1, user1, 12));
-            orderItems1.add(new OrderItem(order1, product3, user1, 3));
+        User user1 = new User("Usuario", "user", "user@gmail.com", passwordEncoder.encode("pass"), "USER");
+        PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
+        PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
+        Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
+        Address address2 = new Address("Trabajo","Dirección del trabajo", "8", "", "23456", "Ciudad de Ejemplo", "España");
 
-            List<OrderItem> orderItems2 = new ArrayList<>();
-            orderItems2.add(new OrderItem(order2, product4, user2, 2));
-            orderItems2.add(new OrderItem(order2, product8, user2, 1));
+        user1.getCards().add(paymentCard);
+        user1.getCards().add(paymentCard2);
+        user1.getAddresses().add(address);
+        user1.getAddresses().add(address2);
+        assignUserImage(user1, defaultProfileRes);
+        userRepository.save(user1);
 
-            order1.setItems(orderItems1);
-            order2.setItems(orderItems2);
+        User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
+        assignUserImage(user2, defaultProfileRes);
+        userRepository.save(user2);
+    }
+
+    private void initCategories() {
+        if (categoryRepository.count() > 0) return;
+        System.out.println(">>> Initializing Categories...");
+
+        List<Category> categories = new ArrayList<>();
+        categories.add(new Category("Gaming y PC"));
+        categories.add(new Category("Almacenamiento"));
+        categories.add(new Category("Conectividad y Redes"));
+        categories.add(new Category("Energía y Carga"));
+        categories.add(new Category("Móviles y Tablets"));
+        categories.add(new Category("Audio y Sonido"));
+        categories.add(new Category("Hogar Inteligente"));
+        categories.add(new Category("Fotografía y Video"));
+        categories.add(new Category("Televisión e Imagen"));
+        categories.add(new Category("Periféricos"));
+        categories.add(new Category("Software y Servicios"));
+        categories.add(new Category("Herramientas y Accesorios"));
+        categories.add(new Category("Recomendado"));
+        categories.add(new Category("Destacado"));
+        categories.add(new Category("Top ventas"));
+
+        for (Category cat : categories) {
+            assignCategoryImage(cat, defaultCategoryRes);
+            categoryRepository.save(cat);
+        }
+    }
+
+    private void initProducts() {
+        if (productRepository.count() > 0) return;
+        System.out.println(">>> Initializing Products...");
+
+        List<Product> products = new ArrayList<>();
+        products.add(new Product("Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
+        products.getFirst().setPreviousPrice(1000.00);
+        products.add(new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad y rendimiento", 1250.50));
+        products.get(1).setPreviousPrice(1500.00);
+        products.add(new Product("Tarjeta Gráfica RTX 5080", "Gráficos de siguiente generación para gaming", 780.25));
+        products.add(new Product("Router WiFi 6E Mesh", "Cobertura total y velocidad Gigabit", 185.70));
+        products.add(new Product("Monitor Curvo Ultrawide", "Experiencia inmersiva para profesionales", 499.00));
+        products.add(new Product("Cámara Mirrorless 4K", "Fotografía y video de alta resolución", 1120.40));
+        products.add(new Product("Disco SSD NVMe 2TB", "Velocidad extrema de lectura/escritura", 155.99));
+        products.add(new Product("Teclado Mecánico RGB", "Switches táctiles para gamers y coders", 89.65));
+        products.add(new Product("Altavoz Inteligente con IA", "Asistente de voz y sonido premium", 75.30));
+        products.add(new Product("Auriculares con Cancelación de Ruido", "Inmersión total en música y llamadas", 199.50));
+        products.add(new Product("Smartwatch con ECG", "Monitor de salud avanzado en tu muñeca", 220.00));
+        products.add(new Product("Drone Plegable con GPS", "Tomas aéreas estables y de calidad", 345.80));
+        products.add(new Product("Batería Externa USB-PD 65W", "Carga tu laptop y móvil en cualquier lugar", 55.45));
+        products.add(new Product("Lector de Ebooks con Luz", "Miles de libros sin fatiga visual", 129.90));
+        products.add(new Product("Sistema de Alarma Inteligente", "Seguridad para el hogar con control remoto", 240.75));
+        products.add(new Product("Convertidor HDMI a USB-C", "Conecta tu laptop a cualquier pantalla", 18.25));
+        products.add(new Product("Mini PC Industrial", "Potencia y tamaño reducido para automatización", 510.10));
+        products.add(new Product("Gafas de Realidad Mixta", "El futuro de la interacción digital y el trabajo", 2400.00));
+        products.add(new Product("Tableta Gráfica Pro 16\"", "Precisión y sensibilidad para el diseño", 390.60));
+        products.add(new Product("Impresora 3D de Resina", "Crea prototipos de alta definición en casa", 425.99));
+        products.add(new Product("Estación de Carga Inalámbrica Triple", "Carga rápida para tus tres dispositivos Apple/Android", 45.00));
+        products.add(new Product("Extensor de Rango Powerline", "Red estable a través de la instalación eléctrica", 68.35));
+        products.add(new Product("Consola de Juegos Portátil", "Juegos AAA en tus manos, donde vayas", 450.70));
+        products.add(new Product("Sensor de Humedad y Temperatura IoT", "Monitorización ambiental a distancia", 12.88));
+        products.add(new Product("Tarjeta de Sonido Externa USB", "Audio de estudio para PC o laptop", 79.95));
+        products.add(new Product("Cable Ethernet Cat 8", "Máxima velocidad para redes cableadas", 15.15));
+        products.add(new Product("Ventilador de Laptop con RGB", "Refrigeración eficiente para sesiones largas", 29.50));
+        products.add(new Product("Kit de Raspberry Pi 5 Avanzado", "Microcomputadora para proyectos de electrónica", 85.60));
+        products.add(new Product("Medidor de Calidad de Aire Digital", "Monitorea CO2 y partículas en tiempo real", 115.20));
+        products.add(new Product("Sistema de Iluminación Inteligente", "Control de color y brillo por voz o app", 60.99));
+
+        List<Category> categories = categoryRepository.findAll();
+        if (!categories.isEmpty()){
+            Category gaming = categories.get(0);
+            Category storage = categories.get(1);
+            Category connectivity = categories.get(2);
+            Category power = categories.get(3);
+            Category mobile = categories.get(4);
+            Category audio = categories.get(5);
+            Category smartHome = categories.get(6);
+            Category photography = categories.get(7);
+            Category tvImage = categories.get(8);
+            Category peripherals = categories.get(9);
+            Category software = categories.get(10);
+            Category tools = categories.get(11);
+            Category recommended = categories.get(12);
+            Category featured = categories.get(13);
+            Category topSales = categories.get(14);
+
+            products.get(0).setCategories(List.of(mobile, topSales, featured));
+            products.get(1).setCategories(List.of(gaming, recommended, peripherals));
+            products.get(2).setCategories(List.of(gaming, peripherals, topSales));
+            products.get(3).setCategories(List.of(connectivity, smartHome));
+            products.get(4).setCategories(List.of(tvImage, peripherals, featured));
+            products.get(5).setCategories(List.of(photography, recommended));
+            products.get(6).setCategories(List.of(storage, gaming, topSales));
+            products.get(7).setCategories(List.of(peripherals, gaming, topSales));
+            products.get(8).setCategories(List.of(audio, smartHome, featured));
+            products.get(9).setCategories(List.of(audio, peripherals, topSales));
+            products.get(10).setCategories(List.of(mobile, recommended));
+            products.get(11).setCategories(List.of(photography, tools));
+            products.get(12).setCategories(List.of(power, mobile, tools));
+            products.get(13).setCategories(List.of(mobile, recommended));
+            products.get(14).setCategories(List.of(smartHome, featured));
+            products.get(15).setCategories(List.of(connectivity, tools));
+            products.get(16).setCategories(List.of(gaming, connectivity));
+            products.get(17).setCategories(List.of(gaming, featured, peripherals));
+            products.get(18).setCategories(List.of(peripherals, photography));
+            products.get(19).setCategories(List.of(tools, recommended));
+            products.get(20).setCategories(List.of(power, mobile));
+            products.get(21).setCategories(List.of(connectivity, smartHome));
+            products.get(22).setCategories(List.of(gaming, topSales, featured));
+            products.get(23).setCategories(List.of(smartHome, tools));
+            products.get(24).setCategories(List.of(audio, peripherals));
+            products.get(25).setCategories(List.of(connectivity, tools, topSales));
+            products.get(26).setCategories(List.of(gaming, tools));
+            products.get(27).setCategories(List.of(gaming, smartHome, tools));
+            products.get(28).setCategories(List.of(smartHome, recommended));
+            products.get(29).setCategories(List.of(smartHome, tvImage, featured));
+        }
+
+        // Upload image for each product and save
+        for (Product p : products) {
+            assignProductImage(p, defaultProductRes);
+            productRepository.save(p);
+        }
+    }
+
+    private void initShopsAndTrucks() {
+        if (shopRepository.count() > 0) return;
+        System.out.println(">>> Initializing Shops and Trucks...");
+
+        Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
+        Shop shop1 = shopRepository.save(new Shop("52552", "Madrid-Recoletos", address1));
+
+        Truck truck1 = truckRepository.save(new Truck("2C4RD"));
+        Truck truck2 = truckRepository.save(new Truck("5U7TH"));
+        truck1.setAssignedShop(shop1);
+        truck2.setAssignedShop(shop1);
+        truckRepository.save(truck1);
+        truckRepository.save(truck2);
+    }
+
+    private void initOrdersAndCart() {
+        if (orderRepository.count() > 0) return;
+        System.out.println(">>> Initializing Orders and Cart...");
+
+        // Retrieve necessary entities
+        User user1 = userRepository.findByUsername("user").orElse(null);
+        User user2 = userRepository.findByUsername("admin").orElse(null);
+        List<Product> products = productRepository.findAll();
+
+        if (user1 == null || user2 == null || products.isEmpty()) {
+            System.err.println("CANNOT INIT ORDERS: Users or Products missing in DB.");
+            return;
+        }
+
+        List<OrderItem> orderItems1 = new ArrayList<>();
+        List<OrderItem> orderItems2 = new ArrayList<>();
+
+        // Use of secure indexes based on the total amount of products
+        if (products.size() >= 8) {
+            orderItems1.add(new OrderItem(products.get(0), user1, 12));
+            orderItems1.add(new OrderItem(products.get(2), user1, 3));
+            orderItems2.add(new OrderItem(products.get(3), user2, 2));
+            orderItems2.add(new OrderItem(products.get(7), user2, 1));
+
+            Order order1 = new Order(user1, orderItems1);
+            Order order2 = new Order(user2, orderItems2);
 
             orderRepository.save(order1);
             orderRepository.save(order2);
+        }
 
-            user1.getRegisteredOrders().add(order1);
-            user2.getRegisteredOrders().add(order2);
-            userRepository.save(user1);
-            userRepository.save(user2);
+        // Cart products
+        if (products.size() >= 29) {
+            List<OrderItem> cartItems = new ArrayList<>();
+            cartItems.add(new OrderItem(products.get(0), user1, 12));
+            cartItems.add(new OrderItem(products.get(2), user1, 3));
+            cartItems.add(new OrderItem(products.get(3), user1, 1));
+            cartItems.add(new OrderItem(products.get(8), user1, 4));
+            cartItems.add(new OrderItem(products.get(12), user1, 2));
+            cartItems.add(new OrderItem(products.get(15), user1, 3));
+            cartItems.add(new OrderItem(products.get(18), user1, 6));
+            cartItems.add(new OrderItem(products.get(22), user1, 20));
+            cartItems.add(new OrderItem(products.get(23), user1, 15));
+            cartItems.add(new OrderItem(products.get(28), user1, 14));
+            orderItemRepository.saveAll(cartItems);
+        }
+    }
 
-            productRepository.save(product1);
-            productRepository.save(product2);
+    private void initStock() {
+        if (shopStockRepository.count() > 0) return;
+        System.out.println(">>> Initializing Stock...");
 
-            shop1.setAvailableProducts(new HashSet<>());
-            shopRepository.save(shop1);
+        List<Shop> shops = shopRepository.findAll();
+        List<Product> products = productRepository.findAll();
 
-            ShopStock ss1 = new ShopStock(shop1, product1, 3);
-            ShopStock ss2 = new ShopStock(shop1, product2, 10);
+        if (shops.isEmpty() || products.isEmpty()) {
+            System.err.println("CANNOT INIT STOCK: Shops or Products missing.");
+            return;
+        }
 
-            shopStockRepository.save(ss1);
-            shopStockRepository.save(ss2);
+        Shop shop1 = shops.getFirst();
+        List<ShopStock> shopStocks = new ArrayList<>();
 
-            Review review1 = new Review(user1, product1, 5, "Muy buen producto", true);
-            Review review2 = new Review(user2, product1, 2, "Desastroso", false);
-            reviewRepository.save(review1);
-            reviewRepository.save(review2);
+        // Loop seguro basado en tu código original
+        for (int i = 0; i < products.size(); i++) {
+            shopStocks.add(new ShopStock(shop1, products.get(i), i));
+        }
+        shopStockRepository.saveAll(shopStocks);
+    }
 
-            System.out.println("Base de datos inicializada con datos por defecto.");
+    private void initReviews() {
+        if (reviewRepository.count() > 0) return;
+        System.out.println(">>> Initializing Reviews...");
+
+        User user1 = userRepository.findByUsername("user").orElse(null);
+        User user2 = userRepository.findByUsername("admin").orElse(null);
+        List<Product> products = productRepository.findAll();
+
+        if (user1 != null && user2 != null && !products.isEmpty()) {
+            reviewRepository.save(new Review(user1, products.getFirst(), 5, "Muy buen producto", true));
+            reviewRepository.save(new Review(user2, products.getFirst(), 2, "Desastroso", false));
+        }
+    }
+
+    // --- AUXILIARY METHODS ---
+
+    private void assignUserImage(User user, ClassPathResource resource) {
+        try {
+            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "users");
+            user.setUserImage(new ImageInfo(result.get("url"), result.get("key"), resource.getFilename()));
+        } catch (IOException e) {
+            System.err.println("Error uploading image for user " + user.getUsername());
+        }
+    }
+
+    private void assignCategoryImage(Category cat, ClassPathResource resource) {
+        try {
+            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "categories");
+            cat.setCategoryImage(new ImageInfo(result.get("url"), result.get("key"), resource.getFilename()));
+        } catch (IOException e) {
+            System.err.println("Error uploading image for category " + cat.getName());
+        }
+    }
+
+    private void assignProductImage(Product product, ClassPathResource resource) {
+        try {
+            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "products");
+            ProductImageInfo pi = new ProductImageInfo(result.get("url"), result.get("key"), resource.getFilename(), product);
+            product.getImages().add(pi);
+        } catch (IOException e) {
+            System.err.println("Error uploading image for product " + product.getName());
+        }
+    }
+
+    private Map<String, String> uploadToMinio(ClassPathResource resource, String originalName, String folder) throws IOException {
+        try (InputStream inputStream = resource.getInputStream()) {
+            return storageService.uploadFile(
+                    inputStream,
+                    originalName,
+                    "image/jpeg",
+                    resource.contentLength(),
+                    folder
+            );
         }
     }
 }

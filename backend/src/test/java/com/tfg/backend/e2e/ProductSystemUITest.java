@@ -16,13 +16,10 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Commit;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
         properties = {
-        "app.db.init=false", // Deactivate sample data initialization only for this test (DatabaseInitializer class will not run)
-        "server.port=8443" // WARNING: Before running this test, run Angular using the command ng s -c testing, which changes the Angular proxy to one which works listening in port 8443
+                "server.port=8443", // WARNING: Angular must be running with: ng s -c testing
+                "app.db.init=users, categories"
         }
 )
 public class ProductSystemUITest {
@@ -46,27 +43,22 @@ public class ProductSystemUITest {
     @Autowired
     private ProductRepository productRepository;
 
-    /*
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-     */
-
     @BeforeAll
-    public static void setUp()  {
+    public static void setUp() {
         ChromeOptions options = new ChromeOptions();
         options.setAcceptInsecureCerts(true);
-        options.addArguments("--headless=new");
+        options.addArguments("--headless=new"); // New headless mode for better stability
+        options.addArguments("--no-sandbox"); // Required for some CI environments
+        options.addArguments("--disable-dev-shm-usage"); // Required for Docker/CI resources
+
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
     @BeforeEach
     public void initTest() {
         driver.get(BASE_URL);
         wait.until(ExpectedConditions.urlContains(BASE_URL));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("content"))); //Loading component div or carousels div
     }
 
     @AfterEach
@@ -84,6 +76,33 @@ public class ProductSystemUITest {
 
     @Test
     public void displayNoProductsTest() {
+        // Expected messages
+        String msgFeatured = "No hay productos destacados disponibles.";
+        String msgRecommended = "No hay productos recomendados disponibles.";
+        String msgTopSales = "No hay productos top ventas disponibles.";
+
+        // Container locators
+        By featuredLoc = By.id("featured-content");
+        By recommendedLoc = By.id("recommended-content");
+        By topSalesLoc = By.id("topSales-content");
+
+        // Waits explicitly until the text is present
+        // Synchronizes ngIf divs with Selenium
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(featuredLoc, msgFeatured));
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(recommendedLoc, msgRecommended));
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(topSalesLoc, msgTopSales));
+
+        // Capture the elements
+        WebElement featuredMessageDiv = driver.findElement(featuredLoc);
+        WebElement recommendedMessageDiv = driver.findElement(recommendedLoc);
+        WebElement topSalesMessageDiv = driver.findElement(topSalesLoc);
+
+        // CI debugging logs
+        System.out.println("Featured Content: " + featuredMessageDiv.getText());
+        System.out.println("Recommended Content: " + recommendedMessageDiv.getText());
+        System.out.println("Top Sales Content: " + topSalesMessageDiv.getText());
+
+        // Logic checks (empty carousels)
         int initialFeaturedProducts = driver.findElements(By.cssSelector("[id^='featuredProduct-']")).size();
         int initialRecommendedProducts = driver.findElements(By.cssSelector("[id^='reccomendedProduct-']")).size();
         int initialTopSalesProducts = driver.findElements(By.cssSelector("[id^='topSalesProduct-']")).size();
@@ -92,98 +111,10 @@ public class ProductSystemUITest {
         assertEquals(0, initialRecommendedProducts, "El número de productos recomendados mostrados no es el esperado");
         assertEquals(0, initialTopSalesProducts, "El número de productos top ventas mostrados no es el esperado");
 
-        WebElement featuredMessageDiv = driver.findElement(By.id("featured-content"));
-        WebElement recommendedMessageDiv = driver.findElement(By.id("recommended-content"));
-        WebElement topSalesMessageDiv = driver.findElement(By.id("topSales-content"));
-
-        String featuredMessage = featuredMessageDiv.getText();
-
-        assertTrue(featuredMessageDiv.getText().contains("Ha ocurrido un error inesperado"));
-        assertTrue(recommendedMessageDiv.getText().contains("Ha ocurrido un error inesperado"));
-        assertTrue(topSalesMessageDiv.getText().contains("Ha ocurrido un error inesperado"));
+        // Final message check
+        assertTrue(featuredMessageDiv.getText().contains(msgFeatured), "Mensaje de destacados incorrecto");
+        assertTrue(recommendedMessageDiv.getText().contains(msgRecommended), "Mensaje de recomendados incorrecto");
+        assertTrue(topSalesMessageDiv.getText().contains(msgTopSales), "Mensaje de top ventas incorrecto");
     }
 
-    /*
-
-    @Test
-    public void displayCreatedProductsTest() { //Example with a featured product
-        Category featured = categoryRepository.save(new Category("Destacado", null));
-        Product product = new Product("5A6", "Disco duro", null, "Almacenamiento sin límites", 75.49);
-        product.getCategories().add(featured);
-        testProducts.add(product);
-        productRepository.saveAll(testProducts);
-        checkSampleFeaturedProductsAreDisplayed();
-    }
-
-    @Test
-    public void displayChangesInUpdatedProductsTest() {
-        Category featured = categoryRepository.save(new Category("Destacado", null));
-        Product product = new Product("5A6", "Disco duro", null, "Almacenamiento sin límites", 75.49);
-        product.getCategories().add(featured);
-        testProducts.add(product);
-        List<Product> savedProducts = productRepository.saveAll(testProducts);
-        checkSampleFeaturedProductsAreDisplayed();
-
-        Product updatingProduct = savedProducts.getFirst();
-        String newName = "Ratón inalámbrico";
-        double newCurrentPrice = 24.95;
-
-        updatingProduct.setName(newName);
-        updatingProduct.setCurrentPrice(newCurrentPrice);
-        productRepository.save(updatingProduct); //Contains the id where the product has been saved previously
-
-        driver.get(BASE_URL);
-        wait.until(ExpectedConditions.urlContains(BASE_URL));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("content")));
-        List<WebElement> productDivs = driver.findElements(By.cssSelector("[id^='featuredProduct-']"));
-
-        assertEquals(1, productDivs.size());
-        assertTrue(productDivs.getFirst().getText().contains(updatingProduct.getReferenceCode()));
-        assertTrue(productDivs.getFirst().getText().contains(newName));
-        assertTrue(productDivs.getFirst().getText().contains(updatingProduct.getDescription()));
-        assertTrue(productDivs.getFirst().getText().contains(String.valueOf(newCurrentPrice)));
-    }
-
-    @Test
-    public void retireDeletedProductsTest() {
-        Category featured = categoryRepository.save(new Category("Destacado", null));
-        Product product = new Product("5A6", "Disco duro", null, "Almacenamiento sin límites", 75.49);
-        product.getCategories().add(featured);
-        testProducts.add(product);
-        List<Product> savedProducts = productRepository.saveAll(testProducts);
-        checkSampleFeaturedProductsAreDisplayed();
-
-        Product deletingProduct = savedProducts.getFirst();
-        productRepository.delete(deletingProduct); //The saved products include their id
-
-        driver.get(BASE_URL);
-        wait.until(ExpectedConditions.urlContains(BASE_URL));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("content")));
-        List<WebElement> productDivs = driver.findElements(By.cssSelector("[id^='featuredProduct-']"));
-
-        assertEquals(testProducts.size()-1, productDivs.size());
-        for (int i = 0; i < productDivs.size(); i++) {
-            assertFalse(productDivs.get(i).getText().contains(savedProducts.getFirst().getReferenceCode()));
-            assertFalse(productDivs.get(i).getText().contains(savedProducts.getFirst().getName()));
-            assertFalse(productDivs.get(i).getText().contains(savedProducts.getFirst().getDescription()));
-            assertFalse(productDivs.get(i).getText().contains(String.valueOf(savedProducts.getFirst().getCurrentPrice())));
-        }
-    }
-
-    private void checkSampleFeaturedProductsAreDisplayed(){
-        driver.navigate().refresh();
-        wait.until(ExpectedConditions.urlContains(BASE_URL));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("featured-content")));
-        List<WebElement> productDiv = driver.findElements(By.cssSelector("[id^='featuredProduct-']"));
-
-        assertEquals(testProducts.size(), productDiv.size());
-        for (int i = 0; i < productDiv.size(); i++) {
-            assertTrue(productDiv.get(i).getText().contains(testProducts.get(i).getReferenceCode()));
-            assertTrue(productDiv.get(i).getText().contains(testProducts.get(i).getName()));
-            assertTrue(productDiv.get(i).getText().contains(testProducts.get(i).getDescription()));
-            assertTrue(productDiv.get(i).getText().contains(String.valueOf(testProducts.get(i).getCurrentPrice())));
-        }
-    }
-
-     */
 }

@@ -1,17 +1,19 @@
 <!-- h-171 to avoid scroll when an error occurs, change to min-h-screen if footer does not need to be shown -->
-<div *ngIf="loading" class="h-171 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-  <div class="flex flex-col items-center gap-3">
-    <p-progress-spinner
-      strokeWidth="4"
-      fill="transparent"
-      animationDuration="1s"
-      [style]="{ width: '3.5rem', height: '3.5rem' }"
-    ></p-progress-spinner>
-    <span class="text-white text-lg font-medium">{{ loadingText }}</span>
+<div *ngIf="loading" class="h-217 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="w-full max-w-md bg-surface-800 rounded-2xl shadow-lg p-8 text-center space-y-6">
+    <div class="flex flex-col items-center gap-3">
+      <p-progress-spinner
+        strokeWidth="4"
+        fill="transparent"
+        animationDuration="1s"
+        [style]="{ width: '3.5rem', height: '3.5rem' }"
+      ></p-progress-spinner>
+      <span class="text-white text-lg font-medium">{{ loadingText }}</span>
+    </div>
   </div>
 </div>
 
-<div *ngIf="!loading && error" class="h-171 flex flex-col items-center justify-center text-surface-100 px-4">
+<div *ngIf="!loading && error" class="h-217 flex flex-col items-center justify-center text-surface-100 px-4">
 
   <div class="w-full max-w-md bg-surface-800 rounded-2xl shadow-lg p-8 text-center space-y-6">
 

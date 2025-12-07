@@ -32,3 +32,11 @@ export function formatRating(rating: number): string {
     });
   }
 }
+
+export function formatDueDate(isoDate: string | undefined): string { //Input: 2028-05, Output: 05/28
+  if (isoDate){
+    const [year, month] = isoDate.split('-');
+    return `${month}/${year.slice(-2)}`; // year.slice(-2) takes the two last characters of the year (2028 -> 28)
+  }
+  return '';
+}

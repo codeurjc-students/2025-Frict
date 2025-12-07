@@ -39,7 +39,7 @@ export class SignupComponent {
   onSubmit() {
     this.authService.signup(this.registerForm.value).subscribe({
       next: (response) => { //Backend returns some fields, one of them being the id of the user created
-        if (this.selectedImage) { this.uploadUserImage(response.id, this.selectedImage);}
+        if (this.selectedImage) { this.uploadUserImage(this.selectedImage);}
         else{ this.router.navigate(["/login"]); }
       },
       error: () => {
@@ -48,8 +48,8 @@ export class SignupComponent {
     })
   }
 
-  private uploadUserImage(id: string, selectedImage: File) {
-    this.userService.uploadUserImage(id, selectedImage).subscribe({
+  private uploadUserImage(selectedImage: File) {
+    this.userService.uploadUserImage(selectedImage).subscribe({
       next: () => {
         this.router.navigate([`/login`]);
       },

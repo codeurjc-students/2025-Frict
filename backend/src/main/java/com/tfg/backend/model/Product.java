@@ -1,11 +1,13 @@
 package com.tfg.backend.model;
 
-import com.tfg.backend.utils.ImageUtils;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Formula;
 
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -22,13 +24,14 @@ public class Product {
     private Long id;
 
     @Column(unique = true, nullable = false)
+    @Setter(AccessLevel.NONE)
     private String referenceCode;
 
     private String name;
 
-    @Lob
-    @Column(nullable = false)
-    private Blob productImage = ImageUtils.prepareDefaultImage(Product.class);
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ProductImageInfo> images = new ArrayList<>();
 
     @Column (length = 5000)
     private String description;
@@ -39,8 +42,13 @@ public class Product {
 
     private boolean active = true;
 
+    //It is NOT a column in Product table, and Hibernate automatically calculates its value
+    @Formula("(SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = id AND oi.order_id IS NULL)")
+    @Setter(AccessLevel.NONE)
+    private int reservedUnits; //Contains the exact number of items with this product id that are in all users carts
+
     @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Category> categories = new HashSet<>();
+    private List<Category> categories = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
@@ -49,7 +57,8 @@ public class Product {
     private Set<User> usersAsFavourite = new HashSet<>();
 
     //Controlled by the intermediate entities OrderItem and ShopStock
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    //Not Cascade.ALL, as it deletes all previous user's orders registries too
+    @OneToMany(mappedBy = "product")
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -58,12 +67,9 @@ public class Product {
     public Product() {
     }
 
-    public Product(String referenceCode, String name, Blob productImage, String description, double price) {
-        this.referenceCode = referenceCode;
+    public Product(String name, String description, double price) {
+        this.referenceCode = ReferenceNumberGenerator.generateProductReferenceNumber();
         this.name = name;
-        if (productImage !=null){
-            this.productImage = productImage;
-        }
         this.description = description;
         this.currentPrice = price;
     }

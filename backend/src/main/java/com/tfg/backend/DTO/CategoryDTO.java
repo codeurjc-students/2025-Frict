@@ -12,9 +12,12 @@ public class CategoryDTO {
     private String name;
     private String imageUrl;
 
+    public CategoryDTO() {
+    }
+
     public CategoryDTO(Category c) {
         this.id = c.getId();
         this.name = c.getName();
-        this.imageUrl = "/api/v1/categories/image/" + id;
+        this.imageUrl = c.getCategoryImage().getImageUrl();
     }
 }

@@ -1,13 +1,11 @@
 package com.tfg.backend.DTO;
 
-import com.tfg.backend.model.Category;
-import com.tfg.backend.model.Product;
-import com.tfg.backend.model.Review;
-import com.tfg.backend.model.ShopStock;
+import com.tfg.backend.model.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 //More fields than the original product, as they are calculated and sent from other parts of the backend
@@ -17,14 +15,13 @@ public class ProductDTO {
     private Long id;
     private String referenceCode;
     private String name;
-    private String imageUrl;
-    private String thumbnailUrl;
+    private List<String> imageUrls = new ArrayList<>();
     private String description;
     private double previousPrice;
     private double currentPrice;
     private String discount;
-    private Set<Long> categoriesId = new HashSet<>();
-    private int availableUnits;
+    private List<CategoryDTO> categories = new ArrayList<>();
+    private int availableUnits; //Available units will be all units stock which are not in any user cart yet
     private double averageRating;
     private int totalReviews;
 
@@ -35,8 +32,9 @@ public class ProductDTO {
         this.id = p.getId();
         this.name = p.getName();
         this.referenceCode = p.getReferenceCode();
-        this.imageUrl = "/api/v1/products/image/" + id;
-        this.thumbnailUrl = "/api/v1/products/thumbnail/" + id;
+        for (ProductImageInfo image : p.getImages()) {
+            this.imageUrls.add(image.getImageUrl());
+        }
         this.description = p.getDescription();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();
@@ -44,14 +42,19 @@ public class ProductDTO {
             this.discount = "-" + String.valueOf((int) Math.floor(((this.previousPrice - this.currentPrice) / this.previousPrice) * 100)) + "%";
         }
         else this.discount = "0%";
-        this.categoriesId = p.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toSet());
 
-        //Available units
+        List<CategoryDTO> dtos = new ArrayList<>();
+        for (Category c : p.getCategories()) {
+            dtos.add(new CategoryDTO(c));
+        }
+        this.categories = dtos;
+
+        //Available units (total - reserved)
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {
             totalUnits += s.getStock();
         }
-        this.availableUnits = totalUnits;
+        this.availableUnits = totalUnits - p.getReservedUnits();
 
         //Total reviews and average rating
         double totalRating = 0.0;

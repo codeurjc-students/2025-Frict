@@ -1,16 +1,15 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.tfg.backend.utils.ImageUtils;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
@@ -36,18 +35,22 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String address;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
+    private List<Address> addresses = new ArrayList<>();
 
-    @Lob
-    @Column(nullable = false)
-    private Blob profileImage = ImageUtils.prepareDefaultImage(User.class);
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
+    private List<PaymentCard> cards = new ArrayList<>();
+
+    @Embedded
+    private ImageInfo userImage;
 
     @Column(nullable = false)
     private boolean isBanned = false;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> itemsInCart = new ArrayList<>();
+    private List<OrderItem> allOrderItems = new ArrayList<>();
 
     @ManyToMany
     private Set<Product> favouriteProducts = new HashSet<>();
@@ -61,12 +64,18 @@ public class User {
 	public User() {
 	}
 
-    public User(String name, String username, String email, String address, String encodedPassword, String... roles) {
+    public User(String name, String username, String email, String encodedPassword, String... roles) {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
         this.roles = Set.of(roles);
         this.email = email;
-        this.address = address;
+    }
+
+    //Retrieves only the items that are currently in user cart
+    public List<OrderItem> getItemsInCart() {
+        return this.allOrderItems.stream()
+            .filter(item -> item.getOrder() == null && item.getUser().getId().equals(this.id))
+            .collect(Collectors.toList());
     }
 }

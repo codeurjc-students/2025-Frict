@@ -8,7 +8,7 @@ import { Observable, tap, catchError, map, of } from 'rxjs';
 })
 export class AuthService {
 
-  private defaultLoginInfo: LoginInfo = {isLogged: false, thumbnailUrl: '', id: '0', name: '', username: '', roles: []};
+  private defaultLoginInfo: LoginInfo = {isLogged: false, imageUrl: '', id: '0', name: '', username: '', roles: []};
   private loginInfoSignal: WritableSignal<LoginInfo> = signal(this.defaultLoginInfo);
 
   public isLogged = computed(() => this.loginInfoSignal().isLogged);
@@ -30,7 +30,7 @@ export class AuthService {
   }
 
   public getLoginInfo(): Observable<LoginInfo> {
-    return this.http.get<LoginInfo>(this.apiUrl + "/users/me", { withCredentials: true }).pipe(
+    return this.http.get<LoginInfo>(this.apiUrl + "/users/session", { withCredentials: true }).pipe(
       map(info => ({...info, isLogged: true})),
       catchError(() => of(this.defaultLoginInfo)),
       tap(info => this.loginInfoSignal.set(info))

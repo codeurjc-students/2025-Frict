@@ -7,6 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+//Inactive constraint, as NULL objects are not considered equal between each other
 @Table(
         name = "order_items",
         uniqueConstraints = @UniqueConstraint(
@@ -21,7 +22,7 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
-    private Order order;
+    private Order order = null; //Initially, this orderItem will belong to a user's cart
 
     @ManyToOne
     @JoinColumn(name = "product_id")
@@ -40,8 +41,7 @@ public class OrderItem {
     }
 
     //Order items with null order means products that are already in assigned user's cart
-    public OrderItem(Order order, Product product, User user, int quantity) {
-        this.order = order;
+    public OrderItem(Product product, User user, int quantity) {
         this.product = product;
         this.user = user;
         this.quantity = quantity;
