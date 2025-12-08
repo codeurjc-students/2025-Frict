@@ -1,11 +1,16 @@
 name: Code analysis with Sonarqube
+
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main # On successfully merged PRs into main branch
 
 jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
@@ -15,30 +20,58 @@ jobs:
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    defaults:
-      run:
-        working-directory: backend
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
+
+
+      - name: Start MinIO and Create Bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.MINIO_ROOT_USER }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          AWS_REGION: us-east-1
+        run: |
+          docker run -d \
+            -p 9000:9000 \
+            -p 9001:9001 \
+            --name minio \
+            -e MINIO_ROOT_USER=$AWS_ACCESS_KEY_ID \
+            -e MINIO_ROOT_PASSWORD=$AWS_SECRET_ACCESS_KEY \
+            minio/minio server /data
+
+          sleep 5
+          aws --endpoint-url http://localhost:9000 s3 mb s3://images
+
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: 21
-          distribution: 'temurin' # Alternative distribution options are available.
+          distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Set up Angular CLI
-        run: npm install -g @angular/cli
 
-      - name: Install project dependencies
-        run: npm ci
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+
+      - name: Install Frontend Dependencies
         working-directory: frontend
+        run: |
+          npm ci
+          npm install -g @angular/cli
+
 
       - name: Start Angular project
-        run: ng serve --proxy-config proxy-test.conf.json &
         working-directory: frontend
+        run: ng serve --proxy-config proxy-test.conf.json &
+
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4
@@ -47,14 +80,10 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
 
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: backend
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test
