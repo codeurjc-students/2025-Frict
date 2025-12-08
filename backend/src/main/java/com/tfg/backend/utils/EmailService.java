@@ -53,4 +53,37 @@ public class EmailService {
             System.err.println("Error al enviar email: " + e.getMessage());
         }
     }
+
+
+    @Async
+    public void sendRecoveryOtp(String to, String username, String otpCode) {
+        try {
+            // Build redirection URL
+            String targetUrl = "https://localhost:4202/reset?username=" + username;
+
+            // Set Thymeleaf variables
+            Context context = new Context();
+            context.setVariable("username", username);
+            context.setVariable("otpCode", otpCode);
+            context.setVariable("resetLink", targetUrl);
+
+            // Process HTML
+            String htmlContent = templateEngine.process("otp-code-sending", context);
+
+            // Configure message
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject("Código de recuperación: " + otpCode + " - MiTienda");
+            helper.setText(htmlContent, true);
+
+            // Send
+            mailSender.send(message);
+            System.out.println("OTP de recuperación enviado a " + to);
+
+        } catch (MessagingException e) {
+            System.err.println("Error al enviar OTP: " + e.getMessage()); //No exception to avoid interrupting the main thread
+        }
+    }
 }

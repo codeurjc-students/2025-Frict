@@ -1,5 +1,5 @@
 import { Injectable, signal, WritableSignal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import { LoginInfo } from '../models/loginInfo.model';
 import { Observable, tap, catchError, map, of } from 'rxjs';
 
@@ -52,5 +52,18 @@ export class AuthService {
         return of(null);
       })
     );
+  }
+
+  //All of the above use @RequestBody to avoid sending sensible data via URL
+  public initPasswordRecovery(username: string) {
+    return this.http.post(this.apiUrl + "/auth/recovery", { username: username });
+  }
+
+  verifyOtp(username: string, otpCode: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.apiUrl}/auth/verification`, { username, otpCode });
+  }
+
+  resetPassword(username: string, otpCode: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/reset`, { username, otpCode, newPassword });
   }
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,10 @@ public class User {
     @JsonIgnore
     @Column(nullable = false)
 	private String encodedPassword;
+
+    private String otpCode = null; //If OTP is not null, the user account is in process of being recovered
+
+    private LocalDateTime otpExpiration;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	private Set<String> roles;
@@ -77,5 +82,12 @@ public class User {
         return this.allOrderItems.stream()
             .filter(item -> item.getOrder() == null && item.getUser().getId().equals(this.id))
             .collect(Collectors.toList());
+    }
+
+    public boolean isOtpValid(String inputCode) {
+        if (this.otpCode == null || this.otpExpiration == null) return false;
+
+        // Input and stored OTP match, and stored OTP has not expired yet
+        return this.otpCode.equals(inputCode) && LocalDateTime.now().isBefore(this.otpExpiration);
     }
 }
