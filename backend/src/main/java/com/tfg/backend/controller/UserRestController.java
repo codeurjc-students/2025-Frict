@@ -37,7 +37,7 @@ public class UserRestController {
 	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
         Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
 		if(loginInfoOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
 		}
         return ResponseEntity.ok(loginInfoOptional.get());
 	}
@@ -54,7 +54,7 @@ public class UserRestController {
     }
 
     @PostMapping("/image")
-    public ResponseEntity<UserDTO> uploadUserAvatar(HttpServletRequest request, @RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<UserDTO> uploadUserAvatar(HttpServletRequest request, @RequestParam("file") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.getLoggedUser(request);
         if(userOptional.isEmpty()){
             return ResponseEntity.status(401).build(); //Unauthorized as not logged
@@ -67,13 +67,13 @@ public class UserRestController {
         }
 
         // Upload
-        Map<String, String> res = storageService.uploadFile(file, "users");
+        Map<String, String> res = storageService.uploadFile(image, "users");
 
         // Create ImageInfo object (not an entity)
         ImageInfo avatarInfo = new ImageInfo(
                 res.get("url"),
                 res.get("key"),
-                file.getOriginalFilename()
+                image.getOriginalFilename()
         );
 
         // Add to user

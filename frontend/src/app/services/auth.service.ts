@@ -30,8 +30,15 @@ export class AuthService {
   }
 
   public getLoginInfo(): Observable<LoginInfo> {
-    return this.http.get<LoginInfo>(this.apiUrl + "/users/session", { withCredentials: true }).pipe(
-      map(info => ({...info, isLogged: true})),
+    // It may return a LoginInfo object o null (204 no content)
+    return this.http.get<LoginInfo | null>(this.apiUrl + "/users/session", { withCredentials: true }).pipe(
+      map(info => {
+        if (!info) {
+          return this.defaultLoginInfo;
+        }
+        return { ...info, isLogged: true };
+      }),
+      // catchError will catch any error (500 Server Error, Network Error, etc.)
       catchError(() => of(this.defaultLoginInfo)),
       tap(info => this.loginInfoSignal.set(info))
     );

@@ -57,7 +57,7 @@ public class UserService {
     }
 
     public User registerUser(UserSignupDTO dto) {
-        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), dto.getAddress(), passwordEncoder.encode(dto.getPassword()), "USER");
+        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), "USER");
         return this.save(newUser);
     }
 

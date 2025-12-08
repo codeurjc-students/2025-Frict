@@ -22,35 +22,34 @@ public class EmailService {
     @Autowired
     private TemplateEngine templateEngine;
 
-    // IMPORTANTE: @Async hace que esto se ejecute en un hilo separado
-    // Necesitas activar @EnableAsync en tu clase main Application.java
+    // @Async allows that this function can be executed concurrently
     @Async
     public void sendOrderConfirmation(String to, String userName, String orderRef, List<OrderItem> items, Double total) {
         try {
-            // 1. Preparar el contexto de Thymeleaf (las variables)
+            // Prepare Thymeleaf context
             Context context = new Context();
             context.setVariable("userName", userName);
             context.setVariable("orderRef", orderRef);
             context.setVariable("items", items);
             context.setVariable("totalAmount", total);
 
-            // 2. Procesar el HTML
+            // Process HTML
             String htmlContent = templateEngine.process("email-order-confirmation", context);
 
-            // 3. Crear el mensaje
+            // Create message
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(to);
             helper.setSubject("Confirmación de Pedido - " + orderRef);
-            helper.setText(htmlContent, true); // true = es HTML
+            helper.setText(htmlContent, true); //It is true that is HTML
 
-            // 4. Enviar
+            // Send
             mailSender.send(message);
             System.out.println("Email enviado correctamente a " + to);
 
         } catch (MessagingException e) {
-            // Logueamos el error, pero NO lanzamos excepción para no romper la transacción del pedido
+            // Do not raise exceptions in order not to interrupt the main thread
             System.err.println("Error al enviar email: " + e.getMessage());
         }
     }

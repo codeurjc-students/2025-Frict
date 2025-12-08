@@ -74,8 +74,6 @@ public class OrderRestController {
         Order savedOrder = orderService.save(newOrder);
 
         //Send email confirmation
-        // 2. ENVIAR EMAIL (Fuego y olvido)
-        // Al ser @Async, esta línea no bloquea el retorno
         emailService.sendOrderConfirmation(
                 loggedUser.getEmail(),
                 loggedUser.getName(),
