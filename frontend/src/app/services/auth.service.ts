@@ -20,8 +20,8 @@ export class AuthService {
   constructor(private http: HttpClient) {}
   private apiUrl = '/api/v1';
 
-  public signup(userData: FormData) {
-    return this.http.post<any>(this.apiUrl + '/auth/signup', userData);
+  public signup(userData: FormData): Observable<LoginInfo> {
+    return this.http.post<LoginInfo>(this.apiUrl + '/auth/signup', userData);
   }
 
   public login(user: string, pass: string): Observable<any> {

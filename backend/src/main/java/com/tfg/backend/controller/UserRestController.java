@@ -53,11 +53,12 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
-    @PostMapping("/image")
-    public ResponseEntity<UserDTO> uploadUserAvatar(HttpServletRequest request, @RequestParam("file") MultipartFile image) throws IOException {
-        Optional<User> userOptional = userService.getLoggedUser(request);
+    //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
+    @PostMapping("/image/{id}")
+    public ResponseEntity<UserDTO> uploadUserAvatar(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
+        Optional<User> userOptional = userService.findById(id);
         if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+            return ResponseEntity.status(404).build(); //User not found in DB (not registered)
         }
         User loggedUser = userOptional.get();
 
