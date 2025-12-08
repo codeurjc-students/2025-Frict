@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
+
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; border: 1px solid #ddd;">
+    <h2 style="color: #06b6d4;">¡Gracias por tu pedido!</h2> <p>Hola <strong th:text="${userName}">Usuario</strong>,</p>
+    <p>Tu pedido con referencia <strong th:text="${orderRef}">REF-123</strong> ha sido confirmado.</p>
+
+    <h3>Resumen:</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background-color: #f3f4f6;">
+            <th style="padding: 10px; text-align: left;">Producto</th>
+            <th style="padding: 10px; text-align: right;">Precio</th>
+        </tr>
+        <tr th:each="item : ${items}" style="border-bottom: 1px solid #eee;">
+            <td style="padding: 10px;" th:text="${item.getProduct().getName()}">Producto X</td>
+            <td style="padding: 10px; text-align: right;" th:text="${item.getProduct().getCurrentPrice()} + '€'">100€</td>
+        </tr>
+    </table>
+
+    <p style="text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px;">
+        Total: <span th:text="${totalAmount} + '€'">100€</span>
+    </p>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+    <p style="font-size: 12px; color: #888;">El equipo de MiTienda</p>
+</div>
+
+</body>
+</html>
