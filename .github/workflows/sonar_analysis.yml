@@ -37,12 +37,12 @@ jobs:
             -p 9000:9000 \
             -p 9001:9001 \
             --name minio \
-            -e MINIO_ROOT_USER=$AWS_ACCESS_KEY_ID \
-            -e MINIO_ROOT_PASSWORD=$AWS_SECRET_ACCESS_KEY \
+            -e MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }} \
+            -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }} \
             minio/minio server /data
 
           sleep 5
-          aws --endpoint-url http://localhost:9000 s3 mb s3://images
+          aws --endpoint-url http://localhost:9000 s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
 
 
       - name: Set up JDK 21
@@ -85,5 +85,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
+          SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
+          SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
         working-directory: backend
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test
