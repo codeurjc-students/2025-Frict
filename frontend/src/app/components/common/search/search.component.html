@@ -29,7 +29,9 @@
         ></p-select>
       </div>
 
-      <p-button (click)="visibleDrawer = true" label="Filtrar y Ordenar" icon="pi pi-filter" styleClass="xl:hidden !rounded-xl !font-bold w-full sm:w-auto" />
+      <div class="flex sm:hidden">
+        <p-button (click)="visibleDrawer = true" label="Filtrar y Ordenar" icon="pi pi-filter" styleClass="!rounded-xl !font-bold w-full sm:w-auto" />
+      </div>
     </div>
   </div>
 

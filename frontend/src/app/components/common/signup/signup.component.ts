@@ -4,6 +4,7 @@ import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
 import {NgOptimizedImage} from '@angular/common';
+import {LoginInfo} from '../../../models/loginInfo.model';
 
 @Component({
   selector: 'app-signup',
@@ -27,8 +28,7 @@ export class SignupComponent {
       name: ['', Validators.required],
       username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
-      address: ['', Validators.required]
+      password: ['', Validators.required]
     });
   }
 
@@ -38,8 +38,8 @@ export class SignupComponent {
 
   onSubmit() {
     this.authService.signup(this.registerForm.value).subscribe({
-      next: (response) => { //Backend returns some fields, one of them being the id of the user created
-        if (this.selectedImage) { this.uploadUserImage(this.selectedImage);}
+      next: (loginInfo) => { //Backend returns some fields, one of them being the id of the user created
+        if (this.selectedImage) { this.uploadUserImage(loginInfo.id, this.selectedImage);}
         else{ this.router.navigate(["/login"]); }
       },
       error: () => {
@@ -48,8 +48,8 @@ export class SignupComponent {
     })
   }
 
-  private uploadUserImage(selectedImage: File) {
-    this.userService.uploadUserImage(selectedImage).subscribe({
+  private uploadUserImage(userId: string, selectedImage: File) {
+    this.userService.uploadUserImage(userId, selectedImage).subscribe({
       next: () => {
         this.router.navigate([`/login`]);
       },

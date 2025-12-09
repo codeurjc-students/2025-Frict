@@ -6,6 +6,7 @@ import com.tfg.backend.service.OrderItemService;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.UserService;
+import com.tfg.backend.utils.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,9 @@ public class OrderRestController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private EmailService emailService;
 
     //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
     //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
@@ -68,6 +72,17 @@ public class OrderRestController {
         PaymentCard card = cardOptional.get();
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
         Order savedOrder = orderService.save(newOrder);
+
+        //Send email confirmation
+        emailService.sendOrderConfirmation(
+                loggedUser.getEmail(),
+                loggedUser.getName(),
+                savedOrder.getReferenceCode(),
+                savedOrder.getItems(),
+                savedOrder.getTotalCost()
+        );
+
+
         return ResponseEntity.ok(new OrderDTO(savedOrder));
     }
 

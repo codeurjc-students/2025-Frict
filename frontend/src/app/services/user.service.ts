@@ -14,10 +14,10 @@ export class UserService {
 
   private apiUrl = '/api/v1';
 
-  public uploadUserImage(selectedImage: File) {
+  public uploadUserImage(userId: string, selectedImage: File) {
     const formData = new FormData();
     formData.append('image', selectedImage);
-    return this.http.post(this.apiUrl + `/users/image`, formData);
+    return this.http.post(this.apiUrl + `/users/image/${userId}`, formData);
   }
 
   public getLoggedUserInfo(): Observable<User>{

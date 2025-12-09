@@ -77,6 +77,22 @@ export const routes: Routes = [
     data: { title: 'Registro - MiTienda', icon: icons.client }
   },
 
+  {
+    path: 'recover',
+    loadComponent: () =>
+      import('./components/common/recover-account/recover-account.component')
+        .then(m => m.RecoverAccountComponent),
+    data: { title: 'Recuperar cuenta', icon: icons.client }
+  },
+
+  {
+    path: 'reset',
+    loadComponent: () =>
+      import('./components/common/reset-password/reset-password.component')
+        .then(m => m.ResetPasswordComponent),
+    data: { title: 'Restablecer contraseña', icon: icons.client }
+  },
+
   // -------------------------
   // NOT FOUND
   // -------------------------

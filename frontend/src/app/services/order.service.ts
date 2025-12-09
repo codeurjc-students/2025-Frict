@@ -1,6 +1,6 @@
 import {Injectable, signal} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {Observable, tap} from 'rxjs';
 import {OrderItemsPage} from '../models/orderItemsPage.model';
 import {OrderItem} from '../models/orderItem.model';
 import {CartSummary} from '../models/cartSummary.model';
@@ -17,18 +17,22 @@ export class OrderService {
 
   private apiUrl = '/api/v1/orders';
 
+// Tu signal actual
   itemsCount = signal<number>(0);
 
-  setItemsCount(n: number) {
-    this.itemsCount.set(n);
+  public syncItemsCount() {
+    this.http.get<CartSummary>(this.apiUrl + `/cart/summary`, { withCredentials: true })
+      .pipe(
+        tap(summary => this.itemsCount.set(summary.totalItems))
+      ).subscribe();
   }
 
   incrementItemsCount(n: number) {
     this.itemsCount.update(current => current + n);
   }
 
-  decrementItemsCount(n: number) {
-    this.itemsCount.update(current => current - n);
+  public setItemsCount(n: number) {
+    this.itemsCount.set(n);
   }
 
   public createOrder(addressId: string, cardId: string): Observable<Order> {
