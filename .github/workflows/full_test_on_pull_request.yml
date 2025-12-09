@@ -10,6 +10,12 @@ jobs:
   full-stack-test:
     runs-on: ubuntu-latest
 
+    #Necessary for steps "Run Backend Unit & Integration Tests" and "Run E2E System Tests", which need to start the app and read the env variables values
+    env:
+      SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
+      SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
+      SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
+
     services:
       mysql:
         image: mysql:8.0
@@ -59,10 +65,6 @@ jobs:
 
       - name: Run Backend Unit & Integration Tests
         working-directory: backend
-        env:
-          SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
-          SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
-          SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
         run: |
           mvn test -Dtest=com.tfg.backend.unit.*Test
           mvn test -Dtest=com.tfg.backend.integration.*Test
