@@ -1,10 +1,12 @@
 package com.tfg.backend.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +29,9 @@ public class OrderDTO {
 
     private String cardNumberEnding;
     private String fullSendingAddress;
+
+    @JsonFormat(pattern = "dd/MM/yy HH:mm")
+    private LocalDateTime createdAt;
 
     public OrderDTO() {
     }
@@ -52,5 +57,6 @@ public class OrderDTO {
 
         this.cardNumberEnding = o.getCardNumberEnding();
         this.fullSendingAddress = o.getFullSendingAddress();
+        this.createdAt = o.getCreatedAt();
     }
 }

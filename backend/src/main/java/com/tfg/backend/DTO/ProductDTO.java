@@ -54,7 +54,7 @@ public class ProductDTO {
         for (ShopStock s : p.getShopsStock()) {
             totalUnits += s.getStock();
         }
-        this.availableUnits = totalUnits - p.getReservedUnits();
+        this.availableUnits = Math.max(0, totalUnits - p.getReservedUnits());
 
         //Total reviews and average rating
         double totalRating = 0.0;

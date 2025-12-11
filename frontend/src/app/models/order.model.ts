@@ -6,7 +6,7 @@ export interface Order {
   status: string;
   userId: string;
   orderItems: OrderItem[];
-  assignedTruckID: string;
+  assignedTruckId: string;
   estimatedCompletionTime: number;
 
   totalItems: number;
@@ -17,4 +17,6 @@ export interface Order {
 
   cardNumberEnding: string;
   fullSendingAddress: string;
+
+  createdAt: string;
 }

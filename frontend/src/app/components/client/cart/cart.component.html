@@ -96,7 +96,7 @@
 
                   <div class="text-right">
                     <div *ngIf="item.product.previousPrice > item.product.currentPrice" class="text-xs text-surface-400 line-through font-medium mb-0.5">
-                      {{ formatPrice(item.product.previousPrice) }}
+                      ({{ formatPrice(item.product.previousPrice) }}/ud)
                     </div>
                     <div class="text-xl font-bold text-surface-900 flex items-center gap-1">
                       {{ formatPrice(item.product.currentPrice * item.quantity) }}

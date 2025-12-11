@@ -2,10 +2,13 @@ package com.tfg.backend.model;
 
 import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
+import jakarta.websocket.server.ServerEndpoint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +41,11 @@ public class Order {
 
     private int estimatedCompletionTime = 0;
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private LocalDateTime createdAt;
+
     //Fields from CartSummaryDTO
     private int totalItems;
     private double subtotalCost;
@@ -51,7 +59,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(User user, List<OrderItem> items) {
+    public Order(User user, List<OrderItem> items, Address address, PaymentCard card) {
         this.referenceCode = ReferenceNumberGenerator.generateOrderReferenceNumber();
         this.status = OrderStatus.ORDER_MADE;
         this.user = user;
@@ -59,6 +67,8 @@ public class Order {
             item.setOrder(this);
             this.items.add(item);
         }
+        this.cardNumberEnding = card.getNumber().substring(card.getNumber().length() - 4);
+        this.fullSendingAddress = address.toString();
         this.updateSummaryFields();
     }
 

@@ -35,6 +35,10 @@ export class OrderService {
     this.itemsCount.set(n);
   }
 
+  public getOrderById(id: string): Observable<Order> {
+    return this.http.get<Order>(this.apiUrl + `/${id}`);
+  }
+
   public createOrder(addressId: string, cardId: string): Observable<Order> {
     let params = new HttpParams();
     params = params.append('addressId', addressId);

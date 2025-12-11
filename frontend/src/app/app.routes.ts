@@ -58,9 +58,26 @@ export const routes: Routes = [
     data: { title: 'Pedido confirmado', icon: icons.client }
   },
 
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./components/common/profile/profile.component')
+        .then(m => m.ProfileComponent),
+    data: { title: 'Perfil - MiTienda', icon: icons.client }
+  },
+
   // -------------------------
-  // AUTH ROUTES
+  // COMMON ROUTES
   // -------------------------
+
+  {
+    path: 'order/:id',
+    loadComponent: () =>
+      import('./components/common/order-details/order-details.component')
+        .then(m => m.OrderDetailsComponent),
+    data: { title: 'Detalles del pedido - MiTienda', icon: icons.client }
+  },
+
   {
     path: 'login',
     loadComponent: () =>
