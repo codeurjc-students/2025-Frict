@@ -2,7 +2,6 @@ package com.tfg.backend.model;
 
 import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
-import jakarta.websocket.server.ServerEndpoint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,9 +25,8 @@ public class Order {
     @Setter(AccessLevel.NONE)
     private String referenceCode;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private OrderStatus status;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StatusLog> history = new ArrayList<>(); //Unidirectional relation with StatusLog (as it is only updated from Order)
 
     @ManyToOne
     private User user;
@@ -61,7 +59,9 @@ public class Order {
 
     public Order(User user, List<OrderItem> items, Address address, PaymentCard card) {
         this.referenceCode = ReferenceNumberGenerator.generateOrderReferenceNumber();
-        this.status = OrderStatus.ORDER_MADE;
+
+        this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
+
         this.user = user;
         for (OrderItem item : items) {
             item.setOrder(this);

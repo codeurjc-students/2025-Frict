@@ -65,12 +65,6 @@ export class OrderDetailsComponent implements OnInit {
       icon: 'pi pi-truck',
       date: '08/12/2025 08:15',
       description: 'El repartidor tiene tu paquete y realizará la entrega a lo largo del día de hoy.'
-    },
-    {
-      status: 'Entregado',
-      icon: 'pi pi-check-circle',
-      date: undefined,
-      description: 'El paquete ha sido entregado en la dirección indicada.'
     }
   ];
 
