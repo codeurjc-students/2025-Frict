@@ -1,10 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProductService } from '../../../services/product.service';
-import { of, throwError } from 'rxjs';
-import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideHttpClient } from '@angular/common/http';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {ProductService} from '../../../services/product.service';
+import {of, throwError} from 'rxjs';
+import {By} from '@angular/platform-browser';
+import {provideRouter} from '@angular/router';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {provideHttpClient} from '@angular/common/http';
 import {ClientHomeComponent} from './client-home.component';
 import {Product} from '../../../models/product.model';
 import {Category} from '../../../models/category.model';

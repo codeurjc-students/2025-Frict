@@ -1,7 +1,6 @@
 package com.tfg.backend.DTO;
 
 import com.tfg.backend.model.Category;
-import com.tfg.backend.model.Product;
 import lombok.Getter;
 import lombok.Setter;
 

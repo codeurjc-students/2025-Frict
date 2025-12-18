@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import {Routes} from '@angular/router';
 
 const icons: Record<'client' | 'admin', string> = {
   client: '/shopLogo.png',

@@ -1,12 +1,9 @@
 package com.tfg.backend.e2e;
 
 import com.tfg.backend.BackendApplication;
-import com.tfg.backend.model.Category;
 import com.tfg.backend.model.Product;
-import com.tfg.backend.repository.CategoryRepository;
 import com.tfg.backend.repository.ProductRepository;
 import org.junit.jupiter.api.*;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -21,7 +18,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //CLIENT SIDE SYSTEM TESTS
 @SpringBootTest(

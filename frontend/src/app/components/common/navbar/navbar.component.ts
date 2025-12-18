@@ -14,7 +14,6 @@ import {LoginInfo} from '../../../models/loginInfo.model';
 import {OrderService} from '../../../services/order.service';
 
 
-
 @Component({
   selector: 'app-navbar',
   imports: [

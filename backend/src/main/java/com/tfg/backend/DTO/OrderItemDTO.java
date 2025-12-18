@@ -1,7 +1,6 @@
 package com.tfg.backend.DTO;
 
 import com.tfg.backend.model.OrderItem;
-import com.tfg.backend.model.ShopStock;
 import lombok.Getter;
 import lombok.Setter;
 

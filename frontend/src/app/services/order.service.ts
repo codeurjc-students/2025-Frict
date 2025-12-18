@@ -4,8 +4,6 @@ import {Observable, tap} from 'rxjs';
 import {OrderItemsPage} from '../models/orderItemsPage.model';
 import {OrderItem} from '../models/orderItem.model';
 import {CartSummary} from '../models/cartSummary.model';
-import {Address} from '../models/address.model';
-import {PaymentCard} from '../models/paymentCard.model';
 import {Order} from '../models/order.model';
 
 @Injectable({

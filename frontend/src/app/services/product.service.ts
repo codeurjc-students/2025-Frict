@@ -5,7 +5,6 @@ import {CategoryService} from './category.service';
 import {ProductsPage} from '../models/productsPage.model';
 import {Product} from '../models/product.model';
 import {ShopStockList} from '../models/shopStockList.model';
-import {OrderItemsPage} from '../models/orderItemsPage.model';
 
 @Injectable({
   providedIn: 'root'

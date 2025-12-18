@@ -32,7 +32,7 @@ import {TableModule} from 'primeng/table';
 import {ShopStock} from '../../../models/shopStock.model';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {OrderService} from '../../../services/order.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
 
 

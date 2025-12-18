@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule} from '@angular/common';
 import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {ButtonModule} from 'primeng/button';
 import {RouterLink} from '@angular/router';

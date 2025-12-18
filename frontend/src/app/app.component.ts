@@ -3,7 +3,6 @@ import {ActivatedRoute, NavigationEnd, Router, RouterOutlet} from '@angular/rout
 import {Title} from '@angular/platform-browser';
 import {filter, map, mergeMap} from 'rxjs';
 import {AuthService} from './services/auth.service';
-import {LoginInfo} from './models/loginInfo.model';
 import {OrderService} from './services/order.service';
 
 @Component({

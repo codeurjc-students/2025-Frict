@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ActivatedRoute, RouterModule} from '@angular/router';
 
 // PrimeNG Imports
-import { ButtonModule } from 'primeng/button';
+import {ButtonModule} from 'primeng/button';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {FooterComponent} from '../../common/footer/footer.component';
 import {NavbarComponent} from '../../common/navbar/navbar.component';

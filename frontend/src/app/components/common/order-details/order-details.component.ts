@@ -1,20 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ActivatedRoute, RouterModule} from '@angular/router';
 
 // PrimeNG Imports
-import { ButtonModule } from 'primeng/button';
-import { TimelineModule } from 'primeng/timeline';
-import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
-import { DividerModule } from 'primeng/divider';
+import {ButtonModule} from 'primeng/button';
+import {TimelineModule} from 'primeng/timeline';
+import {CardModule} from 'primeng/card';
+import {TagModule} from 'primeng/tag';
+import {DividerModule} from 'primeng/divider';
 
-import { NavbarComponent } from '../navbar/navbar.component';
-import { FooterComponent } from '../footer/footer.component';
-import { Order } from '../../../models/order.model'; // Asegúrate que tu modelo Order tenga el campo history: StatusLog[]
-import { OrderService } from '../../../services/order.service';
-import { LoadingScreenComponent } from '../loading-screen/loading-screen.component';
-import { formatPrice } from '../../../utils/numberFormat.util';
+import {NavbarComponent} from '../navbar/navbar.component';
+import {FooterComponent} from '../footer/footer.component';
+import {Order} from '../../../models/order.model'; // Asegúrate que tu modelo Order tenga el campo history: StatusLog[]
+import {OrderService} from '../../../services/order.service';
+import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
+import {formatPrice} from '../../../utils/numberFormat.util';
 
 @Component({
   selector: 'app-order-details',
