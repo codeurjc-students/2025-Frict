@@ -14,6 +14,8 @@ import java.util.List;
 @Setter
 public class StatusLogDTO {
 
+    private Long id;
+
     private String status;
 
     private List<LogEntryDTO> updates = new ArrayList<>();
@@ -22,6 +24,7 @@ public class StatusLogDTO {
     }
 
     public StatusLogDTO(StatusLog l){
+        this.id = l.getId();
         this.status = l.getStatus().toString();
         for (LogEntry u : l.getUpdates()) {
             this.updates.add(new LogEntryDTO(u));

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {ActivatedRoute, RouterModule} from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -8,12 +8,13 @@ import { TimelineModule } from 'primeng/timeline';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
-import {NavbarComponent} from '../navbar/navbar.component';
-import {FooterComponent} from '../footer/footer.component';
-import {Order} from '../../../models/order.model';
-import {OrderService} from '../../../services/order.service';
-import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
-import {formatPrice} from '../../../utils/numberFormat.util';
+
+import { NavbarComponent } from '../navbar/navbar.component';
+import { FooterComponent } from '../footer/footer.component';
+import { Order } from '../../../models/order.model'; // Asegúrate que tu modelo Order tenga el campo history: StatusLog[]
+import { OrderService } from '../../../services/order.service';
+import { LoadingScreenComponent } from '../loading-screen/loading-screen.component';
+import { formatPrice } from '../../../utils/numberFormat.util';
 
 @Component({
   selector: 'app-order-details',
@@ -47,25 +48,12 @@ export class OrderDetailsComponent implements OnInit {
   loading: boolean = true;
   error: boolean = false;
 
-  steps = [
-    {
-      status: 'Pedido realizado',
-      icon: 'pi pi-shopping-cart',
-      date: '05/12/2025 10:30',
-      description: 'Hemos recibido tu pedido correctamente y estamos verificando los detalles del pago.'
-    },
-    {
-      status: 'Enviado',
-      icon: 'pi pi-box',
-      date: '06/12/2025 14:20',
-      description: 'Tu paquete ha salido de nuestro almacén central en Madrid y está en manos del transportista.'
-    },
-    {
-      status: 'En reparto',
-      icon: 'pi pi-truck',
-      date: '08/12/2025 08:15',
-      description: 'El repartidor tiene tu paquete y realizará la entrega a lo largo del día de hoy.'
-    }
+  private readonly stepsDefinitions = [
+    { status: 'Pedido realizado', icon: 'pi pi-shopping-cart' },
+    { status: 'Enviado', icon: 'pi pi-box' },
+    { status: 'En reparto', icon: 'pi pi-truck' },
+    { status: 'Completado', icon: 'pi pi-check' },
+    { status: 'Cancelado', icon: 'pi pi-ban' }
   ];
 
   constructor(private orderService: OrderService,
@@ -76,19 +64,36 @@ export class OrderDetailsComponent implements OnInit {
     this.loadOrder();
   }
 
-  loadOrder(){
-    if(this.orderId){
+  loadOrder() {
+    if (this.orderId) {
       this.orderService.getOrderById(this.orderId).subscribe({
         next: (order) => {
           this.order = order;
+          this.loadIcons();
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error(err);
+          this.error = true;
           this.loading = false;
         }
       })
     }
   }
 
-  initTimeline() {
+  protected readonly formatPrice = formatPrice;
+
+  loadIcons() {
+    if (!this.order || !this.order.history) return;
+
+    this.order.history.forEach(log => {
+      const matchingStep = this.stepsDefinitions.find(step => step.status === log.status);
+
+      if (matchingStep) {
+        log.icon = matchingStep.icon;
+      }
+    });
+    console.log(this.order.history);
   }
 
-  protected readonly formatPrice = formatPrice;
 }

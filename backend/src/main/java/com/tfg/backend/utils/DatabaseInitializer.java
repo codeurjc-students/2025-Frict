@@ -284,6 +284,8 @@ public class DatabaseInitializer {
 
             Order order1 = new Order(user1, orderItems1, user1.getAddresses().getFirst(), user1.getCards().getFirst());
             Order order2 = new Order(user2, orderItems2, user2.getAddresses().getFirst(), user2.getCards().getFirst());
+            order1.addStatusUpdate("El pedido ha quedado registrado correctamente en la tienda asignada");
+            order1.changeOrderStatus(OrderStatus.SENT, "El pedido se está procesando");
 
             orderRepository.save(order1);
             orderRepository.save(order2);

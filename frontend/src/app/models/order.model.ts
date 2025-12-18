@@ -1,10 +1,10 @@
 import {OrderItem} from './orderItem.model';
-import {OrderLog} from './orderLog.model';
+import {StatusLog} from './statusLog.model';
 
 export interface Order {
   id: string;
   referenceCode: string;
-  history: OrderLog[];
+  history: StatusLog[];
   userId: string;
   orderItems: OrderItem[];
   assignedTruckId: string;
