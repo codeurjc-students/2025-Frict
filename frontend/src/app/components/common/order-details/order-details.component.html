@@ -36,7 +36,7 @@
           <div class="flex gap-3">
             <p-button label="Descargar Factura" icon="pi pi-file-pdf" [outlined]="true" severity="secondary" styleClass="!text-white !border-surface-600 hover:!bg-surface-800" />
             <div *ngIf="!(order.history[order.history.length-1].status == 'Completado') && !(order.history[order.history.length-1].status == 'Cancelado')">
-              <p-button label="Cancelar pedido" icon="pi pi-times-circle" [outlined]="true" severity="secondary" styleClass="!text-white !border-surface-600 hover:!bg-surface-800" />
+              <p-button (click)="cancelOrder()" label="Cancelar pedido" icon="pi pi-times-circle" [outlined]="true" severity="secondary" styleClass="!text-white !border-surface-600 hover:!bg-surface-800" />
             </div>
           </div>
         </div>

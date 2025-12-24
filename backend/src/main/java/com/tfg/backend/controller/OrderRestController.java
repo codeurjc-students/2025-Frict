@@ -102,6 +102,39 @@ public class OrderRestController {
     }
 
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<OrderDTO> cancelOrder(HttpServletRequest request, @PathVariable Long id){
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Check if the order belongs to that user or if the logged user is a delivery driver
+        if(!loggedUser.getRoles().contains("DRIVER") && !orderService.existsByIdAndUser(id, loggedUser)){
+            return ResponseEntity.status(403).build(); //Forbidden as the user does not meet the requirements
+        }
+
+        //Check if the order exists
+        Optional<Order> orderOptional = orderService.findById(id);
+        if (orderOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Order order = orderOptional.get();
+
+        //Mark the order as cancelled (update order status without deleting it from DB)
+        if(loggedUser.getRoles().contains("DRIVER")){
+            order.changeOrderStatus(OrderStatus.CANCELLED, "El pedido ha sido cancelado por el repartidor.");
+        }
+        else{
+            order.changeOrderStatus(OrderStatus.CANCELLED, "Has cancelado este pedido.");
+        }
+
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
+
     @GetMapping("/cart/summary")
     public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {
         //Get logged user info if any (User class)

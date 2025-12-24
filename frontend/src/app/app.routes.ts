@@ -58,14 +58,6 @@ export const routes: Routes = [
     data: { title: 'Pedido confirmado', icon: icons.client }
   },
 
-  {
-    path: 'profile',
-    loadComponent: () =>
-      import('./components/common/profile/profile.component')
-        .then(m => m.ProfileComponent),
-    data: { title: 'Perfil - MiTienda', icon: icons.client }
-  },
-
   // -------------------------
   // COMMON ROUTES
   // -------------------------

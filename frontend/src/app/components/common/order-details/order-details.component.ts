@@ -96,4 +96,13 @@ export class OrderDetailsComponent implements OnInit {
     console.log(this.order.history);
   }
 
+  protected cancelOrder() {
+    this.orderService.cancelOrder(this.order.id).subscribe({
+      next: (order) =>  {
+        this.order = order;
+        this.loadIcons();
+        this.loading = false;
+      }
+    })
+  }
 }

@@ -44,6 +44,10 @@ export class OrderService {
     return this.http.post<Order>(this.apiUrl, null, { params });
   }
 
+  public cancelOrder(id: string): Observable<Order> {
+    return this.http.delete<Order>(this.apiUrl + `/${id}`);
+  }
+
   public getUserCartItemsPage(page: number, size: number): Observable<OrderItemsPage> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
