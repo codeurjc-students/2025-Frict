@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.ReviewDTO;
-import com.tfg.backend.DTO.ReviewListDTO;
+import com.tfg.backend.DTO.*;
+import com.tfg.backend.model.Order;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
 import com.tfg.backend.model.User;
@@ -10,6 +10,8 @@ import com.tfg.backend.service.ReviewService;
 import com.tfg.backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,19 @@ public class ReviewRestController {
 
     @Autowired
     private UserService userService;
+
+    @GetMapping
+    public ResponseEntity<ReviewsPageDTO> getAllUserReviews(HttpServletRequest request, Pageable pageable){
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
+        return ResponseEntity.ok(toReviewsPageDTO(userReviews));
+    }
 
     //Get all the reviews of a product
     @GetMapping("/")
@@ -118,5 +133,15 @@ public class ReviewRestController {
 
         reviewService.deleteById(id);
         return ResponseEntity.ok().body(new ReviewDTO(review));
+    }
+
+    //Creates ReviewsPageDTO objects with necessary fields only
+    private ReviewsPageDTO toReviewsPageDTO(Page<Review> reviews){
+        List<ReviewDTO> dtos = new ArrayList<>();
+        for (Review r : reviews.getContent()) {
+            ReviewDTO dto = new ReviewDTO(r);
+            dtos.add(dto);
+        }
+        return new ReviewsPageDTO(dtos, reviews.getTotalElements(), reviews.getNumber(), reviews.getTotalPages()-1, reviews.getSize());
     }
 }
