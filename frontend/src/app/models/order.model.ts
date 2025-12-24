@@ -1,12 +1,13 @@
 import {OrderItem} from './orderItem.model';
+import {StatusLog} from './statusLog.model';
 
 export interface Order {
   id: string;
   referenceCode: string;
-  status: string;
+  history: StatusLog[];
   userId: string;
   orderItems: OrderItem[];
-  assignedTruckID: string;
+  assignedTruckId: string;
   estimatedCompletionTime: number;
 
   totalItems: number;
@@ -17,4 +18,6 @@ export interface Order {
 
   cardNumberEnding: string;
   fullSendingAddress: string;
+
+  createdAt: string;
 }

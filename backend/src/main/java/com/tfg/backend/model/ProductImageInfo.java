@@ -15,7 +15,7 @@ public class ProductImageInfo {
     private Long id;
 
     private String imageUrl; // http://localhost:9000/images/products/foto.jpg
-    private String s3Key;    // products/foto.jpg (Ruta relativa dentro del bucket)
+    private String s3Key;    // products/foto.jpg (relative route inside the bucket)
     private String fileName; // archivo_original.jpg
 
     @ManyToOne

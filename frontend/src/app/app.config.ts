@@ -1,15 +1,10 @@
-import {
-  ApplicationConfig,
-  inject,
-  provideAppInitializer,
-  provideZoneChangeDetection
-} from '@angular/core';
+import {ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection} from '@angular/core';
 import {provideRouter, withRouterConfig} from '@angular/router';
 
-import { routes } from './app.routes';
+import {routes} from './app.routes';
 
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { providePrimeNG } from 'primeng/config';
+import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
+import {providePrimeNG} from 'primeng/config';
 import {MyPreset} from './colorpreset';
 import {provideHttpClient} from '@angular/common/http';
 import {AuthService} from './services/auth.service';

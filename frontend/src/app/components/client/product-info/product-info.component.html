@@ -64,10 +64,6 @@
                 appendTo="body"
                 imageClass="w-full h-full object-contain mix-blend-multiply">
               </p-image>
-
-              <div *ngIf="product.previousPrice > 0 && product.discount != '0%'" class="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg z-10">
-                {{ product.discount }}
-              </div>
             </div>
           </ng-template>
 

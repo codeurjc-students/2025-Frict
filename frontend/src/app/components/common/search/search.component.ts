@@ -7,7 +7,6 @@ import {ProductService} from '../../../services/product.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {NgForOf, NgIf} from '@angular/common';
 import {ProductCardComponent} from '../../client/product-card/product-card.component';
-import {LoadingSectionComponent} from '../loading-section/loading-section.component';
 import {Select} from 'primeng/select';
 import {Button} from 'primeng/button';
 import {FormsModule} from '@angular/forms';

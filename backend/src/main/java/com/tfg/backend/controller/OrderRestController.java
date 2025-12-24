@@ -1,6 +1,9 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.*;
+import com.tfg.backend.DTO.CartSummaryDTO;
+import com.tfg.backend.DTO.OrderDTO;
+import com.tfg.backend.DTO.OrderItemDTO;
+import com.tfg.backend.DTO.OrderItemsPageDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderItemService;
 import com.tfg.backend.service.OrderService;
@@ -37,6 +40,18 @@ public class OrderRestController {
     @Autowired
     private EmailService emailService;
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id){
+        Optional<Order> orderOptional = this.orderService.findById(id);
+
+        if(orderOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(new OrderDTO(orderOptional.get()));
+    }
+
+
     //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
     //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
     @PostMapping
@@ -51,10 +66,6 @@ public class OrderRestController {
         }
         User loggedUser = userOptional.get();
 
-        //Find cart items
-        List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
-        Order newOrder = new Order(loggedUser, cartItems);
-
         //Find address info and card info
         Optional<Address> addressOptional = loggedUser.getAddresses().stream()
                 .filter(addr -> addr.getId().equals(addressId))
@@ -67,6 +78,10 @@ public class OrderRestController {
         if (addressOptional.isEmpty() || cardOptional.isEmpty()){
             return ResponseEntity.notFound().build();
         }
+
+        //Find cart items
+        List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
+        Order newOrder = new Order(loggedUser, cartItems, addressOptional.get(), cardOptional.get());
 
         newOrder.setFullSendingAddress(addressOptional.get().toString());
         PaymentCard card = cardOptional.get();
@@ -86,6 +101,39 @@ public class OrderRestController {
         return ResponseEntity.ok(new OrderDTO(savedOrder));
     }
 
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<OrderDTO> cancelOrder(HttpServletRequest request, @PathVariable Long id){
+        //Get logged user info if any (User class)
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Check if the order belongs to that user or if the logged user is a delivery driver
+        if(!loggedUser.getRoles().contains("DRIVER") && !orderService.existsByIdAndUser(id, loggedUser)){
+            return ResponseEntity.status(403).build(); //Forbidden as the user does not meet the requirements
+        }
+
+        //Check if the order exists
+        Optional<Order> orderOptional = orderService.findById(id);
+        if (orderOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Order order = orderOptional.get();
+
+        //Mark the order as cancelled (update order status without deleting it from DB)
+        if(loggedUser.getRoles().contains("DRIVER")){
+            order.changeOrderStatus(OrderStatus.CANCELLED, "El pedido ha sido cancelado por el repartidor.");
+        }
+        else{
+            order.changeOrderStatus(OrderStatus.CANCELLED, "Has cancelado este pedido.");
+        }
+
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
 
     @GetMapping("/cart/summary")
     public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {

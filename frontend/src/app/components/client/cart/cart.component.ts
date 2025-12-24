@@ -149,6 +149,7 @@ export class CartComponent implements OnInit, OnDestroy {
     this.orderService.getUserCartItemsPage(this.firstItem/this.itemsRows, this.itemsRows).subscribe({
       next: (items) => {
         this.foundItems = items;
+        console.log(items.orderItems[0].maxQuantity);
       },
       error: () => {
         this.loading = false;

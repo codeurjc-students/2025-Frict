@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import {Routes} from '@angular/router';
 
 const icons: Record<'client' | 'admin', string> = {
   client: '/shopLogo.png',
@@ -59,8 +59,17 @@ export const routes: Routes = [
   },
 
   // -------------------------
-  // AUTH ROUTES
+  // COMMON ROUTES
   // -------------------------
+
+  {
+    path: 'order/:id',
+    loadComponent: () =>
+      import('./components/common/order-details/order-details.component')
+        .then(m => m.OrderDetailsComponent),
+    data: { title: 'Detalles del pedido - MiTienda', icon: icons.client }
+  },
+
   {
     path: 'login',
     loadComponent: () =>

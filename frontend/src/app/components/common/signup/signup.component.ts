@@ -1,10 +1,9 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
 import {NgOptimizedImage} from '@angular/common';
-import {LoginInfo} from '../../../models/loginInfo.model';
 
 @Component({
   selector: 'app-signup',

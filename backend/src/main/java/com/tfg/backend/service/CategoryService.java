@@ -1,7 +1,6 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.Category;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

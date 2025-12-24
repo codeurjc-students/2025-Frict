@@ -10,4 +10,6 @@ export interface OrderItem {
 
   maxQuantity: number;
   quantity: number;
+
+  itemsCost: number;
 }

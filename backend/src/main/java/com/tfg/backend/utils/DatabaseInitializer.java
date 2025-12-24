@@ -14,8 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.YearMonth;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class DatabaseInitializer {
@@ -113,6 +114,10 @@ public class DatabaseInitializer {
         userRepository.save(user1);
 
         User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
+        PaymentCard paymentCard3 = new PaymentCard("Tarjeta de la empresa", "Laura Miño", "1233453212231346", "345", YearMonth.of(2028, 7));
+        Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
+        user2.getCards().add(paymentCard3);
+        user2.getAddresses().add(address3);
         assignUserImage(user2, defaultProfileRes);
         userRepository.save(user2);
     }
@@ -278,8 +283,10 @@ public class DatabaseInitializer {
             orderItems2.add(new OrderItem(products.get(3), user2, 2));
             orderItems2.add(new OrderItem(products.get(7), user2, 1));
 
-            Order order1 = new Order(user1, orderItems1);
-            Order order2 = new Order(user2, orderItems2);
+            Order order1 = new Order(user1, orderItems1, user1.getAddresses().getFirst(), user1.getCards().getFirst());
+            Order order2 = new Order(user2, orderItems2, user2.getAddresses().getFirst(), user2.getCards().getFirst());
+            order1.addStatusUpdate("El pedido ha quedado registrado correctamente en la tienda asignada");
+            order1.changeOrderStatus(OrderStatus.SENT, "El pedido se está procesando");
 
             orderRepository.save(order1);
             orderRepository.save(order2);

@@ -1,17 +1,15 @@
 package com.tfg.backend.integration;
 
 import com.tfg.backend.BackendApplication;
-import com.tfg.backend.utils.ReferenceNumberGenerator;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
-
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
 
 //CLIENT SIDE INTEGRATION TESTS
 @SpringBootTest(
