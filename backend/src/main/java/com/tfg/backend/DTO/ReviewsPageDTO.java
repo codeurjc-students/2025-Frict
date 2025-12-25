@@ -9,14 +9,14 @@ import java.util.List;
 @Setter
 public class ReviewsPageDTO {
     private List<ReviewDTO> reviews;
-    private Long totalItems;
+    private Long totalReviews;
     private int currentPage;
     private int lastPage;
     private int pageSize;
 
-    public ReviewsPageDTO(List<ReviewDTO> reviews, Long totalItems, int currentPage, int lastPage, int pageSize) {
+    public ReviewsPageDTO(List<ReviewDTO> reviews, Long totalReviews, int currentPage, int lastPage, int pageSize) {
         this.reviews = reviews;
-        this.totalItems = totalItems;
+        this.totalReviews = totalReviews;
         this.currentPage = currentPage;
         this.lastPage = lastPage;
         this.pageSize = pageSize;

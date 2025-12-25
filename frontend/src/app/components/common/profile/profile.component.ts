@@ -112,12 +112,13 @@ export class ProfileComponent implements OnInit {
     })
   }
 
-  protected getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" | undefined {
+  protected getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {
     switch (status) {
-      case 'delivered': return 'success';
-      case 'shipped': return 'info';
-      case 'processing': return 'warn';
-      case 'cancelled': return 'danger';
+      case 'Pedido realizado': return 'success';
+      case 'Enviado': return 'warn';
+      case 'En reparto': return 'info';
+      case 'Completado': return 'contrast';
+      case 'Cancelado': return 'danger';
       default: return 'secondary';
     }
   }
