@@ -40,6 +40,8 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    public boolean existsByUsername(String username) { return userRepository.existsByUsername(username); }
+
 	public Optional<UserLoginDTO> getLoginInfo(HttpServletRequest request) {
         Principal principal = request.getUserPrincipal();
         if(principal == null) {
@@ -57,7 +59,7 @@ public class UserService {
     }
 
     public User registerUser(UserSignupDTO dto) {
-        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), "USER");
+        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), dto.getPhone(), passwordEncoder.encode(dto.getPassword()), "USER");
         return this.save(newUser);
     }
 

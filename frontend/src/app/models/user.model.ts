@@ -7,6 +7,7 @@ export interface User {
   username: string;
   roles: string[];
   email: string;
+  phone: string;
   addresses: Address[];
   cards: PaymentCard[];
   imageUrl: string;

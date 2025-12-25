@@ -17,6 +17,10 @@ import {LoadingScreenComponent} from '../loading-screen/loading-screen.component
 import {OrdersPage} from '../../../models/ordersPage.model';
 import {ReviewsPage} from '../../../models/reviewsPage.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
+import {Dialog} from 'primeng/dialog';
+import {InputText} from 'primeng/inputtext';
+import {Address} from '../../../models/address.model';
+import {PaymentCard} from '../../../models/paymentCard.model';
 
 @Component({
   selector: 'app-profile',
@@ -32,7 +36,9 @@ import {Paginator, PaginatorState} from 'primeng/paginator';
     NavbarComponent,
     FooterComponent,
     LoadingScreenComponent,
-    Paginator
+    Paginator,
+    Dialog,
+    InputText
   ],
   templateUrl: './profile.component.html',
   styles: []
@@ -52,6 +58,14 @@ export class ProfileComponent implements OnInit {
   loading: boolean = true;
   error: boolean = false;
 
+  visibleDataDialog: boolean = false;
+  visibleAddressDialog: boolean = false;
+  visibleCardDialog: boolean = false;
+
+  newUserData!: User;
+  newAddress: Address = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
+  newCard: PaymentCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
+
   constructor(private userService: UserService,
               private orderService: OrderService,
               private reviewService: ReviewService) {}
@@ -64,6 +78,7 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
+        this.newUserData = structuredClone(this.user);
         this.loadUserOrders();
         this.loadUserReviews();
       },
@@ -84,6 +99,32 @@ export class ProfileComponent implements OnInit {
     this.firstReview = event.first ?? 0;
     this.reviewsRows = event.rows ?? 10;
     this.loadUserReviews();
+  }
+
+  showDataDialog() {
+    this.visibleDataDialog = true;
+  }
+
+  protected cancelEditData() {
+    this.newUserData = structuredClone(this.user);
+    this.visibleDataDialog = false;
+  }
+
+  protected saveEditData() {
+    this.userService.submitUserData(this.newUserData).subscribe({
+      next: (user) => {
+        this.user = user;
+        this.cancelEditData();
+      }
+    })
+  }
+
+  showAddressDialog() {
+    this.visibleAddressDialog = true;
+  }
+
+  showCardDialog() {
+    this.visibleCardDialog = true;
   }
 
   protected loadUserOrders(){

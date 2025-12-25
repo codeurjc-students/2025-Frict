@@ -100,7 +100,7 @@ public class DatabaseInitializer {
         if (userRepository.count() > 0) return;
         System.out.println(">>> Initializing Users...");
 
-        User user1 = new User("Usuario", "user", "kefox56746@asurad.com", passwordEncoder.encode("pass"), "USER");
+        User user1 = new User("Usuario", "user", "kefox56746@asurad.com", "234567890", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
         PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
         Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
@@ -113,7 +113,7 @@ public class DatabaseInitializer {
         assignUserImage(user1, defaultProfileRes);
         userRepository.save(user1);
 
-        User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
+        User user2 = new User("Administrador", "admin", "admin@gmail.com", "123456789", passwordEncoder.encode("adminpass"), "ADMIN");
         PaymentCard paymentCard3 = new PaymentCard("Tarjeta de la empresa", "Laura Miño", "1233453212231346", "345", YearMonth.of(2028, 7));
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);

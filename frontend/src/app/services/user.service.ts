@@ -24,16 +24,24 @@ export class UserService {
     return this.http.get<User>(this.apiUrl + `/users/me`);
   }
 
+  //POST method could be used by administrators to create new user profiles
+  public submitUserData(user: User): Observable<User>{
+    if (user.id){
+      return this.http.put<User>(this.apiUrl + `/users/data`, user);
+    }
+    return this.http.post<User>(this.apiUrl + `/users/data`, user); //Unused
+  }
+
   public submitPaymentCard(card: PaymentCard): Observable<User>{
     if (card.id){
-      return this.http.put<User>(this.apiUrl + `/users/cards`, card);
+      return this.http.put<User>(this.apiUrl + `/users/cards`, card); //Unused
     }
       return this.http.post<User>(this.apiUrl + `/users/cards`, card);
   }
 
   public submitAddress(address: Address): Observable<User>{
     if (address.id){
-      return this.http.put<User>(this.apiUrl + `/users/addresses`, address);
+      return this.http.put<User>(this.apiUrl + `/users/addresses`, address); //Unused
     }
     return this.http.post<User>(this.apiUrl + `/users/addresses`, address);
   }

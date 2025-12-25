@@ -105,6 +105,29 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(loggedUser)); // Return original user if did not have image
     }
 
+    @PutMapping("/data")
+    public ResponseEntity<UserDTO> updateLoggedUserData(HttpServletRequest request, @RequestBody UserDTO userDTO){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Check if the username exists if it is not the same (lazy check)
+        if(!userDTO.getUsername().equals(loggedUser.getUsername()) && userService.existsByUsername(userDTO.getUsername())){
+            return ResponseEntity.status(403).build(); //Forbidden, as username must be unique
+        }
+
+        //Edit user data
+        loggedUser.setName(userDTO.getName());
+        loggedUser.setUsername(userDTO.getUsername());
+        loggedUser.setEmail(userDTO.getEmail());
+        loggedUser.setPhone(userDTO.getPhone());
+
+        User savedUser = userService.save(loggedUser);
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
 
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
