@@ -21,6 +21,10 @@ import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
 import {Address} from '../../../models/address.model';
 import {PaymentCard} from '../../../models/paymentCard.model';
+import {Toast} from 'primeng/toast';
+import {MessageService} from 'primeng/api';
+import {HttpErrorResponse} from '@angular/common/http';
+import {InputMask} from 'primeng/inputmask';
 
 @Component({
   selector: 'app-profile',
@@ -38,8 +42,11 @@ import {PaymentCard} from '../../../models/paymentCard.model';
     LoadingScreenComponent,
     Paginator,
     Dialog,
-    InputText
+    InputText,
+    Toast,
+    InputMask
   ],
+  providers: [MessageService],
   templateUrl: './profile.component.html',
   styles: []
 })
@@ -68,7 +75,8 @@ export class ProfileComponent implements OnInit {
 
   constructor(private userService: UserService,
               private orderService: OrderService,
-              private reviewService: ReviewService) {}
+              private reviewService: ReviewService,
+              private messageService: MessageService) {}
 
   ngOnInit() {
     this.loadUser();
@@ -78,7 +86,6 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
-        this.newUserData = structuredClone(this.user);
         this.loadUserOrders();
         this.loadUserReviews();
       },
@@ -102,6 +109,7 @@ export class ProfileComponent implements OnInit {
   }
 
   showDataDialog() {
+    this.newUserData = structuredClone(this.user);
     this.visibleDataDialog = true;
   }
 
@@ -115,8 +123,64 @@ export class ProfileComponent implements OnInit {
       next: (user) => {
         this.user = user;
         this.cancelEditData();
+      },
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 403) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de registro',
+            detail: 'El nombre del usuario ya está en uso. Elige otro.' // Usamos el texto exacto del servidor
+          });
+        } else this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se ha podido editar la información del usuario.'
+        });
       }
     })
+  }
+
+  protected cancelNewAddress() {
+    this.newAddress = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
+    this.visibleAddressDialog = false;
+  }
+
+  protected saveNewAddress() {
+    this.userService.submitAddress(this.newAddress).subscribe({
+      next: (user) => {
+        this.user = user;
+        this.cancelNewAddress();
+      }
+    })
+  }
+
+  protected cancelNewCard() {
+    this.newCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
+    this.visibleCardDialog = false;
+  }
+
+  protected saveNewCard() {
+    if (this.isValidDueDate(this.newCard.dueDate)){
+      this.userService.submitPaymentCard(this.newCard).subscribe({
+        next: (user) => {
+          this.user = user;
+          this.cancelNewCard();
+        }
+      })
+    }
+    else {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El mes de caducidad no puede ser mayor a 12' });
+    }
+  }
+
+  protected isValidDueDate(input: string): boolean {
+    // 0[1-9] -> Accepts from 01 to 09
+    // |      -> or
+    // 1[0-2] -> Accepts 10, 11 and 12
+    // \/     -> Searches for the bar
+    // \d{2}  -> Searches for two digits for the year
+    const regex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+    return regex.test(input);
   }
 
   showAddressDialog() {

@@ -2,6 +2,8 @@
 
 <app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
 
+<p-toast position="bottom-right"/>
+
 <div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
   <section class="mt-6 mb-12 relative">
     <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 border border-surface-700">
@@ -30,8 +32,8 @@
 
       <div class="relative z-10 md:ml-auto">
         <p-button
-          label="Editar Perfil"
-          icon="pi pi-user-edit"
+          label="Eliminar cuenta"
+          icon="pi pi-times"
           [outlined]="true"
           severity="secondary"
           styleClass="!text-white !border-surface-600 hover:!bg-surface-800 !rounded-full px-6" />
@@ -70,7 +72,7 @@
         <!-- Edit profile details dialog -->
         <p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visibleDataDialog" styleClass="!border-0 !bg-transparent">
           <ng-template #headless>
-            <div class="w-120 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+            <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
               <h4 class="font-bold mb-4">Editar datos personales:</h4>
               <div class="grid grid-cols-1 gap-4">
                 <div>
@@ -106,9 +108,11 @@
         </div>
         <div class="space-y-3">
           <div *ngFor="let addr of user.addresses" class="flex items-start gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors cursor-pointer group">
+
             <div class="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 mt-1 group-hover:bg-primary-500 group-hover:text-white transition-colors">
               <i class="pi pi-map-marker text-sm"></i>
             </div>
+
             <div>
               <p class="text-sm font-bold text-surface-900">{{ addr.alias }}</p>
               <p class="text-xs text-surface-500 leading-relaxed">
@@ -116,8 +120,73 @@
                 {{ addr.postalCode }} {{ addr.city }} ({{ addr.country }})
               </p>
             </div>
+
+            <div class="ml-auto flex gap-2 self-center" (click)="$event.stopPropagation()">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                text
+                severity="info"
+              />
+
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                text
+                severity="danger"
+              />
+            </div>
+
           </div>
         </div>
+
+        <!-- Create / Edit address dialog -->
+        <p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visibleAddressDialog" styleClass="!border-0 !bg-transparent">
+          <ng-template #headless>
+            <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+              <div *ngIf="newAddress.id">
+                <h4 class="font-bold mb-4">Editar dirección de envío:</h4>
+              </div>
+              <div *ngIf="!newAddress.id">
+                <h4 class="font-bold mb-4">Nueva dirección de envío:</h4>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Alias</label>
+                  <input pInputText placeholder="Nombre preferido..." [(ngModel)]="newAddress.alias" class="w-full"/>
+                </div>
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Calle</label>
+                  <input pInputText placeholder="Tipo y nombre de vía..." [(ngModel)]="newAddress.street" class="w-full md:col-span-2" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Número</label>
+                  <input pInputText placeholder="Número de domicilio..." [(ngModel)]="newAddress.number" class="w-full"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Piso</label>
+                  <input pInputText placeholder="Piso y letra..." [(ngModel)]="newAddress.floor" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Código postal</label>
+                  <input pInputText placeholder="Código postal..." [(ngModel)]="newAddress.postalCode" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Ciudad</label>
+                  <input pInputText placeholder="Nombre de población..." [(ngModel)]="newAddress.city" class="w-full" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">País</label>
+                  <input pInputText placeholder="Nombre de país..." [(ngModel)]="newAddress.country" class="w-full"/>
+                </div>
+              </div>
+              <div class="flex justify-end mt-4 gap-2">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelNewAddress()"></p-button>
+                <p-button label="Guardar" styleClass="p-button-primary" (onClick)="saveNewAddress()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-dialog>
       </div>
 
       <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
@@ -127,16 +196,81 @@
         </div>
         <div class="space-y-3">
           <div *ngFor="let card of user.cards" class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100">
+
             <div class="w-10 h-10 rounded-full bg-surface-200 flex items-center justify-center text-surface-600">
               <i class="pi pi-credit-card"></i>
             </div>
+
             <div>
               <p class="text-sm font-bold text-surface-900 capitalize">{{ card.alias }} (••••{{ card.numberEnding }})</p>
               <p class="text-xs text-surface-500">Titular: {{ card.cardOwnerName }}</p>
               <p class="text-xs text-surface-500">Expira: {{ card.dueDate }}</p>
             </div>
+
+            <div class="ml-auto flex gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                text
+                severity="info"
+                 />
+
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                text
+                severity="danger"
+                 />
+            </div>
+
           </div>
         </div>
+
+        <!-- Create / Edit card dialog -->
+        <p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visibleCardDialog" styleClass="!border-0 !bg-transparent">
+          <ng-template #headless>
+            <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+              <div *ngIf="newCard.id">
+                <h4 class="font-bold mb-4">Editar tarjeta:</h4>
+              </div>
+              <div *ngIf="!newCard.id">
+                <h4 class="font-bold mb-4">Nueva tarjeta:</h4>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Alias de la tarjeta</label>
+                  <input pInputText placeholder="Nombre completo" [(ngModel)]="newCard.alias" class="w-full" />
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Número de tarjeta</label>
+                  <p-inputmask mask="9999 9999 9999 9999" [(ngModel)]="newCard.number" placeholder="0000 0000 0000 0000" styleClass="w-full" />
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Titular de la tarjeta</label>
+                  <input pInputText placeholder="Nombre completo" [(ngModel)]="newCard.cardOwnerName" class="w-full" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Caducidad</label>
+                  <p-inputmask mask="99/99" [(ngModel)]="newCard.dueDate" placeholder="MM/AA" styleClass="w-full" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">CVV</label>
+                  <p-inputmask mask="999" [(ngModel)]="newCard.cvv" placeholder="000" styleClass="w-full" />
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-6 gap-2">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelNewCard()"></p-button>
+                <p-button label="Guardar tarjeta" styleClass="p-button-primary" (onClick)="saveNewCard()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-dialog>
       </div>
     </section>
 
