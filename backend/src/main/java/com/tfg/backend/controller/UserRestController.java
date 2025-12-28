@@ -144,6 +144,49 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
+    @PutMapping("/addresses")
+    public ResponseEntity<UserDTO> editAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Optional<Address> addressOptional = loggedUser.getAddresses().stream().filter(address -> address.getId().equals(addressDTO.getId())).findFirst();
+        if(addressOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        Address address = addressOptional.get();
+
+        address.setAlias(addressDTO.getAlias());
+        address.setStreet(addressDTO.getStreet());
+        address.setNumber(addressDTO.getNumber());
+        address.setFloor(addressDTO.getFloor());
+        address.setPostalCode(addressDTO.getPostalCode());
+        address.setCity(addressDTO.getCity());
+        address.setCountry(addressDTO.getCountry());
+
+        User savedUser = this.userService.save(loggedUser);
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+    @DeleteMapping("/addresses/{id}")
+    public ResponseEntity<UserDTO> deleteAddress(HttpServletRequest request, @PathVariable Long id){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        boolean removed = loggedUser.getAddresses().removeIf(address -> address.getId().equals(id));
+        if(!removed){
+            return ResponseEntity.notFound().build();
+        }
+
+        User savedUser = userService.save(loggedUser);
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
 
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO cardDTO){
@@ -158,6 +201,46 @@ public class UserRestController {
         loggedUser.getCards().add(card);
         User savedUser = userService.save(loggedUser);
 
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+    @PutMapping("/cards")
+    public ResponseEntity<UserDTO> editPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO paymentCardDTO){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        Optional<PaymentCard> cardOptional = loggedUser.getCards().stream().filter(card -> card.getId().equals(paymentCardDTO.getId())).findFirst();
+        if(cardOptional.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+        PaymentCard card = cardOptional.get();
+
+        card.setAlias(paymentCardDTO.getAlias());
+        card.setCardOwnerName(paymentCardDTO.getCardOwnerName());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+        card.setDueDate(YearMonth.parse(paymentCardDTO.getDueDate(), formatter));
+
+        User savedUser = this.userService.save(loggedUser);
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+    @DeleteMapping("/cards/{id}")
+    public ResponseEntity<UserDTO> deletePaymentCard(HttpServletRequest request, @PathVariable Long id){
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        boolean removed = loggedUser.getCards().removeIf(card -> card.getId().equals(id));
+        if(!removed){
+            return ResponseEntity.notFound().build();
+        }
+
+        User savedUser = userService.save(loggedUser);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 }

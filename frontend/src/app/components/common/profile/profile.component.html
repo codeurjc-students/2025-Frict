@@ -104,7 +104,7 @@
       <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-bold text-surface-900">Direcciones</h3>
-          <p-button (click)="showAddressDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
+          <p-button (click)="showAddressCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
         </div>
         <div class="space-y-3">
           <div *ngFor="let addr of user.addresses" class="flex items-start gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors cursor-pointer group">
@@ -121,12 +121,13 @@
               </p>
             </div>
 
-            <div class="ml-auto flex gap-2 self-center" (click)="$event.stopPropagation()">
+            <div class="ml-auto flex gap-2 self-center">
               <p-button
                 icon="pi pi-pencil"
                 [rounded]="true"
                 text
                 severity="info"
+                (click)="showEditAddressDialog(addr.id)"
               />
 
               <p-button
@@ -134,6 +135,7 @@
                 [rounded]="true"
                 text
                 severity="danger"
+                (click)="deleteAddress(addr.id)"
               />
             </div>
 
@@ -182,7 +184,7 @@
               </div>
               <div class="flex justify-end mt-4 gap-2">
                 <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelNewAddress()"></p-button>
-                <p-button label="Guardar" styleClass="p-button-primary" (onClick)="saveNewAddress()"></p-button>
+                <p-button [label]="newAddress.id ? 'Guardar cambios' : 'Guardar dirección'" styleClass="p-button-primary" (onClick)="submitAddress()"></p-button>
               </div>
             </div>
           </ng-template>
@@ -192,7 +194,7 @@
       <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-bold text-surface-900">Métodos de Pago</h3>
-          <p-button (click)="showCardDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
+          <p-button (click)="showCardCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
         </div>
         <div class="space-y-3">
           <div *ngFor="let card of user.cards" class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100">
@@ -213,6 +215,7 @@
                 [rounded]="true"
                 text
                 severity="info"
+                (click)="showEditCardDialog(card.id)"
                  />
 
               <p-button
@@ -220,6 +223,7 @@
                 [rounded]="true"
                 text
                 severity="danger"
+                (click)="deleteCard(card.id)"
                  />
             </div>
 
@@ -245,7 +249,12 @@
 
                 <div class="md:col-span-2">
                   <label class="text-sm font-medium text-surface-600 mb-1 block">Número de tarjeta</label>
-                  <p-inputmask mask="9999 9999 9999 9999" [(ngModel)]="newCard.number" placeholder="0000 0000 0000 0000" styleClass="w-full" />
+                  <div *ngIf="newCard.id">
+                    <input pInputText [disabled]="true" [placeholder]="newCard.number" class="w-full" />
+                  </div>
+                  <div *ngIf="!newCard.id">
+                    <p-inputmask mask="9999 9999 9999 9999" [(ngModel)]="newCard.number" placeholder="0000 0000 0000 0000" styleClass="w-full" />
+                  </div>
                 </div>
 
                 <div class="md:col-span-2">
@@ -260,13 +269,18 @@
 
                 <div>
                   <label class="text-sm font-medium text-surface-600 mb-1 block">CVV</label>
-                  <p-inputmask mask="999" [(ngModel)]="newCard.cvv" placeholder="000" styleClass="w-full" />
+                  <div *ngIf="newCard.id">
+                    <input pInputText [disabled]="true" [placeholder]="newCard.cvv" class="w-full" />
+                  </div>
+                  <div *ngIf="!newCard.id">
+                    <p-inputmask mask="999" [(ngModel)]="newCard.cvv" placeholder="000" styleClass="w-full" />
+                  </div>
                 </div>
               </div>
 
               <div class="flex justify-end mt-6 gap-2">
                 <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelNewCard()"></p-button>
-                <p-button label="Guardar tarjeta" styleClass="p-button-primary" (onClick)="saveNewCard()"></p-button>
+                <p-button [label]="newCard.id ? 'Guardar cambios' : 'Guardar tarjeta'" styleClass="p-button-primary" (onClick)="submitCard()"></p-button>
               </div>
             </div>
           </ng-template>

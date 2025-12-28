@@ -86,6 +86,7 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
+        console.log(this.user);
         this.loadUserOrders();
         this.loadUserReviews();
       },
@@ -108,14 +109,58 @@ export class ProfileComponent implements OnInit {
     this.loadUserReviews();
   }
 
+  //Show creation and edition dialogs
   showDataDialog() {
     this.newUserData = structuredClone(this.user);
     this.visibleDataDialog = true;
   }
 
-  protected cancelEditData() {
-    this.newUserData = structuredClone(this.user);
-    this.visibleDataDialog = false;
+  showAddressCreationDialog() {
+    this.visibleAddressDialog = true;
+  }
+
+  showCardCreationDialog() {
+    this.visibleCardDialog = true;
+  }
+
+  showEditAddressDialog(id: string) {
+    const addressFound = this.user.addresses.find(addr => addr.id === id);
+    if(addressFound){
+      this.newAddress = structuredClone(addressFound);
+      this.visibleAddressDialog = true;
+    }
+  }
+
+  showEditCardDialog(id: string) {
+    const cardFound = this.user.cards.find(card => card.id === id);
+    if(cardFound){
+      this.newCard = structuredClone(cardFound);
+      this.visibleCardDialog = true;
+    }
+  }
+
+  //Create/Edit operations
+  protected submitAddress() {
+    this.userService.submitAddress(this.newAddress).subscribe({
+      next: (user) => {
+        this.user.addresses = user.addresses;
+        this.cancelNewAddress();
+      }
+    })
+  }
+
+  protected submitCard() {
+    if (this.isValidDueDate(this.newCard.dueDate)){
+      this.userService.submitPaymentCard(this.newCard).subscribe({
+        next: (user) => {
+          this.user.cards = user.cards;
+          this.cancelNewCard();
+        }
+      })
+    }
+    else {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El mes de caducidad no puede ser mayor a 12' });
+    }
   }
 
   protected saveEditData() {
@@ -140,37 +185,37 @@ export class ProfileComponent implements OnInit {
     })
   }
 
+  //Delete operations
+  protected deleteAddress(id: string) {
+    this.userService.deleteAddress(id).subscribe({
+      next: (user) => {
+        this.user.addresses = user.addresses;
+      }
+    })
+  }
+
+  protected deleteCard(id: string) {
+    this.userService.deletePaymentCard(id).subscribe({
+      next: (user) => {
+        this.user.cards = user.cards;
+      }
+    })
+  }
+
+  //Cancel operations
+  protected cancelEditData() {
+    this.newUserData = structuredClone(this.user);
+    this.visibleDataDialog = false;
+  }
+
   protected cancelNewAddress() {
     this.newAddress = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
     this.visibleAddressDialog = false;
   }
 
-  protected saveNewAddress() {
-    this.userService.submitAddress(this.newAddress).subscribe({
-      next: (user) => {
-        this.user = user;
-        this.cancelNewAddress();
-      }
-    })
-  }
-
   protected cancelNewCard() {
     this.newCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
     this.visibleCardDialog = false;
-  }
-
-  protected saveNewCard() {
-    if (this.isValidDueDate(this.newCard.dueDate)){
-      this.userService.submitPaymentCard(this.newCard).subscribe({
-        next: (user) => {
-          this.user = user;
-          this.cancelNewCard();
-        }
-      })
-    }
-    else {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El mes de caducidad no puede ser mayor a 12' });
-    }
   }
 
   protected isValidDueDate(input: string): boolean {
@@ -181,14 +226,6 @@ export class ProfileComponent implements OnInit {
     // \d{2}  -> Searches for two digits for the year
     const regex = /^(0[1-9]|1[0-2])\/\d{2}$/;
     return regex.test(input);
-  }
-
-  showAddressDialog() {
-    this.visibleAddressDialog = true;
-  }
-
-  showCardDialog() {
-    this.visibleCardDialog = true;
   }
 
   protected loadUserOrders(){
