@@ -33,18 +33,22 @@ public class DatabaseInitializer {
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private StorageService storageService;
 
-    // Cambiado para leer una lista separada por comas. Default: lista vacía
+    // Read a list separated by commas. Default: empty list
     @Value("#{'${app.db.init:}'.split(',')}")
     private List<String> initEntities;
 
-    // Recursos estáticos definidos como campos para reutilizarlos
-    private final ClassPathResource defaultProductRes = new ClassPathResource("static/img/defaultProductImage.jpg");
-    private final ClassPathResource defaultCategoryRes = new ClassPathResource("static/img/defaultCategoryImage.jpg");
-    private final ClassPathResource defaultProfileRes = new ClassPathResource("static/img/defaultProfileImage.jpg");
+    // Static resources defined as fields
+    private final ClassPathResource defaultProductResource = new ClassPathResource("static/img/defaultProductImage.jpg");
+    private final ClassPathResource defaultCategoryResource = new ClassPathResource("static/img/defaultCategoryImage.jpg");
+    private final ClassPathResource defaultUserResource = new ClassPathResource("static/img/defaultUserImage.jpg");
 
     @PostConstruct
     @Transactional
     public void init() {
+        // Critical: Initialize Global Defaults first (Static Holder Pattern)
+        // This ensures GlobalDefaults.USER_IMAGE, etc., are available for the whole app and for the data loading below.
+        initGlobalImages();
+
         // Normalize input (trim blank spaces and lower cases)
         List<String> entities = initEntities.stream()
                 .map(String::trim)
@@ -92,6 +96,14 @@ public class DatabaseInitializer {
         System.out.println("---- DATABASE INITIALIZATION FINISHED ----");
     }
 
+    private void initGlobalImages() {
+        System.out.println(">>> Uploading Global Default Images to S3...");
+        // Upload once, assign to Static Holder
+        GlobalDefaults.USER_IMAGE = uploadDefaultImage(defaultUserResource, "users");
+        GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories");
+        GlobalDefaults.PRODUCT_IMAGE = uploadDefaultImage(defaultProductResource, "products");
+    }
+
     // --------------------------------------------------------------------------------
     // INITIALIZATION METHODS FOR EACH ENTITY
     // --------------------------------------------------------------------------------
@@ -110,7 +122,10 @@ public class DatabaseInitializer {
         user1.getCards().add(paymentCard2);
         user1.getAddresses().add(address);
         user1.getAddresses().add(address2);
-        assignUserImage(user1, defaultProfileRes);
+
+        // Assign GLOBAL default image
+        user1.setUserImage(GlobalDefaults.USER_IMAGE);
+
         userRepository.save(user1);
 
         User user2 = new User("Administrador", "admin", "admin@gmail.com", "123456789", passwordEncoder.encode("adminpass"), "ADMIN");
@@ -118,7 +133,10 @@ public class DatabaseInitializer {
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
         user2.getAddresses().add(address3);
-        assignUserImage(user2, defaultProfileRes);
+
+        // Assign GLOBAL default image
+        user2.setUserImage(GlobalDefaults.USER_IMAGE);
+
         userRepository.save(user2);
     }
 
@@ -144,7 +162,8 @@ public class DatabaseInitializer {
         categories.add(new Category("Top ventas"));
 
         for (Category cat : categories) {
-            assignCategoryImage(cat, defaultCategoryRes);
+            // Assign GLOBAL default image (Pointer copy, no new upload)
+            cat.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
             categoryRepository.save(cat);
         }
     }
@@ -239,7 +258,15 @@ public class DatabaseInitializer {
 
         // Upload image for each product and save
         for (Product p : products) {
-            assignProductImage(p, defaultProductRes);
+            // New Logic: Create ProductImageInfo using GlobalDefaults data
+            // We reuse the URL and Key from the global upload.
+            ProductImageInfo pImage = new ProductImageInfo(
+                    GlobalDefaults.PRODUCT_IMAGE.getImageUrl(),
+                    GlobalDefaults.PRODUCT_IMAGE.getS3Key(),
+                    GlobalDefaults.PRODUCT_IMAGE.getFileName(),
+                    p
+            );
+            p.getImages().add(pImage);
             productRepository.save(p);
         }
     }
@@ -263,7 +290,6 @@ public class DatabaseInitializer {
         if (orderRepository.count() > 0) return;
         System.out.println(">>> Initializing Orders and Cart...");
 
-        // Retrieve necessary entities
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);
         List<Product> products = productRepository.findAll();
@@ -276,7 +302,6 @@ public class DatabaseInitializer {
         List<OrderItem> orderItems1 = new ArrayList<>();
         List<OrderItem> orderItems2 = new ArrayList<>();
 
-        // Use of secure indexes based on the total amount of products
         if (products.size() >= 8) {
             orderItems1.add(new OrderItem(products.get(0), user1, 12));
             orderItems1.add(new OrderItem(products.get(2), user1, 3));
@@ -324,7 +349,6 @@ public class DatabaseInitializer {
         Shop shop1 = shops.getFirst();
         List<ShopStock> shopStocks = new ArrayList<>();
 
-        // Loop seguro basado en tu código original
         for (int i = 0; i < products.size(); i++) {
             shopStocks.add(new ShopStock(shop1, products.get(i), i));
         }
@@ -346,32 +370,12 @@ public class DatabaseInitializer {
     }
 
     // --- AUXILIARY METHODS ---
-
-    private void assignUserImage(User user, ClassPathResource resource) {
+    private ImageInfo uploadDefaultImage(ClassPathResource resource, String folder) {
         try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "users");
-            user.setUserImage(new ImageInfo(result.get("url"), result.get("key"), resource.getFilename()));
+            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), folder);
+            return new ImageInfo(result.get("url"), result.get("key"), resource.getFilename());
         } catch (IOException e) {
-            System.err.println("Error uploading image for user " + user.getUsername());
-        }
-    }
-
-    private void assignCategoryImage(Category cat, ClassPathResource resource) {
-        try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "categories");
-            cat.setCategoryImage(new ImageInfo(result.get("url"), result.get("key"), resource.getFilename()));
-        } catch (IOException e) {
-            System.err.println("Error uploading image for category " + cat.getName());
-        }
-    }
-
-    private void assignProductImage(Product product, ClassPathResource resource) {
-        try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "products");
-            ProductImageInfo pi = new ProductImageInfo(result.get("url"), result.get("key"), resource.getFilename(), product);
-            product.getImages().add(pi);
-        } catch (IOException e) {
-            System.err.println("Error uploading image for product " + product.getName());
+            throw new RuntimeException("CRITICAL: Error uploading default image: " + resource.getFilename(), e);
         }
     }
 

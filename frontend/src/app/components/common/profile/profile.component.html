@@ -3,6 +3,7 @@
 <app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
 
 <p-toast position="bottom-right"/>
+<p-confirmDialog></p-confirmDialog>
 
 <div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
   <section class="mt-6 mb-12 relative">
@@ -35,8 +36,8 @@
           label="Eliminar cuenta"
           icon="pi pi-times"
           [outlined]="true"
-          severity="secondary"
-          styleClass="!text-white !border-surface-600 hover:!bg-surface-800 !rounded-full px-6" />
+          severity="danger"
+          (click)="confirm($event)"/>
       </div>
     </div>
   </section>
@@ -70,7 +71,7 @@
         </div>
 
         <!-- Edit profile details dialog -->
-        <p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visibleDataDialog" styleClass="!border-0 !bg-transparent">
+        <p-dialog [(visible)]="visibleDataDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
           <ng-template #headless>
             <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
               <h4 class="font-bold mb-4">Editar datos personales:</h4>
@@ -143,7 +144,7 @@
         </div>
 
         <!-- Create / Edit address dialog -->
-        <p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visibleAddressDialog" styleClass="!border-0 !bg-transparent">
+        <p-dialog [(visible)]="visibleAddressDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
           <ng-template #headless>
             <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
               <div *ngIf="newAddress.id">
@@ -231,7 +232,7 @@
         </div>
 
         <!-- Create / Edit card dialog -->
-        <p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visibleCardDialog" styleClass="!border-0 !bg-transparent">
+        <p-dialog [(visible)]="visibleCardDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
           <ng-template #headless>
             <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
               <div *ngIf="newCard.id">

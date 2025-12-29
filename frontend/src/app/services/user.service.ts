@@ -24,6 +24,10 @@ export class UserService {
     return this.http.get<User>(this.apiUrl + `/me`);
   }
 
+  public deleteLoggedUser(): Observable<User> {
+    return this.http.delete<User>(this.apiUrl);
+  }
+
   //POST method could be used by administrators to create new user profiles
   public submitUserData(user: User): Observable<User>{
     if (user.id){

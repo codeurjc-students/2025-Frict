@@ -10,6 +10,7 @@ import com.tfg.backend.model.PaymentCard;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
+import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -31,6 +33,7 @@ public class UserRestController {
 
     @Autowired
     private StorageService storageService;
+
 
 	@GetMapping("/session")
 	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
@@ -54,15 +57,15 @@ public class UserRestController {
 
     //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
     @PostMapping("/image/{id}")
-    public ResponseEntity<UserDTO> uploadUserAvatar(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
+    public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.findById(id);
         if(userOptional.isEmpty()){
             return ResponseEntity.status(404).build(); //User not found in DB (not registered)
         }
         User loggedUser = userOptional.get();
 
-        // Clean previous image
-        if (loggedUser.getUserImage() != null) {
+        // Clean previous image (if exists and it is not the default user image)
+        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().getS3Key().equals(GlobalDefaults.USER_IMAGE.getS3Key())) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
         }
 
@@ -70,16 +73,51 @@ public class UserRestController {
         Map<String, String> res = storageService.uploadFile(image, "users");
 
         // Create ImageInfo object (not an entity)
-        ImageInfo avatarInfo = new ImageInfo(
+        ImageInfo userImageInfo = new ImageInfo(
                 res.get("url"),
                 res.get("key"),
                 image.getOriginalFilename()
         );
 
         // Add to user
-        loggedUser.setUserImage(avatarInfo);
+        loggedUser.setUserImage(userImageInfo);
 
         return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
+    }
+
+    //Option 1: Delete User entities (statistics information will be lost, reviews and orders need to be reassigned to a generic anon user, which affects data possession)
+    //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
+    @DeleteMapping
+    public ResponseEntity<UserDTO> deleteLoggedUser(HttpServletRequest request) {
+        Optional<User> userOptional = userService.getLoggedUser(request);
+        if(userOptional.isEmpty()){
+            return ResponseEntity.status(401).build(); //Unauthorized as not logged
+        }
+        User loggedUser = userOptional.get();
+
+        //Erase and anonymize all user data but the name (in order to identify review creators)
+        String uniqueUuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        loggedUser.setName("Usuario eliminado " + uniqueUuid);
+        loggedUser.setUsername("deleteduser_" + uniqueUuid);
+        loggedUser.setEncodedPassword(""); // Empty password, as it may contain sensible data
+        loggedUser.setOtpCode(null);
+        loggedUser.setOtpExpiration(null);
+        loggedUser.getRoles().clear(); // Unauthorized to access secured pages
+        loggedUser.setEmail("deleteduser_" + uniqueUuid + "@frictapp.com");
+        loggedUser.setPhone(null);
+        loggedUser.getAddresses().clear();
+        loggedUser.getCards().clear();
+
+        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().getS3Key().equals(GlobalDefaults.USER_IMAGE.getS3Key())) {
+            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
+        }
+        loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
+
+        loggedUser.setDeleted(true); //Mark as deleted user
+        loggedUser.getAllOrderItems().removeIf(item -> item.getOrder() == null); //Clear cart items
+
+        User savedUser = userService.save(loggedUser);
+        return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
     @DeleteMapping("/avatar")

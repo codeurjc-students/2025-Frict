@@ -41,6 +41,15 @@ public class AuthRestController {
 	public ResponseEntity<AuthResponse> login(
 			@RequestBody LoginRequest loginRequest,
 			HttpServletResponse response) {
+
+        //Check if the user is banned or deleted
+        if(userService.isBannedByUsername(loginRequest.getUsername())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); //Unauthorized as banned
+        }
+
+        if(userService.isDeletedByUsername(loginRequest.getUsername())){
+            return ResponseEntity.notFound().build(); //Not found as deleted
+        }
 		
 		return loginService.login(response, loginRequest);
 	}
@@ -102,6 +111,8 @@ public class AuthRestController {
         if (!user.isOtpValid(payload.get("otpCode"))){
             return ResponseEntity.ok(false);
         }
+        user.setOtpCode(null);
+        user.setOtpExpiration(null);
         return ResponseEntity.ok(true);
     }
 
@@ -118,7 +129,6 @@ public class AuthRestController {
         }
 
         user.setEncodedPassword(passwordEncoder.encode(payload.get("newPassword")));
-        user.setOtpCode(null);
         userService.save(user);
         return ResponseEntity.ok().build();
     }

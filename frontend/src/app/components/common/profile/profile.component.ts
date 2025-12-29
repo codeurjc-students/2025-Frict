@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {RouterModule} from '@angular/router';
+import {Router, RouterModule} from '@angular/router';
 
 import {ButtonModule} from 'primeng/button';
 import {TagModule} from 'primeng/tag';
@@ -22,9 +22,11 @@ import {InputText} from 'primeng/inputtext';
 import {Address} from '../../../models/address.model';
 import {PaymentCard} from '../../../models/paymentCard.model';
 import {Toast} from 'primeng/toast';
-import {MessageService} from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
+import {ConfirmDialog} from 'primeng/confirmdialog';
+import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -44,9 +46,10 @@ import {InputMask} from 'primeng/inputmask';
     Dialog,
     InputText,
     Toast,
-    InputMask
+    InputMask,
+    ConfirmDialog
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './profile.component.html',
   styles: []
 })
@@ -73,10 +76,58 @@ export class ProfileComponent implements OnInit {
   newAddress: Address = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
   newCard: PaymentCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
 
-  constructor(private userService: UserService,
+  constructor(private authService: AuthService,
+              private userService: UserService,
               private orderService: OrderService,
               private reviewService: ReviewService,
-              private messageService: MessageService) {}
+              private messageService: MessageService,
+              private confirmationService: ConfirmationService,
+              protected router: Router) {}
+
+  confirm(event: Event) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: '¿Estás seguro de querer eliminar tu cuenta? Se eliminará tu toda tu información de envío y facturación, y no podrás acceder a ella de nuevo.',
+      header: 'Eliminar cuenta',
+      icon: 'pi pi-info-circle',
+      rejectLabel: 'Cancel',
+      rejectButtonProps: {
+        label: 'Cancelar',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Eliminar',
+        severity: 'danger',
+      },
+
+      accept: () => {
+        this.loading = true;
+        this.userService.deleteLoggedUser().subscribe({
+          next: () => {
+            this.logoutOnDelete();
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error borrando al usuario. Inténtalo de nuevo.' });
+            this.loading = false;
+          }
+        });
+      }
+    });
+  }
+
+  protected logoutOnDelete() {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/']);
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    });
+  }
 
   ngOnInit() {
     this.loadUser();

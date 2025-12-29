@@ -56,8 +56,11 @@ public class User {
     @Column(nullable = false)
     private boolean isBanned = false;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> allOrderItems = new ArrayList<>();
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+
+    @OneToMany(mappedBy = "user")
+    private List<OrderItem> allOrderItems = new ArrayList<>(); //Necessary in order to be able to see the user cart
 
     @ManyToMany
     private Set<Product> favouriteProducts = new HashSet<>();

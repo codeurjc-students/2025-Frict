@@ -28,12 +28,12 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    public Optional<User> findById(Long userId) {
-        return userRepository.findById(userId);
+    public void delete(User u){
+        userRepository.delete(u);
     }
 
-    public Optional<User> findByEmail(String userEmail) {
-        return userRepository.findByEmail(userEmail);
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
     }
 
     public Optional<User> findByUsername(String username) {
@@ -69,5 +69,13 @@ public class UserService {
 
     public boolean isUsernameTaken(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    public boolean isBannedByUsername(String username) {
+        return userRepository.existsByUsernameAndIsBannedTrue(username);
+    }
+
+    public boolean isDeletedByUsername(String username) {
+        return userRepository.existsByUsernameAndIsDeletedTrue(username);
     }
 }
