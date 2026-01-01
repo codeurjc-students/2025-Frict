@@ -4,6 +4,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
 import com.tfg.backend.service.StorageService;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class DatabaseInitializer {
 
     @Autowired private OrderRepository orderRepository;
@@ -60,7 +62,7 @@ public class DatabaseInitializer {
             return;
         }
 
-        System.out.println("---- STARTING DATA LOADING FOR: " + entities + " ----");
+        log.info("---- STARTING DATA LOADING FOR: {} ----", entities);
 
         boolean loadAll = entities.contains("all");
 
@@ -93,11 +95,12 @@ public class DatabaseInitializer {
             initReviews();
         }
 
-        System.out.println("---- DATABASE INITIALIZATION FINISHED ----");
+        log.info("---- DATABASE INITIALIZATION FINISHED ----");
+
     }
 
     private void initGlobalImages() {
-        System.out.println(">>> Uploading Global Default Images to S3...");
+        log.info(">>> Uploading Global Default Images to S3...");
         // Upload once, assign to Static Holder
         GlobalDefaults.USER_IMAGE = uploadDefaultImage(defaultUserResource, "users");
         GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories");
@@ -110,7 +113,7 @@ public class DatabaseInitializer {
 
     private void initUsers() {
         if (userRepository.count() > 0) return;
-        System.out.println(">>> Initializing Users...");
+        log.info(">>> Initializing Users...");
 
         User user1 = new User("Usuario", "user", "wekax56917@cucadas.com", "234567890", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
@@ -142,7 +145,7 @@ public class DatabaseInitializer {
 
     private void initCategories() {
         if (categoryRepository.count() > 0) return;
-        System.out.println(">>> Initializing Categories...");
+        log.info(">>> Initializing Categories...");
 
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("Gaming y PC"));
@@ -170,7 +173,7 @@ public class DatabaseInitializer {
 
     private void initProducts() {
         if (productRepository.count() > 0) return;
-        System.out.println(">>> Initializing Products...");
+        log.info(">>> Initializing Products...");
 
         List<Product> products = new ArrayList<>();
         products.add(new Product("Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
@@ -273,7 +276,7 @@ public class DatabaseInitializer {
 
     private void initShopsAndTrucks() {
         if (shopRepository.count() > 0) return;
-        System.out.println(">>> Initializing Shops and Trucks...");
+        log.info(">>> Initializing Shops and Trucks...");
 
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         Shop shop1 = shopRepository.save(new Shop("52552", "Madrid-Recoletos", address1));
@@ -288,14 +291,14 @@ public class DatabaseInitializer {
 
     private void initOrdersAndCart() {
         if (orderRepository.count() > 0) return;
-        System.out.println(">>> Initializing Orders and Cart...");
+        log.info(">>> Initializing Orders and Cart...");
 
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);
         List<Product> products = productRepository.findAll();
 
         if (user1 == null || user2 == null || products.isEmpty()) {
-            System.err.println("CANNOT INIT ORDERS: Users or Products missing in DB.");
+            log.error("CANNOT INIT ORDERS: Users or Products missing in DB.");
             return;
         }
 
@@ -336,13 +339,13 @@ public class DatabaseInitializer {
 
     private void initStock() {
         if (shopStockRepository.count() > 0) return;
-        System.out.println(">>> Initializing Stock...");
+        log.info(">>> Initializing Stock...");
 
         List<Shop> shops = shopRepository.findAll();
         List<Product> products = productRepository.findAll();
 
         if (shops.isEmpty() || products.isEmpty()) {
-            System.err.println("CANNOT INIT STOCK: Shops or Products missing.");
+            log.error("CANNOT INIT STOCK: Shops or Products missing.");
             return;
         }
 
@@ -357,7 +360,7 @@ public class DatabaseInitializer {
 
     private void initReviews() {
         if (reviewRepository.count() > 0) return;
-        System.out.println(">>> Initializing Reviews...");
+        log.info(">>> Initializing Reviews...");
 
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);

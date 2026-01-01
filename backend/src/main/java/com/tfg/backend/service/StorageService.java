@@ -2,6 +2,7 @@ package com.tfg.backend.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StorageService {
 
@@ -44,7 +46,7 @@ public class StorageService {
                         .map(o -> ObjectIdentifier.builder().key(o.key()).build())
                         .toList();
                 s3Client.deleteObjects(b -> b.bucket(bucketName).delete(d -> d.objects(objects)));
-                System.out.println("Bucket '" + bucketName + "' emptied correcty.");
+                log.info("Bucket '{}' emptied correcty.", bucketName);
             }
 
             // Set bucket to have public access
@@ -63,10 +65,10 @@ public class StorageService {
             """.formatted(bucketName);
 
             s3Client.putBucketPolicy(b -> b.bucket(bucketName).policy(policy));
-            System.out.println("Public policy applied to '" + bucketName + "'.");
+            log.info("Public policy applied to '{}'.", bucketName);
 
         } catch (Exception e) {
-            System.err.println("Warning initializing MinIO: " + e.getMessage());
+            log.error("Warning initializing MinIO: {}", e.getMessage());
         }
     }
 
