@@ -1,0 +1,465 @@
+<app-navbar></app-navbar>
+
+<app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
+
+<p-toast position="bottom-right"/>
+<p-confirmDialog></p-confirmDialog>
+
+<div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
+  <section class="mt-6 mb-12 relative">
+    <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 border border-surface-700">
+
+      <div class="absolute top-0 right-0 w-[400px] h-[400px] bg-primary-500/15 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3"></div>
+      <div class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/15 rounded-full blur-[80px] -translate-x-1/4 translate-y-1/4"></div>
+
+      <div class="relative z-10 inline-block">
+        <div class="p-1 bg-gradient-to-br from-primary-400 to-cyan-400 rounded-full">
+
+          <div class="relative group cursor-pointer rounded-full overflow-hidden" (click)="visibleImageDialog = true">
+            <p-avatar [image]="user.imageUrl" shape="circle" styleClass="!w-30 !h-30 border-4 border-surface-900 block"/>
+            <div class="absolute inset-[0px] rounded-full bg-surface-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+              <i class="pi pi-pencil text-white text-2xl drop-shadow-md"></i>
+            </div>
+          </div>
+        </div>
+
+        <p-dialog
+          [(visible)]="visibleImageDialog"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          styleClass="!bg-transparent !shadow-none !border-none"
+          [contentStyle]="{'padding': '0', 'background': 'transparent'}"
+        >
+          <ng-template #headless>
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-[90vw] max-w-md mx-auto border border-surface-200">
+
+              <div class="px-6 py-4 border-b border-surface-100 flex justify-between items-center bg-surface-50">
+                <h3 class="font-bold text-lg text-surface-900">Foto de perfil</h3>
+                <button (click)="cancelUploadImage()" class="text-surface-400 hover:text-surface-600 focus:outline-none transition-colors">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+
+              <div class="p-8 flex flex-col items-center gap-6">
+
+                <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface-100 shadow-inner shrink-0">
+                  <img [src]="previewUrl || user.imageUrl" class="w-full h-full object-cover" alt="Foto de perfil actual"/>
+                </div>
+
+                <div class="w-full">
+                  <label
+                    for="dropzone-file"
+                    class="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200"
+                    [class.border-primary-500]="isDragging"
+                    [class.bg-primary-50]="isDragging"
+                    [class.text-primary-600]="isDragging"
+                    [class.border-surface-300]="!isDragging"
+                    [class.hover:bg-surface-50]="!isDragging"
+                    [class.hover:border-primary-400]="!isDragging"
+                    (dragover)="onDragOver($event)"
+                    (dragleave)="onDragLeave($event)"
+                    (drop)="onDrop($event)"
+                  >
+                    <div class="flex flex-col items-center gap-2 pointer-events-none">
+                      <i class="pi text-3xl" [ngClass]="isDragging ? 'pi-image text-primary-600 scale-110' : 'pi-cloud-upload text-surface-400'"></i>
+
+                      <div class="text-center">
+                        <p class="text-sm font-medium" [ngClass]="isDragging ? 'text-primary-700' : 'text-surface-600'">
+                          {{ isDragging ? '¡Suelta la imagen aquí!' : 'Haz clic o arrastra aquí' }}
+                        </p>
+                        <p class="text-xs text-surface-400 mt-1" *ngIf="!isDragging">JPG (Max 2MB)</p>
+                      </div>
+                    </div>
+
+                    <input
+                      id="dropzone-file"
+                      type="file"
+                      class="hidden"
+                      accept="image/jpeg"
+                      (change)="onFileSelected($event)"
+                    />
+                  </label>
+
+                  <div *ngIf="selectedImage" class="flex items-center justify-between gap-2 mt-3 p-3 bg-primary-50 text-primary-700 rounded-lg text-sm animate-fadein border border-primary-100">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                      <i class="pi pi-file-image"></i>
+                      <span class="font-medium truncate">{{ selectedImage.name }}</span>
+                    </div>
+                    <button (click)="clearSelection()" class="hover:bg-primary-100 p-1 rounded text-primary-600 transition-colors">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-6 py-4 bg-surface-50 border-t border-surface-100 flex justify-end gap-3">
+                <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="cancelUploadImage()"></p-button>
+                <p-button label="Guardar cambios" icon="pi pi-check" [disabled]="!selectedImage" (onClick)="submitUploadImage()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-dialog>
+      </div>
+
+      <div class="relative z-10 text-center md:text-left space-y-2">
+        <div class="inline-block">
+          <p-tag [value]="getRoleLabel(user.roles[0])" severity="info" [rounded]="true" styleClass="uppercase text-xs font-bold tracking-wider bg-surface-800 border border-surface-700 text-primary-400 px-3 py-1"></p-tag>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+          Hola, <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">{{ user.name }}</span>
+        </h1>
+        <p class="text-surface-400 text-lg font-light">Bienvenido de nuevo a tu panel personal.</p>
+      </div>
+
+      <div class="relative z-10 md:ml-auto">
+        <p-button
+          label="Eliminar cuenta"
+          icon="pi pi-times"
+          [outlined]="true"
+          severity="danger"
+          (click)="confirm($event)"/>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <section class="lg:col-span-1 space-y-8">
+      <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-surface-900">
+            <i class="pi pi-id-card text-primary-500 mr-2"></i>Datos personales</h3>
+          <p-button (click)="showDataDialog()" icon="pi pi-pen-to-square" [text]="true" [rounded]="true" size="small" />
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Nombre Completo</label>
+            <p class="text-surface-900 font-medium text-lg">{{ user.name }}</p>
+          </div>
+          <div>
+            <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Nombre de usuario</label>
+            <p class="text-surface-900 font-medium text-lg">{{ user.username }}</p>
+          </div>
+          <div>
+            <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Email</label>
+            <p class="text-surface-900 font-medium text-lg">{{ user.email }}</p>
+          </div>
+          <div>
+            <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Teléfono</label>
+            <p class="text-surface-900 font-medium text-lg">{{ user.phone }}</p>
+          </div>
+        </div>
+
+        <!-- Edit profile details dialog -->
+        <p-dialog [(visible)]="visibleDataDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
+          <ng-template #headless>
+            <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+              <h4 class="font-bold mb-4">Editar datos personales:</h4>
+              <div class="grid grid-cols-1 gap-4">
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre completo</label>
+                  <input pInputText placeholder="Nombre y apellidos" [(ngModel)]="newUserData.name" class="w-full"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre de usuario</label>
+                  <input pInputText placeholder="Alias" [(ngModel)]="newUserData.username" class="w-full md:col-span-2" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Correo electrónico</label>
+                  <input pInputText placeholder="Dirección de correo" [(ngModel)]="newUserData.email" class="w-full md:col-span-2" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Teléfono</label>
+                  <input pInputText placeholder="Número de teléfono" [(ngModel)]="newUserData.phone" class="w-full md:col-span-2" />
+                </div>
+              </div>
+              <div class="flex justify-end mt-4 gap-2">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelEditData()"></p-button>
+                <p-button label="Guardar" styleClass="p-button-primary" (onClick)="saveEditData()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-dialog>
+      </div>
+
+      <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-surface-900">Direcciones</h3>
+          <p-button (click)="showAddressCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
+        </div>
+        <div class="space-y-3">
+          <div *ngFor="let addr of user.addresses" class="flex items-start gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors cursor-pointer group">
+
+            <div class="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 mt-1 group-hover:bg-primary-500 group-hover:text-white transition-colors">
+              <i class="pi pi-map-marker text-sm"></i>
+            </div>
+
+            <div>
+              <p class="text-sm font-bold text-surface-900">{{ addr.alias }}</p>
+              <p class="text-xs text-surface-500 leading-relaxed">
+                {{ addr.street }} {{ addr.number }} {{ addr.floor }} <br>
+                {{ addr.postalCode }} {{ addr.city }} ({{ addr.country }})
+              </p>
+            </div>
+
+            <div class="ml-auto flex gap-2 self-center">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                text
+                severity="info"
+                (click)="showEditAddressDialog(addr.id)"
+              />
+
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                text
+                severity="danger"
+                (click)="deleteAddress(addr.id)"
+              />
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Create / Edit address dialog -->
+        <p-dialog [(visible)]="visibleAddressDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
+          <ng-template #headless>
+            <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+              <div *ngIf="newAddress.id">
+                <h4 class="font-bold mb-4">Editar dirección de envío:</h4>
+              </div>
+              <div *ngIf="!newAddress.id">
+                <h4 class="font-bold mb-4">Nueva dirección de envío:</h4>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Alias</label>
+                  <input pInputText placeholder="Nombre preferido..." [(ngModel)]="newAddress.alias" class="w-full"/>
+                </div>
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Calle</label>
+                  <input pInputText placeholder="Tipo y nombre de vía..." [(ngModel)]="newAddress.street" class="w-full md:col-span-2" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Número</label>
+                  <input pInputText placeholder="Número de domicilio..." [(ngModel)]="newAddress.number" class="w-full"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Piso</label>
+                  <input pInputText placeholder="Piso y letra..." [(ngModel)]="newAddress.floor" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Código postal</label>
+                  <input pInputText placeholder="Código postal..." [(ngModel)]="newAddress.postalCode" class="w-full" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Ciudad</label>
+                  <input pInputText placeholder="Nombre de población..." [(ngModel)]="newAddress.city" class="w-full" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">País</label>
+                  <input pInputText placeholder="Nombre de país..." [(ngModel)]="newAddress.country" class="w-full"/>
+                </div>
+              </div>
+              <div class="flex justify-end mt-4 gap-2">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelNewAddress()"></p-button>
+                <p-button [label]="newAddress.id ? 'Guardar cambios' : 'Guardar dirección'" styleClass="p-button-primary" (onClick)="submitAddress()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-dialog>
+      </div>
+
+      <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-surface-900">Métodos de Pago</h3>
+          <p-button (click)="showCardCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
+        </div>
+        <div class="space-y-3">
+          <div *ngFor="let card of user.cards" class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100">
+
+            <div class="w-10 h-10 rounded-full bg-surface-200 flex items-center justify-center text-surface-600">
+              <i class="pi pi-credit-card"></i>
+            </div>
+
+            <div>
+              <p class="text-sm font-bold text-surface-900 capitalize">{{ card.alias }} (••••{{ card.numberEnding }})</p>
+              <p class="text-xs text-surface-500">Titular: {{ card.cardOwnerName }}</p>
+              <p class="text-xs text-surface-500">Expira: {{ card.dueDate }}</p>
+            </div>
+
+            <div class="ml-auto flex gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                text
+                severity="info"
+                (click)="showEditCardDialog(card.id)"
+                 />
+
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                text
+                severity="danger"
+                (click)="deleteCard(card.id)"
+                 />
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Create / Edit card dialog -->
+        <p-dialog [(visible)]="visibleCardDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
+          <ng-template #headless>
+            <div class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+              <div *ngIf="newCard.id">
+                <h4 class="font-bold mb-4">Editar tarjeta:</h4>
+              </div>
+              <div *ngIf="!newCard.id">
+                <h4 class="font-bold mb-4">Nueva tarjeta:</h4>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Alias de la tarjeta</label>
+                  <input pInputText placeholder="Nombre completo" [(ngModel)]="newCard.alias" class="w-full" />
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Número de tarjeta</label>
+                  <div *ngIf="newCard.id">
+                    <input pInputText [disabled]="true" [placeholder]="newCard.number" class="w-full" />
+                  </div>
+                  <div *ngIf="!newCard.id">
+                    <p-inputmask mask="9999 9999 9999 9999" [(ngModel)]="newCard.number" placeholder="0000 0000 0000 0000" styleClass="w-full" />
+                  </div>
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Titular de la tarjeta</label>
+                  <input pInputText placeholder="Nombre completo" [(ngModel)]="newCard.cardOwnerName" class="w-full" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Caducidad</label>
+                  <p-inputmask mask="99/99" [(ngModel)]="newCard.dueDate" placeholder="MM/AA" styleClass="w-full" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">CVV</label>
+                  <div *ngIf="newCard.id">
+                    <input pInputText [disabled]="true" [placeholder]="newCard.cvv" class="w-full" />
+                  </div>
+                  <div *ngIf="!newCard.id">
+                    <p-inputmask mask="999" [(ngModel)]="newCard.cvv" placeholder="000" styleClass="w-full" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-6 gap-2">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelNewCard()"></p-button>
+                <p-button [label]="newCard.id ? 'Guardar cambios' : 'Guardar tarjeta'" styleClass="p-button-primary" (onClick)="submitCard()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-dialog>
+      </div>
+    </section>
+
+    <div class="lg:col-span-2 space-y-8">
+
+      <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
+        <div class="flex justify-between items-end mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Pedidos</h2>
+            <p class="text-surface-500 text-sm mt-1">Historial de tus últimas compras</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div *ngFor="let order of foundOrders.orders" class="group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-surface-100 hover:border-primary-300 hover:shadow-md transition-all bg-surface-50/50 hover:bg-white">
+
+            <div class="flex items-center gap-4 mb-4 md:mb-0">
+              <div class="w-12 h-12 rounded-full bg-surface-200 flex items-center justify-center text-surface-600 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                <i class="pi pi-box text-xl"></i>
+              </div>
+              <div>
+                <p class="font-bold text-surface-900 text-lg">{{ order.referenceCode }}</p>
+                <div class="flex items-center gap-2 text-xs text-surface-500">
+                  <i class="pi pi-calendar"></i> {{ order.createdAt }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto">
+              <div class="text-right mr-4">
+                <p class="text-sm font-bold text-surface-900">{{ order.totalCost }}</p>
+                <p class="text-xs text-surface-500">Total</p>
+              </div>
+
+              <p-tag [value]="order.history[order.history.length-1].status" [severity]="getStatusSeverity(order.history[order.history.length-1].status)" styleClass="min-w-[90px] text-center"></p-tag>
+
+              <p-button
+                icon="pi pi-angle-right"
+                [routerLink]="['/order', order.id]"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                styleClass="hover:!bg-surface-100" />
+            </div>
+          </div>
+          <div class="flex justify-center mt-6">
+            <p-paginator [first]="firstOrder" [rows]="ordersRows" [totalRecords]="foundOrders.totalOrders" (onPageChange)="onUserOrdersPageChange($event)"
+                         styleClass="!bg-transparent !border-none" [rowsPerPageOptions]="[5, 10, 20]"></p-paginator>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
+          <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Reseñas Publicadas</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div *ngFor="let review of foundReviews.reviews" class="p-5 rounded-xl border border-surface-200 bg-white hover:border-amber-400 transition-colors relative group">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <p class="font-bold text-surface-900 line-clamp-1">{{ review.productName }}</p>
+                <p class="text-xs text-surface-500">{{ review.createdAt }}</p>
+              </div>
+              <p-button
+                icon="pi pi-external-link"
+                [routerLink]="['/product', review.productId]"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                styleClass="!text-surface-400 hover:!text-primary-500" />
+            </div>
+
+            <div class="mb-3 flex items-center gap-2 text-sm">
+              <p-rating [ngModel]="review.rating" [readonly]="true"></p-rating>
+              <span *ngIf="review.recommended" class="text-green-600 font-medium flex items-center gap-1"><i class="pi pi-thumbs-up"></i></span>
+              <span *ngIf="!review.recommended" class="text-red-500 font-medium flex items-center gap-1"><i class="pi pi-thumbs-down"></i></span>
+            </div>
+
+            <p class="text-sm text-surface-600 italic bg-surface-50 p-3 rounded-lg border border-surface-100">
+              "{{ review.text }}"
+            </p>
+          </div>
+        </div>
+        <div class="flex justify-center mt-6">
+          <p-paginator (onPageChange)="onUserReviewsPageChange($event)" [first]="firstReview" [rows]="reviewsRows" [totalRecords]="foundReviews.totalReviews"
+                       styleClass="!bg-transparent !border-none" [rowsPerPageOptions]="[5, 10, 20]"></p-paginator>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

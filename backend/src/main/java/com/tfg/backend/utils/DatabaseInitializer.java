@@ -4,6 +4,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
 import com.tfg.backend.service.StorageService;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class DatabaseInitializer {
 
     @Autowired private OrderRepository orderRepository;
@@ -33,18 +35,22 @@ public class DatabaseInitializer {
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private StorageService storageService;
 
-    // Cambiado para leer una lista separada por comas. Default: lista vacía
+    // Read a list separated by commas. Default: empty list
     @Value("#{'${app.db.init:}'.split(',')}")
     private List<String> initEntities;
 
-    // Recursos estáticos definidos como campos para reutilizarlos
-    private final ClassPathResource defaultProductRes = new ClassPathResource("static/img/defaultProductImage.jpg");
-    private final ClassPathResource defaultCategoryRes = new ClassPathResource("static/img/defaultCategoryImage.jpg");
-    private final ClassPathResource defaultProfileRes = new ClassPathResource("static/img/defaultProfileImage.jpg");
+    // Static resources defined as fields
+    private final ClassPathResource defaultProductResource = new ClassPathResource("static/img/defaultProductImage.jpg");
+    private final ClassPathResource defaultCategoryResource = new ClassPathResource("static/img/defaultCategoryImage.jpg");
+    private final ClassPathResource defaultUserResource = new ClassPathResource("static/img/defaultUserImage.jpg");
 
     @PostConstruct
     @Transactional
     public void init() {
+        // Critical: Initialize Global Defaults first (Static Holder Pattern)
+        // This ensures GlobalDefaults.USER_IMAGE, etc., are available for the whole app and for the data loading below.
+        initGlobalImages();
+
         // Normalize input (trim blank spaces and lower cases)
         List<String> entities = initEntities.stream()
                 .map(String::trim)
@@ -56,7 +62,7 @@ public class DatabaseInitializer {
             return;
         }
 
-        System.out.println("---- STARTING DATA LOADING FOR: " + entities + " ----");
+        log.info("---- STARTING DATA LOADING FOR: {} ----", entities);
 
         boolean loadAll = entities.contains("all");
 
@@ -89,7 +95,16 @@ public class DatabaseInitializer {
             initReviews();
         }
 
-        System.out.println("---- DATABASE INITIALIZATION FINISHED ----");
+        log.info("---- DATABASE INITIALIZATION FINISHED ----");
+
+    }
+
+    private void initGlobalImages() {
+        log.info(">>> Uploading Global Default Images to S3...");
+        // Upload once, assign to Static Holder
+        GlobalDefaults.USER_IMAGE = uploadDefaultImage(defaultUserResource, "users");
+        GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories");
+        GlobalDefaults.PRODUCT_IMAGE = uploadDefaultImage(defaultProductResource, "products");
     }
 
     // --------------------------------------------------------------------------------
@@ -98,9 +113,9 @@ public class DatabaseInitializer {
 
     private void initUsers() {
         if (userRepository.count() > 0) return;
-        System.out.println(">>> Initializing Users...");
+        log.info(">>> Initializing Users...");
 
-        User user1 = new User("Usuario", "user", "kefox56746@asurad.com", passwordEncoder.encode("pass"), "USER");
+        User user1 = new User("Usuario", "user", "wekax56917@cucadas.com", "234567890", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
         PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
         Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
@@ -110,21 +125,27 @@ public class DatabaseInitializer {
         user1.getCards().add(paymentCard2);
         user1.getAddresses().add(address);
         user1.getAddresses().add(address2);
-        assignUserImage(user1, defaultProfileRes);
+
+        // Assign GLOBAL default image
+        user1.setUserImage(GlobalDefaults.USER_IMAGE);
+
         userRepository.save(user1);
 
-        User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
+        User user2 = new User("Administrador", "admin", "admin@gmail.com", "123456789", passwordEncoder.encode("adminpass"), "ADMIN");
         PaymentCard paymentCard3 = new PaymentCard("Tarjeta de la empresa", "Laura Miño", "1233453212231346", "345", YearMonth.of(2028, 7));
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
         user2.getAddresses().add(address3);
-        assignUserImage(user2, defaultProfileRes);
+
+        // Assign GLOBAL default image
+        user2.setUserImage(GlobalDefaults.USER_IMAGE);
+
         userRepository.save(user2);
     }
 
     private void initCategories() {
         if (categoryRepository.count() > 0) return;
-        System.out.println(">>> Initializing Categories...");
+        log.info(">>> Initializing Categories...");
 
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("Gaming y PC"));
@@ -144,14 +165,15 @@ public class DatabaseInitializer {
         categories.add(new Category("Top ventas"));
 
         for (Category cat : categories) {
-            assignCategoryImage(cat, defaultCategoryRes);
+            // Assign GLOBAL default image (Pointer copy, no new upload)
+            cat.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
             categoryRepository.save(cat);
         }
     }
 
     private void initProducts() {
         if (productRepository.count() > 0) return;
-        System.out.println(">>> Initializing Products...");
+        log.info(">>> Initializing Products...");
 
         List<Product> products = new ArrayList<>();
         products.add(new Product("Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
@@ -239,14 +261,22 @@ public class DatabaseInitializer {
 
         // Upload image for each product and save
         for (Product p : products) {
-            assignProductImage(p, defaultProductRes);
+            // New Logic: Create ProductImageInfo using GlobalDefaults data
+            // We reuse the URL and Key from the global upload.
+            ProductImageInfo pImage = new ProductImageInfo(
+                    GlobalDefaults.PRODUCT_IMAGE.getImageUrl(),
+                    GlobalDefaults.PRODUCT_IMAGE.getS3Key(),
+                    GlobalDefaults.PRODUCT_IMAGE.getFileName(),
+                    p
+            );
+            p.getImages().add(pImage);
             productRepository.save(p);
         }
     }
 
     private void initShopsAndTrucks() {
         if (shopRepository.count() > 0) return;
-        System.out.println(">>> Initializing Shops and Trucks...");
+        log.info(">>> Initializing Shops and Trucks...");
 
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         Shop shop1 = shopRepository.save(new Shop("52552", "Madrid-Recoletos", address1));
@@ -261,22 +291,20 @@ public class DatabaseInitializer {
 
     private void initOrdersAndCart() {
         if (orderRepository.count() > 0) return;
-        System.out.println(">>> Initializing Orders and Cart...");
+        log.info(">>> Initializing Orders and Cart...");
 
-        // Retrieve necessary entities
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);
         List<Product> products = productRepository.findAll();
 
         if (user1 == null || user2 == null || products.isEmpty()) {
-            System.err.println("CANNOT INIT ORDERS: Users or Products missing in DB.");
+            log.error("CANNOT INIT ORDERS: Users or Products missing in DB.");
             return;
         }
 
         List<OrderItem> orderItems1 = new ArrayList<>();
         List<OrderItem> orderItems2 = new ArrayList<>();
 
-        // Use of secure indexes based on the total amount of products
         if (products.size() >= 8) {
             orderItems1.add(new OrderItem(products.get(0), user1, 12));
             orderItems1.add(new OrderItem(products.get(2), user1, 3));
@@ -311,20 +339,19 @@ public class DatabaseInitializer {
 
     private void initStock() {
         if (shopStockRepository.count() > 0) return;
-        System.out.println(">>> Initializing Stock...");
+        log.info(">>> Initializing Stock...");
 
         List<Shop> shops = shopRepository.findAll();
         List<Product> products = productRepository.findAll();
 
         if (shops.isEmpty() || products.isEmpty()) {
-            System.err.println("CANNOT INIT STOCK: Shops or Products missing.");
+            log.error("CANNOT INIT STOCK: Shops or Products missing.");
             return;
         }
 
         Shop shop1 = shops.getFirst();
         List<ShopStock> shopStocks = new ArrayList<>();
 
-        // Loop seguro basado en tu código original
         for (int i = 0; i < products.size(); i++) {
             shopStocks.add(new ShopStock(shop1, products.get(i), i));
         }
@@ -333,7 +360,7 @@ public class DatabaseInitializer {
 
     private void initReviews() {
         if (reviewRepository.count() > 0) return;
-        System.out.println(">>> Initializing Reviews...");
+        log.info(">>> Initializing Reviews...");
 
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);
@@ -346,32 +373,12 @@ public class DatabaseInitializer {
     }
 
     // --- AUXILIARY METHODS ---
-
-    private void assignUserImage(User user, ClassPathResource resource) {
+    private ImageInfo uploadDefaultImage(ClassPathResource resource, String folder) {
         try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "users");
-            user.setUserImage(new ImageInfo(result.get("url"), result.get("key"), resource.getFilename()));
+            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), folder);
+            return new ImageInfo(result.get("url"), result.get("key"), resource.getFilename());
         } catch (IOException e) {
-            System.err.println("Error uploading image for user " + user.getUsername());
-        }
-    }
-
-    private void assignCategoryImage(Category cat, ClassPathResource resource) {
-        try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "categories");
-            cat.setCategoryImage(new ImageInfo(result.get("url"), result.get("key"), resource.getFilename()));
-        } catch (IOException e) {
-            System.err.println("Error uploading image for category " + cat.getName());
-        }
-    }
-
-    private void assignProductImage(Product product, ClassPathResource resource) {
-        try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), "products");
-            ProductImageInfo pi = new ProductImageInfo(result.get("url"), result.get("key"), resource.getFilename(), product);
-            product.getImages().add(pi);
-        } catch (IOException e) {
-            System.err.println("Error uploading image for product " + product.getName());
+            throw new RuntimeException("CRITICAL: Error uploading default image: " + resource.getFilename(), e);
         }
     }
 

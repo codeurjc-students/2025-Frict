@@ -18,16 +18,21 @@ public class UserDTO {
     private String username;
     private Set<String> roles;
     private String email;
+    private String phone;
     private List<AddressDTO> addresses = new ArrayList<>();
     private List<PaymentCardDTO> cards = new ArrayList<>();
     private String imageUrl;
     private boolean banned;
+
+    public UserDTO() {
+    }
 
     public UserDTO(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.username = user.getUsername();
         this.email = user.getEmail();
+        this.phone = user.getPhone();
         this.banned = user.isBanned();
         this.roles = user.getRoles();
         this.id = user.getId();

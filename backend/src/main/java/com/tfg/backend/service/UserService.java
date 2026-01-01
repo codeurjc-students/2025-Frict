@@ -28,17 +28,19 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    public Optional<User> findById(Long userId) {
-        return userRepository.findById(userId);
+    public void delete(User u){
+        userRepository.delete(u);
     }
 
-    public Optional<User> findByEmail(String userEmail) {
-        return userRepository.findByEmail(userEmail);
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
     }
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
+
+    public boolean existsByUsername(String username) { return userRepository.existsByUsername(username); }
 
 	public Optional<UserLoginDTO> getLoginInfo(HttpServletRequest request) {
         Principal principal = request.getUserPrincipal();
@@ -57,7 +59,7 @@ public class UserService {
     }
 
     public User registerUser(UserSignupDTO dto) {
-        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), "USER");
+        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), dto.getPhone(), passwordEncoder.encode(dto.getPassword()), "USER");
         return this.save(newUser);
     }
 
@@ -67,5 +69,13 @@ public class UserService {
 
     public boolean isUsernameTaken(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    public boolean isBannedByUsername(String username) {
+        return userRepository.existsByUsernameAndIsBannedTrue(username);
+    }
+
+    public boolean isDeletedByUsername(String username) {
+        return userRepository.existsByUsernameAndIsDeletedTrue(username);
     }
 }

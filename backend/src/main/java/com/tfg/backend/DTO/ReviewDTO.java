@@ -14,6 +14,7 @@ public class ReviewDTO {
     private Long id; //Review id
     private Long productId;
     private Long creatorId;
+    private String productName;
     private String creatorName;
     private String creatorImage;
     private String text;
@@ -28,6 +29,7 @@ public class ReviewDTO {
         this.id = r.getId();
         this.productId = r.getProduct().getId();
         this.creatorId = r.getUser().getId();
+        this.productName = r.getProduct().getName();
         this.creatorName = r.getUser().getName();
         this.creatorImage = r.getUser().getUserImage().getImageUrl();
         this.text = r.getText();

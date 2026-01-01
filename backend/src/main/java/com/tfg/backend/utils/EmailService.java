@@ -3,6 +3,7 @@ package com.tfg.backend.utils;
 import com.tfg.backend.model.OrderItem;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,6 +15,7 @@ import org.thymeleaf.context.Context;
 import java.util.List;
 
 @Service
+@Slf4j //Custom logs enablement
 public class EmailService {
 
     @Autowired
@@ -46,11 +48,11 @@ public class EmailService {
 
             // Send
             mailSender.send(message);
-            System.out.println("Email enviado correctamente a " + to);
+            log.info("Email enviado correctamente a {}", to);
 
         } catch (MessagingException e) {
             // Do not raise exceptions in order not to interrupt the main thread
-            System.err.println("Error al enviar email: " + e.getMessage());
+            log.error("Error al enviar email: {}", e.getMessage());
         }
     }
 
@@ -80,10 +82,10 @@ public class EmailService {
 
             // Send
             mailSender.send(message);
-            System.out.println("OTP de recuperación enviado a " + to);
+            log.info("OTP de recuperación enviado a {}", to);
 
         } catch (MessagingException e) {
-            System.err.println("Error al enviar OTP: " + e.getMessage()); //No exception to avoid interrupting the main thread
+            log.error("Error al enviar OTP: {}", e.getMessage()); //No exception to avoid interrupting the main thread
         }
     }
 }

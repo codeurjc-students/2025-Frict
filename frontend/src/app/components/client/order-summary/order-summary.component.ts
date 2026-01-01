@@ -202,6 +202,5 @@ export class OrderSummaryComponent implements OnInit {
     else {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El mes de caducidad no puede ser mayor a 12' });
     }
-
   }
 }

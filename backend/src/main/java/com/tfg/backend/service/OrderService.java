@@ -4,6 +4,8 @@ import com.tfg.backend.model.Order;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +20,10 @@ public class OrderService {
     public Optional<Order> findById(Long id){ return this.repository.findById(id); }
 
     public List<Order> findAll() { return repository.findAll(); }
+
+    public Page<Order> findAllByUser(User u, Pageable pageInfo){
+        return repository.findAllByUser(u, pageInfo);
+    }
 
     public Order save(Order o) {
         return repository.save(o);

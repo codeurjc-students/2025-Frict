@@ -5,6 +5,7 @@ import {OrderItemsPage} from '../models/orderItemsPage.model';
 import {OrderItem} from '../models/orderItem.model';
 import {CartSummary} from '../models/cartSummary.model';
 import {Order} from '../models/order.model';
+import {OrdersPage} from '../models/ordersPage.model';
 
 @Injectable({
   providedIn: 'root'
@@ -35,6 +36,13 @@ export class OrderService {
 
   public getOrderById(id: string): Observable<Order> {
     return this.http.get<Order>(this.apiUrl + `/${id}`);
+  }
+
+  public getLoggedUserOrders(page: number, size: number): Observable<OrdersPage>{
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<OrdersPage>(this.apiUrl, { params });
   }
 
   public createOrder(addressId: string, cardId: string): Observable<Order> {

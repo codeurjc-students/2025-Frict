@@ -2,6 +2,7 @@ export interface Review {
   id: string;
   productId: string;
   creatorId: string;
+  productName: string;
   creatorName: string;
   creatorImage: string;
   text: string;

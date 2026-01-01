@@ -3,6 +3,7 @@ package com.tfg.backend.e2e;
 import com.tfg.backend.BackendApplication;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
                 "app.db.init=users, categories"
         }
 )
+@Slf4j
 public class ProductSystemUITest {
 
     private static WebDriver driver;
@@ -96,9 +98,9 @@ public class ProductSystemUITest {
         WebElement topSalesMessageDiv = driver.findElement(topSalesLoc);
 
         // CI debugging logs
-        System.out.println("Featured Content: " + featuredMessageDiv.getText());
-        System.out.println("Recommended Content: " + recommendedMessageDiv.getText());
-        System.out.println("Top Sales Content: " + topSalesMessageDiv.getText());
+        log.info("Featured Content: {}", featuredMessageDiv.getText());
+        log.info("Recommended Content: {}", recommendedMessageDiv.getText());
+        log.info("Top Sales Content: {}", topSalesMessageDiv.getText());
 
         // Logic checks (empty carousels)
         int initialFeaturedProducts = driver.findElements(By.cssSelector("[id^='featuredProduct-']")).size();

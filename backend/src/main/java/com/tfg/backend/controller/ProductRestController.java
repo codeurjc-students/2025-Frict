@@ -10,9 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
@@ -53,11 +55,7 @@ public class ProductRestController {
     @GetMapping("/favourites")
     public ResponseEntity<ProductsPageDTO> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
         return ResponseEntity.ok(toProductsPageDTO(favouriteProducts));
@@ -66,42 +64,27 @@ public class ProductRestController {
     @GetMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> checkProductInFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
-        Optional<Product> productOptional = productService.findById(id);
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        Product product = productOptional.get();
+        Product product = findProductHelper(id);
         boolean inFavourites = loggedUser.getFavouriteProducts().contains(product);
 
         if (!inFavourites){
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product with ID " + id + " is not in favourites.");
         }
         return ResponseEntity.ok(new ProductDTO(product));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
-        Optional<Product> product = productService.findById(id);
-        if (!product.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new ProductDTO(product.get()));
+        Product product = findProductHelper(id);
+        return ResponseEntity.ok(new ProductDTO(product));
     }
 
 
     @GetMapping("/stock/{id}")
     public ResponseEntity<ShopStockListDTO> getProductStock(@PathVariable Long id) {
-        Optional<Product> productOptional = productService.findById(id);
-        if (!productOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        Product product = productOptional.get();
+        Product product = findProductHelper(id);
 
         List<ShopStockDTO> dtos = new ArrayList<>();
         for (ShopStock s : product.getShopsStock()) {
@@ -114,18 +97,10 @@ public class ProductRestController {
     @PostMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         //Find the product and, if exists, add it to user cart
-        Optional<Product> productOptional = productService.findById(id);
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        Product product = productOptional.get();
+        Product product = findProductHelper(id);
 
         loggedUser.getFavouriteProducts().add(product);
         userService.save(loggedUser);
@@ -137,20 +112,12 @@ public class ProductRestController {
     @DeleteMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> deleteProductFromFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
-        Optional<Product> productOptional = productService.findById(id);
-
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
+        Product product = findProductHelper(id);
 
         Set<Product> favouriteProducts = loggedUser.getFavouriteProducts();
-        favouriteProducts.remove(productOptional.get());
+        favouriteProducts.remove(product);
         userService.save(loggedUser);
         return ResponseEntity.ok().build();
     }
@@ -164,7 +131,7 @@ public class ProductRestController {
         for (CategoryDTO c : productDTO.getCategories()) {
             Optional<Category> categoryOptional = categoryService.findById(c.getId());
             if(categoryOptional.isEmpty()){
-                return ResponseEntity.badRequest().build();
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
             }
             categories.add(categoryOptional.get());
         }
@@ -183,12 +150,7 @@ public class ProductRestController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
-        Optional<Product> productOptional = productService.findById(id);
-        if (!productOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productOptional.get();
+        Product product = findProductHelper(id);
         
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
@@ -198,7 +160,7 @@ public class ProductRestController {
         for (CategoryDTO c : productDTO.getCategories()) {
             Optional<Category> categoryOptional = categoryService.findById(c.getId());
             if(categoryOptional.isEmpty()){
-                return ResponseEntity.badRequest().build();
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
             }
             categories.add(categoryOptional.get());
         }
@@ -211,11 +173,7 @@ public class ProductRestController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
-        Optional<Product> productOptional = productService.findById(id);
-        if (!productOptional.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        Product product = productOptional.get();
+        Product product = findProductHelper(id);
 
         //Option 1 (active): delete intermediate table relations from Order entities -> Order info will not contain deleted products info
         //Option 2: Apply soft delete to products by adding a "deleted" boolean field -> No product removal, all orders will access products info, manage not retrieving deleted products info
@@ -225,12 +183,12 @@ public class ProductRestController {
         product.getOrderItems().clear();
 
         productService.deleteById(id);
-        return ResponseEntity.status(200).body(new ProductDTO(product));
+        return ResponseEntity.ok(new ProductDTO(product));
     }
 
     @PostMapping("/{id}/images")
     public ResponseEntity<Product> uploadProductImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
-        Product product = productService.findById(id).orElseThrow();
+        Product product = findProductHelper(id);
 
         // 1. Upload
         Map<String, String> res = storageService.uploadFile(file, "products");
@@ -250,14 +208,13 @@ public class ProductRestController {
     @DeleteMapping("/{productId}/images/{imageId}")
     public ResponseEntity<Product> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
         // 1. Retrieve the product
-        Product product = productService.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        Product product = findProductHelper(productId);
 
         // 2. Find the image in product images list
         ProductImageInfo imageToRemove = product.getImages().stream()
                 .filter(img -> img.getId().equals(imageId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Imagen no encontrada en este producto"));
+                .orElseThrow(() -> new RuntimeException("Image not found in this product."));
 
         // 3. Delete from MinIO
         storageService.deleteFile(imageToRemove.getS3Key());
@@ -269,6 +226,16 @@ public class ProductRestController {
         Product savedProduct = productService.save(product);
 
         return ResponseEntity.ok(savedProduct);
+    }
+
+    private User findLoggedUserHelper(HttpServletRequest request) {
+        return this.userService.getLoggedUser(request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
+    }
+
+    private Product findProductHelper(Long id) {
+        return this.productService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
     }
 
     //Creates Page<ProductDTO> objects with necessary fields only

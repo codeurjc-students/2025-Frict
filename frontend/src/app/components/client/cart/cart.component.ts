@@ -30,13 +30,6 @@ export class CartComponent implements OnInit, OnDestroy {
   loading: boolean = true;
   error: boolean = false;
 
-  //Global pagination options
-  options = [
-    { label: 5, value: 5 },
-    { label: 10, value: 10 },
-    { label: 20, value: 20 }
-  ];
-
   //Cart items pagination
   foundItems : OrderItemsPage = {orderItems: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   cartSummary!: CartSummary;
@@ -149,7 +142,6 @@ export class CartComponent implements OnInit, OnDestroy {
     this.orderService.getUserCartItemsPage(this.firstItem/this.itemsRows, this.itemsRows).subscribe({
       next: (items) => {
         this.foundItems = items;
-        console.log(items.orderItems[0].maxQuantity);
       },
       error: () => {
         this.loading = false;

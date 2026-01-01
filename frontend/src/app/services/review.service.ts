@@ -3,6 +3,8 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {ReviewList} from '../models/reviewList.model';
 import {Review} from '../models/review.model';
+import {OrdersPage} from '../models/ordersPage.model';
+import {ReviewsPage} from '../models/reviewsPage.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +15,13 @@ export class ReviewService {
   }
 
   private apiUrl = '/api/v1/reviews';
+
+  public getLoggedUserReviews(page: number, size: number): Observable<ReviewsPage>{
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<ReviewsPage>(this.apiUrl, { params });
+  }
 
   public getReviewsByProductId(id: string): Observable<ReviewList> {
     let params = new HttpParams();

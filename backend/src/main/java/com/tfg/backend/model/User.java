@@ -37,8 +37,10 @@ public class User {
 	@ElementCollection(fetch = FetchType.EAGER) //Mandatory for JWT to work properly
 	private Set<String> roles;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
+
+    private String phone;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
@@ -54,8 +56,12 @@ public class User {
     @Column(nullable = false)
     private boolean isBanned = false;
 
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+
+    //cascade and orphanRemoval, to be able to perform DB operations with all user order items easily. As users are never deleted from DB (but anonymized), it does not delete historic information useful for statistics
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> allOrderItems = new ArrayList<>();
+    private List<OrderItem> allOrderItems = new ArrayList<>(); //Necessary in order to be able to see the user cart
 
     @ManyToMany
     private Set<Product> favouriteProducts = new HashSet<>();
@@ -69,12 +75,13 @@ public class User {
 	public User() {
 	}
 
-    public User(String name, String username, String email, String encodedPassword, String... roles) {
+    public User(String name, String username, String email, String phone, String encodedPassword, String... roles) {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
         this.roles = Set.of(roles);
         this.email = email;
+        this.phone = phone;
     }
 
     //Retrieves only the items that are currently in user cart

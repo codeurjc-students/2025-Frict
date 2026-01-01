@@ -27,6 +27,7 @@ export class SignupComponent {
       name: ['', Validators.required],
       username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
+      phone: ['', [Validators.required]],
       password: ['', Validators.required]
     });
   }
@@ -53,7 +54,6 @@ export class SignupComponent {
         this.router.navigate([`/login`]);
       },
       error: () => {
-        this.router.navigate(['/error']);
         alert('Error subiendo la imagen.');
       }
     })
