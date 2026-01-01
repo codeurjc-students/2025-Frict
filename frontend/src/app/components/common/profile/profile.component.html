@@ -44,7 +44,7 @@
               <div class="p-8 flex flex-col items-center gap-6">
 
                 <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface-100 shadow-inner shrink-0">
-                  <img [src]="user.imageUrl" class="w-full h-full object-cover" alt="Avatar actual"/>
+                  <img [src]="previewUrl || user.imageUrl" class="w-full h-full object-cover" alt="Foto de perfil actual"/>
                 </div>
 
                 <div class="w-full">

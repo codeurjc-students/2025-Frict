@@ -79,6 +79,7 @@ export class ProfileComponent implements OnInit {
 
   selectedImage: File | null = null;
   isDragging = false;
+  previewUrl: string | ArrayBuffer | null = null;
 
 
   constructor(private authService: AuthService,
@@ -196,6 +197,14 @@ export class ProfileComponent implements OnInit {
   processFile(file: File | undefined) {
     if (file && file.type.startsWith('image/jpeg')) {
       this.selectedImage = file;
+
+      //Previews logic
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.previewUrl = e.target?.result || null;
+      };
+      reader.readAsDataURL(file);
+
     } else {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'La imagen debe tener formato JPG.' });
     }
@@ -203,7 +212,9 @@ export class ProfileComponent implements OnInit {
 
   clearSelection() {
     this.selectedImage = null;
-    // Reset del input HTML para permitir volver a elegir el mismo archivo si se desea
+    this.previewUrl = null;
+
+    // Reset of HTML input to allow choosing the same file if desired
     const input = document.getElementById('dropzone-file') as HTMLInputElement;
     if(input) input.value = '';
   }
