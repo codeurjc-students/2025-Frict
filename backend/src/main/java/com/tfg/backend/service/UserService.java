@@ -1,7 +1,7 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.DTO.UserSignupDTO;
+import com.tfg.backend.dto.UserLoginDTO;
+import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;

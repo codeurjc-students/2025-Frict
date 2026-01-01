@@ -1,4 +1,4 @@
-package com.tfg.backend.DTO;
+package com.tfg.backend.dto;
 
 import com.tfg.backend.model.LogEntry;
 import com.tfg.backend.model.StatusLog;

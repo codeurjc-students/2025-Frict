@@ -1,6 +1,6 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.*;
+import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderItemService;
 import com.tfg.backend.service.OrderService;
@@ -204,8 +204,8 @@ public class OrderRestController {
 
     @PostMapping("/cart/{id}")
     public ResponseEntity<OrderItemDTO> addItemToCart(HttpServletRequest request,
-                                                       @PathVariable Long id,
-                                                       @RequestParam int quantity) {
+                                                      @PathVariable Long id,
+                                                      @RequestParam int quantity) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 

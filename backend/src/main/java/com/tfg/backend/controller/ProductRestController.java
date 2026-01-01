@@ -1,6 +1,6 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.*;
+import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;

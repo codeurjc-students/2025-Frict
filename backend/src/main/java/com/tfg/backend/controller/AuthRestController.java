@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.UserLoginDTO;
-import com.tfg.backend.DTO.UserSignupDTO;
+import com.tfg.backend.dto.UserLoginDTO;
+import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.security.jwt.AuthResponse;
 import com.tfg.backend.security.jwt.AuthResponse.Status;
@@ -10,7 +10,6 @@ import com.tfg.backend.security.jwt.UserLoginService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.EmailService;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

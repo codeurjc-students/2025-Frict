@@ -1,7 +1,6 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.*;
-import com.tfg.backend.model.Order;
+import com.tfg.backend.dto.*;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
 import com.tfg.backend.model.User;
@@ -19,7 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/reviews")

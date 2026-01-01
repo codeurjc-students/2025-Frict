@@ -1,4 +1,4 @@
-package com.tfg.backend.DTO;
+package com.tfg.backend.dto;
 
 import lombok.Getter;
 import lombok.Setter;

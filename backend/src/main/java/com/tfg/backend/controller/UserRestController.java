@@ -1,9 +1,9 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.AddressDTO;
-import com.tfg.backend.DTO.PaymentCardDTO;
-import com.tfg.backend.DTO.UserDTO;
-import com.tfg.backend.DTO.UserLoginDTO;
+import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.PaymentCardDTO;
+import com.tfg.backend.dto.UserDTO;
+import com.tfg.backend.dto.UserLoginDTO;
 import com.tfg.backend.model.Address;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.PaymentCard;

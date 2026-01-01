@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.CategoryDTO;
-import com.tfg.backend.DTO.CategoryListDTO;
+import com.tfg.backend.dto.CategoryDTO;
+import com.tfg.backend.dto.CategoryListDTO;
 import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
