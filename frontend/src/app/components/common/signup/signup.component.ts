@@ -54,7 +54,6 @@ export class SignupComponent {
         this.router.navigate([`/login`]);
       },
       error: () => {
-        this.router.navigate(['/error']);
         alert('Error subiendo la imagen.');
       }
     })

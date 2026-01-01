@@ -68,6 +68,7 @@ export class ProfileComponent implements OnInit {
   loading: boolean = true;
   error: boolean = false;
 
+  visibleImageDialog: boolean = false;
   visibleDataDialog: boolean = false;
   visibleAddressDialog: boolean = false;
   visibleCardDialog: boolean = false;
@@ -75,6 +76,10 @@ export class ProfileComponent implements OnInit {
   newUserData!: User;
   newAddress: Address = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
   newCard: PaymentCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
+
+  selectedImage: File | null = null;
+  isDragging = false;
+
 
   constructor(private authService: AuthService,
               private userService: UserService,
@@ -84,6 +89,8 @@ export class ProfileComponent implements OnInit {
               private confirmationService: ConfirmationService,
               protected router: Router) {}
 
+
+  //Delete account confirmation
   confirm(event: Event) {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
@@ -158,6 +165,67 @@ export class ProfileComponent implements OnInit {
     this.firstReview = event.first ?? 0;
     this.reviewsRows = event.rows ?? 10;
     this.loadUserReviews();
+  }
+
+  //Profile image drop zone logic
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    this.processFile(file);
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    const file = event.dataTransfer?.files[0];
+    this.processFile(file);
+  }
+
+  processFile(file: File | undefined) {
+    if (file && file.type.startsWith('image/jpeg')) {
+      this.selectedImage = file;
+    } else {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'La imagen debe tener formato JPG.' });
+    }
+  }
+
+  clearSelection() {
+    this.selectedImage = null;
+    // Reset del input HTML para permitir volver a elegir el mismo archivo si se desea
+    const input = document.getElementById('dropzone-file') as HTMLInputElement;
+    if(input) input.value = '';
+  }
+
+  cancelUploadImage() {
+    this.visibleImageDialog = false;
+    setTimeout(() => this.clearSelection(), 300);
+  }
+
+  protected submitUploadImage() {
+    if (this.selectedImage){
+      this.userService.uploadUserImage(this.user.id, this.selectedImage).subscribe({
+        next: (user) => {
+          this.user.imageUrl = user.imageUrl;
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Imagen de perfil actualizada.' });
+          this.cancelUploadImage();
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se ha podido actualizar la imagen de perfil.' });
+        }
+      })
+    }
   }
 
   //Show creation and edition dialogs

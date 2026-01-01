@@ -14,10 +14,10 @@ export class UserService {
 
   private apiUrl = '/api/v1/users';
 
-  public uploadUserImage(userId: string, selectedImage: File) {
+  public uploadUserImage(userId: string, selectedImage: File): Observable<User> {
     const formData = new FormData();
     formData.append('image', selectedImage);
-    return this.http.post(this.apiUrl + `/image/${userId}`, formData);
+    return this.http.post<User>(this.apiUrl + `/image/${userId}`, formData);
   }
 
   public getLoggedUserInfo(): Observable<User>{
@@ -33,7 +33,7 @@ export class UserService {
     if (user.id){
       return this.http.put<User>(this.apiUrl + `/data`, user);
     }
-    return this.http.post<User>(this.apiUrl + `/data`, user); //Unused
+    return this.http.post<User>(this.apiUrl + `/data`, user);
   }
 
   public submitPaymentCard(card: PaymentCard): Observable<User>{
