@@ -10,18 +10,20 @@ import com.tfg.backend.security.jwt.UserLoginService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.EmailService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
+// @Slf4j // For custom logs (log.warn("Warning message"))
 @RequestMapping("/api/v1/auth")
 public class AuthRestController {
 	
@@ -44,11 +46,19 @@ public class AuthRestController {
 
         //Check if the user is banned or deleted
         if(userService.isBannedByUsername(loginRequest.getUsername())){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); //Unauthorized as banned
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
+
+            /* Another option is:
+            // 1. Create standard object
+            ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "This user is banned.");
+
+            // 2. Return the object in response body
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(detail);
+            */
         }
 
         if(userService.isDeletedByUsername(loginRequest.getUsername())){
-            return ResponseEntity.notFound().build(); //Not found as deleted
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user has been previously deleted.");
         }
 		
 		return loginService.login(response, loginRequest);
@@ -58,13 +68,13 @@ public class AuthRestController {
     @PostMapping("/signup")
     public ResponseEntity<UserLoginDTO> registerUser(@RequestBody UserSignupDTO registerDTO) {
         if (userService.isUsernameTaken(registerDTO.getUsername()) || userService.isEmailTaken(registerDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This username or email is already taken.");
         }
 
         User newUser = userService.registerUser(registerDTO);
 
         if (newUser == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Internal error during user signup.");
         }
 
         return ResponseEntity.ok(new UserLoginDTO(newUser));
@@ -84,11 +94,7 @@ public class AuthRestController {
 
     @PostMapping("/recovery")
     public ResponseEntity<Void> recoverPassword(@RequestBody Map<String, String> payload) {
-        Optional<User> userOptional = this.userService.findByUsername(payload.get("username"));
-        if(userOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        User user = userOptional.get();
+        User user = findUserHelper(payload.get("username"));
 
         SecureRandom secureRandom = new SecureRandom();
         String newOtp = String.format("%06d", secureRandom.nextInt(1000000)); //6-digit OTP
@@ -102,11 +108,7 @@ public class AuthRestController {
 
     @PostMapping("/verification")
     public ResponseEntity<Boolean> verifyOtp(@RequestBody Map<String, String> payload) {
-        Optional<User> userOptional = this.userService.findByUsername(payload.get("username"));
-        if(userOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        User user = userOptional.get();
+        User user = findUserHelper(payload.get("username"));
 
         if (!user.isOtpValid(payload.get("otpCode"))){
             return ResponseEntity.ok(false);
@@ -118,18 +120,19 @@ public class AuthRestController {
 
     @PostMapping("/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody Map<String, String> payload) {
-        Optional<User> userOptional = this.userService.findByUsername(payload.get("username"));
-        if(userOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-        User user = userOptional.get();
+        User user = findUserHelper(payload.get("username"));
 
         if (!user.isOtpValid(payload.get("otpCode"))){
-            return ResponseEntity.status(401).build(); //Unauthorized, as OTP does not match, or it is expired
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "OTP code does not match or is expired.");
         }
 
         user.setEncodedPassword(passwordEncoder.encode(payload.get("newPassword")));
         userService.save(user);
         return ResponseEntity.ok().build();
+    }
+
+    private User findUserHelper(String username) {
+        return this.userService.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user '" + username + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)
     }
 }

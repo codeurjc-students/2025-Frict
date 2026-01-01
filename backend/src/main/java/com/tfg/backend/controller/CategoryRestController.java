@@ -7,9 +7,11 @@ import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class CategoryRestController {
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
         Optional<Category> category = categoryService.findById(id);
         if (!category.isPresent()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
         }
         return ResponseEntity.ok(new CategoryDTO(category.get()));
     }
@@ -52,8 +54,11 @@ public class CategoryRestController {
             @RequestParam("file") MultipartFile file) throws IOException {
 
         // A. Find category
-        Category category = categoryService.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+        Optional<Category> categoryOptional = categoryService.findById(id);
+        if(categoryOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
+        }
+        Category category = categoryOptional.get();
 
         // B. Previous cleaning: If there is already a photo, delete the one from MinIO
         if (category.getCategoryImage() != null && category.getCategoryImage().getS3Key() != null) {
@@ -79,9 +84,12 @@ public class CategoryRestController {
     @DeleteMapping("/{id}/image")
     public ResponseEntity<Category> deleteCategoryImage(@PathVariable Long id) {
 
-        // A. Find category
-        Category category = categoryService.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
+        //A. Find category
+        Optional<Category> categoryOptional = categoryService.findById(id);
+        if(categoryOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
+        }
+        Category category = categoryOptional.get();
 
         // B. Check if there is something to delete
         if (category.getCategoryImage() != null) {

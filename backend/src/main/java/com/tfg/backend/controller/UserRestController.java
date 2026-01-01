@@ -13,9 +13,11 @@ import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.YearMonth;
@@ -39,19 +41,14 @@ public class UserRestController {
 	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
         Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
 		if(loginInfoOptional.isEmpty()) {
-            return ResponseEntity.noContent().build();
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No user logged in this session.");
 		}
         return ResponseEntity.ok(loginInfoOptional.get());
 	}
 
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request) {
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
-
+        User loggedUser = findLoggedUserHelper(request);
         return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
@@ -60,7 +57,7 @@ public class UserRestController {
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.findById(id);
         if(userOptional.isEmpty()){
-            return ResponseEntity.status(404).build(); //User not found in DB (not registered)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
         }
         User loggedUser = userOptional.get();
 
@@ -89,11 +86,7 @@ public class UserRestController {
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
     @DeleteMapping
     public ResponseEntity<UserDTO> deleteLoggedUser(HttpServletRequest request) {
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         //Erase and anonymize all user data but the name (in order to identify review creators)
         String uniqueUuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
@@ -122,11 +115,7 @@ public class UserRestController {
 
     @DeleteMapping("/avatar")
     public ResponseEntity<UserDTO> deleteAvatar(HttpServletRequest request) {
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         // Check if there is something to delete
         if (loggedUser.getUserImage() != null) {
@@ -145,15 +134,11 @@ public class UserRestController {
 
     @PutMapping("/data")
     public ResponseEntity<UserDTO> updateLoggedUserData(HttpServletRequest request, @RequestBody UserDTO userDTO){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         //Check if the username exists if it is not the same (lazy check)
         if(!userDTO.getUsername().equals(loggedUser.getUsername()) && userService.existsByUsername(userDTO.getUsername())){
-            return ResponseEntity.status(403).build(); //Forbidden, as username must be unique
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Username is already taken.");
         }
 
         //Edit user data
@@ -169,11 +154,7 @@ public class UserRestController {
 
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         Address address = new Address(addressDTO.getAlias(), addressDTO.getStreet(), addressDTO.getNumber(), addressDTO.getFloor(), addressDTO.getPostalCode(), addressDTO.getCity(), addressDTO.getCountry());
         loggedUser.getAddresses().add(address);
@@ -184,15 +165,11 @@ public class UserRestController {
 
     @PutMapping("/addresses")
     public ResponseEntity<UserDTO> editAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         Optional<Address> addressOptional = loggedUser.getAddresses().stream().filter(address -> address.getId().equals(addressDTO.getId())).findFirst();
         if(addressOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Address with ID " + addressDTO.getId() + " does not exist.");
         }
         Address address = addressOptional.get();
 
@@ -210,15 +187,11 @@ public class UserRestController {
 
     @DeleteMapping("/addresses/{id}")
     public ResponseEntity<UserDTO> deleteAddress(HttpServletRequest request, @PathVariable Long id){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         boolean removed = loggedUser.getAddresses().removeIf(address -> address.getId().equals(id));
         if(!removed){
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Address with ID " + id + " not deleted as it does not exist.");
         }
 
         User savedUser = userService.save(loggedUser);
@@ -228,11 +201,7 @@ public class UserRestController {
 
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO cardDTO){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
         PaymentCard card = new PaymentCard(cardDTO.getAlias(), cardDTO.getCardOwnerName(), cardDTO.getNumber(), cardDTO.getCvv(), YearMonth.parse(cardDTO.getDueDate(), formatter));
@@ -244,15 +213,11 @@ public class UserRestController {
 
     @PutMapping("/cards")
     public ResponseEntity<UserDTO> editPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO paymentCardDTO){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         Optional<PaymentCard> cardOptional = loggedUser.getCards().stream().filter(card -> card.getId().equals(paymentCardDTO.getId())).findFirst();
         if(cardOptional.isEmpty()){
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card with ID " + paymentCardDTO.getId() + " does not exist.");
         }
         PaymentCard card = cardOptional.get();
 
@@ -267,18 +232,19 @@ public class UserRestController {
 
     @DeleteMapping("/cards/{id}")
     public ResponseEntity<UserDTO> deletePaymentCard(HttpServletRequest request, @PathVariable Long id){
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         boolean removed = loggedUser.getCards().removeIf(card -> card.getId().equals(id));
         if(!removed){
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Address with ID " + id + " not deleted as it does not exist.");
         }
 
         User savedUser = userService.save(loggedUser);
         return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+    private User findLoggedUserHelper(HttpServletRequest request) {
+        return this.userService.getLoggedUser(request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 }

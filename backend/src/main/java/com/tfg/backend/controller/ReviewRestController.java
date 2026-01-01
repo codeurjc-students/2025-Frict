@@ -12,8 +12,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +37,7 @@ public class ReviewRestController {
     @GetMapping
     public ResponseEntity<ReviewsPageDTO> getAllUserReviews(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
         return ResponseEntity.ok(toReviewsPageDTO(userReviews));
@@ -48,12 +46,9 @@ public class ReviewRestController {
     //Get all the reviews of a product
     @GetMapping("/")
     public ResponseEntity<ReviewListDTO> showAllByProductId(@RequestParam Long productId) {
-        Optional<Product> product = productService.findById(productId);
-        if (product.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        Product product = findProductHelper(productId);
         List<ReviewDTO> dtos = new ArrayList<>();
-        for (Review r : product.get().getReviews()) {
+        for (Review r : product.getReviews()) {
             dtos.add(new ReviewDTO(r));
         }
         return ResponseEntity.ok(new ReviewListDTO(dtos));
@@ -62,23 +57,16 @@ public class ReviewRestController {
     @PostMapping
     public ResponseEntity<ReviewDTO> createReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
-            return ResponseEntity.status(401).build(); //Unauthorized as not matched
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
         }
 
         //Check that the product exists
-        Optional<Product> productOptional = productService.findById(reviewDTO.getProductId());
-        if(productOptional.isEmpty()){
-            return ResponseEntity.notFound().build(); //Product not found
-        }
+        Product product = findProductHelper(reviewDTO.getProductId());
 
-        Review review = new Review(loggedUser, productOptional.get(), reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
+        Review review = new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
         reviewService.save(review);
         return ResponseEntity.ok().body(new ReviewDTO(review));
     }
@@ -87,22 +75,14 @@ public class ReviewRestController {
     @PutMapping
     public ResponseEntity<ReviewDTO> updateReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
-            return ResponseEntity.status(401).build(); //Unauthorized as not matched
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
         }
 
         //Check that the review exists
-        Optional<Review> reviewOptional = reviewService.findById(reviewDTO.getId());
-        if(reviewOptional.isEmpty()){
-            return ResponseEntity.notFound().build(); //Review not found
-        }
-        Review review = reviewOptional.get();
+        Review review = findReviewHelper(reviewDTO.getId());
 
         review.setText(reviewDTO.getText());
         review.setRating(reviewDTO.getRating());
@@ -114,25 +94,32 @@ public class ReviewRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ReviewDTO> deleteReview(HttpServletRequest request, @PathVariable Long id) {
         //Check that the review exists
-        Optional<Review> reviewOptional = reviewService.findById(id);
-        if(reviewOptional.isEmpty()){
-            return ResponseEntity.notFound().build(); //Review not found
-        }
-        Review review = reviewOptional.get();
+        Review review = findReviewHelper(id);
 
         //Check that the logged user and the review creator match
-        Optional<User> userOptional = userService.getLoggedUser(request);
-        if(userOptional.isEmpty()){
-            return ResponseEntity.status(401).build(); //Unauthorized as not logged
-        }
-        User loggedUser = userOptional.get();
+        User loggedUser = findLoggedUserHelper(request);
 
         if (!loggedUser.getId().equals(review.getUser().getId())){
-            return ResponseEntity.status(401).build(); //Unauthorized as not matched
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + review.getUser().getId() + " and logged user ID " + loggedUser.getId() + " do not match.");
         }
 
         reviewService.deleteById(id);
         return ResponseEntity.ok().body(new ReviewDTO(review));
+    }
+
+    private User findLoggedUserHelper(HttpServletRequest request) {
+        return this.userService.getLoggedUser(request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
+    }
+
+    private Product findProductHelper(Long id) {
+        return this.productService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
+    }
+
+    private Review findReviewHelper(Long id) {
+        return this.reviewService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review with ID " + id + " does not exist."));
     }
 
     //Creates ReviewsPageDTO objects with necessary fields only

@@ -59,7 +59,8 @@ public class User {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    @OneToMany(mappedBy = "user")
+    //cascade and orphanRemoval, to be able to perform DB operations with all user order items easily. As users are never deleted from DB (but anonymized), it does not delete historic information useful for statistics
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> allOrderItems = new ArrayList<>(); //Necessary in order to be able to see the user cart
 
     @ManyToMany
