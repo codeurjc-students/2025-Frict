@@ -119,10 +119,14 @@
                  enterActiveClass="animate-slidedown"
                  leaveToClass="hidden"
                  leaveActiveClass="animate-slideup"
-                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors"
+                 (click)="toggleCategories()"
+                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors [&:has(+_.animate-slidedown)]:pointer-events-none [&:has(+_.animate-slideup)]:pointer-events-none"
             >
               <span class="font-medium uppercase tracking-wider text-sm">Categorías</span>
-              <i class="pi pi-chevron-down"></i>
+              <i class="pi"
+                 [class.pi-chevron-down]="!isCategoriesExpanded()"
+                 [class.pi-chevron-up]="isCategoriesExpanded()">
+              </i>
             </div>
 
             <ul class="list-none p-0 m-0 overflow-hidden">
@@ -169,10 +173,14 @@
                 enterActiveClass="animate-slidedown"
                 leaveToClass="hidden"
                 leaveActiveClass="animate-slideup"
-                class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors"
+                (click)="toggleAccount()"
+                class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors [&:has(+_.animate-slidedown)]:pointer-events-none [&:has(+_.animate-slideup)]:pointer-events-none"
               >
                 <span class="font-medium uppercase tracking-wider text-sm">Cuenta</span>
-                <i class="pi pi-chevron-down"></i>
+                <i class="pi"
+                   [class.pi-chevron-down]="!isAccountExpanded()"
+                   [class.pi-chevron-up]="isAccountExpanded()">
+                </i>
               </div>
               <ul class="list-none p-0 m-0 overflow-hidden">
                 <li>

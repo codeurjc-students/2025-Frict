@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
+import {Component, ViewChild, OnInit, signal, WritableSignal} from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Router, RouterLink, RouterLinkActive, IsActiveMatchOptions } from '@angular/router';
 import { NgIf, NgOptimizedImage } from '@angular/common';
@@ -60,6 +60,17 @@ export class NavbarComponent implements OnInit {
   searchBarInput: string = '';
   items: MenuItem[] | undefined;
   loggedUserInfo!: LoginInfo;
+
+  isCategoriesExpanded: WritableSignal<boolean> = signal(true);
+  isAccountExpanded: WritableSignal<boolean> = signal(true);
+
+  toggleCategories() {
+    this.isCategoriesExpanded.update((v) => !v);
+  }
+
+  toggleAccount() {
+    this.isAccountExpanded.update((v) => !v);
+  }
 
   //If a label is defined for this category name, then use it. Otherwise, use the category name from the backend. Else, use "Category" label instead.
   // If a category does not appear in this record, it will not be printed in the sidebar menu.
