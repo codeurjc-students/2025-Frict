@@ -45,42 +45,17 @@
   </section>
 
   <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-    <div class="flex items-center gap-3 p-4 rounded-xl bg-surface-50 border border-surface-100">
-      <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-        <i class="pi pi-truck text-xl"></i>
+    @for (service of services; track service.title) {
+      <div class="flex items-center gap-3 p-4 rounded-xl bg-surface-50 border border-surface-100">
+        <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
+          <i [class]="service.icon + ' text-xl'"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-surface-900 text-sm">{{ service.title }}</h4>
+          <p class="text-surface-500 text-xs">{{ service.subtitle }}</p>
+        </div>
       </div>
-      <div>
-        <h4 class="font-bold text-surface-900 text-sm">Envío Gratis</h4>
-        <p class="text-surface-500 text-xs">En pedidos +50€</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-3 p-4 rounded-xl bg-surface-50 border border-surface-100">
-      <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-        <i class="pi pi-shield text-xl"></i>
-      </div>
-      <div>
-        <h4 class="font-bold text-surface-900 text-sm">Garantía 3 años</h4>
-        <p class="text-surface-500 text-xs">100% oficial</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-3 p-4 rounded-xl bg-surface-50 border border-surface-100">
-      <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-        <i class="pi pi-undo text-xl"></i>
-      </div>
-      <div>
-        <h4 class="font-bold text-surface-900 text-sm">Devoluciones</h4>
-        <p class="text-surface-500 text-xs">30 días gratis</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-3 p-4 rounded-xl bg-surface-50 border border-surface-100">
-      <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-        <i class="pi pi-headphones text-xl"></i>
-      </div>
-      <div>
-        <h4 class="font-bold text-surface-900 text-sm">Soporte 24/7</h4>
-        <p class="text-surface-500 text-xs">Ayuda experta</p>
-      </div>
-    </div>
+    }
   </section>
 
   <section class="mb-16">
@@ -89,45 +64,27 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      <div class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
-        <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
-          <i class="pi pi-desktop text-3xl text-surface-600 group-hover:text-primary-600 transition-colors"></i>
-        </div>
-        <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">Ordenadores</h4>
-        <p class="text-xs text-surface-500 mt-1">Portátiles y Sobremesa</p>
-      </div>
 
-      <div class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
-        <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
-          <i class="pi pi-mobile text-3xl text-surface-600 group-hover:text-primary-600 transition-colors"></i>
-        </div>
-        <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">Periféricos</h4>
-        <p class="text-xs text-surface-500 mt-1">Teclados, Ratones...</p>
-      </div>
+      @for (cat of categories; track cat.id) {
+        @let ui = getCategoryUI(cat.name);
 
-      <div class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
-        <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
-          <i class="pi pi-headphones text-3xl text-surface-600 group-hover:text-primary-600 transition-colors"></i>
-        </div>
-        <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">Gaming</h4>
-        <p class="text-xs text-surface-500 mt-1">Para Jugadores</p>
-      </div>
+        @if (ui) {
+          <div
+            [routerLink]="['/search']"
+            [queryParams]="{ categories: cat.id }"
+            class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
 
-      <div class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
-        <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
-          <i class="pi pi-tablet text-3xl text-surface-600 group-hover:text-primary-600 transition-colors"></i>
-        </div>
-        <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">Móvil / Tablet</h4>
-        <p class="text-xs text-surface-500 mt-1">Última generación</p>
-      </div>
+            <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
+              <i [class]="ui.icon + ' text-3xl text-surface-600 group-hover:text-primary-600 transition-colors'"></i>
+            </div>
 
-      <div class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
-        <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
-          <i class="pi pi-video text-3xl text-surface-600 group-hover:text-primary-600 transition-colors"></i>
-        </div>
-        <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">TV e Imagen</h4>
-        <p class="text-xs text-surface-500 mt-1">Monitores y TV</p>
-      </div>
+            <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">{{ ui.label }}</h4>
+
+            <p class="text-xs text-surface-500 mt-1">{{ ui.description }}</p>
+          </div>
+        }
+      }
+
     </div>
   </section>
 
@@ -166,7 +123,7 @@
         <h3 class="text-3xl font-bold mb-2">Renueva tu Setup Gaming</h3>
         <p class="text-surface-300">Hasta un 20% de descuento en periféricos seleccionados.</p>
       </div>
-      <button routerLink="/search" class="whitespace-nowrap bg-white text-surface-900 font-bold py-3 px-8 rounded-xl hover:bg-surface-100 transition-colors shadow-lg">
+      <button routerLink="/search" [queryParams]="{ categories: 10 }" class="whitespace-nowrap bg-white text-surface-900 font-bold py-3 px-8 rounded-xl hover:bg-surface-100 transition-colors shadow-lg">
         Ver Ofertas <i class="pi pi-arrow-right ml-2"></i>
       </button>
     </div>
