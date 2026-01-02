@@ -108,68 +108,34 @@
 
             <ul class="list-none p-0 m-0 overflow-hidden">
               <div *ngIf="!authService.isAdmin()">
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-microchip mr-3 text-lg"></i>
-                    <span class="font-medium">Ordenadores</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-headphones mr-3 text-lg"></i>
-                    <span class="font-medium">Periféricos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-crown mr-3 text-lg"></i>
-                    <span class="font-medium">Gaming</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-mobile mr-3 text-lg"></i>
-                    <span class="font-medium">Smartphone / Tablet</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-desktop mr-3 text-lg"></i>
-                    <span class="font-medium">Televisión e imagen</span>
-                  </a>
-                </li>
+                @for (cat of categories; track cat.id) {
+                  @let ui = getCategoryUI(cat.name);
+                  @if (ui) {
+                    <li>
+                      <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+                         [routerLink]="['/search']"
+                         [queryParams]="{ categories: cat.id }"
+                         routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+                         [routerLinkActiveOptions]="routerOptions">
+                        <i [class]="ui.icon + ' mr-3 text-lg'"></i>
+                        <span class="font-medium">{{ ui.label }}</span>
+                      </a>
+                    </li>
+                  }
+                }
               </div>
+
               <div *ngIf="authService.isAdmin()">
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="products">
-                    <i class="pi pi-desktop mr-3"></i>
-                    <span class="font-medium">Productos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="orders">
-                    <i class="pi pi-box mr-3"></i>
-                    <span class="font-medium">Pedidos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="reports">
-                    <i class="pi pi-chart-bar mr-3"></i>
-                    <span class="font-medium">Informes</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="delivery">
-                    <i class="pi pi-truck mr-3"></i>
-                    <span class="font-medium">Reparto</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="users">
-                    <i class="pi pi-users mr-3"></i>
-                    <span class="font-medium">Usuarios</span>
-                  </a>
-                </li>
+                @for (item of adminItems; track item.link) {
+                  <li>
+                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+                       [routerLink]="item.link"
+                       routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
+                      <i [class]="item.icon + ' mr-3'"></i>
+                      <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                  </li>
+                }
               </div>
             </ul>
           </li>
@@ -212,7 +178,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors text-red-300 hover:text-red-200" (click)="logout()">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border hover:bg-surface-700 duration-150 transition-colors text-red-300 hover:text-red-200" (click)="logout()">
                     <i class="pi pi-sign-out mr-3"></i>
                     <span class="font-medium">Cerrar sesión</span>
                   </a>
