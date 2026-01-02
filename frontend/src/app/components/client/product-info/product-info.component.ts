@@ -167,7 +167,6 @@ export class ProductInfoComponent implements OnInit {
     if (id) {
       this.productService.getProductById(id).subscribe({
         next: (product) => {
-          console.log(product);
           this.product = product;
 
           if (product.imageUrls && Array.isArray(product.imageUrls)) {
@@ -176,6 +175,11 @@ export class ProductInfoComponent implements OnInit {
             }));
           } else {
             this.images = [];
+          }
+
+          // Light scroll to the top of the page on page change
+          if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'instant' });
           }
 
           this.loadProductCategory();
@@ -262,7 +266,6 @@ export class ProductInfoComponent implements OnInit {
             this.userReviewed = this.productReviews.some(r => r.creatorId === loginInfo.id)
             this.loggedUserInfo = loginInfo;
             this.loading = false;
-            console.log(this.images);
           }
         })
       },

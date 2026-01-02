@@ -93,7 +93,6 @@ export class OrderDetailsComponent implements OnInit {
         log.icon = matchingStep.icon;
       }
     });
-    console.log(this.order.history);
   }
 
   protected cancelOrder() {

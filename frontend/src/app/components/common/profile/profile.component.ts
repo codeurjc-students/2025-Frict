@@ -145,7 +145,6 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
-        console.log(this.user);
         this.loadUserOrders();
         this.loadUserReviews();
       },

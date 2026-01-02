@@ -14,6 +14,8 @@ import { OrderService } from '../../../services/order.service';
 import {Category} from '../../../models/category.model';
 import {CategoryService} from '../../../services/category.service';
 import {Avatar} from 'primeng/avatar';
+import {InputGroup} from 'primeng/inputgroup';
+import {InputText} from 'primeng/inputtext';
 
 interface CategoryUI {
   icon?: string;
@@ -35,7 +37,9 @@ interface CategoryUI {
     PrimeTemplate,
     FormsModule,
     Menu,
-    Avatar
+    Avatar,
+    InputGroup,
+    InputText
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
@@ -109,7 +113,6 @@ export class NavbarComponent implements OnInit {
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list.categories;
-        console.log(this.categories);
       }
     })
 

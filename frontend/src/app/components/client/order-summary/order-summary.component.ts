@@ -151,12 +151,10 @@ export class OrderSummaryComponent implements OnInit {
 
   protected changeAddress(addr: Address) {
     this.selectedAddress = addr;
-    console.log("Dirección seleccionado: ", this.selectedAddress);
   }
 
   protected changePaymentCard(card: PaymentCard) {
     this.selectedPaymentCard = card;
-    console.log("Tarjeta de pago seleccionado: ", this.selectedPaymentCard);
   }
 
   protected cancelNewAddress() {

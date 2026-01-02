@@ -25,13 +25,22 @@
 
     <div class="flex-1 relative w-auto order-3 h-full flex items-center mx-2">
       <div class="flex w-full group">
-        <input placeholder="Buscar productos…" type="text" [(ngModel)]="searchBarInput" class="flex-1 bg-surface-800 placeholder:text-surface-400 focus:bg-surface-900 focus:text-white px-4 text-sm rounded-l-xl outline-none border border-transparent focus:border-primary-500 transition-all"/>
-        <p-button iconPos="left" [routerLink]="['/search']" [queryParams]="{ query: searchBarInput }" styleClass="!h-11 !bg-primary-500/90 hover:!bg-primary/70 text-surface-900 font-bold !rounded-r-lg !rounded-l-none px-4 flex items-center transition-colors">
-          <ng-template pTemplate="content">
-            <i class="pi pi-search text-white"></i>
-            <span class="hidden lg:inline ml-2 font-bold text-white">Buscar</span>
-          </ng-template>
-        </p-button>
+        <p-inputgroup>
+          <input pInputText placeholder="Buscar productos…" [(ngModel)]="searchBarInput" class="!bg-surface-800 !text-surface-200"/>
+
+          <p-button
+            [routerLink]="['/search']"
+            [queryParams]="{ query: searchBarInput }"
+            [disabled]="!(searchBarInput.length > 0)">
+
+            <ng-template pTemplate="content">
+              <i class="pi pi-search"></i>
+
+              <span class="hidden md:inline ml-2 font-bold">Buscar</span>
+            </ng-template>
+
+          </p-button>
+        </p-inputgroup>
       </div>
     </div>
 
@@ -94,6 +103,16 @@
 
       <div class="overflow-y-auto w-full">
         <ul class="list-none px-4 pb-4 m-0">
+          <li>
+            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+               [routerLink]="['/search']"
+               routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+               [routerLinkActiveOptions]="routerOptions">
+              <i class="pi pi-search mr-3 text-lg"></i>
+              <span class="font-medium">Buscar</span>
+            </a>
+          </li>
+
           <li>
             <div pStyleClass="@next"
                  enterFromClass="hidden"
