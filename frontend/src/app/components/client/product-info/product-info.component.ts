@@ -12,7 +12,7 @@ import {Carousel} from 'primeng/carousel';
 import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {ActivatedRoute, Router} from '@angular/router';
-import {MessageService} from 'primeng/api';
+import {MenuItem, MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
 import {CategoryService} from '../../../services/category.service';
@@ -34,6 +34,7 @@ import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
+import {Breadcrumb} from 'primeng/breadcrumb';
 
 
 @Component({
@@ -63,12 +64,16 @@ import {Image} from 'primeng/image';
     Textarea,
     TableModule,
     StockTagComponent,
-    Image
+    Image,
+    Breadcrumb
   ],
   providers: [MessageService],
   templateUrl: './product-info.component.html'
 })
 export class ProductInfoComponent implements OnInit {
+
+  breadcrumbItems: MenuItem[] | undefined = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Components' }, { label: 'Form' }, { label: 'InputText', route: '/inputtext' }];
+  home: MenuItem | undefined;
 
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;

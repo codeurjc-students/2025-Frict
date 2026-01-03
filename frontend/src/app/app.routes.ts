@@ -15,7 +15,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/client/client-home/client-home.component')
         .then(m => m.ClientHomeComponent),
-    data: { title: 'Producto - MiTienda', icon: icons.client }
+    data: { title: 'Inicio - MiTienda', icon: icons.client }
+  },
+
+  {
+    path: 'category/:id',
+    loadComponent: () =>
+      import('./components/client/category-info/category-info.component')
+        .then(m => m.CategoryInfoComponent),
+    data: { title: 'Categoría - MiTienda', icon: icons.client }
   },
 
   {

@@ -148,21 +148,110 @@ public class DatabaseInitializer {
         log.info(">>> Initializing Categories...");
 
         List<Category> categories = new ArrayList<>();
-        categories.add(new Category("Gaming y PC"));
-        categories.add(new Category("Almacenamiento"));
-        categories.add(new Category("Conectividad y Redes"));
-        categories.add(new Category("Energía y Carga"));
-        categories.add(new Category("Móviles y Tablets"));
-        categories.add(new Category("Audio y Sonido"));
-        categories.add(new Category("Hogar Inteligente"));
-        categories.add(new Category("Fotografía y Video"));
-        categories.add(new Category("Televisión e Imagen"));
-        categories.add(new Category("Periféricos"));
-        categories.add(new Category("Software y Servicios"));
-        categories.add(new Category("Herramientas y Accesorios"));
-        categories.add(new Category("Recomendado"));
-        categories.add(new Category("Destacado"));
-        categories.add(new Category("Top ventas"));
+        categories.add(new Category(
+                "Gaming y PC",
+                "Domina el juego con el mejor hardware",
+                "Componentes, portátiles gaming y periféricos de alto rendimiento.",
+                "Encuentra las últimas tarjetas gráficas, procesadores extremos y todo lo necesario para montar tu setup gaming definitivo. Rendimiento sin límites para jugadores exigentes."
+        ));
+
+        categories.add(new Category(
+                "Almacenamiento",
+                "Más espacio, más velocidad",
+                "Discos duros, SSDs NVMe y memorias USB.",
+                "No te quedes sin espacio. Descubre nuestra gama de soluciones de almacenamiento interno y externo para guardar tus archivos, juegos y copias de seguridad con la máxima fiabilidad."
+        ));
+
+        categories.add(new Category(
+                "Conectividad y Redes",
+                "Conexión estable y rápida",
+                "Routers, switches, adaptadores WiFi y cableado.",
+                "Mejora la velocidad de tu internet y elimina las zonas muertas. Equipos de red de última generación para tu hogar u oficina inteligente."
+        ));
+
+        categories.add(new Category(
+                "Energía y Carga",
+                "Energía para todo el día",
+                "Cargadores, powerbanks, regletas y SAIs.",
+                "Mantén tus dispositivos siempre encendidos y protegidos. Soluciones de carga rápida y protección eléctrica contra picos de tensión para tus equipos valiosos."
+        ));
+
+        categories.add(new Category(
+                "Móviles y Tablets",
+                "Tecnología en tu mano",
+                "Smartphones, tablets y accesorios imprescindibles.",
+                "Las últimas novedades en telefonía móvil. Desde buques insignia hasta opciones calidad-precio, junto con fundas y protectores para mantenerlos como nuevos."
+        ));
+
+        categories.add(new Category(
+                "Audio y Sonido",
+                "Siente cada nota",
+                "Auriculares, altavoces, micrófonos y barras de sonido.",
+                "Sumérgete en un sonido de alta fidelidad. Equipos de audio profesional y de consumo para disfrutar de tu música, películas y conferencias con claridad cristalina."
+        ));
+
+        categories.add(new Category(
+                "Hogar Inteligente",
+                "Tu casa, ahora más lista",
+                "Domótica, asistentes de voz y seguridad smart.",
+                "Automatiza tu vida. Controla luces, enchufes y cámaras desde tu móvil. Crea rutinas inteligentes para ahorrar energía y mejorar tu comodidad."
+        ));
+
+        categories.add(new Category(
+                "Fotografía y Video",
+                "Captura el momento perfecto",
+                "Cámaras, objetivos, trípodes y estabilizadores.",
+                "Equipo para creadores de contenido y fotógrafos. Inmortaliza tus recuerdos con la mejor calidad de imagen, ya seas aficionado o profesional."
+        ));
+
+        categories.add(new Category(
+                "Televisión e Imagen",
+                "Cine en tu salón",
+                "Smart TVs 4K, proyectores y monitores.",
+                "Disfruta de tus series y películas favoritas con la mejor calidad visual. Pantallas con tecnologías OLED y QLED para colores vibrantes y negros puros."
+        ));
+
+        categories.add(new Category(
+                "Periféricos",
+                "Completa tu experiencia",
+                "Teclados, ratones, webcams e impresoras.",
+                "Mejora tu productividad y ergonomía. Accesorios esenciales que conectan contigo y tu ordenador para trabajar o estudiar mejor."
+        ));
+
+        categories.add(new Category(
+                "Software y Servicios",
+                "Potencia digital",
+                "Sistemas operativos, antivirus y ofimática.",
+                "Las licencias originales que necesitas. Protege tu equipo contra virus y aumenta tu productividad con las suites de oficina más populares."
+        ));
+
+        categories.add(new Category(
+                "Herramientas y Accesorios",
+                "Mantenimiento y montaje",
+                "Kits de herramientas, pasta térmica y limpieza.",
+                "Todo lo necesario para el entusiasta del hardware. Herramientas de precisión para montar PCs y productos de limpieza para cuidar tu electrónica."
+        ));
+
+        categories.add(new Category(
+                "Recomendado",
+                "Nuestra selección experta",
+                "Productos elegidos por su calidad y precio.",
+                "Una selección curada por nuestros especialistas. Artículos que destacan por su excelente relación calidad-precio y fiabilidad comprobada."
+        ));
+
+        categories.add(new Category(
+                "Destacado",
+                "Tendencias del momento",
+                "Lo más nuevo y relevante del mercado.",
+                "Descubre los productos que están marcando tendencia ahora mismo. Lanzamientos recientes y artículos que están dando de qué hablar."
+        ));
+
+        categories.add(new Category(
+                "Top ventas",
+                "Los favoritos de la comunidad",
+                "Los productos más comprados por nuestros clientes.",
+                "Éxito garantizado. Estos son los artículos número uno en ventas, avalados por miles de compras y clientes satisfechos."
+        ));
 
         for (Category cat : categories) {
             // Assign GLOBAL default image (Pointer copy, no new upload)

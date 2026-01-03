@@ -20,6 +20,12 @@ public class Category {
     @Column(unique = true)
     private String name;
 
+    private String bannerText;
+
+    private String shortDescription;
+
+    private String longDescription;
+
     @Embedded
     private ImageInfo categoryImage;
 
@@ -29,7 +35,10 @@ public class Category {
     public Category() {
     }
 
-    public Category(String name) {
+    public Category(String name, String bannerText, String shortDescription, String longDescription) {
         this.name = name;
+        this.bannerText = bannerText;
+        this.shortDescription = shortDescription;
+        this.longDescription = longDescription;
     }
 }

@@ -84,7 +84,7 @@ export class ProductService {
   public getProductsByCategoryName(name: string): Observable<ProductsPage> { //Gets data for carousels
     return this.categoryService.getCategoryByName(name).pipe(
       switchMap((category: any) => {
-        return this.getFilteredProducts(0, 10, '', [category.id], "");
+        return this.getFilteredProducts(0, 8, '', [category.id], "");
       }),
       catchError((error) => {
         return throwError(() => error);
