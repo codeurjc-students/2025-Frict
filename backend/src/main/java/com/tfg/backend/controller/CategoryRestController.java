@@ -31,21 +31,16 @@ public class CategoryRestController {
 
     @GetMapping("/")
     public ResponseEntity<CategoryListDTO> showAllCategories() {
-        List<Category> categories = categoryService.findAll();
-        List<CategoryDTO> dtos = new ArrayList<>();
-        for (Category c : categories) {
-            dtos.add(new CategoryDTO(c));
-        }
+        List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
         return ResponseEntity.ok(new CategoryListDTO(dtos));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        Optional<Category> category = categoryService.findById(id);
-        if (!category.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
-        }
-        return ResponseEntity.ok(new CategoryDTO(category.get()));
+        return categoryService.findById(id)
+                .map(CategoryDTO::new)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found."));
     }
 
     @PostMapping(value = "/{id}/image")

@@ -1,10 +1,9 @@
 import {Component, ViewChild, OnInit, signal, WritableSignal} from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Router, RouterLink, RouterLinkActive, IsActiveMatchOptions } from '@angular/router';
-import { NgIf, NgOptimizedImage } from '@angular/common';
+import {NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import { Button } from 'primeng/button';
 import { Drawer } from 'primeng/drawer';
-import { StyleClass } from 'primeng/styleclass';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { FormsModule } from '@angular/forms';
 import { Menu } from 'primeng/menu';
@@ -33,13 +32,13 @@ interface CategoryUI {
     NgOptimizedImage,
     Button,
     Drawer,
-    StyleClass,
     PrimeTemplate,
     FormsModule,
     Menu,
     Avatar,
     InputGroup,
-    InputText
+    InputText,
+    NgTemplateOutlet
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
@@ -63,6 +62,28 @@ export class NavbarComponent implements OnInit {
 
   isCategoriesExpanded: WritableSignal<boolean> = signal(true);
   isAccountExpanded: WritableSignal<boolean> = signal(true);
+  manualToggleState = signal<Map<number, boolean>>(new Map());
+
+  shouldExpand(categoryId: number, isRouteActive: boolean): boolean {
+    const manualState = this.manualToggleState().get(categoryId);
+
+    if (manualState !== undefined) {
+      return manualState;
+    }
+
+    return isRouteActive;
+  }
+
+  toggleSubmenu(categoryId: number, isRouteActive: boolean) {
+    const currentState = this.shouldExpand(categoryId, isRouteActive);
+
+    // Actualizamos el mapa invirtiendo el estado actual
+    this.manualToggleState.update(map => {
+      const newMap = new Map(map);
+      newMap.set(categoryId, !currentState);
+      return newMap;
+    });
+  }
 
   toggleCategories() {
     this.isCategoriesExpanded.update((v) => !v);
@@ -73,15 +94,14 @@ export class NavbarComponent implements OnInit {
   }
 
   //If a label is defined for this category name, then use it. Otherwise, use the category name from the backend. Else, use "Category" label instead.
-  // If a category does not appear in this record, it will not be printed in the sidebar menu.
+  // Same for icons
   // noinspection JSNonASCIINames
   private readonly categoryConfig: Record<string, CategoryUI> = {
-    'Gaming y PC': { icon: 'pi pi-desktop' /*, label: 'Gaming' */ }, //Prints the category with both custom icon and label
-    'Almacenamiento': { icon: 'pi pi-database' },
-    'Conectividad y Redes': { icon: 'pi pi-wifi' },
-    'Energía y Carga': { icon: 'pi pi-bolt' },
-    'Móviles y Tablets': { icon: 'pi pi-mobile' }, // Prints the category with the custom icon and the category name
-    //'Audio y Sonido': {} //Prints the category, but use the default icon and the category name
+    'Ordenadores': { icon: 'pi pi-desktop' /*, label: 'Gaming' */ }, //Prints the category with both custom icon and label
+    'Componentes': { icon: 'pi pi-database' },
+    'Periféricos': { icon: 'pi pi-wifi' },
+    'Telefonía y Wearables': { icon: 'pi pi-bolt' },
+    'Hogar y Conectividad': { icon: 'pi pi-mobile' }, // Prints the category with the custom icon and the category name
   };
 
   public adminItems = [
@@ -106,13 +126,11 @@ export class NavbarComponent implements OnInit {
     const config = this.categoryConfig[categoryName];
 
     if (!config) {
-      return undefined;
+      return { icon: 'pi pi-tag', label: categoryName ?? 'Categoría' }
     }
-
-    return {
-      icon: config.icon ?? 'pi pi-tag',
-      label: config.label ?? categoryName ?? 'Categoría'
-    };
+    else {
+      return { icon: config.icon ?? 'pi pi-tag', label: config.label ?? categoryName ?? 'Categoría' }
+    }
   }
 
   ngOnInit() {
@@ -124,6 +142,7 @@ export class NavbarComponent implements OnInit {
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list.categories;
+        console.log(this.categories);
       }
     })
 

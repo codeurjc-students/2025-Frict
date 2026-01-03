@@ -4,6 +4,9 @@ import com.tfg.backend.model.Category;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 public class CategoryDTO {
@@ -13,6 +16,7 @@ public class CategoryDTO {
     private String shortDescription;
     private String longDescription;
     private String imageUrl;
+    private List<CategoryDTO> children = new ArrayList<>();
 
     public CategoryDTO() {
     }
@@ -23,6 +27,16 @@ public class CategoryDTO {
         this.bannerText = c.getBannerText();
         this.shortDescription = c.getShortDescription();
         this.longDescription = c.getLongDescription();
-        this.imageUrl = c.getCategoryImage().getImageUrl();
+
+        if (c.getCategoryImage() != null) {
+            this.imageUrl = c.getCategoryImage().getImageUrl();
+        }
+
+        //Recursive category children instantiation
+        if (c.getChildren() != null && !c.getChildren().isEmpty()) {
+            this.children = c.getChildren().stream()
+                    .map(CategoryDTO::new) // Recursive call
+                    .toList();
+        }
     }
 }

@@ -15,9 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -145,118 +144,86 @@ public class DatabaseInitializer {
 
     private void initCategories() {
         if (categoryRepository.count() > 0) return;
-        log.info(">>> Initializing Categories...");
+        log.info(">>> Initializing Hierarchical Categories...");
 
-        List<Category> categories = new ArrayList<>();
-        categories.add(new Category(
-                "Gaming y PC",
-                "Domina el juego con el mejor hardware",
-                "Componentes, portátiles gaming y periféricos de alto rendimiento.",
-                "Encuentra las últimas tarjetas gráficas, procesadores extremos y todo lo necesario para montar tu setup gaming definitivo. Rendimiento sin límites para jugadores exigentes."
-        ));
+        List<Category> roots = new ArrayList<>();
 
-        categories.add(new Category(
-                "Almacenamiento",
-                "Más espacio, más velocidad",
-                "Discos duros, SSDs NVMe y memorias USB.",
-                "No te quedes sin espacio. Descubre nuestra gama de soluciones de almacenamiento interno y externo para guardar tus archivos, juegos y copias de seguridad con la máxima fiabilidad."
-        ));
+        // --- ROOT CATEGORY 1 ---
+        Category ordenadores = new Category("Ordenadores", "Potencia para todo", "Portátiles, Sobremesa y Mini PCs", "Equipos completos listos para usar.");
 
-        categories.add(new Category(
-                "Conectividad y Redes",
-                "Conexión estable y rápida",
-                "Routers, switches, adaptadores WiFi y cableado.",
-                "Mejora la velocidad de tu internet y elimina las zonas muertas. Equipos de red de última generación para tu hogar u oficina inteligente."
-        ));
+        Category portatiles = new Category("Portátiles", "Llévalo contigo", "Ultrabooks y Gaming Laptops", "Movilidad sin compromisos.");
+        Category sobremesa = new Category("Sobremesa y Mini PC", "Máximo rendimiento", "Torres y compactos", "Para oficina o setups minimalistas.");
 
-        categories.add(new Category(
-                "Energía y Carga",
-                "Energía para todo el día",
-                "Cargadores, powerbanks, regletas y SAIs.",
-                "Mantén tus dispositivos siempre encendidos y protegidos. Soluciones de carga rápida y protección eléctrica contra picos de tensión para tus equipos valiosos."
-        ));
+        ordenadores.addChild(portatiles);
+        ordenadores.addChild(sobremesa);
+        roots.add(ordenadores);
 
-        categories.add(new Category(
-                "Móviles y Tablets",
-                "Tecnología en tu mano",
-                "Smartphones, tablets y accesorios imprescindibles.",
-                "Las últimas novedades en telefonía móvil. Desde buques insignia hasta opciones calidad-precio, junto con fundas y protectores para mantenerlos como nuevos."
-        ));
+        // --- ROOT CATEGORY 2 ---
+        Category componentes = new Category("Componentes", "Monta tu PC", "Hardware interno de alto rendimiento", "El corazón de tu ordenador.");
 
-        categories.add(new Category(
-                "Audio y Sonido",
-                "Siente cada nota",
-                "Auriculares, altavoces, micrófonos y barras de sonido.",
-                "Sumérgete en un sonido de alta fidelidad. Equipos de audio profesional y de consumo para disfrutar de tu música, películas y conferencias con claridad cristalina."
-        ));
+        Category almacenamiento = new Category("Almacenamiento", "Guárdalo todo", "SSD, NVMe y Discos Duros", "Velocidad y capacidad para tus datos.");
+        Category graficas = new Category("Tarjetas Gráficas", "Gráficos Next-Gen", "GPUs NVIDIA y AMD", "Potencia visual para juegos y renderizado.");
+        Category herramientas = new Category("Herramientas y Montaje", "Taller PC", "Pastas térmicas y kits", "Todo para el mantenimiento.");
 
-        categories.add(new Category(
-                "Hogar Inteligente",
-                "Tu casa, ahora más lista",
-                "Domótica, asistentes de voz y seguridad smart.",
-                "Automatiza tu vida. Controla luces, enchufes y cámaras desde tu móvil. Crea rutinas inteligentes para ahorrar energía y mejorar tu comodidad."
-        ));
+        componentes.addChild(almacenamiento);
+        componentes.addChild(graficas);
+        componentes.addChild(herramientas);
+        roots.add(componentes);
 
-        categories.add(new Category(
-                "Fotografía y Video",
-                "Captura el momento perfecto",
-                "Cámaras, objetivos, trípodes y estabilizadores.",
-                "Equipo para creadores de contenido y fotógrafos. Inmortaliza tus recuerdos con la mejor calidad de imagen, ya seas aficionado o profesional."
-        ));
+        // --- ROOT CATEGORY 3 ---
+        Category perifericos = new Category("Periféricos", "Tu conexión con el PC", "Teclados, ratones y monitores", "Mejora tu interacción.");
 
-        categories.add(new Category(
-                "Televisión e Imagen",
-                "Cine en tu salón",
-                "Smart TVs 4K, proyectores y monitores.",
-                "Disfruta de tus series y películas favoritas con la mejor calidad visual. Pantallas con tecnologías OLED y QLED para colores vibrantes y negros puros."
-        ));
+        Category monitores = new Category("Monitores y Pantallas", "Visualización perfecta", "Monitores 4K, Curvos y Gaming", "No pierdas detalle.");
+        Category entrada = new Category("Teclados y Ratones", "Control total", "Mecánicos, inalámbricos y ergonómicos", "Precisión en cada clic.");
+        Category audio = new Category("Audio y Sonido", "Experiencia sonora", "Auriculares y Altavoces", "Calidad de estudio.");
 
-        categories.add(new Category(
-                "Periféricos",
-                "Completa tu experiencia",
-                "Teclados, ratones, webcams e impresoras.",
-                "Mejora tu productividad y ergonomía. Accesorios esenciales que conectan contigo y tu ordenador para trabajar o estudiar mejor."
-        ));
+        perifericos.addChild(monitores);
+        perifericos.addChild(entrada);
+        perifericos.addChild(audio);
+        roots.add(perifericos);
 
-        categories.add(new Category(
-                "Software y Servicios",
-                "Potencia digital",
-                "Sistemas operativos, antivirus y ofimática.",
-                "Las licencias originales que necesitas. Protege tu equipo contra virus y aumenta tu productividad con las suites de oficina más populares."
-        ));
+        // --- ROOT CATEGORY 4 ---
+        Category movilidad = new Category("Telefonía y Wearables", "Siempre conectado", "Smartphones y relojes inteligentes", "Tecnología de bolsillo.");
 
-        categories.add(new Category(
-                "Herramientas y Accesorios",
-                "Mantenimiento y montaje",
-                "Kits de herramientas, pasta térmica y limpieza.",
-                "Todo lo necesario para el entusiasta del hardware. Herramientas de precisión para montar PCs y productos de limpieza para cuidar tu electrónica."
-        ));
+        Category moviles = new Category("Móviles y Smartphones", "Última generación", "Android y iOS", "Potencia en tu mano.");
+        Category wearables = new Category("Smartwatches", "Salud y notificaciones", "Relojes y pulseras", "Tu asistente de muñeca.");
 
-        categories.add(new Category(
-                "Recomendado",
-                "Nuestra selección experta",
-                "Productos elegidos por su calidad y precio.",
-                "Una selección curada por nuestros especialistas. Artículos que destacan por su excelente relación calidad-precio y fiabilidad comprobada."
-        ));
+        movilidad.addChild(moviles);
+        movilidad.addChild(wearables);
+        roots.add(movilidad);
 
-        categories.add(new Category(
-                "Destacado",
-                "Tendencias del momento",
-                "Lo más nuevo y relevante del mercado.",
-                "Descubre los productos que están marcando tendencia ahora mismo. Lanzamientos recientes y artículos que están dando de qué hablar."
-        ));
+        // --- ROOT CATEGORY 5 ---
+        Category hogarRedes = new Category("Hogar y Conectividad", "Tu espacio inteligente", "Domótica y Redes", "Moderniza tu entorno.");
 
-        categories.add(new Category(
-                "Top ventas",
-                "Los favoritos de la comunidad",
-                "Los productos más comprados por nuestros clientes.",
-                "Éxito garantizado. Estos son los artículos número uno en ventas, avalados por miles de compras y clientes satisfechos."
-        ));
+        Category redes = new Category("Redes y WiFi", "Internet veloz", "Routers y Mesh", "Adiós al lag.");
+        Category domotica = new Category("Hogar Inteligente", "Automatización", "Bombillas y Asistentes", "Controla tu casa por voz.");
+        Category energia = new Category("Energía", "Poder constante", "Cargadores y Powerbanks", "Baterías siempre llenas.");
 
-        for (Category cat : categories) {
-            // Assign GLOBAL default image (Pointer copy, no new upload)
-            cat.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
-            categoryRepository.save(cat);
+        hogarRedes.addChild(redes);
+        hogarRedes.addChild(domotica);
+        hogarRedes.addChild(energia);
+        roots.add(hogarRedes);
+
+        // --- ROOT CATEGORY 6 ---
+        Category multimedia = new Category("Foto y Video", "Creadores de contenido", "Cámaras y Accesorios", "Captura el mundo.");
+        roots.add(multimedia);
+
+        roots.add(new Category("Recomendado", "Nuestra selección", "Calidad precio", "Elegidos por expertos."));
+        roots.add(new Category("Destacado", "Tendencias", "Lo más nuevo", "Lo que está de moda."));
+        roots.add(new Category("Top Ventas", "Los más vendidos", "Favoritos de la comunidad", "Éxito garantizado."));
+
+        for (Category root : roots) {
+            assignCategoryImage(root);
+            categoryRepository.save(root);
+        }
+    }
+
+    private void assignCategoryImage(Category category) {
+        category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
+        if (category.getChildren() != null) {
+            for (Category child : category.getChildren()) {
+                assignCategoryImage(child);
+            }
         }
     }
 
@@ -264,94 +231,144 @@ public class DatabaseInitializer {
         if (productRepository.count() > 0) return;
         log.info(">>> Initializing Products...");
 
+        // Load category map
+        Map<String, Category> catMap = categoryRepository.findAll().stream()
+                .collect(Collectors.toMap(Category::getName, c -> c));
+
         List<Product> products = new ArrayList<>();
-        products.add(new Product("Smartphone Plegable X", "Innovación en diseño y potencia", 750.00));
-        products.getFirst().setPreviousPrice(1000.00);
-        products.add(new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad y rendimiento", 1250.50));
-        products.get(1).setPreviousPrice(1500.00);
-        products.add(new Product("Tarjeta Gráfica RTX 5080", "Gráficos de siguiente generación para gaming", 780.25));
-        products.add(new Product("Router WiFi 6E Mesh", "Cobertura total y velocidad Gigabit", 185.70));
-        products.add(new Product("Monitor Curvo Ultrawide", "Experiencia inmersiva para profesionales", 499.00));
-        products.add(new Product("Cámara Mirrorless 4K", "Fotografía y video de alta resolución", 1120.40));
-        products.add(new Product("Disco SSD NVMe 2TB", "Velocidad extrema de lectura/escritura", 155.99));
-        products.add(new Product("Teclado Mecánico RGB", "Switches táctiles para gamers y coders", 89.65));
-        products.add(new Product("Altavoz Inteligente con IA", "Asistente de voz y sonido premium", 75.30));
-        products.add(new Product("Auriculares con Cancelación de Ruido", "Inmersión total en música y llamadas", 199.50));
-        products.add(new Product("Smartwatch con ECG", "Monitor de salud avanzado en tu muñeca", 220.00));
-        products.add(new Product("Drone Plegable con GPS", "Tomas aéreas estables y de calidad", 345.80));
-        products.add(new Product("Batería Externa USB-PD 65W", "Carga tu laptop y móvil en cualquier lugar", 55.45));
-        products.add(new Product("Lector de Ebooks con Luz", "Miles de libros sin fatiga visual", 129.90));
-        products.add(new Product("Sistema de Alarma Inteligente", "Seguridad para el hogar con control remoto", 240.75));
-        products.add(new Product("Convertidor HDMI a USB-C", "Conecta tu laptop a cualquier pantalla", 18.25));
-        products.add(new Product("Mini PC Industrial", "Potencia y tamaño reducido para automatización", 510.10));
-        products.add(new Product("Gafas de Realidad Mixta", "El futuro de la interacción digital y el trabajo", 2400.00));
-        products.add(new Product("Tableta Gráfica Pro 16\"", "Precisión y sensibilidad para el diseño", 390.60));
-        products.add(new Product("Impresora 3D de Resina", "Crea prototipos de alta definición en casa", 425.99));
-        products.add(new Product("Estación de Carga Inalámbrica Triple", "Carga rápida para tus tres dispositivos Apple/Android", 45.00));
-        products.add(new Product("Extensor de Rango Powerline", "Red estable a través de la instalación eléctrica", 68.35));
-        products.add(new Product("Consola de Juegos Portátil", "Juegos AAA en tus manos, donde vayas", 450.70));
-        products.add(new Product("Sensor de Humedad y Temperatura IoT", "Monitorización ambiental a distancia", 12.88));
-        products.add(new Product("Tarjeta de Sonido Externa USB", "Audio de estudio para PC o laptop", 79.95));
-        products.add(new Product("Cable Ethernet Cat 8", "Máxima velocidad para redes cableadas", 15.15));
-        products.add(new Product("Ventilador de Laptop con RGB", "Refrigeración eficiente para sesiones largas", 29.50));
-        products.add(new Product("Kit de Raspberry Pi 5 Avanzado", "Microcomputadora para proyectos de electrónica", 85.60));
-        products.add(new Product("Medidor de Calidad de Aire Digital", "Monitorea CO2 y partículas en tiempo real", 115.20));
-        products.add(new Product("Sistema de Iluminación Inteligente", "Control de color y brillo por voz o app", 60.99));
 
-        List<Category> categories = categoryRepository.findAll();
-        if (!categories.isEmpty()){
-            Category gaming = categories.get(0);
-            Category storage = categories.get(1);
-            Category connectivity = categories.get(2);
-            Category power = categories.get(3);
-            Category mobile = categories.get(4);
-            Category audio = categories.get(5);
-            Category smartHome = categories.get(6);
-            Category photography = categories.get(7);
-            Category tvImage = categories.get(8);
-            Category peripherals = categories.get(9);
-            Category software = categories.get(10);
-            Category tools = categories.get(11);
-            Category recommended = categories.get(12);
-            Category featured = categories.get(13);
-            Category topSales = categories.get(14);
+        // --- COMPUTERS ---
+        Product p1 = new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad", 1250.50);
+        p1.setPreviousPrice(1500.00);
+        assignCategories(p1, catMap, "Portátiles", "Recomendado", "Destacado");
+        products.add(p1);
 
-            products.get(0).setCategories(List.of(mobile, topSales, featured));
-            products.get(1).setCategories(List.of(gaming, recommended, peripherals));
-            products.get(2).setCategories(List.of(gaming, peripherals, topSales));
-            products.get(3).setCategories(List.of(connectivity, smartHome));
-            products.get(4).setCategories(List.of(tvImage, peripherals, featured));
-            products.get(5).setCategories(List.of(photography, recommended));
-            products.get(6).setCategories(List.of(storage, gaming, topSales));
-            products.get(7).setCategories(List.of(peripherals, gaming, topSales));
-            products.get(8).setCategories(List.of(audio, smartHome, featured));
-            products.get(9).setCategories(List.of(audio, peripherals, topSales));
-            products.get(10).setCategories(List.of(mobile, recommended));
-            products.get(11).setCategories(List.of(photography, tools));
-            products.get(12).setCategories(List.of(power, mobile, tools));
-            products.get(13).setCategories(List.of(mobile, recommended));
-            products.get(14).setCategories(List.of(smartHome, featured));
-            products.get(15).setCategories(List.of(connectivity, tools));
-            products.get(16).setCategories(List.of(gaming, connectivity));
-            products.get(17).setCategories(List.of(gaming, featured, peripherals));
-            products.get(18).setCategories(List.of(peripherals, photography));
-            products.get(19).setCategories(List.of(tools, recommended));
-            products.get(20).setCategories(List.of(power, mobile));
-            products.get(21).setCategories(List.of(connectivity, smartHome));
-            products.get(22).setCategories(List.of(gaming, topSales, featured));
-            products.get(23).setCategories(List.of(smartHome, tools));
-            products.get(24).setCategories(List.of(audio, peripherals));
-            products.get(25).setCategories(List.of(connectivity, tools, topSales));
-            products.get(26).setCategories(List.of(gaming, tools));
-            products.get(27).setCategories(List.of(gaming, smartHome, tools));
-            products.get(28).setCategories(List.of(smartHome, recommended));
-            products.get(29).setCategories(List.of(smartHome, tvImage, featured));
-        }
+        Product p2 = new Product("Mini PC Industrial", "Potencia compacta", 510.10);
+        assignCategories(p2, catMap, "Sobremesa y Mini PC", "Destacado");
+        products.add(p2);
 
-        // Upload image for each product and save
+        Product p18 = new Product("Portátil Gaming Beast 17\"", "RTX 4090 y i9 de última gen", 3200.00);
+        p18.setPreviousPrice(3500.00);
+        assignCategories(p18, catMap, "Portátiles", "Top Ventas", "Ordenadores");
+        products.add(p18);
+
+        Product p19 = new Product("All-in-One Oficina Pro", "Pantalla 27\" y diseño limpio", 899.99);
+        assignCategories(p19, catMap, "Sobremesa y Mini PC", "Ordenadores");
+        products.add(p19);
+
+        // --- MOBILITY ---
+        Product p3 = new Product("Smartphone Plegable X", "Innovación en diseño", 750.00);
+        p3.setPreviousPrice(1000.00);
+        assignCategories(p3, catMap, "Móviles y Smartphones", "Top Ventas", "Destacado");
+        products.add(p3);
+
+        Product p4 = new Product("Smartwatch con ECG", "Salud en tu muñeca", 220.00);
+        assignCategories(p4, catMap, "Smartwatches", "Recomendado");
+        products.add(p4);
+
+        Product p20 = new Product("Tablet Pro 12.9\"", "Pantalla Liquid Retina XDR", 1100.00);
+        assignCategories(p20, catMap, "Móviles y Smartphones", "Destacado");
+        products.add(p20);
+
+        // --- COMPONENTS ---
+        Product p5 = new Product("Tarjeta Gráfica RTX 5080", "Next Gen Gaming", 780.25);
+        assignCategories(p5, catMap, "Tarjetas Gráficas", "Top Ventas", "Destacado");
+        products.add(p5);
+
+        Product p6 = new Product("Disco SSD NVMe 2TB", "Velocidad extrema", 155.99);
+        assignCategories(p6, catMap, "Almacenamiento", "Recomendado");
+        products.add(p6);
+
+        Product p7 = new Product("Pasta Térmica Gold", "Refrigeración eficiente", 12.50);
+        assignCategories(p7, catMap, "Herramientas y Montaje");
+        products.add(p7);
+
+        Product p21 = new Product("Procesador Intel Core i9", "24 núcleos de potencia pura", 589.90);
+        assignCategories(p21, catMap, "Componentes", "Recomendado");
+        products.add(p21);
+
+        Product p22 = new Product("Kit RAM DDR5 32GB", "6000MHz RGB", 145.00);
+        assignCategories(p22, catMap, "Componentes", "Destacado");
+        products.add(p22);
+
+        Product p23 = new Product("Fuente Alimentación 850W", "Certificación Gold Modular", 119.99);
+        assignCategories(p23, catMap, "Componentes", "Herramientas y Montaje");
+        products.add(p23);
+
+        // --- PERIPHERALS ---
+        Product p8 = new Product("Monitor Curvo Ultrawide", "Inmersión total", 499.00);
+        assignCategories(p8, catMap, "Monitores y Pantallas", "Destacado");
+        products.add(p8);
+
+        Product p9 = new Product("Teclado Mecánico RGB", "Switches táctiles", 89.65);
+        assignCategories(p9, catMap, "Teclados y Ratones", "Top Ventas");
+        products.add(p9);
+
+        Product p10 = new Product("Auriculares Cancelación Ruido", "Silencio absoluto", 199.50);
+        assignCategories(p10, catMap, "Audio y Sonido", "Recomendado");
+        products.add(p10);
+
+        Product p24 = new Product("Ratón Gaming Inalámbrico", "Sensor óptico 25K DPI", 79.99);
+        p24.setPreviousPrice(99.99);
+        assignCategories(p24, catMap, "Teclados y Ratones", "Top Ventas");
+        products.add(p24);
+
+        Product p25 = new Product("Webcam StreamCam 1080p", "60fps para creadores", 115.50);
+        assignCategories(p25, catMap, "Periféricos", "Foto y Video");
+        products.add(p25);
+
+        Product p26 = new Product("Micrófono USB Condensador", "Calidad de estudio podcast", 129.99);
+        assignCategories(p26, catMap, "Audio y Sonido", "Periféricos");
+        products.add(p26);
+
+        Product p27 = new Product("Ratón Vertical Ergonómico", "Reduce la fatiga de muñeca", 45.00);
+        assignCategories(p27, catMap, "Teclados y Ratones", "Recomendado");
+        products.add(p27);
+
+        // --- HOME & NETWORK ---
+        Product p11 = new Product("Router WiFi 6E Mesh", "Cobertura total", 185.70);
+        assignCategories(p11, catMap, "Redes y WiFi", "Destacado");
+        products.add(p11);
+
+        Product p12 = new Product("Altavoz Inteligente IA", "Asistente de hogar", 75.30);
+        assignCategories(p12, catMap, "Hogar Inteligente", "Audio y Sonido", "Top Ventas");
+        products.add(p12);
+
+        Product p13 = new Product("Batería Externa 65W", "Carga rápida", 55.45);
+        assignCategories(p13, catMap, "Energía", "Móviles y Smartphones");
+        products.add(p13);
+
+        Product p28 = new Product("Bombilla Inteligente RGB", "Control por voz y app", 15.99);
+        assignCategories(p28, catMap, "Hogar Inteligente", "Energía");
+        products.add(p28);
+
+        Product p29 = new Product("Switch Gigabit 8 Puertos", "Expansión de red metálica", 25.00);
+        assignCategories(p29, catMap, "Redes y WiFi");
+        products.add(p29);
+
+        // --- MULTIMEDIA ---
+        Product p14 = new Product("Cámara Mirrorless 4K", "Calidad profesional", 1120.40);
+        assignCategories(p14, catMap, "Foto y Video", "Destacado");
+        products.add(p14);
+
+        Product p15 = new Product("Dron Plegable GPS", "Tomas aéreas", 345.80);
+        assignCategories(p15, catMap, "Foto y Video", "Hogar y Conectividad");
+        products.add(p15);
+
+        Product p16 = new Product("Gafas Realidad Mixta", "El futuro hoy", 2400.00);
+        assignCategories(p16, catMap, "Destacado", "Monitores y Pantallas");
+        products.add(p16);
+
+        Product p17 = new Product("Impresora 3D Resina", "Crea prototipos", 425.99);
+        assignCategories(p17, catMap, "Herramientas y Montaje", "Periféricos");
+        products.add(p17);
+
+        Product p30 = new Product("Barra de Sonido Atmos", "Cine en casa compacto", 350.00);
+        p30.setPreviousPrice(450.00);
+        assignCategories(p30, catMap, "Audio y Sonido", "Hogar y Conectividad");
+        products.add(p30);
+
         for (Product p : products) {
-            // New Logic: Create ProductImageInfo using GlobalDefaults data
-            // We reuse the URL and Key from the global upload.
             ProductImageInfo pImage = new ProductImageInfo(
                     GlobalDefaults.PRODUCT_IMAGE.getImageUrl(),
                     GlobalDefaults.PRODUCT_IMAGE.getS3Key(),
@@ -361,6 +378,19 @@ public class DatabaseInitializer {
             p.getImages().add(pImage);
             productRepository.save(p);
         }
+    }
+
+    private void assignCategories(Product product, Map<String, Category> catMap, String... categoryNames) {
+        List<Category> categoriesToAssign = new ArrayList<>();
+        for (String name : categoryNames) {
+            Category c = catMap.get(name);
+            if (c != null) {
+                categoriesToAssign.add(c);
+            } else {
+                log.warn("Category not found in initialization: {}", name);
+            }
+        }
+        product.setCategories(categoriesToAssign);
     }
 
     private void initShopsAndTrucks() {

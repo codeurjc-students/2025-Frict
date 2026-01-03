@@ -27,18 +27,14 @@
       <div class="flex w-full group">
         <p-inputgroup>
           <input pInputText placeholder="Buscar productos…" [(ngModel)]="searchBarInput" class="!bg-surface-800 !text-surface-200"/>
-
           <p-button
             [routerLink]="['/search']"
             [queryParams]="{ query: searchBarInput }"
             [disabled]="!(searchBarInput.length > 0)">
-
             <ng-template pTemplate="content">
               <i class="pi pi-search"></i>
-
               <span class="hidden md:inline ml-2 font-bold">Buscar</span>
             </ng-template>
-
           </p-button>
         </p-inputgroup>
       </div>
@@ -103,6 +99,7 @@
 
       <div class="overflow-y-auto w-full">
         <ul class="list-none px-4 pb-4 m-0">
+
           <li>
             <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
                [routerLink]="['/search']"
@@ -114,38 +111,18 @@
           </li>
 
           <li>
-            <div pStyleClass="@next"
-                 enterFromClass="hidden"
-                 enterActiveClass="animate-slidedown"
-                 leaveToClass="hidden"
-                 leaveActiveClass="animate-slideup"
-                 (click)="toggleCategories()"
-                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors [&:has(+_.animate-slidedown)]:pointer-events-none [&:has(+_.animate-slideup)]:pointer-events-none"
-            >
+            <div (click)="toggleCategories()"
+                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors p-ripple">
               <span class="font-medium uppercase tracking-wider text-sm">Categorías</span>
-              <i class="pi"
-                 [class.pi-chevron-down]="!isCategoriesExpanded()"
-                 [class.pi-chevron-up]="isCategoriesExpanded()">
+              <i class="pi pi-chevron-down transition-transform duration-300"
+                 [class.rotate-180]="isCategoriesExpanded()">
               </i>
             </div>
 
-            <ul class="list-none p-0 m-0 overflow-hidden">
+            <ul [class.hidden]="!isCategoriesExpanded()" class="list-none p-0 m-0 overflow-hidden block">
+
               <div *ngIf="!authService.isAdmin()">
-                @for (cat of categories; track cat.id) {
-                  @let ui = getCategoryUI(cat.name);
-                  @if (ui) {
-                    <li>
-                      <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
-                         [routerLink]="['/search']"
-                         [queryParams]="{ categories: cat.id }"
-                         routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
-                         [routerLinkActiveOptions]="routerOptions">
-                        <i [class]="ui.icon + ' mr-3 text-lg'"></i>
-                        <span class="font-medium">{{ ui.label }}</span>
-                      </a>
-                    </li>
-                  }
-                }
+                <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
               </div>
 
               <div *ngIf="authService.isAdmin()">
@@ -167,22 +144,15 @@
         <div *ngIf="authService.isLogged()">
           <ul class="list-none p-4 m-0 pt-0">
             <li>
-              <div
-                pStyleClass="@next"
-                enterFromClass="hidden"
-                enterActiveClass="animate-slidedown"
-                leaveToClass="hidden"
-                leaveActiveClass="animate-slideup"
-                (click)="toggleAccount()"
-                class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors [&:has(+_.animate-slidedown)]:pointer-events-none [&:has(+_.animate-slideup)]:pointer-events-none"
-              >
+              <div (click)="toggleAccount()"
+                   class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors p-ripple">
                 <span class="font-medium uppercase tracking-wider text-sm">Cuenta</span>
-                <i class="pi"
-                   [class.pi-chevron-down]="!isAccountExpanded()"
-                   [class.pi-chevron-up]="isAccountExpanded()">
+                <i class="pi pi-chevron-down transition-transform duration-300"
+                   [class.rotate-180]="isAccountExpanded()">
                 </i>
               </div>
-              <ul class="list-none p-0 m-0 overflow-hidden">
+
+              <ul [class.hidden]="!isAccountExpanded()" class="list-none p-0 m-0 overflow-hidden block">
                 <li>
                   <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-user mr-3"></i>
@@ -218,3 +188,59 @@
     </div>
   </ng-template>
 </p-drawer>
+
+<ng-template #categoryTree let-items let-level="level">
+  @for (cat of items; track cat.id) {
+    @let ui = getCategoryUI(cat.name);
+
+    <li>
+      @if (cat.children && cat.children.length > 0) {
+
+        <div class="flex items-stretch justify-between rounded-border overflow-hidden group hover:bg-surface-700 transition-colors">
+
+          <a [routerLink]="['/category', cat.id]"
+             routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+             [routerLinkActiveOptions]="{ exact: false }"
+             #rla="routerLinkActive"
+             class="flex-1 flex items-center cursor-pointer p-4 text-surface-100 hover:text-primary-400 transition-colors"
+             [style.padding-left.rem]="1 + (level * 1.5)">
+
+            <i [class]="(ui ? ui.icon : 'pi pi-folder') + ' mr-3 text-lg'"></i>
+            <span class="font-medium">{{ ui ? ui.label : cat.name }}</span>
+          </a>
+
+          @let isOpen = shouldExpand(cat.id, rla.isActive);
+
+          <div (click)="toggleSubmenu(cat.id, rla.isActive)"
+               [class.bg-surface-700]="rla.isActive"
+               [class.text-white]="rla.isActive"
+               [class.text-surface-400]="!rla.isActive"
+               class="w-14 flex items-center justify-center cursor-pointer hover:text-white hover:bg-surface-600 border-l border-surface-600/50 p-ripple">
+
+            <i class="pi pi-chevron-down transition-transform duration-300"
+               [class.rotate-180]="isOpen"></i>
+          </div>
+
+        </div>
+
+        <ul [class.hidden]="!isOpen"
+            class="list-none p-0 m-0 overflow-hidden block">
+          <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: cat.children, level: level + 1 }"></ng-container>
+        </ul>
+      }
+
+      @else {
+        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+           [routerLink]="['/search']"
+           [queryParams]="{ categories: cat.id }"
+           routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+           [routerLinkActiveOptions]="routerOptions"
+           [style.padding-left.rem]="1 + (level * 1.5)">
+
+          <i [class]="(ui ? ui.icon : 'pi pi-tag') + ' mr-3 text-lg'"></i>
+          <span class="font-medium">{{ ui ? ui.label : cat.name }}</span>
+        </a>
+      }
+    </li>
+  }
+</ng-template>

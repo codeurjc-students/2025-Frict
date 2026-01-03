@@ -1,10 +1,13 @@
 package com.tfg.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -29,6 +32,14 @@ public class Category {
     @Embedded
     private ImageInfo categoryImage;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    @JsonIgnore // Avoids recursive calls while building the DTO objects
+    private Category parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Category> children = new ArrayList<>();
+
     @ManyToMany(mappedBy = "categories")
     private Set<Product> products = new HashSet<>();
 
@@ -40,5 +51,15 @@ public class Category {
         this.bannerText = bannerText;
         this.shortDescription = shortDescription;
         this.longDescription = longDescription;
+    }
+
+    public void addChild(Category child) {
+        children.add(child);
+        child.setParent(this);
+    }
+
+    public void removeChild(Category child) {
+        children.remove(child);
+        child.setParent(null);
     }
 }
