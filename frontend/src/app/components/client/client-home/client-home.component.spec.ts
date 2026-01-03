@@ -57,7 +57,7 @@ describe('ClientHomeComponent', () => {
   it('debe mostrar los productos cuando el servicio devuelve datos', async () => {
 
     const allMockCategories: Category[] = [
-      { id: '1', name: 'Categoría 1', imageUrl: '/api/v1/categories/image/1' }
+      { id: '1', name: 'Categoría 1', imageUrl: '/api/v1/categories/image/1', bannerText: '', shortDescription: '', longDescription: '', children: [] }
     ];
 
     const allMockProducts: Product[] = [

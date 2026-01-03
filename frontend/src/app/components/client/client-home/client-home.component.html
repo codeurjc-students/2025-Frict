@@ -3,7 +3,7 @@
 <div class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
 
   <section class="mt-6 mb-12 relative">
-    <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-2xl overflow-hidden relative min-h-[500px] flex items-center">
+    <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-xl overflow-hidden relative min-h-[500px] flex items-center">
 
       <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/4"></div>
       <div class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/20 rounded-full blur-[100px] translate-y-1/4 -translate-x-1/4"></div>
@@ -25,7 +25,7 @@
           </p>
 
           <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-            <button routerLink="/searchResult" class="px-8 py-4 bg-primary-500 hover:bg-primary-400 text-surface-900 font-bold rounded-full text-lg transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(var(--primary-500),0.3)]">
+            <button routerLink="/search" [queryParams]="{ categories: featuredCategoryId }" class="px-8 py-4 bg-primary-500 hover:bg-primary-400 text-surface-900 font-bold rounded-full text-lg transition-all transform hover:scale-1.05">
               Ver ofertas ahora
             </button>
             <button routerLink="/search" class="px-8 py-4 bg-surface-800 hover:bg-surface-700 text-white font-bold rounded-full text-lg border border-surface-700 transition-all">
@@ -36,7 +36,7 @@
 
         <div class="hidden lg:flex justify-center relative">
           <div class="relative z-10 animate-fade-in-up">
-            <img src="/frictLogo.png" class="w-auto h-80 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700">
+            <img src="/shopLogo.png" class="w-auto h-80 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700">
           </div>
           <div class="absolute inset-0 bg-gradient-to-tr from-surface-800 to-surface-700 rounded-full opacity-50 blur-3xl scale-90"></div>
         </div>
@@ -59,7 +59,8 @@
   </section>
 
   <section class="mb-16">
-    <div class="flex justify-between items-end mb-8">
+    <div class="flex items-center gap-3 mb-8">
+      <div class="w-1.5 h-8 bg-green-500 rounded-full"></div>
       <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Explora por categorías</h2>
     </div>
 
@@ -94,7 +95,7 @@
         <div class="w-1.5 h-8 bg-primary-500 rounded-full"></div>
         <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Destacados de la semana</h2>
       </div>
-      <a routerLink="/search" class="group flex items-center gap-2 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors cursor-pointer">
+      <a routerLink="/search" [queryParams]="{ categories: featuredCategoryId }"  class="group flex items-center gap-2 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors cursor-pointer">
         Ver todo <i class="pi pi-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
       </a>
     </div>
@@ -123,7 +124,7 @@
         <h3 class="text-3xl font-bold mb-2">Renueva tu Setup Gaming</h3>
         <p class="text-surface-300">Hasta un 20% de descuento en periféricos seleccionados.</p>
       </div>
-      <button routerLink="/search" [queryParams]="{ categories: 10 }" class="whitespace-nowrap bg-white text-surface-900 font-bold py-3 px-8 rounded-xl hover:bg-surface-100 transition-colors shadow-lg">
+      <button routerLink="/search" [queryParams]="{ categories: peripheralsCategoryId }" class="whitespace-nowrap bg-white text-surface-900 font-bold py-3 px-8 rounded-xl hover:bg-surface-100 transition-colors shadow-lg">
         Ver Ofertas <i class="pi pi-arrow-right ml-2"></i>
       </button>
     </div>
@@ -135,6 +136,9 @@
         <div class="w-1.5 h-8 bg-cyan-500 rounded-full"></div>
         <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Basado en tus búsquedas</h2>
       </div>
+      <a routerLink="/search" [queryParams]="{ categories: recommendedCategoryId }"  class="group flex items-center gap-2 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors cursor-pointer">
+        Ver todo <i class="pi pi-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+      </a>
     </div>
 
     <div id="recommended-content" class="content">
@@ -159,6 +163,9 @@
         <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
         <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Los más vendidos</h2>
       </div>
+      <a routerLink="/search" [queryParams]="{ categories: topSalesCategoryId }"  class="group flex items-center gap-2 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors cursor-pointer">
+        Ver todo <i class="pi pi-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+      </a>
     </div>
 
     <div id="topSales-content" class="content">

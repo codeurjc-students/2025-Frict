@@ -70,16 +70,18 @@ export class ClientHomeComponent implements OnInit {
     const config = this.categoryConfig[categoryName];
 
     if (!config) {
-      return undefined;
+      return { icon: 'pi pi-tag', label: categoryName ?? 'Categoría', description: ''};
     }
-
-    return {
-      icon: config.icon ?? 'pi pi-tag',
-      label: config.label ?? categoryName ?? 'Categoría',
-      description: config.description ?? ''
-    };
+    else {
+      return { icon: config.icon ?? 'pi pi-tag', label: config.label ?? categoryName ?? 'Categoría', description: config.description ?? ''};
+    }
   }
+
   categories: Category[] = [];
+  featuredCategoryId: string = '0';
+  recommendedCategoryId: string = '0';
+  topSalesCategoryId: string = '0';
+  peripheralsCategoryId: string = '0';
 
   featuredProducts: Product[] = [];
   recommendedProducts: Product[] = [];
@@ -108,7 +110,8 @@ export class ClientHomeComponent implements OnInit {
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list.categories;
-        console.log(this.categories);
+        const peripheralsCategory = this.categories.find(c => c.name.toLowerCase() === 'periféricos');
+        this.peripheralsCategoryId = peripheralsCategory ? peripheralsCategory.id : '0';
       }
     })
   }
@@ -117,6 +120,8 @@ export class ClientHomeComponent implements OnInit {
     this.productService.getProductsByCategoryName("Destacado").subscribe({
       next: (products) => {
         this.featuredProducts = products.products;
+        const featuredCategory = this.categories.find(c => c.name.toLowerCase() === 'destacado');
+        this.featuredCategoryId = featuredCategory ? featuredCategory.id : '0';
         this.featuredLoading = false;
       },
       error: () => {
@@ -127,9 +132,11 @@ export class ClientHomeComponent implements OnInit {
   }
 
   private loadTopSalesProducts() {
-    this.productService.getProductsByCategoryName("Top ventas").subscribe({
+    this.productService.getProductsByCategoryName("Top Ventas").subscribe({
       next: (products) => {
         this.topSalesProducts = products.products;
+        const topSalesCategory = this.categories.find(c => c.name.toLowerCase() === 'top ventas');
+        this.topSalesCategoryId = topSalesCategory ? topSalesCategory.id : '0';
         this.topSalesLoading = false;
       },
       error: () => {
@@ -143,6 +150,8 @@ export class ClientHomeComponent implements OnInit {
     this.productService.getProductsByCategoryName("Recomendado").subscribe({
       next: (products) => {
         this.recommendedProducts = products.products;
+        const recommendedCategory = this.categories.find(c => c.name.toLowerCase() === 'recomendado');
+        this.recommendedCategoryId = recommendedCategory ? recommendedCategory.id : '0';
         this.recommendedLoading = false;
       },
       error: () => {
