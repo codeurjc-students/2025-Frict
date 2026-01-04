@@ -41,16 +41,10 @@ export class CategoryInfoComponent {
 
   topSalesProducts: Product[] = []; //Top sales products of this main category
   mainCategory!: Category;
+  similarCategories: Category[] = []; //Main category siblings
 
   loading: boolean = true;
   error: boolean = false;
-
-  buyingGuides = [
-    { title: '¿Cámara para interior?', image: 'http://localhost:9000/images/categories/ed6acdb5-02f0-451d-964c-1d5f6fae49c2_defaultCategoryImage.jpg', subtitle: 'Vigila tu hogar desde dentro' },
-    { title: '¿Cámara para exterior?', image: 'http://localhost:9000/images/categories/ed6acdb5-02f0-451d-964c-1d5f6fae49c2_defaultCategoryImage.jpg', subtitle: 'Resistentes al agua y clima' },
-    { title: 'Kits de Videovigilancia', image: 'http://localhost:9000/images/categories/ed6acdb5-02f0-451d-964c-1d5f6fae49c2_defaultCategoryImage.jpg', subtitle: 'Seguridad completa' },
-    { title: 'Videoporteros Smart', image: 'http://localhost:9000/images/categories/ed6acdb5-02f0-451d-964c-1d5f6fae49c2_defaultCategoryImage.jpg', subtitle: 'Mira quién llama' }
-  ];
 
   useCases = [
     { title: 'Seguridad para tu Negocio', icon: 'pi pi-briefcase' },
@@ -65,7 +59,12 @@ export class CategoryInfoComponent {
   }
 
   ngOnInit() {
-    this.loadMainCategory();
+    this.route.params.subscribe(() => { //If a related product is clicked when visualizing a product, the page should refresh the information
+      this.loadMainCategory();
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
   }
 
   loadMainCategory() {
@@ -74,6 +73,7 @@ export class CategoryInfoComponent {
       this.categoryService.getCategoryById(id).subscribe({
         next: (category) => {
           this.mainCategory = category;
+          this.loadSimilarCategories();
           this.loadTopSalesProducts();
         },
         error: () => {
@@ -84,10 +84,29 @@ export class CategoryInfoComponent {
     }
   }
 
+  loadSimilarCategories(){
+    if(this.mainCategory.parentId){
+      this.categoryService.getCategoryById(this.mainCategory.parentId).subscribe({
+        next: (category) => {
+          this.similarCategories = category.children.filter(c => c.id !== this.mainCategory.id);
+          console.log(this.similarCategories);
+        }
+      })
+    }
+    else{
+      this.categoryService.getAllCategories().subscribe({
+        next: (c) => {
+          this.similarCategories = c.categories.filter(c => c.id !== this.mainCategory.id);
+        }
+      })
+    }
+  }
+
   loadTopSalesProducts(){
     this.productService.getProductsByCategoryName(this.mainCategory.name).subscribe({
       next: (page) => {
         this.topSalesProducts = page.products;
+        this.loading = false;
       }
     })
   }

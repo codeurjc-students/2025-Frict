@@ -6,5 +6,6 @@ export interface Category {
   shortDescription: string;
   longDescription: string;
   imageUrl: string;
+  parentId: string;
   children: Category[];
 }

@@ -6,15 +6,15 @@
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto">
       <div class="flex flex-col-reverse md:flex-row md:items-stretch justify-between gap-8">
 
-        <div class="flex-1 text-center md:text-left text-sm flex flex-col py-8">
+        <div class="flex-1 text-center md:text-left flex flex-col">
 
-          <div class="mb-4 md:mb-0">
+          <div class="text-sm md:pt-8">
             <p-breadcrumb [home]="home" [model]="breadcrumbItems" styleClass="!bg-transparent !p-0" />
           </div>
 
-          <div class="md:my-auto">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight mb-4">
-              {{ mainCategory.name }}
+          <div class="py-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight mb-4 ">
+              <i [class]="mainCategory.icon + ' mr-3'" style="font-size: 2rem"></i> {{ mainCategory.name }}
             </h1>
             <p class="text-surface-600 text-sm md:text-base leading-relaxed max-w-2xl">
               {{ mainCategory.shortDescription }}
@@ -44,14 +44,25 @@
 
     <section>
       <div class="flex gap-12 overflow-x-auto hide-scrollbar pb-4 sm:flex-wrap sm:justify-center">
-        <div *ngFor="let sub of mainCategory.children"  class="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group">
-          <div class="w-20 h-20 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-600 group-hover:border-primary-500 group-hover:text-primary-600 transition-all duration-300">
-            <i [class]="(sub.icon || 'pi pi-tag') + ' !text-4xl'"></i>
+
+        @for (sub of mainCategory.children; track sub.id) {
+          @let hasChildren = sub.children && sub.children.length > 0;
+
+          <div
+            [routerLink]="hasChildren ? ['/category', sub.id] : ['/search']"
+            [queryParams]="hasChildren ? null : { categories: sub.id }"
+            class="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group">
+
+            <div class="w-20 h-20 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-600 group-hover:border-primary-500 group-hover:text-primary-600 transition-all duration-300">
+              <i [class]="(sub.icon || 'pi pi-tag') + ' !text-4xl'"></i>
+            </div>
+
+            <span class="text-md font-bold text-surface-700 text-center group-hover:text-primary-600">
+          {{ sub.name }}
+        </span>
           </div>
-          <span class="text-md font-bold text-surface-700 text-center group-hover:text-primary-600">
-            {{ sub.name }}
-          </span>
-        </div>
+        }
+
       </div>
     </section>
 
@@ -71,30 +82,31 @@
     <section>
       <div class="flex items-center gap-3 mb-6">
         <div class="w-1.5 h-8 bg-indigo-500 rounded-full"></div>
-        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Más acerca de {{ mainCategory.name }}</h2>
+        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Otras categorías similares</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div *ngFor="let guide of buyingGuides"
-             class="relative h-64 rounded-xl overflow-hidden cursor-pointer group">
-          <img [src]="guide.image" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+        @for (cat of similarCategories; track cat.id) {
+          @let hasChildren = cat.children && cat.children.length > 0;
+          <div [routerLink]="hasChildren ? ['/category', cat.id] : ['/search']" [queryParams]="hasChildren ? null : { categories: cat.id }" class="relative h-64 rounded-xl overflow-hidden cursor-pointer group">
+            <img [src]="cat.imageUrl" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+              <h3 class="text-white font-bold text-lg leading-tight mb-1">{{ cat.name }}</h3>
+              <p class="text-surface-300 text-xs">{{ cat.shortDescription }}</p>
 
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
-            <h3 class="text-white font-bold text-lg leading-tight mb-1">{{ guide.title }}</h3>
-            <p class="text-surface-300 text-xs">{{ guide.subtitle }}</p>
-
-            <button class="mt-3 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full py-1 px-4 text-xs font-bold w-max opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-              Ver productos
-            </button>
+              <button class="mt-3 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full py-1 px-4 text-xs font-bold w-max opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                Ver productos
+              </button>
+            </div>
           </div>
-        </div>
+        }
       </div>
     </section>
 
     <section>
       <div class="flex items-center gap-3 mb-6">
         <div class="w-1.5 h-8 bg-cyan-500 rounded-full"></div>
-        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Nuestra selección</h2>
+        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Nuestra selección (provisional)</h2>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

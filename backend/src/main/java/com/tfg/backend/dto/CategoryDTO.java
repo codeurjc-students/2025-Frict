@@ -17,6 +17,7 @@ public class CategoryDTO {
     private String shortDescription;
     private String longDescription;
     private String imageUrl;
+    private Long parentId;
     private List<CategoryDTO> children = new ArrayList<>();
 
     public CategoryDTO() {
@@ -32,6 +33,10 @@ public class CategoryDTO {
 
         if (c.getCategoryImage() != null) {
             this.imageUrl = c.getCategoryImage().getImageUrl();
+        }
+
+        if(c.getParent() != null){
+            this.parentId = c.getParent().getId();
         }
 
         //Recursive category children instantiation

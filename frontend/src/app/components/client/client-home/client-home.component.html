@@ -67,23 +67,19 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
 
       @for (cat of categories; track cat.id) {
-        @let ui = getCategoryUI(cat.name);
-
-        @if (ui) {
           <div
             [routerLink]="['/search']"
             [queryParams]="{ categories: cat.id }"
             class="group bg-white border border-surface-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all duration-300">
 
             <div class="w-16 h-16 mx-auto bg-surface-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary-50 transition-colors">
-              <i [class]="ui.icon + ' text-3xl text-surface-600 group-hover:text-primary-600 transition-colors'"></i>
+              <i [class]="(cat.icon || 'pi pi-tag') + ' text-3xl text-surface-600 group-hover:text-primary-600 transition-colors'"></i>
             </div>
 
-            <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">{{ ui.label }}</h4>
+            <h4 class="font-bold text-surface-900 group-hover:text-primary-700 transition-colors">{{ cat.name }}</h4>
 
-            <p class="text-xs text-surface-500 mt-1">{{ ui.description }}</p>
+            <p class="text-xs text-surface-500 mt-1">{{ cat.bannerText }}</p>
           </div>
-        }
       }
 
     </div>
