@@ -32,7 +32,7 @@ import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
-import {Breadcrumb} from 'primeng/breadcrumb';
+import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
 
 
 @Component({
@@ -61,14 +61,11 @@ import {Breadcrumb} from 'primeng/breadcrumb';
     TableModule,
     StockTagComponent,
     Image,
-    Breadcrumb
+    BreadcrumbComponent
   ],
   templateUrl: './product-info.component.html'
 })
 export class ProductInfoComponent implements OnInit {
-
-  breadcrumbItems: MenuItem[] | undefined = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Components' }, { label: 'Form' }, { label: 'InputText', route: '/inputtext' }];
-  home: MenuItem | undefined;
 
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;

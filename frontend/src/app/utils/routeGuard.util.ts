@@ -13,29 +13,33 @@ export const ROLE_HOME_PATHS: Record<UserRole, string> = {
 
 export const ROLE_PRIORITY: UserRole[] = ['ADMIN', 'MANAGER', 'DRIVER', 'USER'];
 
-export const routeGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) => {
+export const routeGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Check Login
+  // Protected route, but not logged -> Redirect to log in
   if (!authService.isLogged()) {
     return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url }});
   }
 
-  const userRoles = authService.userRoles() as UserRole[];
-  const allowedRoles = route.data['roles'] as UserRole[];
+  const allowedRoles = (route.data['roles'] as UserRole[]) || [];
 
-  // Check whether the user has any of the allowed roles
+  // No roles defined (no data['roles'] information defined) -> Allow access
+  if (allowedRoles.length === 0) {
+    console.warn('Protected route without defined access roles.');
+    return true;
+  }
+
+  // Defined roles: access restricted
+  const userRoles = authService.userRoles() as UserRole[];
   const hasAccess = userRoles.some(role => allowedRoles.includes(role));
 
   if (hasAccess) {
     return true;
   }
 
-  // If user has more than a role, the redirection will be to the page of the highest privileges page (ADMIN > MANAGER > DRIVER > USER)
+  //Redirect to the corresponding role home page
   const highestRole = ROLE_PRIORITY.find(role => userRoles.includes(role));
-
-  // Search for the redirection route
   const redirectPath = highestRole ? ROLE_HOME_PATHS[highestRole] : '/';
 
   return router.createUrlTree([redirectPath]);

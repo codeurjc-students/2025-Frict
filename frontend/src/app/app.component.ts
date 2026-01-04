@@ -6,6 +6,7 @@ import {AuthService} from './services/auth.service';
 import {OrderService} from './services/order.service';
 import {ConfirmDialog} from 'primeng/confirmdialog';
 import {Toast} from 'primeng/toast';
+import {UiService} from './utils/ui.service';
 
 @Component({
   selector: 'app-root',
@@ -19,9 +20,9 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private title: Title,
     private orderService: OrderService,
-    private authService: AuthService
+    private authService: AuthService,
+    private uiService: UiService
   ) {
     effect(() => {
       const isLoggedIn = this.authService.isLogged();
@@ -43,16 +44,8 @@ export class AppComponent implements OnInit {
       }),
       mergeMap(route => route.data)
     ).subscribe(data => {
-      if (data['title']) this.title.setTitle(data['title']);
-      if (data['icon']) this.setIcon(data['icon']);
+      if (data['title']) this.uiService.setPageTitle(data['title']);
+      if (data['icon']) this.uiService.setFavicon(data['icon']);
     });
-  }
-
-  private setIcon(iconUrl: string) {
-    const link: HTMLLinkElement =
-      document.querySelector("link[rel~='icon']") || document.createElement('link');
-    link.rel = 'icon';
-    link.href = iconUrl;
-    document.head.appendChild(link);
   }
 }
