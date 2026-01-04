@@ -45,16 +45,6 @@ export class CategoryInfoComponent {
   loading: boolean = true;
   error: boolean = false;
 
-  subcategories = [
-    { name: 'Cámaras IP', icon: 'pi pi-camera', link: '/cameras' },
-    { name: 'Videovigilancia', icon: 'pi pi-video', link: '/video' },
-    { name: 'Kits', icon: 'pi pi-box', link: '/kits' },
-    { name: 'Alarmas', icon: 'pi pi-bell', link: '/alarms' },
-    { name: 'Detectores', icon: 'pi pi-wifi', link: '/detectors' },
-    { name: 'Grabadores', icon: 'pi pi-server', link: '/recorders' },
-    { name: 'Videoporteros', icon: 'pi pi-home', link: '/intercom' }
-  ];
-
   buyingGuides = [
     { title: '¿Cámara para interior?', image: 'http://localhost:9000/images/categories/ed6acdb5-02f0-451d-964c-1d5f6fae49c2_defaultCategoryImage.jpg', subtitle: 'Vigila tu hogar desde dentro' },
     { title: '¿Cámara para exterior?', image: 'http://localhost:9000/images/categories/ed6acdb5-02f0-451d-964c-1d5f6fae49c2_defaultCategoryImage.jpg', subtitle: 'Resistentes al agua y clima' },

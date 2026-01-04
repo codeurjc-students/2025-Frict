@@ -23,6 +23,8 @@ public class Category {
     @Column(unique = true)
     private String name;
 
+    private String icon;
+
     private String bannerText;
 
     private String shortDescription;
@@ -46,9 +48,10 @@ public class Category {
     public Category() {
     }
 
-    public Category(String name, String bannerText, String shortDescription, String longDescription) {
+    public Category(String name, String icon, String bannerText, String shortDescription, String longDescription) {
         this.name = name;
         this.bannerText = bannerText;
+        this.icon = icon;
         this.shortDescription = shortDescription;
         this.longDescription = longDescription;
     }

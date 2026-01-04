@@ -191,8 +191,6 @@
 
 <ng-template #categoryTree let-items let-level="level">
   @for (cat of items; track cat.id) {
-    @let ui = getCategoryUI(cat.name);
-
     <li>
       @if (cat.children && cat.children.length > 0) {
 
@@ -205,13 +203,13 @@
              class="flex-1 flex items-center cursor-pointer p-4 text-surface-100 hover:text-primary-400 transition-colors"
              [style.padding-left.rem]="1 + (level * 1.5)">
 
-            <i [class]="(ui ? ui.icon : 'pi pi-folder') + ' mr-3 text-lg'"></i>
-            <span class="font-medium">{{ ui ? ui.label : cat.name }}</span>
+            <i [class]="(cat.icon || 'pi pi-folder') + ' mr-3 text-lg'"></i>
+            <span class="font-medium">{{ cat.name || 'Categoría' }}</span>
           </a>
 
-          @let isOpen = shouldExpand(cat.id, rla.isActive);
+          @let isOpen = shouldExpand(+cat.id, rla.isActive);
 
-          <div (click)="toggleSubmenu(cat.id, rla.isActive)"
+          <div (click)="toggleSubmenu(+cat.id, rla.isActive)"
                [class.bg-surface-700]="rla.isActive"
                [class.text-white]="rla.isActive"
                [class.text-surface-400]="!rla.isActive"
@@ -237,8 +235,8 @@
            [routerLinkActiveOptions]="routerOptions"
            [style.padding-left.rem]="1 + (level * 1.5)">
 
-          <i [class]="(ui ? ui.icon : 'pi pi-tag') + ' mr-3 text-lg'"></i>
-          <span class="font-medium">{{ ui ? ui.label : cat.name }}</span>
+          <i [class]="(cat.icon || 'pi pi-tag') + ' mr-3 text-lg'"></i>
+          <span class="font-medium">{{ (cat.name || 'Categoría') }}</span>
         </a>
       }
     </li>

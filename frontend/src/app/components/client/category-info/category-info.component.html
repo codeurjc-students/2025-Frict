@@ -1,6 +1,6 @@
 <app-navbar></app-navbar>
 
-<div class="bg-surface-50 min-h-screen pb-12 font-sans text-surface-900">
+<div class="min-h-screen pb-12 font-sans text-surface-900">
 
   <header class="bg-gray-100 border-b border-surface-200">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto">
@@ -33,14 +33,22 @@
 
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto space-y-12 mt-8">
 
+    <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-10">
+      <h2 class="text-2xl font-bold text-surface-900 mb-4">{{ mainCategory.bannerText }}</h2>
+      <div class="prose prose-sm max-w-none text-surface-600">
+        <p class="mb-4">
+          {{ mainCategory.longDescription }}
+        </p>
+      </div>
+    </section>
+
     <section>
-      <div class="flex gap-4 overflow-x-auto hide-scrollbar pb-4 sm:flex-wrap sm:justify-center">
-        <div *ngFor="let sub of subcategories"
-             class="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group">
-          <div class="w-16 h-16 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-600 group-hover:border-primary-500 group-hover:text-primary-600 transition-all duration-300">
-            <i [class]="sub.icon + ' text-2xl'"></i>
+      <div class="flex gap-12 overflow-x-auto hide-scrollbar pb-4 sm:flex-wrap sm:justify-center">
+        <div *ngFor="let sub of mainCategory.children"  class="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group">
+          <div class="w-20 h-20 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-600 group-hover:border-primary-500 group-hover:text-primary-600 transition-all duration-300">
+            <i [class]="(sub.icon || 'pi pi-tag') + ' !text-4xl'"></i>
           </div>
-          <span class="text-xs font-bold text-surface-700 text-center group-hover:text-primary-600">
+          <span class="text-md font-bold text-surface-700 text-center group-hover:text-primary-600">
             {{ sub.name }}
           </span>
         </div>
@@ -48,8 +56,9 @@
     </section>
 
     <section>
-      <div class="flex items-center gap-2 mb-6">
-        <h2 class="text-2xl font-bold text-surface-900">Los más vendidos en {{ mainCategory.name }}</h2>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
+        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Los más vendidos en {{ mainCategory.name }}</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -60,7 +69,10 @@
     </section>
 
     <section>
-      <h2 class="text-2xl font-bold text-surface-900 mb-6">Más acerca de Periféricos</h2>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-1.5 h-8 bg-indigo-500 rounded-full"></div>
+        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Más acerca de {{ mainCategory.name }}</h2>
+      </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div *ngFor="let guide of buyingGuides"
@@ -80,7 +92,11 @@
     </section>
 
     <section>
-      <h2 class="text-xl font-bold text-surface-900 mb-6">Descubre más sobre {{ mainCategory.name }}</h2>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-1.5 h-8 bg-cyan-500 rounded-full"></div>
+        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Nuestra selección</h2>
+      </div>
+
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div *ngFor="let use of useCases" class="bg-white p-4 rounded-xl border border-surface-200 shadow-sm hover:border-primary-400 cursor-pointer transition-colors flex flex-col items-center text-center gap-3">
           <div class="w-12 h-12 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center">
@@ -91,17 +107,6 @@
         </div>
       </div>
     </section>
-
-    <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-10">
-      <h2 class="text-2xl font-bold text-surface-900 mb-4">{{ mainCategory.name }}: {{ mainCategory.bannerText }}</h2>
-      <div class="prose prose-sm max-w-none text-surface-600">
-        <p class="mb-4">
-          {{ mainCategory.longDescription }}
-        </p>
-      </div>
-    </section>
-
-
   </div>
 </div>
 

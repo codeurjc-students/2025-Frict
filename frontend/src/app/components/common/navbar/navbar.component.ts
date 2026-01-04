@@ -15,6 +15,7 @@ import {CategoryService} from '../../../services/category.service';
 import {Avatar} from 'primeng/avatar';
 import {InputGroup} from 'primeng/inputgroup';
 import {InputText} from 'primeng/inputtext';
+import {transformToNumber} from 'primeng/utils';
 
 interface CategoryUI {
   icon?: string;
@@ -93,16 +94,6 @@ export class NavbarComponent implements OnInit {
     this.isAccountExpanded.update((v) => !v);
   }
 
-  //If a label is defined for this category name, then use it. Otherwise, use the category name from the backend. Else, use "Category" label instead.
-  // Same for icons
-  // noinspection JSNonASCIINames
-  private readonly categoryConfig: Record<string, CategoryUI> = {
-    'Ordenadores': { icon: 'pi pi-desktop' /*, label: 'Gaming' */ }, //Prints the category with both custom icon and label
-    'Componentes': { icon: 'pi pi-database' },
-    'Periféricos': { icon: 'pi pi-wifi' },
-    'Telefonía y Wearables': { icon: 'pi pi-bolt' },
-    'Hogar y Conectividad': { icon: 'pi pi-mobile' }, // Prints the category with the custom icon and the category name
-  };
 
   public adminItems = [
     { label: 'Productos', icon: 'pi pi-desktop',   link: 'products' },
@@ -121,17 +112,6 @@ export class NavbarComponent implements OnInit {
   };
 
   public categories : Category[] = [];
-
-  public getCategoryUI(categoryName: string): CategoryUI | undefined {
-    const config = this.categoryConfig[categoryName];
-
-    if (!config) {
-      return { icon: 'pi pi-tag', label: categoryName ?? 'Categoría' }
-    }
-    else {
-      return { icon: config.icon ?? 'pi pi-tag', label: config.label ?? categoryName ?? 'Categoría' }
-    }
-  }
 
   ngOnInit() {
     this.items = [
@@ -157,4 +137,6 @@ export class NavbarComponent implements OnInit {
       next: () => this.router.navigate(['/login'])
     });
   }
+
+  protected readonly transformToNumber = transformToNumber;
 }

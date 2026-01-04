@@ -149,21 +149,21 @@ public class DatabaseInitializer {
         List<Category> roots = new ArrayList<>();
 
         // --- ROOT CATEGORY 1 ---
-        Category ordenadores = new Category("Ordenadores", "Potencia para todo", "Portátiles, Sobremesa y Mini PCs", "Equipos completos listos para usar.");
+        Category ordenadores = new Category("Ordenadores", "pi pi-desktop", "Potencia para todo", "Portátiles, Sobremesa y Mini PCs", "Equipos completos listos para usar.");
 
-        Category portatiles = new Category("Portátiles", "Llévalo contigo", "Ultrabooks y Gaming Laptops", "Movilidad sin compromisos.");
-        Category sobremesa = new Category("Sobremesa y Mini PC", "Máximo rendimiento", "Torres y compactos", "Para oficina o setups minimalistas.");
+        Category portatiles = new Category("Portátiles", "", "Llévalo contigo", "Ultrabooks y Gaming Laptops", "Movilidad sin compromisos.");
+        Category sobremesa = new Category("Sobremesa y Mini PC", "", "Máximo rendimiento", "Torres y compactos", "Para oficina o setups minimalistas.");
 
         ordenadores.addChild(portatiles);
         ordenadores.addChild(sobremesa);
         roots.add(ordenadores);
 
         // --- ROOT CATEGORY 2 ---
-        Category componentes = new Category("Componentes", "Monta tu PC", "Hardware interno de alto rendimiento", "El corazón de tu ordenador.");
+        Category componentes = new Category("Componentes", "pi pi-database", "Monta tu PC", "Hardware interno de alto rendimiento", "El corazón de tu ordenador.");
 
-        Category almacenamiento = new Category("Almacenamiento", "Guárdalo todo", "SSD, NVMe y Discos Duros", "Velocidad y capacidad para tus datos.");
-        Category graficas = new Category("Tarjetas Gráficas", "Gráficos Next-Gen", "GPUs NVIDIA y AMD", "Potencia visual para juegos y renderizado.");
-        Category herramientas = new Category("Herramientas y Montaje", "Taller PC", "Pastas térmicas y kits", "Todo para el mantenimiento.");
+        Category almacenamiento = new Category("Almacenamiento", "", "Guárdalo todo", "SSD, NVMe y Discos Duros", "Velocidad y capacidad para tus datos.");
+        Category graficas = new Category("Tarjetas Gráficas", "", "Gráficos Next-Gen", "GPUs NVIDIA y AMD", "Potencia visual para juegos y renderizado.");
+        Category herramientas = new Category("Herramientas y Montaje", "", "Taller PC", "Pastas térmicas y kits", "Todo para el mantenimiento.");
 
         componentes.addChild(almacenamiento);
         componentes.addChild(graficas);
@@ -171,11 +171,11 @@ public class DatabaseInitializer {
         roots.add(componentes);
 
         // --- ROOT CATEGORY 3 ---
-        Category perifericos = new Category("Periféricos", "Tu conexión con el PC", "Teclados, ratones y monitores", "Mejora tu interacción.");
+        Category perifericos = new Category("Periféricos", "pi pi-wifi", "Tu conexión con el PC", "Teclados, ratones y monitores", "Mejora tu interacción.");
 
-        Category monitores = new Category("Monitores y Pantallas", "Visualización perfecta", "Monitores 4K, Curvos y Gaming", "No pierdas detalle.");
-        Category entrada = new Category("Teclados y Ratones", "Control total", "Mecánicos, inalámbricos y ergonómicos", "Precisión en cada clic.");
-        Category audio = new Category("Audio y Sonido", "Experiencia sonora", "Auriculares y Altavoces", "Calidad de estudio.");
+        Category monitores = new Category("Monitores y Pantallas", "", "Visualización perfecta", "Monitores 4K, Curvos y Gaming", "No pierdas detalle.");
+        Category entrada = new Category("Teclados y Ratones", "", "Control total", "Mecánicos, inalámbricos y ergonómicos", "Precisión en cada clic.");
+        Category audio = new Category("Audio y Sonido", "", "Experiencia sonora", "Auriculares y Altavoces", "Calidad de estudio.");
 
         perifericos.addChild(monitores);
         perifericos.addChild(entrada);
@@ -183,21 +183,21 @@ public class DatabaseInitializer {
         roots.add(perifericos);
 
         // --- ROOT CATEGORY 4 ---
-        Category movilidad = new Category("Telefonía y Wearables", "Siempre conectado", "Smartphones y relojes inteligentes", "Tecnología de bolsillo.");
+        Category movilidad = new Category("Telefonía y Wearables", "pi pi-bolt", "Siempre conectado", "Smartphones y relojes inteligentes", "Tecnología de bolsillo.");
 
-        Category moviles = new Category("Móviles y Smartphones", "Última generación", "Android y iOS", "Potencia en tu mano.");
-        Category wearables = new Category("Smartwatches", "Salud y notificaciones", "Relojes y pulseras", "Tu asistente de muñeca.");
+        Category moviles = new Category("Móviles y Smartphones", "", "Última generación", "Android y iOS", "Potencia en tu mano.");
+        Category wearables = new Category("Smartwatches", "", "Salud y notificaciones", "Relojes y pulseras", "Tu asistente de muñeca.");
 
         movilidad.addChild(moviles);
         movilidad.addChild(wearables);
         roots.add(movilidad);
 
         // --- ROOT CATEGORY 5 ---
-        Category hogarRedes = new Category("Hogar y Conectividad", "Tu espacio inteligente", "Domótica y Redes", "Moderniza tu entorno.");
+        Category hogarRedes = new Category("Hogar y Conectividad", "pi pi-mobile", "Tu espacio inteligente", "Domótica y Redes", "Moderniza tu entorno.");
 
-        Category redes = new Category("Redes y WiFi", "Internet veloz", "Routers y Mesh", "Adiós al lag.");
-        Category domotica = new Category("Hogar Inteligente", "Automatización", "Bombillas y Asistentes", "Controla tu casa por voz.");
-        Category energia = new Category("Energía", "Poder constante", "Cargadores y Powerbanks", "Baterías siempre llenas.");
+        Category redes = new Category("Redes y WiFi", "", "Internet veloz", "Routers y Mesh", "Adiós al lag.");
+        Category domotica = new Category("Hogar Inteligente", "", "Automatización", "Bombillas y Asistentes", "Controla tu casa por voz.");
+        Category energia = new Category("Energía", "", "Poder constante", "Cargadores y Powerbanks", "Baterías siempre llenas.");
 
         hogarRedes.addChild(redes);
         hogarRedes.addChild(domotica);
@@ -205,12 +205,12 @@ public class DatabaseInitializer {
         roots.add(hogarRedes);
 
         // --- ROOT CATEGORY 6 ---
-        Category multimedia = new Category("Foto y Video", "Creadores de contenido", "Cámaras y Accesorios", "Captura el mundo.");
+        Category multimedia = new Category("Foto y Video", "pi pi-headphones", "Creadores de contenido", "Cámaras y Accesorios", "Captura el mundo.");
         roots.add(multimedia);
 
-        roots.add(new Category("Recomendado", "Nuestra selección", "Calidad precio", "Elegidos por expertos."));
-        roots.add(new Category("Destacado", "Tendencias", "Lo más nuevo", "Lo que está de moda."));
-        roots.add(new Category("Top Ventas", "Los más vendidos", "Favoritos de la comunidad", "Éxito garantizado."));
+        roots.add(new Category("Recomendado", "", "Nuestra selección", "Calidad precio", "Elegidos por expertos."));
+        roots.add(new Category("Destacado", "", "Tendencias", "Lo más nuevo", "Lo que está de moda."));
+        roots.add(new Category("Top Ventas", "", "Los más vendidos", "Favoritos de la comunidad", "Éxito garantizado."));
 
         for (Category root : roots) {
             assignCategoryImage(root);

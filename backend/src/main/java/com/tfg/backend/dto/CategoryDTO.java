@@ -12,6 +12,7 @@ import java.util.List;
 public class CategoryDTO {
     private Long id;
     private String name;
+    private String icon;
     private String bannerText;
     private String shortDescription;
     private String longDescription;
@@ -24,6 +25,7 @@ public class CategoryDTO {
     public CategoryDTO(Category c) {
         this.id = c.getId();
         this.name = c.getName();
+        this.icon = c.getIcon();
         this.bannerText = c.getBannerText();
         this.shortDescription = c.getShortDescription();
         this.longDescription = c.getLongDescription();
