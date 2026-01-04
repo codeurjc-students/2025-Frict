@@ -4,10 +4,12 @@ import {Title} from '@angular/platform-browser';
 import {filter, map, mergeMap} from 'rxjs';
 import {AuthService} from './services/auth.service';
 import {OrderService} from './services/order.service';
+import {ConfirmDialog} from 'primeng/confirmdialog';
+import {Toast} from 'primeng/toast';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ConfirmDialog, Toast],
   templateUrl: './app.component.html',
   standalone: true,
   styleUrl: './app.component.css'

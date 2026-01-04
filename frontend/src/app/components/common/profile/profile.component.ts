@@ -49,7 +49,6 @@ import {AuthService} from '../../../services/auth.service';
     InputMask,
     ConfirmDialog
   ],
-  providers: [MessageService, ConfirmationService],
   templateUrl: './profile.component.html',
   styles: []
 })

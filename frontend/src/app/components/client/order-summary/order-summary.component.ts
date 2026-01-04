@@ -45,7 +45,6 @@ import {MessageService} from 'primeng/api';
     InputMask,
     Toast
   ],
-  providers: [MessageService],
   templateUrl: './order-summary.component.html',
   standalone: true,
   styleUrl: './order-summary.component.css'

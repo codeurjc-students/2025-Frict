@@ -67,7 +67,6 @@ import {Breadcrumb} from 'primeng/breadcrumb';
     Image,
     Breadcrumb
   ],
-  providers: [MessageService],
   templateUrl: './product-info.component.html'
 })
 export class ProductInfoComponent implements OnInit {

@@ -11,6 +11,7 @@ export class AuthService {
   private defaultLoginInfo: LoginInfo = {isLogged: false, imageUrl: '', id: '0', name: '', username: '', roles: []};
   private loginInfoSignal: WritableSignal<LoginInfo> = signal(this.defaultLoginInfo);
 
+  public userRoles = computed(() => this.loginInfoSignal().roles);
   public isLogged = computed(() => this.loginInfoSignal().isLogged);
   public isUser = computed(() => this.loginInfoSignal().isLogged && this.loginInfoSignal().roles.includes('USER'));
   public isManager = computed(() => this.loginInfoSignal().isLogged && this.loginInfoSignal().roles.includes('MANAGER'));

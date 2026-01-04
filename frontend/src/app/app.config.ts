@@ -9,6 +9,7 @@ import {MyPreset} from './colorpreset';
 import {provideHttpClient} from '@angular/common/http';
 import {AuthService} from './services/auth.service';
 import {finalize} from 'rxjs';
+import {ConfirmationService, MessageService} from 'primeng/api';
 
 export const carouselResponsiveOptions = [
   {
@@ -70,6 +71,8 @@ export const appConfig: ApplicationConfig = {
         }
       }
     }),
-    provideAppInitializer(() => initializeAuth(inject(AuthService))())
+    provideAppInitializer(() => initializeAuth(inject(AuthService))()),
+    MessageService,
+    ConfirmationService
   ]
 };
