@@ -1,6 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { NavbarComponent } from "../navbar/navbar.component";
-import { FooterComponent } from '../footer/footer.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductsPage } from '../../../models/productsPage.model';
 import { ProductService } from '../../../services/product.service';
@@ -24,8 +22,6 @@ interface SortOption {
   selector: 'app-search',
   standalone: true,
   imports: [
-    NavbarComponent,
-    FooterComponent,
     Paginator,
     NgIf,
     ProductCardComponent,

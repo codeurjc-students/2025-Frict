@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../common/navbar/navbar.component';
 import { ButtonModule } from 'primeng/button';
 import { RouterLink } from '@angular/router';
 import { Carousel } from 'primeng/carousel';
 import { carouselResponsiveOptions } from '../../../app.config';
-import { FooterComponent } from '../../common/footer/footer.component';
 import { ProductCardComponent } from '../product-card/product-card.component';
 import { Product } from '../../../models/product.model';
 import { ProductService } from '../../../services/product.service';
@@ -30,11 +28,9 @@ interface ServiceUI {
   standalone: true,
   imports: [
     CommonModule,
-    NavbarComponent,
     ButtonModule,
     RouterLink,
     Carousel,
-    FooterComponent,
     ProductCardComponent,
     LoadingSectionComponent
   ],

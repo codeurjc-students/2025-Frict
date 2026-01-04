@@ -7,8 +7,6 @@ import {TagModule} from 'primeng/tag';
 import {AvatarModule} from 'primeng/avatar';
 import {RatingModule} from 'primeng/rating';
 import {FormsModule} from '@angular/forms';
-import {NavbarComponent} from '../navbar/navbar.component';
-import {FooterComponent} from '../footer/footer.component';
 import {User} from '../../../models/user.model';
 import {UserService} from '../../../services/user.service';
 import {OrderService} from '../../../services/order.service';
@@ -39,8 +37,6 @@ import {AuthService} from '../../../services/auth.service';
     TagModule,
     AvatarModule,
     RatingModule,
-    NavbarComponent,
-    FooterComponent,
     LoadingScreenComponent,
     Paginator,
     Dialog,

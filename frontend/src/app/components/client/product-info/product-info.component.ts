@@ -1,6 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {FooterComponent} from '../../common/footer/footer.component';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -41,8 +39,6 @@ import {Breadcrumb} from 'primeng/breadcrumb';
   selector: 'app-product-info',
   standalone: true,
   imports: [
-    FooterComponent,
-    NavbarComponent,
     GalleriaModule,
     Tabs,
     TabList,

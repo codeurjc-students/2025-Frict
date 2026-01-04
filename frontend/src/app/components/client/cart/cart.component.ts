@@ -1,8 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {FooterComponent} from '../../common/footer/footer.component';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {OrderService} from '../../../services/order.service';
 import {ProductsPage} from '../../../models/productsPage.model';
 import {OrderItemsPage} from '../../../models/orderItemsPage.model';
@@ -19,7 +17,7 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, RouterLink, Paginator, Button, LoadingScreenComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })

@@ -9,8 +9,6 @@ import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 import {InputTextModule} from 'primeng/inputtext';
 import {CheckboxModule} from 'primeng/checkbox';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
-import {FooterComponent} from '../../common/footer/footer.component';
 import {formatDueDate, formatPrice} from '../../../utils/numberFormat.util';
 import {CartSummary} from '../../../models/cartSummary.model';
 import {OrderService} from '../../../services/order.service';
@@ -38,8 +36,6 @@ import {MessageService} from 'primeng/api';
     DividerModule,
     InputTextModule,
     CheckboxModule,
-    NavbarComponent,
-    FooterComponent,
     LoadingScreenComponent,
     Paginator,
     InputMask,

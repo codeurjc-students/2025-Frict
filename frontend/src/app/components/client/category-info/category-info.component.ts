@@ -6,8 +6,6 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
 import { FormsModule } from '@angular/forms';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
-import {FooterComponent} from '../../common/footer/footer.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {Product} from '../../../models/product.model';
 import {CategoryService} from '../../../services/category.service';
@@ -26,8 +24,6 @@ import {MenuItem} from 'primeng/api';
     TagModule,
     RatingModule,
     FormsModule,
-    NavbarComponent,
-    FooterComponent,
     ProductCardComponent,
     Breadcrumb
   ],
