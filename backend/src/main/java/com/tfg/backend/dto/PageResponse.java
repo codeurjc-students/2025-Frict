@@ -7,16 +7,16 @@ import java.util.List;
 
 @Getter
 @Setter
-public class ReviewsPageDTO {
-    private List<ReviewDTO> reviews;
-    private Long totalReviews;
+public class PageResponse<T> {
+    private List<T> items;
+    private Long totalItems;
     private int currentPage;
     private int lastPage;
     private int pageSize;
 
-    public ReviewsPageDTO(List<ReviewDTO> reviews, Long totalReviews, int currentPage, int lastPage, int pageSize) {
-        this.reviews = reviews;
-        this.totalReviews = totalReviews;
+    public PageResponse(List<T> items, Long totalItems, int currentPage, int lastPage, int pageSize) {
+        this.items = items;
+        this.totalItems = totalItems;
         this.currentPage = currentPage;
         this.lastPage = lastPage;
         this.pageSize = pageSize;

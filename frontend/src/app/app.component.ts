@@ -1,6 +1,5 @@
 import {Component, effect, OnInit} from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Router, RouterOutlet} from '@angular/router';
-import {Title} from '@angular/platform-browser';
 import {filter, map, mergeMap} from 'rxjs';
 import {AuthService} from './services/auth.service';
 import {OrderService} from './services/order.service';

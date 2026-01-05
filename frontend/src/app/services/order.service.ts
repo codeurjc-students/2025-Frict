@@ -1,11 +1,10 @@
 import {Injectable, signal} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable, tap} from 'rxjs';
-import {OrderItemsPage} from '../models/orderItemsPage.model';
 import {OrderItem} from '../models/orderItem.model';
 import {CartSummary} from '../models/cartSummary.model';
 import {Order} from '../models/order.model';
-import {OrdersPage} from '../models/ordersPage.model';
+import {PageResponse} from '../models/pageResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -38,11 +37,11 @@ export class OrderService {
     return this.http.get<Order>(this.apiUrl + `/${id}`);
   }
 
-  public getLoggedUserOrders(page: number, size: number): Observable<OrdersPage>{
+  public getLoggedUserOrders(page: number, size: number): Observable<PageResponse<Order>>{
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
-    return this.http.get<OrdersPage>(this.apiUrl, { params });
+    return this.http.get<PageResponse<Order>>(this.apiUrl, { params });
   }
 
   public createOrder(addressId: string, cardId: string): Observable<Order> {
@@ -56,11 +55,11 @@ export class OrderService {
     return this.http.delete<Order>(this.apiUrl + `/${id}`);
   }
 
-  public getUserCartItemsPage(page: number, size: number): Observable<OrderItemsPage> {
+  public getUserCartItemsPage(page: number, size: number): Observable<PageResponse<OrderItem>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
-    return this.http.get<OrderItemsPage>(this.apiUrl + `/cart`, { params });
+    return this.http.get<PageResponse<OrderItem>>(this.apiUrl + `/cart`, { params });
   }
 
   public getUserCartSummary(): Observable<CartSummary> {

@@ -1,17 +1,18 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ProductsPage } from '../../../models/productsPage.model';
-import { ProductService } from '../../../services/product.service';
-import { Paginator, PaginatorState } from 'primeng/paginator';
-import { NgForOf, NgIf } from '@angular/common';
-import { ProductCardComponent } from '../../client/product-card/product-card.component';
-import { Select } from 'primeng/select';
-import { Button } from 'primeng/button';
-import { FormsModule } from '@angular/forms';
-import { CategoryService } from '../../../services/category.service';
-import { Drawer } from 'primeng/drawer';
-import { TreeNode, PrimeTemplate } from 'primeng/api';
-import { Tree } from 'primeng/tree';
+import {Component, OnInit} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
+import {ProductService} from '../../../services/product.service';
+import {Paginator, PaginatorState} from 'primeng/paginator';
+import {NgForOf, NgIf} from '@angular/common';
+import {ProductCardComponent} from '../../client/product-card/product-card.component';
+import {Select} from 'primeng/select';
+import {Button} from 'primeng/button';
+import {FormsModule} from '@angular/forms';
+import {CategoryService} from '../../../services/category.service';
+import {Drawer} from 'primeng/drawer';
+import {PrimeTemplate, TreeNode} from 'primeng/api';
+import {Tree} from 'primeng/tree';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Product} from '../../../models/product.model';
 
 interface SortOption {
   name: string;
@@ -39,7 +40,7 @@ interface SortOption {
 export class SearchComponent implements OnInit {
 
   searchQuery: string | null = null;
-  foundProducts: ProductsPage = { products: [], totalProducts: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
+  foundProducts: PageResponse<Product> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
 
   sortOptions: SortOption[] = [
     { name: 'Nombre', value: 'name,asc' },
@@ -72,7 +73,7 @@ export class SearchComponent implements OnInit {
   ngOnInit(): void {
     this.categoryService.getAllCategories().subscribe({
       next: (response) => {
-        const rawCategories = response.categories || [];
+        const rawCategories = response || [];
         this.categories = this.mapToTreeNodes(rawCategories);
 
         this.route.queryParamMap.subscribe(params => {

@@ -1,6 +1,8 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
+import com.tfg.backend.dto.ListResponse;
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
 import com.tfg.backend.model.User;
@@ -33,23 +35,23 @@ public class ReviewRestController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<ReviewsPageDTO> getAllUserReviews(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toReviewsPageDTO(userReviews));
+        return ResponseEntity.ok(toPageResponse(userReviews));
     }
 
     //Get all the reviews of a product
     @GetMapping("/")
-    public ResponseEntity<ReviewListDTO> showAllByProductId(@RequestParam Long productId) {
+    public ResponseEntity<ListResponse<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
         Product product = findProductHelper(productId);
         List<ReviewDTO> dtos = new ArrayList<>();
         for (Review r : product.getReviews()) {
             dtos.add(new ReviewDTO(r));
         }
-        return ResponseEntity.ok(new ReviewListDTO(dtos));
+        return ResponseEntity.ok(new ListResponse<>(dtos));
     }
 
     @PostMapping
@@ -121,12 +123,12 @@ public class ReviewRestController {
     }
 
     //Creates ReviewsPageDTO objects with necessary fields only
-    private ReviewsPageDTO toReviewsPageDTO(Page<Review> reviews){
+    private PageResponse<ReviewDTO> toPageResponse(Page<Review> reviews){
         List<ReviewDTO> dtos = new ArrayList<>();
         for (Review r : reviews.getContent()) {
             ReviewDTO dto = new ReviewDTO(r);
             dtos.add(dto);
         }
-        return new ReviewsPageDTO(dtos, reviews.getTotalElements(), reviews.getNumber(), reviews.getTotalPages()-1, reviews.getSize());
+        return new PageResponse<>(dtos, reviews.getTotalElements(), reviews.getNumber(), reviews.getTotalPages()-1, reviews.getSize());
     }
 }

@@ -12,8 +12,6 @@ import {UserService} from '../../../services/user.service';
 import {OrderService} from '../../../services/order.service';
 import {ReviewService} from '../../../services/review.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
-import {OrdersPage} from '../../../models/ordersPage.model';
-import {ReviewsPage} from '../../../models/reviewsPage.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
@@ -25,6 +23,9 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
 import {ConfirmDialog} from 'primeng/confirmdialog';
 import {AuthService} from '../../../services/auth.service';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Order} from '../../../models/order.model';
+import {Review} from '../../../models/review.model';
 
 @Component({
   selector: 'app-profile',
@@ -52,11 +53,11 @@ export class ProfileComponent implements OnInit {
 
   user!: User;
 
-  foundOrders : OrdersPage = {orders: [], totalOrders: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  foundOrders : PageResponse<Order> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstOrder: number = 0;
   ordersRows: number = 5;
 
-  foundReviews: ReviewsPage = {reviews: [], totalReviews: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  foundReviews: PageResponse<Review> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstReview: number = 0;
   reviewsRows: number = 5;
 

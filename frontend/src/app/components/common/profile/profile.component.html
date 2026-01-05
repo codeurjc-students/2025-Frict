@@ -380,7 +380,7 @@
         </div>
 
         <div class="flex flex-col gap-4">
-          <div *ngFor="let order of foundOrders.orders" class="group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-surface-100 hover:border-primary-300 hover:shadow-md transition-all bg-surface-50/50 hover:bg-white">
+          <div *ngFor="let order of foundOrders.items" class="group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-surface-100 hover:border-primary-300 hover:shadow-md transition-all bg-surface-50/50 hover:bg-white">
 
             <div class="flex items-center gap-4 mb-4 md:mb-0">
               <div class="w-12 h-12 rounded-full bg-surface-200 flex items-center justify-center text-surface-600 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
@@ -412,7 +412,7 @@
             </div>
           </div>
           <div class="flex justify-center mt-6">
-            <p-paginator [first]="firstOrder" [rows]="ordersRows" [totalRecords]="foundOrders.totalOrders" (onPageChange)="onUserOrdersPageChange($event)"
+            <p-paginator [first]="firstOrder" [rows]="ordersRows" [totalRecords]="foundOrders.totalItems" (onPageChange)="onUserOrdersPageChange($event)"
                          styleClass="!bg-transparent !border-none" [rowsPerPageOptions]="[5, 10, 20]"></p-paginator>
           </div>
         </div>
@@ -425,7 +425,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div *ngFor="let review of foundReviews.reviews" class="p-5 rounded-xl border border-surface-200 bg-white hover:border-amber-400 transition-colors relative group">
+          <div *ngFor="let review of foundReviews.items" class="p-5 rounded-xl border border-surface-200 bg-white hover:border-amber-400 transition-colors relative group">
             <div class="flex justify-between items-start mb-3">
               <div>
                 <p class="font-bold text-surface-900 line-clamp-1">{{ review.productName }}</p>
@@ -452,7 +452,7 @@
           </div>
         </div>
         <div class="flex justify-center mt-6">
-          <p-paginator (onPageChange)="onUserReviewsPageChange($event)" [first]="firstReview" [rows]="reviewsRows" [totalRecords]="foundReviews.totalReviews"
+          <p-paginator (onPageChange)="onUserReviewsPageChange($event)" [first]="firstReview" [rows]="reviewsRows" [totalRecords]="foundReviews.totalItems"
                        styleClass="!bg-transparent !border-none" [rowsPerPageOptions]="[5, 10, 20]"></p-paginator>
         </div>
       </section>

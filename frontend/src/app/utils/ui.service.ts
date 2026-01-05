@@ -1,5 +1,5 @@
-import { Injectable, inject } from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import {Injectable} from '@angular/core';
+import {Title} from '@angular/platform-browser';
 import {AuthService} from '../services/auth.service';
 
 export type IconType = 'client' | 'admin';

@@ -10,7 +10,7 @@ import {Carousel} from 'primeng/carousel';
 import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {ActivatedRoute, Router} from '@angular/router';
-import {MenuItem, MessageService} from 'primeng/api';
+import {MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
 import {CategoryService} from '../../../services/category.service';
@@ -209,7 +209,7 @@ export class ProductInfoComponent implements OnInit {
     const currentProductId = this.route.snapshot.paramMap.get('id');
     this.productService.getProductsByCategoryName(this.productCategory.name).subscribe({
       next: (products) => {
-        this.relatedProducts = products.products.filter(p => p.id.toString() !== currentProductId?.toString());
+        this.relatedProducts = products.items.filter(p => p.id.toString() !== currentProductId?.toString());
         this.relatedLoading = false;
       },
       error: () => {
@@ -231,7 +231,7 @@ export class ProductInfoComponent implements OnInit {
   protected loadReviews() {
     this.reviewService.getReviewsByProductId(this.product.id).subscribe({
       next: (reviews) => {
-        this.productReviews = reviews.reviews;
+        this.productReviews = reviews;
         const stars = [
           { value: 5, count: 0 },
           { value: 4, count: 0 },
@@ -276,7 +276,7 @@ export class ProductInfoComponent implements OnInit {
   protected loadShopStocks() {
     this.productService.getStockByProductId(this.product.id).subscribe({
       next: (s) => {
-        this.stocks = s.stocks;
+        this.stocks = s;
       }
     })
   }

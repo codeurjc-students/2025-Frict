@@ -1,15 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ClientHomeComponent } from './client-home.component';
-import { ProductService } from '../../../services/product.service';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {ClientHomeComponent} from './client-home.component';
+import {ProductService} from '../../../services/product.service';
 
-import { MessageService, ConfirmationService } from 'primeng/api';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { of, throwError } from 'rxjs';
-import { Product } from '../../../models/product.model';
-import { Category } from '../../../models/category.model';
+import {ConfirmationService, MessageService} from 'primeng/api';
+import {provideAnimations} from '@angular/platform-browser/animations';
+import {provideRouter} from '@angular/router';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {of, throwError} from 'rxjs';
+import {Product} from '../../../models/product.model';
+import {Category} from '../../../models/category.model';
 
 describe('ClientHomeComponent', () => {
   let fixture: ComponentFixture<ClientHomeComponent>;

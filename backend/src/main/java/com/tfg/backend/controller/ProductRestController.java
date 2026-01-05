@@ -39,26 +39,26 @@ public class ProductRestController {
 
 
     @GetMapping("/")
-    public ResponseEntity<ProductsPageDTO> getAllProducts(Pageable pageable) {
+    public ResponseEntity<PageResponse<ProductDTO>> getAllProducts(Pageable pageable) {
         Page<Product> products = productService.findAll(pageable);
-        return ResponseEntity.ok(toProductsPageDTO(products));
+        return ResponseEntity.ok(toPageResponse(products));
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<ProductsPageDTO> getFilteredProducts(Pageable pageable,
-                                                               @RequestParam(value = "query", required = false) String searchTerm,
-                                                               @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
+    public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(Pageable pageable,
+                                                                        @RequestParam(value = "query", required = false) String searchTerm,
+                                                                        @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
         Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
-        return ResponseEntity.ok(toProductsPageDTO(products));
+        return ResponseEntity.ok(toPageResponse(products));
     }
 
     @GetMapping("/favourites")
-    public ResponseEntity<ProductsPageDTO> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
-        return ResponseEntity.ok(toProductsPageDTO(favouriteProducts));
+        return ResponseEntity.ok(toPageResponse(favouriteProducts));
     }
 
     @GetMapping("/favourites/{id}")
@@ -83,14 +83,14 @@ public class ProductRestController {
 
 
     @GetMapping("/stock/{id}")
-    public ResponseEntity<ShopStockListDTO> getProductStock(@PathVariable Long id) {
+    public ResponseEntity<ListResponse<ShopStockDTO>> getProductStock(@PathVariable Long id) {
         Product product = findProductHelper(id);
 
         List<ShopStockDTO> dtos = new ArrayList<>();
         for (ShopStock s : product.getShopsStock()) {
             dtos.add(new ShopStockDTO(s));
         }
-        return ResponseEntity.ok(new ShopStockListDTO(dtos));
+        return ResponseEntity.ok(new ListResponse<>(dtos));
     }
 
 
@@ -239,12 +239,12 @@ public class ProductRestController {
     }
 
     //Creates Page<ProductDTO> objects with necessary fields only
-    private ProductsPageDTO toProductsPageDTO(Page<Product> products){
+    private PageResponse<ProductDTO> toPageResponse(Page<Product> products){
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product p : products.getContent()) {
             ProductDTO dto = new ProductDTO(p);
             dtos.add(dto);
         }
-        return new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
+        return new PageResponse<>(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
     }
 }

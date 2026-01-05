@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.CategoryDTO;
-import com.tfg.backend.dto.CategoryListDTO;
+import com.tfg.backend.dto.ListResponse;
 import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,9 +29,9 @@ public class CategoryRestController {
     private StorageService storageService;
 
     @GetMapping("/")
-    public ResponseEntity<CategoryListDTO> showAllCategories() {
+    public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
         List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
-        return ResponseEntity.ok(new CategoryListDTO(dtos));
+        return ResponseEntity.ok(new ListResponse<>(dtos));
     }
 
     @GetMapping("/{id}")

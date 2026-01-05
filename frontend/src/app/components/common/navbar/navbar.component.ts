@@ -1,15 +1,15 @@
-import {Component, ViewChild, OnInit, signal, WritableSignal} from '@angular/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { Router, RouterLink, RouterLinkActive, IsActiveMatchOptions } from '@angular/router';
+import {Component, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
+import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
+import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
-import { Button } from 'primeng/button';
-import { Drawer } from 'primeng/drawer';
-import { MenuItem, PrimeTemplate } from 'primeng/api';
-import { FormsModule } from '@angular/forms';
-import { Menu } from 'primeng/menu';
-import { AuthService } from '../../../services/auth.service';
-import { LoginInfo } from '../../../models/loginInfo.model';
-import { OrderService } from '../../../services/order.service';
+import {Button} from 'primeng/button';
+import {Drawer} from 'primeng/drawer';
+import {MenuItem, PrimeTemplate} from 'primeng/api';
+import {FormsModule} from '@angular/forms';
+import {Menu} from 'primeng/menu';
+import {AuthService} from '../../../services/auth.service';
+import {LoginInfo} from '../../../models/loginInfo.model';
+import {OrderService} from '../../../services/order.service';
 import {Category} from '../../../models/category.model';
 import {CategoryService} from '../../../services/category.service';
 import {Avatar} from 'primeng/avatar';
@@ -121,7 +121,7 @@ export class NavbarComponent implements OnInit {
 
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
-        this.categories = list.categories;
+        this.categories = list;
       }
     })
 

@@ -1,17 +1,16 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {Component} from '@angular/core';
+import {CommonModule} from '@angular/common';
 import {ActivatedRoute, RouterModule} from '@angular/router';
 
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
-import { RatingModule } from 'primeng/rating';
-import { FormsModule } from '@angular/forms';
+import {ButtonModule} from 'primeng/button';
+import {TagModule} from 'primeng/tag';
+import {RatingModule} from 'primeng/rating';
+import {FormsModule} from '@angular/forms';
 import {ProductCardComponent} from '../product-card/product-card.component';
 import {Product} from '../../../models/product.model';
 import {CategoryService} from '../../../services/category.service';
 import {ProductService} from '../../../services/product.service';
 import {Category} from '../../../models/category.model';
-import {MenuItem} from 'primeng/api';
 import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
 
 @Component({
@@ -31,9 +30,6 @@ import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component'
   styleUrl: './category-info.component.css'
 })
 export class CategoryInfoComponent {
-
-  breadcrumbItems: MenuItem[] | undefined = [{ icon: 'pi pi-home', route: '/installation' }, { label: 'Components' }, { label: 'Form' }, { label: 'InputText', route: '/inputtext' }];
-  home: MenuItem | undefined;
 
   topSalesProducts: Product[] = []; //Top sales products of this main category
   mainCategory!: Category;
@@ -92,7 +88,7 @@ export class CategoryInfoComponent {
     else{
       this.categoryService.getAllCategories().subscribe({
         next: (c) => {
-          this.similarCategories = c.categories.filter(c => c.id !== this.mainCategory.id);
+          this.similarCategories = c.filter(c => c.id !== this.mainCategory.id);
         }
       })
     }
@@ -101,7 +97,7 @@ export class CategoryInfoComponent {
   loadTopSalesProducts(){
     this.productService.getProductsByCategoryName(this.mainCategory.name).subscribe({
       next: (page) => {
-        this.topSalesProducts = page.products;
+        this.topSalesProducts = page.items;
         this.loading = false;
       }
     })

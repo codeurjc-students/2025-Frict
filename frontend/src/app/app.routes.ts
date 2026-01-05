@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import {Routes} from '@angular/router';
 import {routeGuard} from './utils/routeGuard.util';
 
 export const routes: Routes = [

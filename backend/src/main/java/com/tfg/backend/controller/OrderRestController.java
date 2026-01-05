@@ -1,6 +1,9 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
+import com.tfg.backend.dto.CartSummaryDTO;
+import com.tfg.backend.dto.OrderDTO;
+import com.tfg.backend.dto.OrderItemDTO;
+import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderItemService;
 import com.tfg.backend.service.OrderService;
@@ -40,12 +43,12 @@ public class OrderRestController {
     private EmailService emailService;
 
     @GetMapping
-    public ResponseEntity<OrdersPageDTO> getAllUserOrders(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toOrdersPageDTO(userOrders));
+        return ResponseEntity.ok(toPageResponse(userOrders));
     }
 
     @GetMapping("/{id}")
@@ -179,7 +182,7 @@ public class OrderRestController {
 
     //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
     @GetMapping("/cart")
-    public ResponseEntity<OrderItemsPageDTO> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
@@ -339,22 +342,22 @@ public class OrderRestController {
     }
 
     //Creates OrderPageDTO objects with necessary fields only
-    private OrdersPageDTO toOrdersPageDTO(Page<Order> orders){
+    private PageResponse<OrderDTO> toPageResponse(Page<Order> orders){
         List<OrderDTO> dtos = new ArrayList<>();
         for (Order o : orders.getContent()) {
             OrderDTO dto = new OrderDTO(o);
             dtos.add(dto);
         }
-        return new OrdersPageDTO(dtos, orders.getTotalElements(), orders.getNumber(), orders.getTotalPages()-1, orders.getSize());
+        return new PageResponse<>(dtos, orders.getTotalElements(), orders.getNumber(), orders.getTotalPages()-1, orders.getSize());
     }
 
     //Creates OrderItemsPageDTO objects with necessary fields only
-    private OrderItemsPageDTO toOrderItemsPageDTO(Page<OrderItem> items){
+    private PageResponse<OrderItemDTO> toOrderItemsPageDTO(Page<OrderItem> items){
         List<OrderItemDTO> dtos = new ArrayList<>();
         for (OrderItem i : items.getContent()) {
             OrderItemDTO dto = new OrderItemDTO(i);
             dtos.add(dto);
         }
-        return new OrderItemsPageDTO(dtos, items.getTotalElements(), items.getNumber(), items.getTotalPages()-1, items.getSize());
+        return new PageResponse<>(dtos, items.getTotalElements(), items.getNumber(), items.getTotalPages()-1, items.getSize());
     }
 }

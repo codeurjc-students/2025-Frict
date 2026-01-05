@@ -1,13 +1,13 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { RouterLink } from '@angular/router';
-import { Carousel } from 'primeng/carousel';
-import { carouselResponsiveOptions } from '../../../app.config';
-import { ProductCardComponent } from '../product-card/product-card.component';
-import { Product } from '../../../models/product.model';
-import { ProductService } from '../../../services/product.service';
-import { LoadingSectionComponent } from '../../common/loading-section/loading-section.component';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ButtonModule} from 'primeng/button';
+import {RouterLink} from '@angular/router';
+import {Carousel} from 'primeng/carousel';
+import {carouselResponsiveOptions} from '../../../app.config';
+import {ProductCardComponent} from '../product-card/product-card.component';
+import {Product} from '../../../models/product.model';
+import {ProductService} from '../../../services/product.service';
+import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
 
@@ -97,17 +97,18 @@ export class ClientHomeComponent implements OnInit {
 
   ngOnInit() {
     this.loadCategories();
-    this.loadFeaturedProducts();
-    this.loadTopSalesProducts();
-    this.loadRecommendedProducts();
   }
 
   private loadCategories(){
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
-        this.categories = list.categories;
+        this.categories = list;
         const peripheralsCategory = this.categories.find(c => c.name.toLowerCase() === 'periféricos');
         this.peripheralsCategoryId = peripheralsCategory ? peripheralsCategory.id : '0';
+        
+        this.loadFeaturedProducts();
+        this.loadTopSalesProducts();
+        this.loadRecommendedProducts();
       }
     })
   }
@@ -115,7 +116,7 @@ export class ClientHomeComponent implements OnInit {
   private loadFeaturedProducts() {
     this.productService.getProductsByCategoryName("Destacado").subscribe({
       next: (products) => {
-        this.featuredProducts = products.products;
+        this.featuredProducts = products.items;
         const featuredCategory = this.categories.find(c => c.name.toLowerCase() === 'destacado');
         this.featuredCategoryId = featuredCategory ? featuredCategory.id : '0';
         this.featuredLoading = false;
@@ -130,7 +131,7 @@ export class ClientHomeComponent implements OnInit {
   private loadTopSalesProducts() {
     this.productService.getProductsByCategoryName("Top Ventas").subscribe({
       next: (products) => {
-        this.topSalesProducts = products.products;
+        this.topSalesProducts = products.items;
         const topSalesCategory = this.categories.find(c => c.name.toLowerCase() === 'top ventas');
         this.topSalesCategoryId = topSalesCategory ? topSalesCategory.id : '0';
         this.topSalesLoading = false;
@@ -143,14 +144,17 @@ export class ClientHomeComponent implements OnInit {
   }
 
   private loadRecommendedProducts() {
+    console.log("loadRecommendedProducts");
     this.productService.getProductsByCategoryName("Recomendado").subscribe({
       next: (products) => {
-        this.recommendedProducts = products.products;
+        this.recommendedProducts = products.items;
+        console.log(products);
         const recommendedCategory = this.categories.find(c => c.name.toLowerCase() === 'recomendado');
         this.recommendedCategoryId = recommendedCategory ? recommendedCategory.id : '0';
         this.recommendedLoading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.log("Error loadRecommendedProducts: " + error);
         this.recommendedLoading = false;
         this.recommendedError = true;
       }
