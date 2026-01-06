@@ -45,31 +45,41 @@ export class LoginComponent implements OnInit {
   }
 
   private initGoogleButton() {
-    console.log('Client ID:', environment.googleClientId);
     // Check if Google script has already loaded
     if (typeof google === 'undefined' || !this.googleBtn) {
-      console.warn('Google script not loaded');
+      console.warn('Google script not loaded or button element missing');
       return;
     }
 
     const clientId = environment.googleClientId;
     if (!clientId) {
-      console.error('CRITICAL ERROR: Google Client ID is undefined in environment!');
+      console.error('CRITICAL ERROR: Google Client ID is missing.');
       return;
     }
 
-    google.accounts.id.initialize({
-      client_id: environment.googleClientId,
-      use_fedcm_for_prompt: false,
-      callback: (resp: any) => this.handleGoogleLogin(resp)
-    });
+    try {
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (resp: any) => this.handleGoogleLogin(resp),
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
 
-    google.accounts.id.renderButton(this.googleBtn.nativeElement, {
-      theme: 'outline',
-      size: 'large',
-      type: 'standard',
-      width: '365'
-    });
+      // Button rendering
+      google.accounts.id.renderButton(this.googleBtn.nativeElement, {
+        theme: 'outline',
+        size: 'large',
+        type: 'standard',
+        width: '365',
+        shape: 'rectangular',
+        logo_alignment: 'left'
+      });
+
+      google.accounts.id.prompt(); //One tap prompt enabled
+
+    } catch (e) {
+      console.error('Error initializing Google Sign-In:', e);
+    }
   }
 
   private handleGoogleLogin(response: any) {
