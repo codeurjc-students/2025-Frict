@@ -16,6 +16,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -50,40 +56,70 @@ public class SecurityConfig {
 		return authProvider;
 	}
 
-	@Bean
-	public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
-		
-		http.authenticationProvider(authenticationProvider());
-		
-		http
-			.securityMatcher("/api/**")
-			.exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt));
-		
-		http
-			.authorizeHttpRequests(authorize -> authorize
-                    // PRIVATE ENDPOINTS
-                    .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart").hasRole("USER")
-                    .requestMatchers(HttpMethod.GET, "/api/v1/products/favourites").hasRole("USER")
+    @Bean
+    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
 
-					// PUBLIC ENDPOINTS
-					.anyRequest().permitAll()
-			);
+        http
+                // Explicit CORS configuration
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-        // Disable Form login Authentication (as JWT authentication is being used)
-        http.formLogin(formLogin -> formLogin.disable());
+                // Diseble CSRF for API REST
+                .csrf(csrf -> csrf.disable())
 
-        // Disable CSRF protection (as JWT avoids CSRF by storing the tokens in local storage)
-        http.csrf(csrf -> csrf.disable());
+                // Allow popups to communicate with the application (Google)
+                .headers(headers -> headers
+                        .crossOriginOpenerPolicy(coop ->
+                                coop.policy(CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN_ALLOW_POPUPS)
+                        )
+                )
 
-        // Disable Basic Authentication (as JWT authentication is being used)
-        http.httpBasic(httpBasic -> httpBasic.disable());
+                // Set session as stateless
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-        // Stateless session
-        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                // Routes
+                .securityMatcher("/api/**")
+                .authorizeHttpRequests(authorize -> authorize
+                        // Private endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/favourites").hasRole("USER")
+                        // Public endpoints
+                        .anyRequest().permitAll()
+                )
 
-		// Add JWT Token filter
-		http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                // Exception handling
+                .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt))
 
-		return http.build();
-	}
+                // Authentication provider
+                .authenticationProvider(authenticationProvider())
+
+                // JWT filter before user/pass conventional filters
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+
+                // Disable unused
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable());
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Explicit allowed origins
+        configuration.setAllowedOrigins(List.of("https://localhost:4202"));
+
+        // Allowed methods
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // Allowed headers
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        // Allow credentials
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }

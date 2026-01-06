@@ -105,7 +105,7 @@ export class ClientHomeComponent implements OnInit {
         this.categories = list;
         const peripheralsCategory = this.categories.find(c => c.name.toLowerCase() === 'periféricos');
         this.peripheralsCategoryId = peripheralsCategory ? peripheralsCategory.id : '0';
-        
+
         this.loadFeaturedProducts();
         this.loadTopSalesProducts();
         this.loadRecommendedProducts();
@@ -144,17 +144,14 @@ export class ClientHomeComponent implements OnInit {
   }
 
   private loadRecommendedProducts() {
-    console.log("loadRecommendedProducts");
     this.productService.getProductsByCategoryName("Recomendado").subscribe({
       next: (products) => {
         this.recommendedProducts = products.items;
-        console.log(products);
         const recommendedCategory = this.categories.find(c => c.name.toLowerCase() === 'recomendado');
         this.recommendedCategoryId = recommendedCategory ? recommendedCategory.id : '0';
         this.recommendedLoading = false;
       },
       error: (error) => {
-        console.log("Error loadRecommendedProducts: " + error);
         this.recommendedLoading = false;
         this.recommendedError = true;
       }

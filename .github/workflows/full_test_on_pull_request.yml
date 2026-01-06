@@ -15,6 +15,7 @@ jobs:
       SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
       SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
       SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
+      GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
 
     services:
       mysql:

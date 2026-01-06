@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {map, Observable} from 'rxjs';
+import {map, Observable, tap} from 'rxjs';
 import {Category} from '../models/category.model';
 import {ListResponse} from '../models/listResponse.model';
 
@@ -23,10 +23,9 @@ export class CategoryService {
   }
 
   public getCategoryByName(name: string): Observable<Category> {
-    return this.http.get<{ categories: Category[] }>(this.apiUrl + `/`).pipe(
+    return this.http.get<ListResponse<Category>>(this.apiUrl + `/`).pipe(
       map((resp) => {
-        const category = resp.categories.find(c => c.name === name);
-
+        const category = resp.items.find(c => c.name === name);
         if (!category) {
           throw new Error(`Category '${name}' not found`);
         }

@@ -1,8 +1,13 @@
 package com.tfg.backend.controller;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.tfg.backend.dto.UserLoginDTO;
 import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.User;
+import com.tfg.backend.security.GoogleTokenDTO;
 import com.tfg.backend.security.jwt.AuthResponse;
 import com.tfg.backend.security.jwt.AuthResponse.Status;
 import com.tfg.backend.security.jwt.LoginRequest;
@@ -11,15 +16,17 @@ import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.EmailService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 // @Slf4j // For custom logs (log.warn("Warning message"))
@@ -38,6 +45,40 @@ public class AuthRestController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Value("${google.auth.clientId}")
+    private String googleClientId;
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> loginWithGoogle(HttpServletResponse response,
+                                             @RequestBody GoogleTokenDTO tokenDTO) {
+        GoogleIdToken idToken;
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            idToken = verifier.verify(tokenDTO.token());
+        } catch (Exception e) {
+            throw new BadCredentialsException("Error verificando token Google.", e);
+        }
+
+        if (idToken == null) {
+            throw new BadCredentialsException("Token de Google inválido o expirado.");
+        }
+
+        // Pasamos el Payload al servicio, él sabrá qué hacer (Login o Registro)
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        //Check if the user is banned or deleted
+        if(userService.isBannedByEmail(payload.getEmail())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
+        }
+
+        if(userService.isDeletedByEmail(payload.getEmail())){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user has been previously deleted.");
+        }
+        return ResponseEntity.ok(loginService.loginWithGoogle(response, payload));
+    }
+
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(
 			@RequestBody LoginRequest loginRequest,
@@ -46,21 +87,13 @@ public class AuthRestController {
         //Check if the user is banned or deleted
         if(userService.isBannedByUsername(loginRequest.getUsername())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
-
-            /* Another option is:
-            // 1. Create standard object
-            ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "This user is banned.");
-
-            // 2. Return the object in response body
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(detail);
-            */
         }
 
         if(userService.isDeletedByUsername(loginRequest.getUsername())){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user has been previously deleted.");
         }
 		
-		return loginService.login(response, loginRequest);
+		return ResponseEntity.ok(loginService.login(response, loginRequest));
 	}
 
     //Spring automatically matches the form fields with the same name and generates an UserSignupDTO object

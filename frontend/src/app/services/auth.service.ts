@@ -25,6 +25,10 @@ export class AuthService {
     return this.http.post<LoginInfo>(this.apiUrl + '/auth/signup', userData);
   }
 
+  public googleLogin(token: string): Observable<any> {
+    return this.http.post(this.apiUrl + "/auth/google", { token: token }, { withCredentials: true });
+  }
+
   public login(user: string, pass: string): Observable<any> {
     return this.http.post(this.apiUrl + "/auth/login", { username: user, password: pass }, { withCredentials: true })
       .pipe(tap(() => this.getLoginInfo().subscribe()));

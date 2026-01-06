@@ -88,5 +88,6 @@ jobs:
           SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
           SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
           SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
+          GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
         working-directory: backend
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test

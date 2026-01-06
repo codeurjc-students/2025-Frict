@@ -75,13 +75,12 @@ public class User {
 	public User() {
 	}
 
-    public User(String name, String username, String email, String phone, String encodedPassword, String... roles) {
+    public User(String name, String username, String email, String encodedPassword, String... roles) {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
         this.roles = Set.of(roles);
         this.email = email;
-        this.phone = phone;
     }
 
     //Retrieves only the items that are currently in user cart
