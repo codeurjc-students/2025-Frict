@@ -67,9 +67,9 @@ jobs:
       - name: Run Backend Unit, API and Integration tests
         working-directory: backend
         run: |
-          mvn test -Dtest=com.tfg.backend.unit.*
-          mvn test -Dtest=com.tfg.backend.api.*
-          mvn test -Dtest=com.tfg.backend.integration.*
+          mvn test -Dtest='com.tfg.backend.unit.**'
+          mvn test -Dtest='com.tfg.backend.api.**'
+          mvn test -Dtest='com.tfg.backend.integration.**'
 
 
       - name: Install Frontend Dependencies
@@ -91,4 +91,4 @@ jobs:
 
       - name: Run E2E Tests
         working-directory: backend
-        run: mvn test -Dtest=com.tfg.backend.e2e.*
+        run: mvn test -Dtest='com.tfg.backend.e2e.**'
