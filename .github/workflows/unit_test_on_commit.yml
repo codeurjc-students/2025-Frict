@@ -22,7 +22,7 @@ jobs:
           java-version: '21'
 
       - name: Run server unit tests
-        run: mvn test -Dtest=com.tfg.backend.unit.*Test
+        run: mvn test -Dtest=com.tfg.backend.unit.*
 
 
   client-test:
