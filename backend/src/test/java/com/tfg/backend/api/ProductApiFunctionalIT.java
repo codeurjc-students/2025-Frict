@@ -1,4 +1,4 @@
-package com.tfg.backend.integration;
+package com.tfg.backend.api;
 
 import com.tfg.backend.BackendApplication;
 import io.restassured.RestAssured;
@@ -16,7 +16,7 @@ import static org.hamcrest.Matchers.equalTo;
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-public class ProductApiIntegrationTest {
+public class ProductApiFunctionalIT {
 
     @LocalServerPort
     int port;

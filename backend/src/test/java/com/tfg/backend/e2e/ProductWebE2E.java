@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         }
 )
 @Slf4j
-public class ProductSystemUITest {
+public class ProductWebE2E {
 
     private static WebDriver driver;
     private static WebDriverWait wait;

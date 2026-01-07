@@ -14,6 +14,8 @@ import com.tfg.backend.security.jwt.LoginRequest;
 import com.tfg.backend.security.jwt.UserLoginService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.EmailService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +33,7 @@ import java.util.*;
 @RestController
 // @Slf4j // For custom logs (log.warn("Warning message"))
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication Management", description = "Users authentication management")
 public class AuthRestController {
 	
 	@Autowired
@@ -48,6 +51,8 @@ public class AuthRestController {
     @Value("${google.auth.clientId}")
     private String googleClientId;
 
+
+    @Operation(summary = "Login with Google account")
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginWithGoogle(HttpServletResponse response,
                                              @RequestBody GoogleTokenDTO tokenDTO) {
@@ -79,6 +84,8 @@ public class AuthRestController {
         return ResponseEntity.ok(loginService.loginWithGoogle(response, payload));
     }
 
+
+    @Operation(summary = "Login with local account")
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(
 			@RequestBody LoginRequest loginRequest,
@@ -96,7 +103,9 @@ public class AuthRestController {
 		return ResponseEntity.ok(loginService.login(response, loginRequest));
 	}
 
+
     //Spring automatically matches the form fields with the same name and generates an UserSignupDTO object
+    @Operation(summary = "Create user account")
     @PostMapping("/signup")
     public ResponseEntity<UserLoginDTO> registerUser(@RequestBody UserSignupDTO registerDTO) {
         if (userService.isUsernameTaken(registerDTO.getUsername()) || userService.isEmailTaken(registerDTO.getEmail())) {
@@ -112,6 +121,8 @@ public class AuthRestController {
         return ResponseEntity.ok(new UserLoginDTO(newUser));
     }
 
+
+    @Operation(summary = "Refresh logged user JWT access token")
 	@PostMapping("/refresh")
 	public ResponseEntity<AuthResponse> refreshToken(
 			@CookieValue(name = "RefreshToken", required = false) String refreshToken, HttpServletResponse response) {
@@ -119,11 +130,15 @@ public class AuthRestController {
 		return loginService.refresh(response, refreshToken);
 	}
 
+
+    @Operation(summary = "Log out logged user")
 	@PostMapping("/logout")
 	public ResponseEntity<AuthResponse> logOut(HttpServletResponse response) {
 		return ResponseEntity.ok(new AuthResponse(Status.SUCCESS, loginService.logout(response)));
 	}
 
+
+    @Operation(summary = "Recover user account")
     @PostMapping("/recovery")
     public ResponseEntity<Void> recoverPassword(@RequestBody Map<String, String> payload) {
         User user = findUserHelper(payload.get("username"));
@@ -138,6 +153,8 @@ public class AuthRestController {
         return ResponseEntity.ok().build();
     }
 
+
+    @Operation(summary = "Verify user OTP")
     @PostMapping("/verification")
     public ResponseEntity<Boolean> verifyOtp(@RequestBody Map<String, String> payload) {
         User user = findUserHelper(payload.get("username"));
@@ -150,6 +167,8 @@ public class AuthRestController {
         return ResponseEntity.ok(true);
     }
 
+
+    @Operation(summary = "Reset user password")
     @PostMapping("/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody Map<String, String> payload) {
         User user = findUserHelper(payload.get("username"));

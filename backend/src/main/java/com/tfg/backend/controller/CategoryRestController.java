@@ -6,6 +6,8 @@ import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.StorageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/categories")
+@Tag(name = "Category Management", description = "Product categories data management")
 public class CategoryRestController {
 
     @Autowired
@@ -28,12 +31,16 @@ public class CategoryRestController {
     @Autowired
     private StorageService storageService;
 
+
+    @Operation(summary = "Get all categories (paged)")
     @GetMapping("/")
     public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
         List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
         return ResponseEntity.ok(new ListResponse<>(dtos));
     }
 
+
+    @Operation(summary = "Get category by ID")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
         return categoryService.findById(id)
@@ -42,6 +49,8 @@ public class CategoryRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found."));
     }
 
+
+    @Operation(summary = "Update remote category image")
     @PostMapping(value = "/{id}/image")
     public ResponseEntity<Category> uploadCategoryImage(
             @PathVariable Long id,
@@ -75,6 +84,8 @@ public class CategoryRestController {
         return ResponseEntity.ok(categoryService.save(category));
     }
 
+
+    @Operation(summary = "Delete remote category image")
     @DeleteMapping("/{id}/image")
     public ResponseEntity<Category> deleteCategoryImage(@PathVariable Long id) {
 

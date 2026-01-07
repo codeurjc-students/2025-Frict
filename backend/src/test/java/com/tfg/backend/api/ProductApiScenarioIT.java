@@ -1,4 +1,4 @@
-package com.tfg.backend.e2e;
+package com.tfg.backend.api;
 
 import com.tfg.backend.BackendApplication;
 import com.tfg.backend.model.Product;
@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.hasItems;
                 "app.db.init=false" // Do not run DatabaseInitializer class in order to make finding created products easier with paginated responses
         }
 )
-public class ProductSystemApiTest {
+public class ProductApiScenarioIT {
 
     @LocalServerPort
     int port;
@@ -65,10 +65,10 @@ public class ProductSystemApiTest {
                 //.log().all()
                 .statusCode(200)
                 .contentType(CONTENT_TYPE)
-                .body("products.referenceCode", hasItems(product1.getReferenceCode(), product2.getReferenceCode(), product3.getReferenceCode()))
-                .body("products.name", hasItems(product1.getName(), product2.getName(), product3.getName()))
-                .body("products.description", hasItems(product1.getDescription(), product2.getDescription(), product3.getDescription()))
-                .body("products.currentPrice", hasItems((float) product1.getCurrentPrice(), (float) product2.getCurrentPrice(), (float) product3.getCurrentPrice()));
+                .body("items.referenceCode", hasItems(product1.getReferenceCode(), product2.getReferenceCode(), product3.getReferenceCode()))
+                .body("items.name", hasItems(product1.getName(), product2.getName(), product3.getName()))
+                .body("items.description", hasItems(product1.getDescription(), product2.getDescription(), product3.getDescription()))
+                .body("items.currentPrice", hasItems((float) product1.getCurrentPrice(), (float) product2.getCurrentPrice(), (float) product3.getCurrentPrice()));
     }
 
 }
