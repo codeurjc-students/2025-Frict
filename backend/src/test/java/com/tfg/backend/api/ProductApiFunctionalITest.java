@@ -13,11 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Set;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+
 
 @SpringBootTest(
         classes = BackendApplication.class,
@@ -34,14 +32,11 @@ public class ProductApiFunctionalITest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // IMPORTANTE: Asegúrate de que coincide con el nombre de la cookie en tu AuthRestController
+    //
     private static final String JWT_COOKIE_NAME = "AuthToken";
     private static final String CONTENT_TYPE = "application/json";
     private static final String BASE_URL = "/api/v1";
 
-
-
-    // Datos de prueba
     private String name = "Aspiradora inteligente";
     private String description = "Limpieza sin límites";
     private double currentPrice = 130.99;
@@ -52,52 +47,37 @@ public class ProductApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // Credenciales para el test
+        // Test credentials
         String testUsername = "admin2";
         String testEmail = "admin2@test.com";
         String testPassword = "password123";
 
-        // 1. Crear usuario ADMIN en la BD si NO existe
-        // NOTA: Si tu repositorio no tiene 'existsByUsername', usa findByUsername(...).isEmpty()
+        // Create admin user if not exists in order to be able to create, update or even delete products
         if (!userRepository.existsByUsername(testUsername)) {
-            User adminUser = new User();
-
-            // Requisitos obligatorios: usuario, nombre, email y contraseña
-            adminUser.setUsername(testUsername);
-            adminUser.setName("Administrador Test"); // Agregado campo Nombre
-            adminUser.setEmail(testEmail);
-            adminUser.setEncodedPassword(passwordEncoder.encode(testPassword));
-
-            // Roles
-            adminUser.setRoles(Set.of("ADMIN"));
-
+            User adminUser = new User("Test Administrator", testUsername, testEmail, passwordEncoder.encode(testPassword), "ADMIN");
             userRepository.save(adminUser);
         }
 
-        // 2. Realizar Login para obtener la Cookie
-        // Usamos el DTO LoginRequest definido abajo que usa 'username' y 'password'
+        // Log in the system to obtain authentication cookies
         Response loginResponse = given()
                 .contentType(ContentType.JSON)
                 .body(new LoginRequest(testUsername, testPassword))
                 .when()
                 .post(BASE_URL + "/auth/login");
 
-        // Verificamos que el login fue exitoso (200 OK)
-        loginResponse.then().statusCode(200);
 
-        // 3. Extraer el valor de la cookie de la respuesta
+        loginResponse.then().statusCode(200); //The login must be successful
         String tokenCookieValue = loginResponse.getCookie(JWT_COOKIE_NAME);
 
         if (tokenCookieValue == null) {
-            throw new RuntimeException("El login no devolvió la cookie llamada: " + JWT_COOKIE_NAME +
-                    ". Verifica el nombre en tu controlador.");
+            throw new RuntimeException("Login process did not return auth cookie: " + JWT_COOKIE_NAME);
         }
 
-        // 4. Configurar RestAssured globalmente para usar esa Cookie
+        // Configure Rest Assured to always use the authentication cookie
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setBasePath(BASE_URL + "/products")
                 .setContentType(CONTENT_TYPE)
-                .addCookie(JWT_COOKIE_NAME, tokenCookieValue) // Inyección de la cookie
+                .addCookie(JWT_COOKIE_NAME, tokenCookieValue) // Inject authentication cookie
                 .build();
     }
 
@@ -148,8 +128,8 @@ public class ProductApiFunctionalITest {
         getResponse.then().statusCode(404);
     }
 
-    // --- Métodos Auxiliares ---
 
+    // Auxiliary methods
     private Response createProduct() {
         ProductRequest product = new ProductRequest(name, description, currentPrice);
         return given()
@@ -181,7 +161,7 @@ public class ProductApiFunctionalITest {
                 .delete("/{id}");
     }
 
-    // DTOs internos para mapear JSON
+    // Request mappers
     private static class ProductRequest {
         public String name;
         public String description;

@@ -1,23 +1,34 @@
 package com.tfg.backend.unit;
 
+
 import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 //SERVER SIDE UNIT TESTS
-public class ProductServiceUTest {
+@ExtendWith(MockitoExtension.class)
+class ProductServiceUTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -29,101 +40,134 @@ public class ProductServiceUTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        testProduct = new Product("Cámara reflex", "Fotografías profesionales al instante", 799.99);
+        testProduct = new Product("Cámara reflex", "Fotografías profesionales", 799.99);
+        testProduct.setId(1L);
     }
 
+
+    // findAll() method tests
     @Test
-    public void createProductTest(){
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+    void findAll_ShouldReturnPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Product> expectedPage = new PageImpl<>(Collections.singletonList(testProduct));
+        when(productRepository.findAll(pageable)).thenReturn(expectedPage);
+
+        Page<Product> result = productService.findAll(pageable);
+
+        assertEquals(expectedPage, result);
+        verify(productRepository).findAll(pageable);
+    }
+
+
+    // findById() method tests
+    @Test
+    void findById_ShouldReturnProduct_WhenExists() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        Optional<Product> result = productService.findById(1L);
+
+        assertTrue(result.isPresent());
+        assertEquals(testProduct, result.get());
+    }
+
+
+    // save() method tests
+    @Test
+    void save_ShouldReturnProduct_WhenValid() {
         when(productRepository.existsByReferenceCode(testProduct.getReferenceCode())).thenReturn(false);
+        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
 
         Product savedProduct = productService.save(testProduct);
 
         assertNotNull(savedProduct);
-        assertEquals(testProduct.getReferenceCode(), savedProduct.getReferenceCode());
         assertEquals(testProduct.getName(), savedProduct.getName());
-        assertEquals(testProduct.getDescription(), savedProduct.getDescription());
-        assertEquals(testProduct.getCurrentPrice(), savedProduct.getCurrentPrice());
-
-        verify(productRepository, times(1)).save(testProduct);
+        verify(productRepository).existsByReferenceCode(testProduct.getReferenceCode());
+        verify(productRepository).save(testProduct);
     }
 
     @Test
-    public void createProduct_InvalidFieldTest(){
+    void save_ShouldThrowException_WhenReferenceCodeExists() {
+        when(productRepository.existsByReferenceCode(testProduct.getReferenceCode())).thenReturn(true);
 
-        Product invalidRefCode = new Product("Portátil Gamer", "Potente equipo para gaming y trabajo", 1499.99);
-        Product emptyName = new Product("", "Sonido envolvente y cancelación de ruido", 199.99);
-        Product nullName = new Product(null, "Monitoriza tu salud y notificaciones al instante", 249.99);
-        Product negativePrice = new Product("Tablet 10\"", "Perfecta para leer, ver series y tomar notas", -329.99);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> productService.save(testProduct));
 
-        when(productRepository.existsByReferenceCode(invalidRefCode.getReferenceCode())).thenReturn(true);
+        assertEquals("The reference code is already taken", ex.getMessage());
+        verify(productRepository, never()).save(any());
+    }
 
-        IllegalArgumentException exInvalidRefCode = assertThrows(IllegalArgumentException.class, () -> {productService.save(invalidRefCode);});
-        IllegalArgumentException exEmptyName = assertThrows(IllegalArgumentException.class, () -> {productService.save(emptyName);});
-        IllegalArgumentException exNullName = assertThrows(IllegalArgumentException.class, () -> {productService.save(nullName);});
-        IllegalArgumentException exNegativePrice = assertThrows(IllegalArgumentException.class, () -> {productService.save(negativePrice);});
+    @ParameterizedTest(name = "{index} => {1}")
+    @MethodSource("invalidProductsProvider")
+    void save_ShouldThrowException_WhenFieldsAreInvalid(Product invalidProduct, String expectedMessage) {
+        lenient().when(productRepository.existsByReferenceCode(any())).thenReturn(false); // Conditional behaviour definition
 
-        assertEquals("The reference code is already taken", exInvalidRefCode.getMessage());
-        assertEquals("The title is null or empty", exEmptyName.getMessage());
-        assertEquals("The title is null or empty", exNullName.getMessage());
-        assertEquals("The price should be positive or 0", exNegativePrice.getMessage());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> productService.save(invalidProduct));
 
-        verify(productRepository, times(0)).save(invalidRefCode);
-        verify(productRepository, times(0)).save(emptyName);
-        verify(productRepository, times(0)).save(nullName);
-        verify(productRepository, times(0)).save(negativePrice);
+        assertEquals(expectedMessage, ex.getMessage());
+        verify(productRepository, never()).save(any());
+    }
+
+
+    // update() method tests
+    @Test
+    void update_ShouldReturnUpdatedProduct_WhenExists() {
+        Product inputProduct = new Product("Updated Name", "Desc", 100.0);
+        inputProduct.setId(1L);
+
+        when(productRepository.existsById(1L)).thenReturn(true);
+        when(productRepository.save(inputProduct)).thenReturn(inputProduct);
+
+        Product result = productService.update(inputProduct);
+
+        assertEquals("Updated Name", result.getName());
+        verify(productRepository).existsById(1L);
+        verify(productRepository).save(inputProduct);
     }
 
     @Test
-    public void updateExistentProductTest(){
-        testProduct.setId(5L);
-        Optional<Product> productOpt = Optional.of(testProduct);
-        Product updatedProduct = new Product("Ratón inalámbrico", "Sin necesidad de cable", 89.95);
-        updatedProduct.setId(testProduct.getId());
+    void update_ShouldThrowException_WhenDoesNotExist() {
+        Product inputProduct = new Product("Name", "Desc", 10.0);
+        inputProduct.setId(99L); // Inexistent id
 
-        when(productRepository.existsById(updatedProduct.getId())).thenReturn(true);
-        when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
+        when(productRepository.existsById(99L)).thenReturn(false);
 
-        Product savedProduct = productService.update(updatedProduct);
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> productService.update(inputProduct));
 
-        assertEquals(5L, savedProduct.getId());
-        assertEquals("Ratón inalámbrico", savedProduct.getName());
-        assertEquals("Sin necesidad de cable", savedProduct.getDescription());
-        assertEquals(89.95, savedProduct.getCurrentPrice());
+        assertEquals("The product that is being updated does not exist", ex.getMessage());
+        verify(productRepository, never()).save(any());
+    }
 
-        verify(productRepository, times(1)).save(updatedProduct);
+
+    // deleteById() method tests
+    @Test
+    void deleteById_ShouldDelete_WhenExists() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+
+        productService.deleteById(1L);
+
+        verify(productRepository).deleteById(1L);
     }
 
     @Test
-    public void updateInexistentProductTest(){
-        testProduct.setId(5L);
-        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.empty());
-        EntityNotFoundException exInvalidId = assertThrows(EntityNotFoundException.class, () -> {productService.update(testProduct);});
+    void deleteById_ShouldThrowException_WhenDoesNotExist() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertEquals("The product that is being updated does not exist", exInvalidId.getMessage());
-        verify(productRepository, times(0)).save(testProduct);
+        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
+                () -> productService.deleteById(1L));
+
+        assertEquals("The product that is being deleted does not exist", ex.getMessage());
+        verify(productRepository, never()).deleteById(any());
     }
 
-    @Test
-    public void deleteExistentProductTest(){
-        testProduct.setId(5L);
-        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
 
-        productService.deleteById(testProduct.getId());
-
-        verify(productRepository, times(1)).deleteById(testProduct.getId());
+    // Parametrized data provider
+    static Stream<Arguments> invalidProductsProvider() {
+        return Stream.of(
+                Arguments.of(new Product("", "Desc", 10.0), "The title is null or empty"),
+                Arguments.of(new Product(null, "Desc", 10.0), "The title is null or empty"),
+                Arguments.of(new Product("Valid", "Desc", -1.0), "The price should be positive or 0")
+        );
     }
-
-    @Test
-    public void deleteInexistentProductTest(){
-        testProduct.setId(5L);
-        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.empty());
-
-        EntityNotFoundException exInvalidId = assertThrows(EntityNotFoundException.class, () -> {productService.deleteById(testProduct.getId());});
-
-        assertEquals("The product that is being deleted does not exist", exInvalidId.getMessage());
-        verify(productRepository, times(0)).deleteById(testProduct.getId());
-    }
-
 }
