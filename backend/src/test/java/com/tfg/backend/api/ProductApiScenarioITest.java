@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.hasItems;
                 "app.db.init=false" // Do not run DatabaseInitializer class in order to make finding created products easier with paginated responses
         }
 )
-public class ProductApiScenarioIT {
+public class ProductApiScenarioITest {
 
     @LocalServerPort
     int port;

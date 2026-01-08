@@ -17,7 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 //SERVER SIDE UNIT TESTS
-public class ProductServiceUT {
+public class ProductServiceUTest {
 
     @Mock
     private ProductRepository productRepository;

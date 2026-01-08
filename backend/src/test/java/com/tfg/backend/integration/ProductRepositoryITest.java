@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 //SERVER SIDE INTEGRATION TESTS
 @SpringBootTest
-public class ProductRepositoryIT {
+public class ProductRepositoryITest {
 
     @Autowired
     private ProductService productService;
