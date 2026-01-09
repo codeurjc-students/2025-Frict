@@ -7,15 +7,11 @@ import {TagModule} from 'primeng/tag';
 import {AvatarModule} from 'primeng/avatar';
 import {RatingModule} from 'primeng/rating';
 import {FormsModule} from '@angular/forms';
-import {NavbarComponent} from '../navbar/navbar.component';
-import {FooterComponent} from '../footer/footer.component';
 import {User} from '../../../models/user.model';
 import {UserService} from '../../../services/user.service';
 import {OrderService} from '../../../services/order.service';
 import {ReviewService} from '../../../services/review.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
-import {OrdersPage} from '../../../models/ordersPage.model';
-import {ReviewsPage} from '../../../models/reviewsPage.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
@@ -27,6 +23,9 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
 import {ConfirmDialog} from 'primeng/confirmdialog';
 import {AuthService} from '../../../services/auth.service';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Order} from '../../../models/order.model';
+import {Review} from '../../../models/review.model';
 
 @Component({
   selector: 'app-profile',
@@ -39,8 +38,6 @@ import {AuthService} from '../../../services/auth.service';
     TagModule,
     AvatarModule,
     RatingModule,
-    NavbarComponent,
-    FooterComponent,
     LoadingScreenComponent,
     Paginator,
     Dialog,
@@ -49,7 +46,6 @@ import {AuthService} from '../../../services/auth.service';
     InputMask,
     ConfirmDialog
   ],
-  providers: [MessageService, ConfirmationService],
   templateUrl: './profile.component.html',
   styles: []
 })
@@ -57,11 +53,11 @@ export class ProfileComponent implements OnInit {
 
   user!: User;
 
-  foundOrders : OrdersPage = {orders: [], totalOrders: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  foundOrders : PageResponse<Order> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstOrder: number = 0;
   ordersRows: number = 5;
 
-  foundReviews: ReviewsPage = {reviews: [], totalReviews: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  foundReviews: PageResponse<Review> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstReview: number = 0;
   reviewsRows: number = 5;
 
@@ -145,7 +141,6 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
-        console.log(this.user);
         this.loadUserOrders();
         this.loadUserReviews();
       },

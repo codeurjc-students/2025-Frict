@@ -1,12 +1,17 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.*;
+import com.tfg.backend.dto.CartSummaryDTO;
+import com.tfg.backend.dto.OrderDTO;
+import com.tfg.backend.dto.OrderItemDTO;
+import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderItemService;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.EmailService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,6 +27,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/orders")
+@Tag(name = "Order Management", description = "Users orders data management")
 public class OrderRestController {
 
     @Autowired
@@ -39,15 +45,19 @@ public class OrderRestController {
     @Autowired
     private EmailService emailService;
 
+
+    @Operation(summary = "Get logged user orders (paged)")
     @GetMapping
-    public ResponseEntity<OrdersPageDTO> getAllUserOrders(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toOrdersPageDTO(userOrders));
+        return ResponseEntity.ok(toPageResponse(userOrders));
     }
 
+
+    @Operation(summary = "Get order by ID")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id){
         Optional<Order> orderOptional = this.orderService.findById(id);
@@ -61,6 +71,7 @@ public class OrderRestController {
 
     //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
     //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
+    @Operation(summary = "Create order for logged user")
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(HttpServletRequest request,
                                                 @RequestParam Long addressId,
@@ -105,6 +116,7 @@ public class OrderRestController {
     }
 
 
+    @Operation(summary = "Cancel logged user order by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(HttpServletRequest request, @PathVariable Long id){
         //Get logged user info if any (User class)
@@ -134,6 +146,8 @@ public class OrderRestController {
         return ResponseEntity.ok(new OrderDTO(savedOrder));
     }
 
+
+    @Operation(summary = "Get logged user cart summary")
     @GetMapping("/cart/summary")
     public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {
         //Get logged user info if any (User class)
@@ -177,9 +191,11 @@ public class OrderRestController {
                 Math.round(total * 100.0) / 100.0));
     }
 
+
     //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
+    @Operation(summary = "Get logged user cart products (paged)")
     @GetMapping("/cart")
-    public ResponseEntity<OrderItemsPageDTO> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
@@ -187,6 +203,8 @@ public class OrderRestController {
         return ResponseEntity.ok(toOrderItemsPageDTO(cartItems));
     }
 
+
+    @Operation(summary = "Clear logged user cart products")
     @DeleteMapping("/cart")
     public ResponseEntity<CartSummaryDTO> clearCartItems(HttpServletRequest request) {
         //Get logged user info if any (User class)
@@ -202,10 +220,11 @@ public class OrderRestController {
     }
 
 
+    @Operation(summary = "Add item to logged user cart")
     @PostMapping("/cart/{id}")
     public ResponseEntity<OrderItemDTO> addItemToCart(HttpServletRequest request,
-                                                       @PathVariable Long id,
-                                                       @RequestParam int quantity) {
+                                                      @PathVariable Long id,
+                                                      @RequestParam int quantity) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
@@ -253,6 +272,8 @@ public class OrderRestController {
         return ResponseEntity.ok(new OrderItemDTO(resultItem)); //Returns the added item (optional)
     }
 
+
+    @Operation(summary = "Update logged user cart product quantity")
     @PutMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> updateItemQuantity(HttpServletRequest request,
                                                            @PathVariable Long id,
@@ -311,6 +332,8 @@ public class OrderRestController {
         return this.getCartSummary(request);
     }
 
+
+    @Operation(summary = "Delete logged user cart item")
     @DeleteMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -333,28 +356,31 @@ public class OrderRestController {
         return this.getCartSummary(request);
     }
 
+
     private User findLoggedUserHelper(HttpServletRequest request) {
         return this.userService.getLoggedUser(request)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
+
     //Creates OrderPageDTO objects with necessary fields only
-    private OrdersPageDTO toOrdersPageDTO(Page<Order> orders){
+    private PageResponse<OrderDTO> toPageResponse(Page<Order> orders){
         List<OrderDTO> dtos = new ArrayList<>();
         for (Order o : orders.getContent()) {
             OrderDTO dto = new OrderDTO(o);
             dtos.add(dto);
         }
-        return new OrdersPageDTO(dtos, orders.getTotalElements(), orders.getNumber(), orders.getTotalPages()-1, orders.getSize());
+        return new PageResponse<>(dtos, orders.getTotalElements(), orders.getNumber(), orders.getTotalPages()-1, orders.getSize());
     }
 
+
     //Creates OrderItemsPageDTO objects with necessary fields only
-    private OrderItemsPageDTO toOrderItemsPageDTO(Page<OrderItem> items){
+    private PageResponse<OrderItemDTO> toOrderItemsPageDTO(Page<OrderItem> items){
         List<OrderItemDTO> dtos = new ArrayList<>();
         for (OrderItem i : items.getContent()) {
             OrderItemDTO dto = new OrderItemDTO(i);
             dtos.add(dto);
         }
-        return new OrderItemsPageDTO(dtos, items.getTotalElements(), items.getNumber(), items.getTotalPages()-1, items.getSize());
+        return new PageResponse<>(dtos, items.getTotalElements(), items.getNumber(), items.getTotalPages()-1, items.getSize());
     }
 }

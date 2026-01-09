@@ -9,9 +9,7 @@ import {CardModule} from 'primeng/card';
 import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 
-import {NavbarComponent} from '../navbar/navbar.component';
-import {FooterComponent} from '../footer/footer.component';
-import {Order} from '../../../models/order.model'; // Asegúrate que tu modelo Order tenga el campo history: StatusLog[]
+import {Order} from '../../../models/order.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 import {formatPrice} from '../../../utils/numberFormat.util';
@@ -27,13 +25,10 @@ import {formatPrice} from '../../../utils/numberFormat.util';
     CardModule,
     TagModule,
     DividerModule,
-    NavbarComponent,
-    FooterComponent,
     LoadingScreenComponent
   ],
   templateUrl: './order-details.component.html',
   styles: [`
-    /* Personalización para que el timeline se vea bien sobre fondo oscuro */
     :host ::ng-deep .custom-timeline .p-timeline-event-content,
     :host ::ng-deep .custom-timeline .p-timeline-event-opposite {
       line-height: 1;
@@ -93,7 +88,6 @@ export class OrderDetailsComponent implements OnInit {
         log.icon = matchingStep.icon;
       }
     });
-    console.log(this.order.history);
   }
 
   protected cancelOrder() {

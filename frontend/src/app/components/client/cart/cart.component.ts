@@ -1,11 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {FooterComponent} from '../../common/footer/footer.component';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {OrderService} from '../../../services/order.service';
-import {ProductsPage} from '../../../models/productsPage.model';
-import {OrderItemsPage} from '../../../models/orderItemsPage.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
@@ -15,11 +11,13 @@ import {catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap} 
 import {CartSummary} from '../../../models/cartSummary.model';
 import {Button} from 'primeng/button';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Product} from '../../../models/product.model';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, FooterComponent, NavbarComponent, RouterLink, Paginator, Button, LoadingScreenComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
@@ -31,13 +29,13 @@ export class CartComponent implements OnInit, OnDestroy {
   error: boolean = false;
 
   //Cart items pagination
-  foundItems : OrderItemsPage = {orderItems: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  foundItems : PageResponse<OrderItem> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   cartSummary!: CartSummary;
   firstItem: number = 0;
   itemsRows: number = 5;
 
   //Favourite products pagination
-  foundProducts : ProductsPage = {products: [], totalProducts: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  foundProducts : PageResponse<Product> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstProduct: number = 0;
   productsRows: number = 5;
 
@@ -121,7 +119,7 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   isProductInCart(productId: string): boolean {
-    return this.foundItems?.orderItems?.some(item => item.product.id === productId) ?? false;
+    return this.foundItems?.items?.some(item => item.product.id === productId) ?? false;
   }
 
   protected clearCart() {
@@ -129,7 +127,7 @@ export class CartComponent implements OnInit, OnDestroy {
       next: (summary) => {
         this.cartSummary = summary;
         this.orderService.setItemsCount(summary.totalItems);
-        this.foundItems.orderItems = [];
+        this.foundItems.items = [];
         this.foundItems.totalItems = 0;
         this.foundItems.currentPage = 0;
         this.foundItems.lastPage = -1;
@@ -178,7 +176,7 @@ export class CartComponent implements OnInit, OnDestroy {
   protected removeItem(id: string) {
     this.orderService.deleteItem(id).subscribe({
       next: (summary) => {
-        this.foundItems.orderItems = this.foundItems.orderItems.filter(item => item.id !== id);
+        this.foundItems.items = this.foundItems.items.filter(item => item.id !== id);
         this.foundItems.totalItems = this.foundItems.totalItems > 0 ? this.foundItems.totalItems - 1 : 0;
         this.cartSummary = summary;
         this.orderService.setItemsCount(summary.totalItems);
@@ -199,8 +197,8 @@ export class CartComponent implements OnInit, OnDestroy {
   protected removeFavorite(id: string) {
     this.productService.deleteProductFromFavourites(id).subscribe({
       next: () => {
-        this.foundProducts.products = this.foundProducts.products.filter(product => product.id !== id);
-        this.foundProducts.totalProducts = this.foundProducts.totalProducts > 0 ? this.foundProducts.totalProducts - 1 : 0;
+        this.foundProducts.items = this.foundProducts.items.filter(product => product.id !== id);
+        this.foundProducts.totalItems = this.foundProducts.totalItems > 0 ? this.foundProducts.totalItems - 1 : 0;
       }
     })
   }

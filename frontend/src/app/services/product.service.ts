@@ -1,10 +1,11 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {catchError, Observable, switchMap, throwError} from 'rxjs';
+import {catchError, map, Observable, switchMap, tap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
-import {ProductsPage} from '../models/productsPage.model';
 import {Product} from '../models/product.model';
-import {ShopStockList} from '../models/shopStockList.model';
+import {PageResponse} from '../models/pageResponse.model';
+import {ShopStock} from '../models/shopStock.model';
+import {ListResponse} from '../models/listResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,26 +17,26 @@ export class ProductService {
 
   private apiUrl = '/api/v1/products';
 
-  public getAllProducts(page: number, size: number): Observable<ProductsPage> {
+  public getAllProducts(page: number, size: number): Observable<PageResponse<Product>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
-    return this.http.get<ProductsPage>(this.apiUrl + `/`, { params });
+    return this.http.get<PageResponse<Product>>(this.apiUrl + `/`, { params });
   }
 
-  public getUserFavouriteProductsPage(page: number, size: number): Observable<ProductsPage> {
+  public getUserFavouriteProductsPage(page: number, size: number): Observable<PageResponse<Product>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
-    return this.http.get<ProductsPage>(this.apiUrl + `/favourites`, { params });
+    return this.http.get<PageResponse<Product>>(this.apiUrl + `/favourites`, { params });
   }
 
   public getProductById(id: string): Observable<Product> {
     return this.http.get<Product>(this.apiUrl + `/${id}`);
   }
 
-  public getStockByProductId(id: string): Observable<ShopStockList> {
-    return this.http.get<ShopStockList>(this.apiUrl + `/stock/${id}`)
+  public getStockByProductId(id: string): Observable<ShopStock[]> {
+    return this.http.get<ListResponse<ShopStock>>(this.apiUrl + `/stock/${id}`).pipe(map(response => response.items));
   }
 
   public getFilteredProducts(
@@ -44,7 +45,7 @@ export class ProductService {
     searchTerm: string,
     categoryIds: number[],
     sort: string
-  ): Observable<ProductsPage> {
+  ): Observable<PageResponse<Product>> {
 
     let params = new HttpParams();
     params = params.append('page', page.toString());
@@ -64,14 +65,14 @@ export class ProductService {
       params = params.append('categoryId', id.toString());
     });
 
-    return this.http.get<ProductsPage>(this.apiUrl + `/filter`, { params });
+    return this.http.get<PageResponse<Product>>(this.apiUrl + `/filter`, { params });
   }
 
-  public getProductsByCategoryId(id: string): Observable<ProductsPage> {
+  public getProductsByCategoryId(id: string): Observable<PageResponse<Product>> {
     return this.categoryService.getCategoryById(id).pipe(
       switchMap((category: any) => {
         if (category && category.id) {
-          return this.getFilteredProducts(0, 8, '', [category.id], "");
+          return this.getFilteredProducts(0, 8, '', [category.id], "name,asc");
         }
         return throwError(() => new Error(`Category with id ${id} not found.`));
       }),
@@ -81,10 +82,10 @@ export class ProductService {
     );
   }
 
-  public getProductsByCategoryName(name: string): Observable<ProductsPage> { //Gets data for carousels
+  public getProductsByCategoryName(name: string): Observable<PageResponse<Product>> { //Gets data for carousels
     return this.categoryService.getCategoryByName(name).pipe(
       switchMap((category: any) => {
-        return this.getFilteredProducts(0, 10, '', [category.id], "");
+        return this.getFilteredProducts(0, 8, '', [category.id], "name,asc");
       }),
       catchError((error) => {
         return throwError(() => error);

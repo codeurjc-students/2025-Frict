@@ -1,9 +1,9 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.AddressDTO;
-import com.tfg.backend.DTO.PaymentCardDTO;
-import com.tfg.backend.DTO.UserDTO;
-import com.tfg.backend.DTO.UserLoginDTO;
+import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.PaymentCardDTO;
+import com.tfg.backend.dto.UserDTO;
+import com.tfg.backend.dto.UserLoginDTO;
 import com.tfg.backend.model.Address;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.PaymentCard;
@@ -11,6 +11,8 @@ import com.tfg.backend.model.User;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@Tag(name = "User Management", description = "System users data management")
 public class UserRestController {
 	
 	@Autowired
@@ -37,6 +40,7 @@ public class UserRestController {
     private StorageService storageService;
 
 
+    @Operation(summary = "Get current session information")
 	@GetMapping("/session")
 	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
         Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
@@ -46,13 +50,17 @@ public class UserRestController {
         return ResponseEntity.ok(loginInfoOptional.get());
 	}
 
+
+    @Operation(summary = "Get logged user information")
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
         return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
+
     //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
+    @Operation(summary = "Update remote user image")
     @PostMapping("/image/{id}")
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.findById(id);
@@ -82,8 +90,10 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
     }
 
+
     //Option 1: Delete User entities (statistics information will be lost, reviews and orders need to be reassigned to a generic anon user, which affects data possession)
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
+    @Operation(summary = "Anonymize logged user account")
     @DeleteMapping
     public ResponseEntity<UserDTO> deleteLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
@@ -113,6 +123,8 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
+
+    @Operation(summary = "Delete logged user image")
     @DeleteMapping("/avatar")
     public ResponseEntity<UserDTO> deleteAvatar(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
@@ -132,6 +144,8 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(loggedUser)); // Return original user if did not have image
     }
 
+
+    @Operation(summary = "Update logged user data")
     @PutMapping("/data")
     public ResponseEntity<UserDTO> updateLoggedUserData(HttpServletRequest request, @RequestBody UserDTO userDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -152,6 +166,7 @@ public class UserRestController {
     }
 
 
+    @Operation(summary = "Create logged user address")
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -163,6 +178,8 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
+
+    @Operation(summary = "Edit logged user address")
     @PutMapping("/addresses")
     public ResponseEntity<UserDTO> editAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -185,6 +202,8 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
+
+    @Operation(summary = "Delete logged user address by ID")
     @DeleteMapping("/addresses/{id}")
     public ResponseEntity<UserDTO> deleteAddress(HttpServletRequest request, @PathVariable Long id){
         User loggedUser = findLoggedUserHelper(request);
@@ -199,6 +218,7 @@ public class UserRestController {
     }
 
 
+    @Operation(summary = "Create logged user card")
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO cardDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -211,6 +231,8 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
+
+    @Operation(summary = "Update logged user card")
     @PutMapping("/cards")
     public ResponseEntity<UserDTO> editPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO paymentCardDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -230,6 +252,8 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
+
+    @Operation(summary = "Delete logged user card by ID")
     @DeleteMapping("/cards/{id}")
     public ResponseEntity<UserDTO> deletePaymentCard(HttpServletRequest request, @PathVariable Long id){
         User loggedUser = findLoggedUserHelper(request);

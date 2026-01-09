@@ -1,10 +1,9 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {Observable} from 'rxjs';
-import {ReviewList} from '../models/reviewList.model';
+import {map, Observable} from 'rxjs';
 import {Review} from '../models/review.model';
-import {OrdersPage} from '../models/ordersPage.model';
-import {ReviewsPage} from '../models/reviewsPage.model';
+import {PageResponse} from '../models/pageResponse.model';
+import {ListResponse} from '../models/listResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,17 +15,17 @@ export class ReviewService {
 
   private apiUrl = '/api/v1/reviews';
 
-  public getLoggedUserReviews(page: number, size: number): Observable<ReviewsPage>{
+  public getLoggedUserReviews(page: number, size: number): Observable<PageResponse<Review>>{
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
-    return this.http.get<ReviewsPage>(this.apiUrl, { params });
+    return this.http.get<PageResponse<Review>>(this.apiUrl, { params });
   }
 
-  public getReviewsByProductId(id: string): Observable<ReviewList> {
+  public getReviewsByProductId(id: string): Observable<Review[]> {
     let params = new HttpParams();
     params = params.append('productId', id);
-    return this.http.get<ReviewList>(this.apiUrl + `/`, { params });
+    return this.http.get<ListResponse<Review>>(this.apiUrl + `/`, { params }).pipe(map(response => response.items));
   }
 
   //Creates and edits reviews

@@ -5,8 +5,6 @@ import {ActivatedRoute, RouterModule} from '@angular/router';
 // PrimeNG Imports
 import {ButtonModule} from 'primeng/button';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {FooterComponent} from '../../common/footer/footer.component';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {UserService} from '../../../services/user.service';
 import {User} from '../../../models/user.model';
 
@@ -17,8 +15,6 @@ import {User} from '../../../models/user.model';
     CommonModule,
     RouterModule,
     ButtonModule,
-    NavbarComponent,
-    FooterComponent,
     LoadingScreenComponent
   ],
   templateUrl: './order-confirmed.component.html',

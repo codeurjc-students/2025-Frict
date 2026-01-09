@@ -15,6 +15,7 @@ jobs:
       SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
       SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
       SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
+      GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
 
     services:
       mysql:
@@ -63,12 +64,12 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
 
-      - name: Run Backend Unit & Integration Tests
+      - name: Run Backend Unit, API and Integration tests
         working-directory: backend
         run: |
-          mvn test -Dtest=com.tfg.backend.unit.*Test
-          mvn test -Dtest=com.tfg.backend.integration.*Test
-          mvn test -Dtest=com.tfg.backend.e2e.ProductSystemApiTest
+          mvn test -Dtest='com.tfg.backend.unit.**'
+          mvn test -Dtest='com.tfg.backend.api.**'
+          mvn test -Dtest='com.tfg.backend.integration.**'
 
 
       - name: Install Frontend Dependencies
@@ -83,11 +84,11 @@ jobs:
         run: ng test --watch=false --browsers=ChromeHeadlessNoSandbox
 
 
-      - name: Start Angular for E2E
+      - name: Start Angular for E2E Tests
         working-directory: frontend
         run: ng serve --proxy-config proxy-test.conf.json &
 
 
-      - name: Run E2E System Tests
+      - name: Run E2E Tests
         working-directory: backend
-        run: mvn test -Dtest=com.tfg.backend.e2e.ProductSystemUITest
+        run: mvn test -Dtest='com.tfg.backend.e2e.**'

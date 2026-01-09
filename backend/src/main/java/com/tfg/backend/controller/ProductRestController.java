@@ -1,11 +1,13 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.*;
+import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/products")
+@Tag(name = "Product Management", description = "Product data management")
 public class ProductRestController {
 
     @Autowired
@@ -38,29 +41,36 @@ public class ProductRestController {
     private StorageService storageService;
 
 
+    @Operation(summary = "Get all products (paged)")
     @GetMapping("/")
-    public ResponseEntity<ProductsPageDTO> getAllProducts(Pageable pageable) {
+    public ResponseEntity<PageResponse<ProductDTO>> getAllProducts(Pageable pageable) {
         Page<Product> products = productService.findAll(pageable);
-        return ResponseEntity.ok(toProductsPageDTO(products));
+        return ResponseEntity.ok(toPageResponse(products));
     }
 
+
+    @Operation(summary = "Get products with applied filters (paged)")
     @GetMapping("/filter")
-    public ResponseEntity<ProductsPageDTO> getFilteredProducts(Pageable pageable,
-                                                               @RequestParam(value = "query", required = false) String searchTerm,
-                                                               @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
+    public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(Pageable pageable,
+                                                                        @RequestParam(value = "query", required = false) String searchTerm,
+                                                                        @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
         Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
-        return ResponseEntity.ok(toProductsPageDTO(products));
+        return ResponseEntity.ok(toPageResponse(products));
     }
 
+
+    @Operation(summary = "Get logged user favourite products (paged)")
     @GetMapping("/favourites")
-    public ResponseEntity<ProductsPageDTO> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
-        return ResponseEntity.ok(toProductsPageDTO(favouriteProducts));
+        return ResponseEntity.ok(toPageResponse(favouriteProducts));
     }
 
+
+    @Operation(summary = "Check a product in logged user favourites")
     @GetMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> checkProductInFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -75,6 +85,8 @@ public class ProductRestController {
         return ResponseEntity.ok(new ProductDTO(product));
     }
 
+
+    @Operation(summary = "Get product by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         Product product = findProductHelper(id);
@@ -82,18 +94,20 @@ public class ProductRestController {
     }
 
 
+    @Operation(summary = "Get product stock by ID")
     @GetMapping("/stock/{id}")
-    public ResponseEntity<ShopStockListDTO> getProductStock(@PathVariable Long id) {
+    public ResponseEntity<ListResponse<ShopStockDTO>> getProductStock(@PathVariable Long id) {
         Product product = findProductHelper(id);
 
         List<ShopStockDTO> dtos = new ArrayList<>();
         for (ShopStock s : product.getShopsStock()) {
             dtos.add(new ShopStockDTO(s));
         }
-        return ResponseEntity.ok(new ShopStockListDTO(dtos));
+        return ResponseEntity.ok(new ListResponse<>(dtos));
     }
 
 
+    @Operation(summary = "Add product to logged user favourites")
     @PostMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -109,6 +123,7 @@ public class ProductRestController {
     }
 
 
+    @Operation(summary = "Delete product from logged user favourites")
     @DeleteMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> deleteProductFromFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -123,6 +138,7 @@ public class ProductRestController {
     }
 
 
+    @Operation(summary = "Create product")
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
@@ -148,6 +164,7 @@ public class ProductRestController {
     }
 
 
+    @Operation(summary = "Update product by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
         Product product = findProductHelper(id);
@@ -171,6 +188,7 @@ public class ProductRestController {
     }
 
 
+    @Operation(summary = "Delete product by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
         Product product = findProductHelper(id);
@@ -186,6 +204,8 @@ public class ProductRestController {
         return ResponseEntity.ok(new ProductDTO(product));
     }
 
+
+    @Operation(summary = "Add remote product image")
     @PostMapping("/{id}/images")
     public ResponseEntity<Product> uploadProductImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
         Product product = findProductHelper(id);
@@ -205,6 +225,8 @@ public class ProductRestController {
         return ResponseEntity.ok(productService.save(product));
     }
 
+
+    @Operation(summary = "Delete remote product image by ID")
     @DeleteMapping("/{productId}/images/{imageId}")
     public ResponseEntity<Product> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
         // 1. Retrieve the product
@@ -228,23 +250,26 @@ public class ProductRestController {
         return ResponseEntity.ok(savedProduct);
     }
 
+
     private User findLoggedUserHelper(HttpServletRequest request) {
         return this.userService.getLoggedUser(request)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
+
 
     private Product findProductHelper(Long id) {
         return this.productService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
     }
 
+
     //Creates Page<ProductDTO> objects with necessary fields only
-    private ProductsPageDTO toProductsPageDTO(Page<Product> products){
+    private PageResponse<ProductDTO> toPageResponse(Page<Product> products){
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product p : products.getContent()) {
             ProductDTO dto = new ProductDTO(p);
             dtos.add(dto);
         }
-        return new ProductsPageDTO(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
+        return new PageResponse<>(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
     }
 }

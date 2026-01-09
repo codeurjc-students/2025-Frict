@@ -9,14 +9,11 @@ import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 import {InputTextModule} from 'primeng/inputtext';
 import {CheckboxModule} from 'primeng/checkbox';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
-import {FooterComponent} from '../../common/footer/footer.component';
 import {formatDueDate, formatPrice} from '../../../utils/numberFormat.util';
 import {CartSummary} from '../../../models/cartSummary.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Paginator, PaginatorState} from 'primeng/paginator';
-import {OrderItemsPage} from '../../../models/orderItemsPage.model';
 import {UserService} from '../../../services/user.service';
 import {User} from '../../../models/user.model';
 import {Address} from '../../../models/address.model';
@@ -24,6 +21,8 @@ import {PaymentCard} from '../../../models/paymentCard.model';
 import {InputMask} from 'primeng/inputmask';
 import {Toast} from 'primeng/toast';
 import {MessageService} from 'primeng/api';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {OrderItem} from '../../../models/orderItem.model';
 
 @Component({
   selector: 'app-order-summary',
@@ -38,14 +37,11 @@ import {MessageService} from 'primeng/api';
     DividerModule,
     InputTextModule,
     CheckboxModule,
-    NavbarComponent,
-    FooterComponent,
     LoadingScreenComponent,
     Paginator,
     InputMask,
     Toast
   ],
-  providers: [MessageService],
   templateUrl: './order-summary.component.html',
   standalone: true,
   styleUrl: './order-summary.component.css'
@@ -56,7 +52,7 @@ export class OrderSummaryComponent implements OnInit {
   protected readonly formatDueDate = formatDueDate;
 
   cartSummary!: CartSummary;
-  cartItemsPage: OrderItemsPage = {orderItems: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+  cartItemsPage: PageResponse<OrderItem> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   user!: User;
   firstItem: number = 0;
   itemsRows: number = 5;
@@ -151,12 +147,10 @@ export class OrderSummaryComponent implements OnInit {
 
   protected changeAddress(addr: Address) {
     this.selectedAddress = addr;
-    console.log("Dirección seleccionado: ", this.selectedAddress);
   }
 
   protected changePaymentCard(card: PaymentCard) {
     this.selectedPaymentCard = card;
-    console.log("Tarjeta de pago seleccionado: ", this.selectedPaymentCard);
   }
 
   protected cancelNewAddress() {

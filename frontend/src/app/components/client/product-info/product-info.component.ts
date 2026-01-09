@@ -1,6 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {FooterComponent} from '../../common/footer/footer.component';
-import {NavbarComponent} from '../../common/navbar/navbar.component';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -34,14 +32,13 @@ import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
+import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
 
 
 @Component({
   selector: 'app-product-info',
   standalone: true,
   imports: [
-    FooterComponent,
-    NavbarComponent,
     GalleriaModule,
     Tabs,
     TabList,
@@ -63,9 +60,9 @@ import {Image} from 'primeng/image';
     Textarea,
     TableModule,
     StockTagComponent,
-    Image
+    Image,
+    BreadcrumbComponent
   ],
-  providers: [MessageService],
   templateUrl: './product-info.component.html'
 })
 export class ProductInfoComponent implements OnInit {
@@ -167,7 +164,6 @@ export class ProductInfoComponent implements OnInit {
     if (id) {
       this.productService.getProductById(id).subscribe({
         next: (product) => {
-          console.log(product);
           this.product = product;
 
           if (product.imageUrls && Array.isArray(product.imageUrls)) {
@@ -176,6 +172,11 @@ export class ProductInfoComponent implements OnInit {
             }));
           } else {
             this.images = [];
+          }
+
+          // Light scroll to the top of the page on page change
+          if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'instant' });
           }
 
           this.loadProductCategory();
@@ -208,7 +209,7 @@ export class ProductInfoComponent implements OnInit {
     const currentProductId = this.route.snapshot.paramMap.get('id');
     this.productService.getProductsByCategoryName(this.productCategory.name).subscribe({
       next: (products) => {
-        this.relatedProducts = products.products.filter(p => p.id.toString() !== currentProductId?.toString());
+        this.relatedProducts = products.items.filter(p => p.id.toString() !== currentProductId?.toString());
         this.relatedLoading = false;
       },
       error: () => {
@@ -230,7 +231,7 @@ export class ProductInfoComponent implements OnInit {
   protected loadReviews() {
     this.reviewService.getReviewsByProductId(this.product.id).subscribe({
       next: (reviews) => {
-        this.productReviews = reviews.reviews;
+        this.productReviews = reviews;
         const stars = [
           { value: 5, count: 0 },
           { value: 4, count: 0 },
@@ -262,7 +263,6 @@ export class ProductInfoComponent implements OnInit {
             this.userReviewed = this.productReviews.some(r => r.creatorId === loginInfo.id)
             this.loggedUserInfo = loginInfo;
             this.loading = false;
-            console.log(this.images);
           }
         })
       },
@@ -276,7 +276,7 @@ export class ProductInfoComponent implements OnInit {
   protected loadShopStocks() {
     this.productService.getStockByProductId(this.product.id).subscribe({
       next: (s) => {
-        this.stocks = s.stocks;
+        this.stocks = s;
       }
     })
   }

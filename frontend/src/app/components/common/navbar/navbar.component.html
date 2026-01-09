@@ -1,4 +1,4 @@
-<nav class="sticky top-0 z-[2000] backdrop-blur bg-surface-700 h-20 text-white border-b border-surface-700/50">
+<nav class="sticky top-0 z-[2000] bg-surface-700 h-20 text-white border-b border-surface-700/50">
 
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto flex items-center justify-between gap-2 px-4 h-full">
 
@@ -25,13 +25,18 @@
 
     <div class="flex-1 relative w-auto order-3 h-full flex items-center mx-2">
       <div class="flex w-full group">
-        <input placeholder="Buscar productos…" type="text" [(ngModel)]="searchBarInput" class="flex-1 bg-surface-800 placeholder:text-surface-400 focus:bg-surface-900 focus:text-white px-4 text-sm rounded-l-xl outline-none border border-transparent focus:border-primary-500 transition-all"/>
-        <p-button iconPos="left" [routerLink]="['/search']" [queryParams]="{ query: searchBarInput }" styleClass="!h-11 !bg-primary-500/90 hover:!bg-primary/70 text-surface-900 font-bold !rounded-r-lg !rounded-l-none px-4 flex items-center transition-colors">
-          <ng-template pTemplate="content">
-            <i class="pi pi-search text-white"></i>
-            <span class="hidden lg:inline ml-2 font-bold text-white">Buscar</span>
-          </ng-template>
-        </p-button>
+        <p-inputgroup>
+          <input pInputText placeholder="Buscar productos…" [(ngModel)]="searchBarInput" class="!bg-surface-800 !text-surface-200"/>
+          <p-button
+            [routerLink]="['/search']"
+            [queryParams]="{ query: searchBarInput }"
+            [disabled]="!(searchBarInput.length > 0)">
+            <ng-template pTemplate="content">
+              <i class="pi pi-search"></i>
+              <span class="hidden md:inline ml-2 font-bold">Buscar</span>
+            </ng-template>
+          </p-button>
+        </p-inputgroup>
       </div>
     </div>
 
@@ -94,82 +99,43 @@
 
       <div class="overflow-y-auto w-full">
         <ul class="list-none px-4 pb-4 m-0">
+
           <li>
-            <div pStyleClass="@next"
-                 enterFromClass="hidden"
-                 enterActiveClass="animate-slidedown"
-                 leaveToClass="hidden"
-                 leaveActiveClass="animate-slideup"
-                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors"
-            >
+            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+               [routerLink]="['/search']"
+               routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+               [routerLinkActiveOptions]="routerOptions">
+              <i class="pi pi-search mr-3 text-lg"></i>
+              <span class="font-medium">Buscar</span>
+            </a>
+          </li>
+
+          <li>
+            <div (click)="toggleCategories()"
+                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors p-ripple">
               <span class="font-medium uppercase tracking-wider text-sm">Categorías</span>
-              <i class="pi pi-chevron-down"></i>
+              <i class="pi pi-chevron-down transition-transform duration-300"
+                 [class.rotate-180]="isCategoriesExpanded()">
+              </i>
             </div>
 
-            <ul class="list-none p-0 m-0 overflow-hidden">
+            <ul [class.hidden]="!isCategoriesExpanded()" class="list-none p-0 m-0 overflow-hidden block">
+
               <div *ngIf="!authService.isAdmin()">
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-microchip mr-3 text-lg"></i>
-                    <span class="font-medium">Ordenadores</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-headphones mr-3 text-lg"></i>
-                    <span class="font-medium">Periféricos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-crown mr-3 text-lg"></i>
-                    <span class="font-medium">Gaming</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-mobile mr-3 text-lg"></i>
-                    <span class="font-medium">Smartphone / Tablet</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/search">
-                    <i class="pi pi-desktop mr-3 text-lg"></i>
-                    <span class="font-medium">Televisión e imagen</span>
-                  </a>
-                </li>
+                <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
               </div>
+
               <div *ngIf="authService.isAdmin()">
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="products">
-                    <i class="pi pi-desktop mr-3"></i>
-                    <span class="font-medium">Productos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="orders">
-                    <i class="pi pi-box mr-3"></i>
-                    <span class="font-medium">Pedidos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="reports">
-                    <i class="pi pi-chart-bar mr-3"></i>
-                    <span class="font-medium">Informes</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="delivery">
-                    <i class="pi pi-truck mr-3"></i>
-                    <span class="font-medium">Reparto</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="users">
-                    <i class="pi pi-users mr-3"></i>
-                    <span class="font-medium">Usuarios</span>
-                  </a>
-                </li>
+                @for (item of adminItems; track item.link) {
+                  <li>
+                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+                       [routerLink]="item.link"
+                       routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
+                      <i [class]="item.icon + ' mr-3'"></i>
+                      <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                  </li>
+                }
               </div>
             </ul>
           </li>
@@ -178,18 +144,15 @@
         <div *ngIf="authService.isLogged()">
           <ul class="list-none p-4 m-0 pt-0">
             <li>
-              <div
-                pStyleClass="@next"
-                enterFromClass="hidden"
-                enterActiveClass="animate-slidedown"
-                leaveToClass="hidden"
-                leaveActiveClass="animate-slideup"
-                class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors"
-              >
+              <div (click)="toggleAccount()"
+                   class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors p-ripple">
                 <span class="font-medium uppercase tracking-wider text-sm">Cuenta</span>
-                <i class="pi pi-chevron-down"></i>
+                <i class="pi pi-chevron-down transition-transform duration-300"
+                   [class.rotate-180]="isAccountExpanded()">
+                </i>
               </div>
-              <ul class="list-none p-0 m-0 overflow-hidden">
+
+              <ul [class.hidden]="!isAccountExpanded()" class="list-none p-0 m-0 overflow-hidden block">
                 <li>
                   <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-user mr-3"></i>
@@ -212,7 +175,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors text-red-300 hover:text-red-200" (click)="logout()">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border hover:bg-surface-700 duration-150 transition-colors text-red-300 hover:text-red-200" (click)="logout()">
                     <i class="pi pi-sign-out mr-3"></i>
                     <span class="font-medium">Cerrar sesión</span>
                   </a>
@@ -225,3 +188,57 @@
     </div>
   </ng-template>
 </p-drawer>
+
+<ng-template #categoryTree let-items let-level="level">
+  @for (cat of items; track cat.id) {
+    <li>
+      @if (cat.children && cat.children.length > 0) {
+
+        <div class="flex items-stretch justify-between rounded-border overflow-hidden group hover:bg-surface-700 transition-colors">
+
+          <a [routerLink]="['/category', cat.id]"
+             routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+             [routerLinkActiveOptions]="{ exact: false }"
+             #rla="routerLinkActive"
+             class="flex-1 flex items-center cursor-pointer p-4 text-surface-100 hover:text-primary-400 transition-colors"
+             [style.padding-left.rem]="1 + (level * 1.5)">
+
+            <i [class]="(cat.icon || 'pi pi-folder') + ' mr-3 text-lg'"></i>
+            <span class="font-medium">{{ cat.name || 'Categoría' }}</span>
+          </a>
+
+          @let isOpen = shouldExpand(+cat.id, rla.isActive);
+
+          <div (click)="toggleSubmenu(+cat.id, rla.isActive)"
+               [class.bg-surface-700]="rla.isActive"
+               [class.text-white]="rla.isActive"
+               [class.text-surface-400]="!rla.isActive"
+               class="w-14 flex items-center justify-center cursor-pointer hover:text-white hover:bg-surface-600 border-l border-surface-600/50 p-ripple">
+
+            <i class="pi pi-chevron-down transition-transform duration-300"
+               [class.rotate-180]="isOpen"></i>
+          </div>
+
+        </div>
+
+        <ul [class.hidden]="!isOpen"
+            class="list-none p-0 m-0 overflow-hidden block">
+          <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: cat.children, level: level + 1 }"></ng-container>
+        </ul>
+      }
+
+      @else {
+        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+           [routerLink]="['/search']"
+           [queryParams]="{ categories: cat.id }"
+           routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+           [routerLinkActiveOptions]="routerOptions"
+           [style.padding-left.rem]="1 + (level * 1.5)">
+
+          <i [class]="(cat.icon || 'pi pi-tag') + ' mr-3 text-lg'"></i>
+          <span class="font-medium">{{ (cat.name || 'Categoría') }}</span>
+        </a>
+      }
+    </li>
+  }
+</ng-template>

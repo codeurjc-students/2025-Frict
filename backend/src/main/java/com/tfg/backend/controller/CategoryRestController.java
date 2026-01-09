@@ -1,11 +1,13 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.DTO.CategoryDTO;
-import com.tfg.backend.DTO.CategoryListDTO;
+import com.tfg.backend.dto.CategoryDTO;
+import com.tfg.backend.dto.ListResponse;
 import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.StorageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,13 +16,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/categories")
+@Tag(name = "Category Management", description = "Product categories data management")
 public class CategoryRestController {
 
     @Autowired
@@ -29,25 +31,26 @@ public class CategoryRestController {
     @Autowired
     private StorageService storageService;
 
+
+    @Operation(summary = "Get all categories (paged)")
     @GetMapping("/")
-    public ResponseEntity<CategoryListDTO> showAllCategories() {
-        List<Category> categories = categoryService.findAll();
-        List<CategoryDTO> dtos = new ArrayList<>();
-        for (Category c : categories) {
-            dtos.add(new CategoryDTO(c));
-        }
-        return ResponseEntity.ok(new CategoryListDTO(dtos));
+    public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
+        List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
+        return ResponseEntity.ok(new ListResponse<>(dtos));
     }
 
+
+    @Operation(summary = "Get category by ID")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        Optional<Category> category = categoryService.findById(id);
-        if (!category.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
-        }
-        return ResponseEntity.ok(new CategoryDTO(category.get()));
+        return categoryService.findById(id)
+                .map(CategoryDTO::new)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found."));
     }
 
+
+    @Operation(summary = "Update remote category image")
     @PostMapping(value = "/{id}/image")
     public ResponseEntity<Category> uploadCategoryImage(
             @PathVariable Long id,
@@ -81,6 +84,8 @@ public class CategoryRestController {
         return ResponseEntity.ok(categoryService.save(category));
     }
 
+
+    @Operation(summary = "Delete remote category image")
     @DeleteMapping("/{id}/image")
     public ResponseEntity<Category> deleteCategoryImage(@PathVariable Long id) {
 
