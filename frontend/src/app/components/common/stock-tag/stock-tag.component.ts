@@ -15,7 +15,7 @@ export class StockTagComponent {
 
   @Input() units: number = 0;
 
-  protected getStockMessage(): string {
+  protected getStockTagMessage(): string {
     if (this.units <= 10 && this.units > 5) {
       return 'Quedan ' + this.units;
     } else if (this.units <= 5 && this.units > 0) {
@@ -25,7 +25,7 @@ export class StockTagComponent {
     }
   }
 
-  protected getStockIcon(): string {
+  protected getStockTagIcon(): string {
     if (this.units <= 10 && this.units > 5) {
       return 'pi pi-info-circle';
     } else if (this.units <= 5 && this.units > 0) {

@@ -2,10 +2,14 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.UserLoginDTO;
 import com.tfg.backend.dto.UserSignupDTO;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.hamcrest.Condition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +26,13 @@ public class UserService {
 	@Autowired
 	private UserRepository userRepository;
 
-    public List<User> findAll() { return userRepository.findAll(); }
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
+
+    public Page<User> findAll(Pageable pageInfo) {
+        return userRepository.findAll(pageInfo);
+    }
 
     public User save(User u) {
         return userRepository.save(u);

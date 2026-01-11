@@ -23,7 +23,6 @@ import {ReviewService} from '../../../services/review.service';
 import {Review} from '../../../models/review.model';
 import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
-import {Toast} from 'primeng/toast';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Textarea} from 'primeng/textarea';
 import {TableModule} from 'primeng/table';
@@ -55,7 +54,6 @@ import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component'
     Avatar,
     Rating,
     MeterGroupModule,
-    Toast,
     LoadingScreenComponent,
     Textarea,
     TableModule,

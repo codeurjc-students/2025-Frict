@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 import {InputTextModule} from 'primeng/inputtext';
 import {CheckboxModule} from 'primeng/checkbox';
-import {formatDueDate, formatPrice} from '../../../utils/numberFormat.util';
+import {formatCardDueDate, formatPrice} from '../../../utils/numberFormat.util';
 import {CartSummary} from '../../../models/cartSummary.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
@@ -19,7 +19,6 @@ import {User} from '../../../models/user.model';
 import {Address} from '../../../models/address.model';
 import {PaymentCard} from '../../../models/paymentCard.model';
 import {InputMask} from 'primeng/inputmask';
-import {Toast} from 'primeng/toast';
 import {MessageService} from 'primeng/api';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {OrderItem} from '../../../models/orderItem.model';
@@ -39,8 +38,7 @@ import {OrderItem} from '../../../models/orderItem.model';
     CheckboxModule,
     LoadingScreenComponent,
     Paginator,
-    InputMask,
-    Toast
+    InputMask
   ],
   templateUrl: './order-summary.component.html',
   standalone: true,
@@ -49,7 +47,7 @@ import {OrderItem} from '../../../models/orderItem.model';
 export class OrderSummaryComponent implements OnInit {
 
   protected readonly formatPrice = formatPrice;
-  protected readonly formatDueDate = formatDueDate;
+  protected readonly formatDueDate = formatCardDueDate;
 
   cartSummary!: CartSummary;
   cartItemsPage: PageResponse<OrderItem> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};

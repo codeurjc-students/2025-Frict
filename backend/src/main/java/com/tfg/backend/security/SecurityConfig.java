@@ -132,6 +132,7 @@ public class SecurityConfig {
                         // UserRestController
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/session").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/image/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/avatar").authenticated()

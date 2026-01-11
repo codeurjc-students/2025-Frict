@@ -1,9 +1,11 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {User} from '../models/user.model';
 import {PaymentCard} from '../models/paymentCard.model';
 import {Address} from '../models/address.model';
+import {PageResponse} from '../models/pageResponse.model';
+import {Product} from '../models/product.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +24,13 @@ export class UserService {
 
   public getLoggedUserInfo(): Observable<User>{
     return this.http.get<User>(this.apiUrl + `/me`);
+  }
+
+  public getAllUsers(page: number, size: number): Observable<PageResponse<User>> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<User>>(this.apiUrl + `/`, { params });
   }
 
   public deleteLoggedUser(): Observable<User> {
@@ -57,4 +66,5 @@ export class UserService {
   public deletePaymentCard(id: string): Observable<User> {
     return this.http.delete<User>(this.apiUrl + `/cards/${id}`);
   }
+
 }
