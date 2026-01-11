@@ -64,7 +64,7 @@ public class User {
 
     private LocalDateTime lastConnection = null;
 
-    //cascade and orphanRemoval, to be able to perform DB operations with all user order items easily. As users are never deleted from DB (but anonymized), it does not delete historic information useful for statistics
+    //cascade and orphanRemoval, to be able to perform DB operations with all user order items easily
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> allOrderItems = new ArrayList<>(); //Necessary in order to be able to see the user cart
 

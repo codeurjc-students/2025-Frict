@@ -3,8 +3,8 @@
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
     <div class="mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-yellow-600">Administración de Usuarios</h1>
-        <p class="text-slate-500">Gestión centralizada de cuentas, accesos y métricas.</p>
+        <h1 class="text-3xl font-bold text-yellow-600">Gestor de usuarios</h1>
+        <p class="text-slate-500">Administra cuentas, accesos y métricas.</p>
       </div>
     </div>
 
@@ -16,12 +16,12 @@
         <div class="w-px h-10 bg-slate-200 mx-2 hidden md:block"></div>
 
         <div class="flex-grow">
-          <p-button (onClick)="handleGlobalAction('unban_all')" label="Desbanear Todos" icon="pi pi-check-circle" severity="success" outlined="true" styleClass="mr-3" rounded="true"></p-button>
-          <p-button (onClick)="handleGlobalAction('ban_all')" label="Banear Todos" icon="pi pi-ban" severity="danger" outlined="true" rounded="true"></p-button>
+          <p-button (onClick)="handleGlobalAction('Desbanear Todos')" label="Desbanear Todos" icon="pi pi-check-circle" severity="success" outlined="true" styleClass="mr-3" rounded="true"></p-button>
+          <p-button (onClick)="handleGlobalAction('Banear Todos')" label="Banear Todos" icon="pi pi-ban" severity="danger" outlined="true" rounded="true"></p-button>
         </div>
 
-        <p-button (onClick)="handleGlobalAction('clean_anon')" label="Limpiar Anonimizados" icon="pi pi-eraser" severity="secondary" outlined="true" styleClass="text-slate-600" rounded="true"></p-button>
-        <p-button (onClick)="handleGlobalAction('delete_all')" label="Borrar Todos" icon="pi pi-trash" severity="danger" rounded="true"></p-button>
+        <p-button (onClick)="confirmAction('Limpiar Anonimizados')" label="Limpiar Anonimizados" icon="pi pi-eraser" severity="secondary" outlined="true" styleClass="text-slate-600" rounded="true"></p-button>
+        <p-button (onClick)="confirmAction('Borrar Todos')" label="Borrar Todos" icon="pi pi-trash" severity="danger" rounded="true"></p-button>
       </div>
     </div>
 
@@ -75,9 +75,9 @@
         <p-button (onClick)="clearSelection()" icon="pi pi-times" [text]="true" severity="secondary" pTooltip="Cerrar detalles" class="absolute top-0 left-0"></p-button>
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div class="flex items-center gap-6">
-            <div class="relative">
+            <div class="relative ml-3">
               <p-avatar [image]="user.imageUrl" shape="circle"
-                        [styleClass]="user.logged ? '!w-20 !h-20 ring-2 ring-green-500 ring-offset-2 ring-offset-white' : '!w-20 !h-20'">
+                        [styleClass]="user.logged ? '!w-20 !h-20 ring-2 ring-green-500 ring-offset-2 ring-offset-white' : '!w-15 !h-15'">
               </p-avatar>
             </div>
             <div>
@@ -107,12 +107,12 @@
             </div>
             <div class="flex gap-2 mt-2">
               @if(!user.banned) {
-                <p-button (onClick)="confirmAction('Banear usuario')" label="Banear Usuario" icon="pi pi-ban" severity="warn" size="small"></p-button>
+                <p-button (onClick)="handleUserAction('Banear Usuario')" [disabled]="user.roles.includes('ADMIN')" label="Banear Usuario" icon="pi pi-ban" severity="warn" size="small"></p-button>
               } @else {
-                <p-button (onClick)="confirmAction('Desbanear usuario')" label="Desbanear Usuario" icon="pi pi-lock-open" severity="success" size="small"></p-button>
+                <p-button (onClick)="handleUserAction('Desbanear Usuario')" label="Desbanear Usuario" icon="pi pi-lock-open" severity="success" size="small"></p-button>
               }
-              <p-button label="Anonimizar Usuario" (onClick)="confirmAction('Anonimizar usuario')" icon="pi pi-eraser" severity="secondary" size="small"></p-button>
-              <p-button label="Borrar Usuario" (onClick)="confirmAction('Borrar usuario')" icon="pi pi-trash" severity="danger" size="small"></p-button>
+              <p-button label="Anonimizar Usuario" (onClick)="handleUserAction('Anonimizar Usuario')" [disabled]="user.deleted || user.roles.includes('ADMIN')" icon="pi pi-eraser" severity="secondary" size="small"></p-button>
+              <p-button label="Borrar Usuario" (onClick)="handleUserAction('Borrar Usuario')" [disabled]="user.roles.includes('ADMIN')" icon="pi pi-trash" severity="danger" size="small"></p-button>
             </div>
           </div>
         </div>
@@ -141,11 +141,11 @@
 
         <ng-template #body let-user>
           <tr [pSelectableRow]="user" class="cursor-pointer transition-colors hover:bg-slate-50 text-slate-700 border-b border-slate-100 last:border-0">
-            <td class="font-mono text-slate-500 text-xs pl-4">#{{ user.id }}</td>
+            <td class="font-mono text-slate-500 text-md pl-4">#{{ user.id }}</td>
             <td>
               <div class="flex items-center gap-3">
                 <div class="relative">
-                  <p-avatar [image]="user.imageUrl" shape="circle" size="normal"
+                  <p-avatar [image]="user.imageUrl" shape="circle" styleClass="!w-10 !h-10"
                             [style]="{'background-color': '#f1f5f9', 'color': '#475569', 'border': '1px solid #e2e8f0'}">
                   </p-avatar>
                   <span *ngIf="user.isOnline" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
@@ -159,7 +159,7 @@
             <td>
               <div class="flex gap-1">
           <span *ngFor="let role of user.roles"
-                class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wide rounded-md border"
+                class="px-2 py-0.5 text-sm uppercase font-bold tracking-wide rounded-md border"
                 [ngClass]="{
                   'bg-yellow-50 text-yellow-700 border-yellow-200': role === 'ADMIN',
                   'bg-slate-100 text-slate-500 border-slate-200': role !== 'ADMIN'
@@ -169,12 +169,12 @@
               </div>
             </td>
             <td>
-              @if(user.isBanned) {
+              @if(user.banned) {
                 <p-tag severity="danger" value="BANEADO" [rounded]="true" styleClass="text-xs"></p-tag>
-              } @else if(user.isDeleted) {
+              } @else if(user.deleted) {
                 <p-tag severity="warn" value="ELIMINADO" [rounded]="true" styleClass="text-xs"></p-tag>
               } @else {
-                <p-tag severity="success" value="ACTIVO" [rounded]="true" styleClass="text-xs"></p-tag>
+                <p-tag severity="success" value="ACTIVO" [rounded]="true" styleClass="text-sm"></p-tag>
               }
             </td>
             <td>

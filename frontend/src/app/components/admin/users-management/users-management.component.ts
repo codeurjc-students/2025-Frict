@@ -47,10 +47,16 @@ export class UsersManagementComponent implements OnInit {
     this.loadUsers();
   }
 
+  resetPaginator() {
+    this.first = 0;
+    this.rows = 5;
+  }
+
   loadUsers() {
     this.userService.getAllUsers(this.first/this.rows, this.rows).subscribe({
       next: (users) => {
         this.usersPage = users;
+        console.log(this.usersPage);
         this.loading = false;
       },
       error: () => {
@@ -68,32 +74,106 @@ export class UsersManagementComponent implements OnInit {
 
   confirmAction(action: string) {
     this.confirmationService.confirm({
-      header: 'Confirmation',
-      message: '¿Estás seguro de que quieres continuar?',
+      header: action,
+      message: '¿Estás seguro de que quieres continuar? Esta acción es irreversible.',
       icon: 'pi pi-exclamation-circle',
       rejectButtonProps: {
-        label: 'Cancel',
+        label: 'Cancelar',
         icon: 'pi pi-times',
+        severity: 'secondary',
         outlined: true,
         size: 'normal'
       },
       acceptButtonProps: {
-        label: 'Save',
+        label: 'Aceptar',
         icon: 'pi pi-check',
+        severity: 'warn',
         size: 'normal'
       },
       accept: () => {
-        this.handleUserAction(action);
+        this.handleGlobalAction(action);
       }
     });
   }
 
-  handleUserAction(action: string) {
-    console.log(`Ejecutando acción de usuario: ${action}`);
+  handleGlobalAction(action: string) {
+    console.log("Ejecutando acción grobal: " + action);
+    switch (action) {
+      case 'Desbanear Todos':
+      case 'Banear Todos': {
+        let bannedState = false;
+        if (action === "Banear Todos") {
+          bannedState = true;
+        }
+        this.userService.toggleAllBans(bannedState).subscribe({
+          next: () => {
+            this.loadUsers();
+          }
+        });
+        break;
+      }
+      case 'Limpiar Anonimizados': {
+        this.userService.anonAll().subscribe({
+          next: () => {
+            this.loadUsers();
+          }
+        });
+        break;
+      }
+      case 'Borrar Todos': {
+        this.userService.deleteAll().subscribe({
+          next: () => {
+            this.loadUsers();
+          }
+        });
+        break;
+      }
+    }
   }
 
-  handleGlobalAction(action: string) {
-    console.log(`Ejecutando acción global: ${action}`);
+  handleUserAction(action: string) {
+    if(this.selectedUser){
+      switch (action) {
+        case 'Banear Usuario':
+        case 'Desbanear Usuario': {
+          let bannedState = false;
+          if (action === "Banear Usuario") {
+            bannedState = true;
+          }
+          this.userService.toggleUserBan(this.selectedUser.id, bannedState).subscribe({
+            next: (user) => {
+              if (user) {
+                if (this.selectedUser){
+                  this.selectedUser.banned = user.banned;
+                }
+              }
+            }
+          });
+          break;
+        }
+        case 'Anonimizar Usuario': {
+          this.userService.anonUser(this.selectedUser.id).subscribe({
+            next: (user) => {
+              const index = this.usersPage.items.findIndex(u => u.id === this.selectedUser?.id);
+              if (index !== -1) {
+                this.usersPage.items[index] = user;
+                this.selectedUser = user;
+              }
+            }
+          });
+          break;
+        }
+        case 'Borrar Usuario': {
+          this.userService.deleteUser(this.selectedUser.id).subscribe({
+            next: () => {
+              this.selectedUser = null;
+              this.loadUsers();
+            }
+          });
+          break;
+        }
+      }
+    }
   }
 
 }

@@ -33,7 +33,7 @@ export class UserService {
     return this.http.get<PageResponse<User>>(this.apiUrl + `/`, { params });
   }
 
-  public deleteLoggedUser(): Observable<User> {
+  public anonLoggedUser(): Observable<User> {
     return this.http.delete<User>(this.apiUrl);
   }
 
@@ -65,6 +65,31 @@ export class UserService {
 
   public deletePaymentCard(id: string): Observable<User> {
     return this.http.delete<User>(this.apiUrl + `/cards/${id}`);
+  }
+
+  //User Management component endpoints
+  public toggleAllBans(banState: boolean): Observable<boolean> {
+    return this.http.put<boolean>(this.apiUrl + `/ban/`, banState);
+  }
+
+  public toggleUserBan(id: string, banState: boolean): Observable<User> {
+    return this.http.put<User>(this.apiUrl + `/ban/${id}`, banState);
+  }
+
+  public anonAll(): Observable<boolean> {
+    return this.http.put<boolean>(this.apiUrl + `/anon/`, null);
+  }
+
+  public anonUser(id: string): Observable<User> {
+    return this.http.put<User>(this.apiUrl + `/anon/${id}`, null);
+  }
+
+  public deleteAll(): Observable<boolean> {
+    return this.http.delete<boolean>(this.apiUrl + `/`);
+  }
+
+  public deleteUser(id: string): Observable<boolean> {
+    return this.http.delete<boolean>(this.apiUrl + `/${id}`);
   }
 
 }

@@ -103,7 +103,7 @@ export class ProfileComponent implements OnInit {
 
       accept: () => {
         this.loading = true;
-        this.userService.deleteLoggedUser().subscribe({
+        this.userService.anonLoggedUser().subscribe({
           next: () => {
             this.logoutOnDelete();
           },
