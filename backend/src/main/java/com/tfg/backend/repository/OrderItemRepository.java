@@ -18,8 +18,4 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     //Retrieves all the items of the same product that are in all users carts (stock check)
     List<OrderItem> findByProductIdAndOrderIsNull(Long productId);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE OrderItem o SET o.user = NULL WHERE o.user.id = :userId")
-    void unlinkItemsFromUser(@Param("userId") Long userId);
 }

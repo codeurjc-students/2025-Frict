@@ -123,6 +123,7 @@ export class UsersManagementComponent implements OnInit {
       case 'Borrar Todos': {
         this.userService.deleteAll().subscribe({
           next: () => {
+            this.selectedUser = null;
             this.loadUsers();
           }
         });

@@ -22,6 +22,4 @@ public class OrderItemService {
     public List<OrderItem> findProductUnitsInCart(Long id) { return orderItemRepository.findByProductIdAndOrderIsNull(id); }
 
     public void save(OrderItem item) { this.orderItemRepository.save(item); }
-
-    public void unlinkItemsFromUser(Long id) { orderItemRepository.unlinkItemsFromUser(id);}
 }

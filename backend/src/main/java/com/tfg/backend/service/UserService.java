@@ -123,25 +123,6 @@ public class UserService {
         return user;
     }
 
-    // Removes (deletes) all user relations in order for the user to be deleted from DB without data integrity violations
-    @Transactional
-    public User unlinkUser(User user){
-       for (Order order : user.getRegisteredOrders()) {
-            order.setUser(null);
-            orderService.save(order);
-        }
-
-        user.getAllOrderItems().clear();
-        orderItemService.unlinkItemsFromUser(user.getId()); //Custom query, as items are needed to be removed automatically when removed from cart, but not removed when deleting an user
-
-        // PASO 3: Reviews
-        for (Review review : reviewService.findAllByUser(user)) {
-            review.setUser(null);
-            reviewService.save(review);
-        }
-        return user;
-    }
-
     public boolean isEmailTaken(String email) {
         return userRepository.existsByEmail(email);
     }

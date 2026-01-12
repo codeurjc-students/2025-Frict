@@ -321,8 +321,7 @@ public class UserRestController {
         List<User> allUsers = this.userService.findAll();
         for (User u : allUsers) {
             if (!u.getRoles().contains("ADMIN")){
-                User unlinkedUser = this.userService.unlinkUser(u);
-                userService.delete(unlinkedUser);
+                userService.delete(u);
             }
         }
         return ResponseEntity.ok(true);
@@ -336,8 +335,7 @@ public class UserRestController {
         if(userOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
         }
-        User unlinkedUser = userService.unlinkUser(userOptional.get());
-        userService.delete(unlinkedUser);
+        userService.delete(userOptional.get());
         return ResponseEntity.ok(true);
     }
 }
