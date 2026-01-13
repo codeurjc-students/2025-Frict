@@ -5,6 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.StatDataDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -337,5 +338,17 @@ public class UserRestController {
         }
         userService.delete(userOptional.get());
         return ResponseEntity.ok(true);
+    }
+
+
+    @Operation(summary = "Get users stats")
+    @GetMapping("/stats")
+    public ResponseEntity<List<StatDataDTO>> getUsersStats(){
+        List<StatDataDTO> stats = new ArrayList<>();
+        stats.add(new StatDataDTO("Totales", userService.count()));
+        stats.add(new StatDataDTO("Baneados", userService.countByIsBannedTrue()));
+        stats.add(new StatDataDTO("Anonimizados", userService.countByIsDeletedTrue()));
+        stats.add(new StatDataDTO("Administradores", userService.countByRole("ADMIN")));
+        return ResponseEntity.ok(stats);
     }
 }

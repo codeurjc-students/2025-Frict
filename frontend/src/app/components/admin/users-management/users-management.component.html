@@ -4,7 +4,7 @@
     <div class="mb-8">
       <div>
         <h1 class="text-3xl font-bold text-yellow-600">Gestor de usuarios</h1>
-        <p class="text-slate-500">Administra cuentas, accesos y métricas.</p>
+        <p class="text-slate-500">Administra las cuentas de los usuarios de tu organización.</p>
       </div>
     </div>
 
@@ -29,43 +29,41 @@
       <div class="lg:col-span-1 flex flex-col gap-4">
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
           <div>
-            <span class="block text-slate-500 text-sm">Usuarios registrados</span>
-            <span class="text-2xl font-bold text-cyan-600">{{ usersPage.totalItems }}</span>
+            <span class="block text-slate-500 text-sm">Totales</span>
+            <span class="text-2xl font-bold text-green-600">{{ getStatValue('Totales') }}</span>
           </div>
-          <i class="pi pi-sign-in text-cyan-600/20 text-4xl"></i>
+          <i class="pi pi-sign-in text-green-600/20 text-4xl"></i>
         </div>
 
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
           <div>
-            <span class="block text-slate-500 text-sm">Usuarios Online</span>
-            <span class="text-2xl font-bold text-green-600">{{ activeUsers }}</span>
-          </div>
-          <i class="pi pi-wifi text-green-600/20 text-4xl"></i>
-        </div>
-
-        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div>
-            <span class="block text-slate-500 text-sm">Cuentas baneadas</span>
-            <span class="text-2xl font-bold text-red-600">{{ bannedUsers }}</span>
+            <span class="block text-slate-500 text-sm">Baneados</span>
+            <span class="text-2xl font-bold text-red-600">{{ getStatValue('Baneados') }}</span>
           </div>
           <i class="pi pi-lock text-red-600/20 text-4xl"></i>
         </div>
 
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
           <div>
-            <span class="block text-slate-500 text-sm">Cuentas de administración</span>
-            <span class="text-2xl font-bold text-yellow-600">5</span>
+            <span class="block text-slate-500 text-sm">Anonimizados</span>
+            <span class="text-2xl font-bold text-cyan-600">{{ getStatValue('Anonimizados') }}</span>
           </div>
-          <i class="pi pi-shield text-yellow-600/20 text-4xl"></i>
+          <i class="pi pi-shield text-cyan-600/20 text-4xl"></i>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span class="block text-slate-500 text-sm">Administradores</span>
+            <span class="text-2xl font-bold text-yellow-600">{{ getStatValue('Administradores') }}</span>
+          </div>
+          <i class="pi pi-wifi text-yellow-600/20 text-4xl"></i>
         </div>
       </div>
 
       <div class="lg:col-span-3 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-        <h3 class="text-lg font-semibold text-slate-800 mb-4">Actividad de Usuarios (Últimos 6 meses)</h3>
-        <div class="h-[250px]">
-          <!--
-          <p-chart type="line" [data]="chartData()" [options]="chartOptions()"></p-chart>
-          -->
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Distribución de usuarios</h3>
+        <div class="card flex justify-center">
+            <p-chart type="bar" [data]="data()" [options]="options()" class="w-full md:w-[40rem]" />
         </div>
       </div>
     </div>

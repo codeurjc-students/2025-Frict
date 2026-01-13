@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -146,4 +143,10 @@ public class UserService {
     public boolean isDeletedByEmail(String email) {
         return userRepository.existsByEmailAndIsDeletedTrue(email);
     }
+
+    //Stats
+    public Long count(){ return this.userRepository.count(); }
+    public Long countByRole(String role){ return this.userRepository.countByRolesContaining(role); }
+    public Long countByIsBannedTrue(){ return this.userRepository.countByIsBannedTrue();}
+    public Long countByIsDeletedTrue(){ return this.userRepository.countByIsDeletedTrue();}
 }

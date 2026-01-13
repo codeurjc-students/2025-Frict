@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, computed, OnInit, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {Button} from 'primeng/button';
 import {Tag} from 'primeng/tag';
@@ -10,12 +10,14 @@ import {User} from '../../../models/user.model';
 import {UserService} from '../../../services/user.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ConfirmationService} from 'primeng/api';
+import {UIChart} from 'primeng/chart';
+import {StatData} from '../../../utils/statData.model';
 
 @Component({
   selector: 'app-users-management',
   standalone: true,
   imports: [
-    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator
+    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart
   ],
   templateUrl: './users-management.component.html',
   styleUrl: 'users-management.component.css'
@@ -25,20 +27,48 @@ export class UsersManagementComponent implements OnInit {
   usersPage: PageResponse<User> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   selectedUser: User | null = null;
 
-  activeUsers: number = 0;
-  bannedUsers: number = 0;
-
   first: number = 0;
   rows: number = 5;
 
   loading: boolean = true;
   error: boolean = false;
 
+  rawStats = signal<StatData[]>([]);
+  options = signal<any>(null);
+
+  data = computed(() => {
+    const stats = this.rawStats();
+    const documentStyle = getComputedStyle(document.documentElement);
+    return {
+      labels: stats.map(s => s.category),
+      datasets: [
+        {
+          data: stats.map(s => s.total),
+          backgroundColor: [
+            documentStyle.getPropertyValue('--p-green-600'),
+            documentStyle.getPropertyValue('--p-red-600'),
+            documentStyle.getPropertyValue('--p-cyan-600'),
+            documentStyle.getPropertyValue('--p-yellow-600')
+          ],
+          hoverBackgroundColor: [
+            documentStyle.getPropertyValue('--p-green-500'),
+            documentStyle.getPropertyValue('--p-red-500'),
+            documentStyle.getPropertyValue('--p-cyan-500'),
+            documentStyle.getPropertyValue('--p-yellow-500')
+          ]
+        }
+      ]
+    };
+  });
+
   constructor(private userService: UserService,
-              private confirmationService: ConfirmationService) {}
+              private confirmationService: ConfirmationService) {
+  }
 
   ngOnInit() {
+    this.initChartOptions();
     this.loadUsers();
+    this.loadStats();
   }
 
   onUsersPageChange(event: PaginatorState) {
@@ -66,7 +96,21 @@ export class UsersManagementComponent implements OnInit {
     })
   }
 
-  // --- Actions ---
+  loadStats() {
+    this.userService.getUsersStats().subscribe({
+      next: (stats: StatData[]) => {
+        this.rawStats.set(stats);
+        console.log(this.rawStats());
+      },
+      error: (err) => console.error('Error loading stats: ', err)
+    });
+  }
+
+  getStatValue(category: string): number {
+    const stat = this.rawStats().find(s => s.category === category);
+    return stat ? stat.total : 0;
+  }
+
 
   clearSelection() {
     this.selectedUser = null;
@@ -108,6 +152,7 @@ export class UsersManagementComponent implements OnInit {
         this.userService.toggleAllBans(bannedState).subscribe({
           next: () => {
             this.loadUsers();
+            this.loadStats();
           }
         });
         break;
@@ -116,6 +161,7 @@ export class UsersManagementComponent implements OnInit {
         this.userService.anonAll().subscribe({
           next: () => {
             this.loadUsers();
+            this.loadStats();
           }
         });
         break;
@@ -125,6 +171,7 @@ export class UsersManagementComponent implements OnInit {
           next: () => {
             this.selectedUser = null;
             this.loadUsers();
+            this.loadStats();
           }
         });
         break;
@@ -146,6 +193,7 @@ export class UsersManagementComponent implements OnInit {
               if (user) {
                 if (this.selectedUser){
                   this.selectedUser.banned = user.banned;
+                  this.loadStats();
                 }
               }
             }
@@ -159,6 +207,7 @@ export class UsersManagementComponent implements OnInit {
               if (index !== -1) {
                 this.usersPage.items[index] = user;
                 this.selectedUser = user;
+                this.loadStats();
               }
             }
           });
@@ -169,12 +218,27 @@ export class UsersManagementComponent implements OnInit {
             next: () => {
               this.selectedUser = null;
               this.loadUsers();
+              this.loadStats();
             }
           });
           break;
         }
       }
     }
+  }
+
+
+  initChartOptions() {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
+
+    this.options.set({
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    });
   }
 
 }
