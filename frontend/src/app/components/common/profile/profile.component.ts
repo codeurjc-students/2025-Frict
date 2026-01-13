@@ -24,6 +24,7 @@ import {AuthService} from '../../../services/auth.service';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Review} from '../../../models/review.model';
+import {formatPrice} from '../../../utils/numberFormat.util';
 
 @Component({
   selector: 'app-profile',
@@ -395,4 +396,6 @@ export class ProfileComponent implements OnInit {
     };
     return labels[status] || status;
   }
+
+  protected readonly formatPrice = formatPrice;
 }

@@ -4,13 +4,15 @@ import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
 import {NgOptimizedImage} from '@angular/common';
+import {GoogleAuthComponent} from '../google-auth/google-auth.component';
 
 @Component({
   selector: 'app-signup',
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    NgOptimizedImage
+    NgOptimizedImage,
+    GoogleAuthComponent
   ],
   templateUrl: './signup.component.html',
   standalone: true,
@@ -22,7 +24,11 @@ export class SignupComponent {
   showPassword = false;
   selectedImage: File | null = null;
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private userService: UserService, private router: Router) {
+  constructor(private fb: FormBuilder,
+              private authService: AuthService,
+              private userService: UserService,
+              private router: Router) {
+
     this.registerForm = this.fb.nonNullable.group({
       name: ['', Validators.required],
       username: ['', Validators.required],
