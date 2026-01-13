@@ -13,7 +13,9 @@
       />
 
       <div class="absolute top-0 right-0 w-full p-3 flex justify-end items-start pointer-events-none">
-        <app-stock-tag [units]="product.availableUnits"></app-stock-tag>
+        <div *ngIf="product.availableUnits <= 10">
+          <p-tag [value]="getStockTagMessage(product.availableUnits)" [severity]="getStockSeverity(product.availableUnits)" [icon]="getStockTagIcon(product.availableUnits)"></p-tag>
+        </div>
       </div>
     </div>
 

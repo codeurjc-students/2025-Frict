@@ -27,11 +27,12 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
 import {Textarea} from 'primeng/textarea';
 import {TableModule} from 'primeng/table';
 import {ShopStock} from '../../../models/shopStock.model';
-import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
 import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
+import {Tag} from 'primeng/tag';
+import {getStockSeverity, getStockIcon, getStockMessage} from '../../../utils/tagManager.util';
 
 
 @Component({
@@ -57,9 +58,9 @@ import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component'
     LoadingScreenComponent,
     Textarea,
     TableModule,
-    StockTagComponent,
     Image,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    Tag
   ],
   templateUrl: './product-info.component.html'
 })
@@ -347,4 +348,7 @@ export class ProductInfoComponent implements OnInit {
 
   }
 
+  protected readonly getStockTagMessage = getStockMessage;
+  protected readonly getStockSeverity = getStockSeverity;
+  protected readonly getStockTagIcon = getStockIcon;
 }

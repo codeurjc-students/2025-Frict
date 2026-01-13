@@ -157,7 +157,7 @@ export class UsersManagementComponent implements OnInit {
         });
         break;
       }
-      case 'Limpiar Anonimizados': {
+      case 'Anonimizar Todos': {
         this.userService.anonAll().subscribe({
           next: () => {
             this.loadUsers();

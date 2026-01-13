@@ -19,7 +19,9 @@
         <div class="flex items-center gap-4 text-sm">
           <span class="text-surface-500 font-medium">Ref: {{ product.referenceCode }}</span>
           <div class="h-4 w-px bg-surface-300"></div>
-          <app-stock-tag [units]="product.availableUnits"></app-stock-tag>
+          <div *ngIf="product.availableUnits <= 10">
+            <p-tag [value]="getStockTagMessage(product.availableUnits)" [severity]="getStockSeverity(product.availableUnits)" [icon]="getStockTagIcon(product.availableUnits)"></p-tag>
+          </div>
         </div>
       </div>
 
