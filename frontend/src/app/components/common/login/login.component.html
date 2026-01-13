@@ -47,8 +47,18 @@
             <label for="username" class="block text-sm font-bold text-surface-700 ml-1">Usuario</label>
             <div class="relative">
               <i class="pi pi-user absolute left-4 top-3.5 text-surface-400"></i>
+
               <input id="username" formControlName="username" type="text" placeholder="ej. juanperez"
-                     class="w-full bg-surface-50 border border-surface-200 text-surface-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all placeholder:text-surface-400"/>
+                     class="w-full bg-surface-50 border border-surface-200 text-surface-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/10 outline-none transition-all placeholder:text-surface-400"
+                     [class.border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+                     [class.focus:border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+                     [class.focus:ring-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+              />
+            </div>
+
+            <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
+              <span *ngIf="usernameControl?.hasError('userNotFound')">El usuario no existe.</span>
+              <span *ngIf="usernameControl?.hasError('required')">Requerido.</span>
             </div>
           </div>
 

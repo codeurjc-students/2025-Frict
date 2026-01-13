@@ -50,8 +50,17 @@
               <label for="username" class="block text-sm font-bold text-surface-700 ml-1">Nombre de usuario</label>
               <div class="relative">
                 <i class="pi pi-at absolute left-4 top-3.5 text-surface-400"></i>
+
                 <input id="username" formControlName="username" type="text" placeholder="Ej. maria_g"
-                       class="w-full bg-surface-50 border border-surface-200 text-surface-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all placeholder:text-surface-400"/>
+                       class="w-full bg-surface-50 border border-surface-200 text-surface-900 text-sm rounded-xl pl-10 pr-4 py-3 outline-none transition-all placeholder:text-surface-400 focus:bg-white focus:ring-1 focus:ring-primary-500/10 focus:border-primary-500"
+                       [class.border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+                       [class.focus:border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+                       [class.focus:ring-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" />
+              </div>
+
+              <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
+                <span *ngIf="usernameControl?.hasError('usernameTaken')">El usuario ya existe.</span>
+                <span *ngIf="usernameControl?.hasError('required')">Requerido.</span>
               </div>
             </div>
           </div>
@@ -60,8 +69,17 @@
             <label for="email" class="block text-sm font-bold text-surface-700 ml-1">Correo electrónico</label>
             <div class="relative">
               <i class="pi pi-envelope absolute left-4 top-3.5 text-surface-400"></i>
+
               <input id="email" formControlName="email" type="email" placeholder="nombre@correo.com"
-                     class="w-full bg-surface-50 border border-surface-200 text-surface-900 text-sm rounded-xl pl-10 pr-4 py-3 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all placeholder:text-surface-400"/>
+                     class="w-full bg-surface-50 border border-surface-200 text-surface-900 text-sm rounded-xl pl-10 pr-4 py-3 outline-none transition-all placeholder:text-surface-400 focus:bg-white focus:ring-1 focus:ring-primary-500/10 focus:border-primary-500"
+                     [class.border-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"
+                     [class.focus:border-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"
+                     [class.focus:ring-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"/>
+            </div>
+
+            <div *ngIf="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
+              <span *ngIf="emailControl?.hasError('emailTaken')">El correo ya existe.</span>
+              <span *ngIf="emailControl?.hasError('email')">Correo inválido.</span>
             </div>
           </div>
 

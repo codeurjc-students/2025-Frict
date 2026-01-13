@@ -261,7 +261,21 @@ public class UserRestController {
         return new PageResponse<>(dtos, users.getTotalElements(), users.getNumber(), users.getTotalPages()-1, users.getSize());
     }
 
+    //Reactive endpoints
+    @Operation(summary = "Check if a username is taken")
+    @GetMapping("/username")
+    public ResponseEntity<Boolean> checkUsername(@RequestParam String username) {
+        return ResponseEntity.ok(userService.isUsernameTaken(username));
+    }
 
+    @Operation(summary = "Check if an email is taken")
+    @GetMapping("/email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        return ResponseEntity.ok(userService.isEmailTaken(email));
+    }
+
+
+    //Ban / Anon / Delete endpoints
     @Operation(summary = "Toggle all users ban (except admin)")
     @PutMapping("/ban/")
     public ResponseEntity<Boolean> toggleAllUsersBan(@RequestBody boolean banState){

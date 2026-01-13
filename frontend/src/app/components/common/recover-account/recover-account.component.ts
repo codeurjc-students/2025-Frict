@@ -3,6 +3,8 @@ import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterModule} from '@angular/router';
 import {AuthService} from '../../../services/auth.service';
+import {CustomValidators} from '../../../utils/customValidators.util';
+import {UserService} from '../../../services/user.service';
 
 @Component({
   selector: 'app-recover-password',
@@ -23,12 +25,15 @@ export class RecoverAccountComponent {
   isEmailSent: boolean = false; // To chenge the view after success
   errorMessage: string = '';
 
+  get usernameControl() { return this.recoverForm.get('username'); }
+
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) {
     this.recoverForm = this.fb.group({
-      username: ['', [Validators.required]]
+      username: ['', [Validators.required], [CustomValidators.createUsernameExistsValidator(this.userService)]]
     });
   }
 

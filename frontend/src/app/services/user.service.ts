@@ -96,4 +96,16 @@ export class UserService {
     return this.http.get<StatData[]>(this.apiUrl + `/stats`)
   }
 
+  checkUsernameTaken(username: string): Observable<boolean> {
+    let params = new HttpParams();
+    params = params.append('username', username);
+    return this.http.get<boolean>(this.apiUrl + `/username`, { params });
+  }
+
+  checkEmailTaken(email: string): Observable<boolean> {
+    let params = new HttpParams();
+    params = params.append('email', email);
+    return this.http.get<boolean>(this.apiUrl + `/email`, { params });
+  }
+
 }
