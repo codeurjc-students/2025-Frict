@@ -1,10 +1,10 @@
-import {Component, Input} from '@angular/core';
+import {Component, computed, Input} from '@angular/core';
 import {RouterLink} from "@angular/router";
 import {Product} from '../../../models/product.model';
 import {NgIf} from '@angular/common';
 import {formatPrice, formatRating} from '../../../utils/numberFormat.util';
 import {Tag} from 'primeng/tag';
-import {getStockSeverity, getStockIcon, getStockMessage} from '../../../utils/tagManager.util';
+import {getStockTagInfo} from '../../../utils/tagManager.util';
 
 @Component({
   selector: 'app-product-card',
@@ -23,9 +23,8 @@ export class ProductCardComponent {
 
   @Input() elementId: string = 'product';
 
+  stockStatus = computed(() => getStockTagInfo(this.product.availableUnits));
+
   protected readonly formatPrice = formatPrice;
   protected readonly formatRating = formatRating;
-  protected readonly getStockTagMessage = getStockMessage;
-  protected readonly getStockSeverity = getStockSeverity;
-  protected readonly getStockTagIcon = getStockIcon;
 }

@@ -12,6 +12,7 @@ import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ConfirmationService} from 'primeng/api';
 import {UIChart} from 'primeng/chart';
 import {StatData} from '../../../utils/statData.model';
+import {getUserRoleTagInfo, getUserStatusTagInfo} from '../../../utils/tagManager.util';
 
 @Component({
   selector: 'app-users-management',
@@ -229,9 +230,6 @@ export class UsersManagementComponent implements OnInit {
 
 
   initChartOptions() {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--text-color');
-
     this.options.set({
       plugins: {
         legend: {
@@ -241,4 +239,6 @@ export class UsersManagementComponent implements OnInit {
     });
   }
 
+  protected readonly getUserStatusTagInfo = getUserStatusTagInfo;
+  protected readonly getUserRoleTagInfo = getUserRoleTagInfo;
 }

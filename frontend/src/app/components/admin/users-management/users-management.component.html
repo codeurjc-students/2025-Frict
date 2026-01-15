@@ -81,8 +81,7 @@
             <div>
               <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
                 {{ user.name }}
-                <p-tag *ngIf="user.banned" severity="danger" value="BANEADO"></p-tag>
-                <p-tag *ngIf="user.deleted" severity="warn" value="ELIMINADO"></p-tag>
+                <p-tag [severity]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).severity" [value]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).message" [icon]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).icon" [rounded]="true" styleClass="text-xs"></p-tag>
               </h2>
               <div class="flex flex-col lg:flex-row gap-4 text-slate-500 text-sm my-3">
                 <span class="flex items-center gap-1"><i class="pi pi-at"></i> {{ user.email }}</span>
@@ -90,9 +89,7 @@
                 <span class="flex items-center gap-1"><i class="pi pi-calendar"></i> Última vez: {{ user.lastConnection | date:'short' }}</span>
               </div>
               <div class="mt-3 flex gap-2">
-                @for(role of user.roles; track role) {
-                  <p-tag [value]="role" [severity]="role === 'ADMIN' ? 'warning' : 'info'"></p-tag>
-                }
+                <p-tag [value]="getUserRoleTagInfo(user.roles.at(0) ?? '').message" [severity]="getUserRoleTagInfo(user.roles.at(0) ?? '').severity" [icon]="getUserRoleTagInfo(user.roles.at(0) ?? '').icon" rounded="true"></p-tag>
               </div>
             </div>
           </div>
@@ -156,24 +153,11 @@
             </td>
             <td>
               <div class="flex gap-1">
-          <span *ngFor="let role of user.roles"
-                class="px-2 py-0.5 text-sm uppercase font-bold tracking-wide rounded-md border"
-                [ngClass]="{
-                  'bg-yellow-50 text-yellow-700 border-yellow-200': role === 'ADMIN',
-                  'bg-slate-100 text-slate-500 border-slate-200': role !== 'ADMIN'
-                }">
-              {{ role }}
-          </span>
+                <p-tag [value]="getUserRoleTagInfo(user.roles.at(0) ?? '').message" [severity]="getUserRoleTagInfo(user.roles.at(0) ?? '').severity" [icon]="getUserRoleTagInfo(user.roles.at(0) ?? '').icon" rounded="true"></p-tag>
               </div>
             </td>
             <td>
-              @if(user.banned) {
-                <p-tag severity="danger" value="BANEADO" [rounded]="true" styleClass="text-xs"></p-tag>
-              } @else if(user.deleted) {
-                <p-tag severity="warn" value="ELIMINADO" [rounded]="true" styleClass="text-xs"></p-tag>
-              } @else {
-                <p-tag severity="success" value="ACTIVO" [rounded]="true" styleClass="text-sm"></p-tag>
-              }
+                <p-tag [severity]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).severity" [value]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).message" [icon]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).icon" [rounded]="true" styleClass="text-xs"></p-tag>
             </td>
             <td>
               <div class="flex gap-4 text-sm">

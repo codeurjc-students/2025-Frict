@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, computed, OnInit} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -32,7 +32,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
 import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
 import {Tag} from 'primeng/tag';
-import {getStockSeverity, getStockIcon, getStockMessage} from '../../../utils/tagManager.util';
+import {getStockTagInfo} from '../../../utils/tagManager.util';
 
 
 @Component({
@@ -85,6 +85,7 @@ export class ProductInfoComponent implements OnInit {
   protected product!: Product;
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
+  stockStatus = computed(() => getStockTagInfo(this.product.availableUnits));
 
   protected visibleShippingDialog: boolean = false;
   protected visibleAvailabilityDialog: boolean = false;
@@ -347,8 +348,4 @@ export class ProductInfoComponent implements OnInit {
     }
 
   }
-
-  protected readonly getStockTagMessage = getStockMessage;
-  protected readonly getStockSeverity = getStockSeverity;
-  protected readonly getStockTagIcon = getStockIcon;
 }
