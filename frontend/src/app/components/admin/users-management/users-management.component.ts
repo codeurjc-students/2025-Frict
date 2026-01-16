@@ -9,16 +9,23 @@ import {PageResponse} from '../../../models/pageResponse.model';
 import {User} from '../../../models/user.model';
 import {UserService} from '../../../services/user.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
-import {ConfirmationService} from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import {UIChart} from 'primeng/chart';
 import {StatData} from '../../../utils/statData.model';
 import {getUserRoleTagInfo, getUserStatusTagInfo} from '../../../utils/tagManager.util';
+import {Dialog} from 'primeng/dialog';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {InputText} from 'primeng/inputtext';
+import {CustomValidators} from '../../../utils/customValidators.util';
+import {AuthService} from '../../../services/auth.service';
+import {Select} from 'primeng/select';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-users-management',
   standalone: true,
   imports: [
-    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart
+    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select
   ],
   templateUrl: './users-management.component.html',
   styleUrl: 'users-management.component.css'
@@ -33,6 +40,14 @@ export class UsersManagementComponent implements OnInit {
 
   loading: boolean = true;
   error: boolean = false;
+
+  internalRoles = [
+    { name: 'Gerente', code: 'MANAGER' },
+    { name: 'Conductor', code: 'DRIVER' },
+    { name: 'Administrador', code: 'ADMIN' }
+  ];
+
+  visibleNewInternalUserDialog: boolean = false;
 
   rawStats = signal<StatData[]>([]);
   options = signal<any>(null);
@@ -62,14 +77,80 @@ export class UsersManagementComponent implements OnInit {
     };
   });
 
+  newInternalUserForm: FormGroup;
+  showPassword = false;
+  selectedImage: File | null = null;
+
   constructor(private userService: UserService,
-              private confirmationService: ConfirmationService) {
+              private confirmationService: ConfirmationService,
+              private fb: FormBuilder,
+              private authService: AuthService,
+              private messageService: MessageService,) {
+
+    this.newInternalUserForm = this.fb.nonNullable.group({
+      name: ['', Validators.required],
+      username: ['', Validators.required, [CustomValidators.createUsernameValidator(this.userService)]],
+      email: ['', [Validators.required, Validators.email], [CustomValidators.createEmailValidator(this.userService)]],
+      password: ['', Validators.required],
+      role: ['', Validators.required]
+    });
   }
+
+  get usernameControl() { return this.newInternalUserForm.get('username'); }
+  get emailControl() { return this.newInternalUserForm.get('email'); }
 
   ngOnInit() {
     this.initChartOptions();
     this.loadUsers();
     this.loadStats();
+  }
+
+  showNewInternalUserDialog() {
+    this.visibleNewInternalUserDialog = true;
+  }
+
+  cancelUserCreation() {
+    this.newInternalUserForm.reset();
+    this.visibleNewInternalUserDialog = false;
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+
+  onSubmit() {
+    console.log('Lo que voy a enviar al backend:', JSON.stringify(this.newInternalUserForm.getRawValue(), null, 2));
+    this.authService.signup(this.newInternalUserForm.value).subscribe({
+      next: (loginInfo) => { //Backend returns some fields, one of them being the id of the user created
+        if (this.selectedImage) { this.uploadUserImage(loginInfo.id, this.selectedImage);}
+        this.cancelUserCreation();
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Usuario ${loginInfo.name} creado correctamente` });
+        this.loadUsers();
+        this.loadStats();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error creando al usuario. Inténtalo de nuevo.' });
+      }
+    })
+  }
+
+  private uploadUserImage(userId: string, selectedImage: File) {
+    this.userService.uploadUserImage(userId, selectedImage).subscribe({
+      next: () => {
+        this.selectedImage = null;
+      },
+      error: () => {
+        alert('Error subiendo la imagen.');
+      }
+    })
+  }
+
+  changeSelectedImage(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.files && input.files.length) {
+      this.selectedImage = input.files[0];
+    }
   }
 
   onUsersPageChange(event: PaginatorState) {

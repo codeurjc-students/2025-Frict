@@ -22,13 +22,13 @@ export function getUserRoleTagInfo(role: string): TagInformation {
     return {
       message: 'REPARTO',
       icon: 'pi pi-truck',
-      severity: 'contrast'
+      severity: 'info'
     };
   } else {
     return {
       message: 'USUARIO',
       icon: 'pi pi-user',
-      severity: 'info'
+      severity: 'secondary'
     };
   }
 }

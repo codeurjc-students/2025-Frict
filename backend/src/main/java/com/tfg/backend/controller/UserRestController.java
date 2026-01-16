@@ -362,7 +362,8 @@ public class UserRestController {
         stats.add(new StatDataDTO("Totales", userService.count()));
         stats.add(new StatDataDTO("Baneados", userService.countByIsBannedTrue()));
         stats.add(new StatDataDTO("Anonimizados", userService.countByIsDeletedTrue()));
-        stats.add(new StatDataDTO("Administradores", userService.countByRole("ADMIN")));
+        Long internalAccounts = userService.countByRole("ADMIN") + userService.countByRole("MANAGER") + userService.countByRole("DRIVER");
+        stats.add(new StatDataDTO("Cuentas Internas", internalAccounts));
         return ResponseEntity.ok(stats);
     }
 }

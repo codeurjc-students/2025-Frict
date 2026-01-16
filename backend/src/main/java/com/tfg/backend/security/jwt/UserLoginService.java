@@ -59,7 +59,8 @@ public class UserLoginService {
                     (String) payload.get("name"), //Real Google name
                     "google_" + uniqueUuid,
                     dummyPassword,
-                    email
+                    email,
+                    "USER"
             ));
         }
 

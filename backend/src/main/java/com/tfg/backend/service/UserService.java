@@ -91,7 +91,17 @@ public class UserService {
     }
 
     public User registerUser(UserSignupDTO dto) {
-        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), "USER");
+        String role;
+        if (dto.getRole() == null || dto.getRole().isEmpty()){
+            role = "USER";
+        }
+        else role = dto.getRole();
+
+        User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), role);
+
+        //Assign default user image to prevent later errors
+        newUser.setUserImage(GlobalDefaults.USER_IMAGE);
+
         return this.save(newUser);
     }
 
