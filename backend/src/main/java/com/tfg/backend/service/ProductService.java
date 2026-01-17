@@ -18,8 +18,10 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    @Autowired
-    private OrderRepository orderRepository;
+
+    public List<Product> findAll() {
+        return productRepository.findAll();
+    }
 
     public Page<Product> findAll(Pageable pageInfo) {
         return productRepository.findAll(pageInfo);
@@ -41,6 +43,10 @@ public class ProductService {
         }
         this.checkProductFields(p);
         return productRepository.save(p);
+    }
+
+    public void saveAll(List<Product> products) {
+        this.productRepository.saveAll(products);
     }
 
     public Product update(Product p) {

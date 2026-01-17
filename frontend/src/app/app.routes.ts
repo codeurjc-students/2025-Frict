@@ -87,6 +87,11 @@ export const routes: Routes = [
         path: 'users',
         loadComponent: () => import('./components/admin/users-management/users-management.component').then(m => m.UsersManagementComponent),
         data: { roles: ['ADMIN'], title: 'Gestor de Usuarios', icon: 'admin', breadcrumb: 'Gestor de Usuarios' }
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./components/admin/products-management/products-management.component').then(m => m.ProductsManagementComponent),
+        data: { roles: ['ADMIN'], title: 'Gestor de Productos', icon: 'admin', breadcrumb: 'Gestor de Productos' }
       }
     ]
   },

@@ -104,4 +104,17 @@ export class ProductService {
   public deleteProductFromFavourites(id: string): Observable<void> {
     return this.http.delete<void>(this.apiUrl + `/favourites/${id}`);
   }
+
+  //Product management endpoints
+  public toggleGlobalActivation(id: string, state: boolean): Observable<Product> {
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Product>(this.apiUrl + `/active/${id}`, null, { params });
+  }
+
+  public toggleAllGlobalActivations(state: boolean): Observable<Boolean> {
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Boolean>(this.apiUrl + `/active/`, null, { params });
+  }
 }

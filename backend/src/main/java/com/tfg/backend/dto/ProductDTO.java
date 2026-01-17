@@ -19,9 +19,12 @@ public class ProductDTO {
     private String description;
     private double previousPrice;
     private double currentPrice;
+    private boolean active;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
+    private int totalUnits;
     private int availableUnits; //Available units will be all units stock which are not in any user cart yet
+    private int shopsWithStock;
     private double averageRating;
     private int totalReviews;
 
@@ -38,6 +41,7 @@ public class ProductDTO {
         this.description = p.getDescription();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();
+        this.active = p.isActive();
         if (previousPrice != 0.0 && currentPrice < previousPrice){
             this.discount = "-" + String.valueOf((int) Math.floor(((this.previousPrice - this.currentPrice) / this.previousPrice) * 100)) + "%";
         }
@@ -54,7 +58,9 @@ public class ProductDTO {
         for (ShopStock s : p.getShopsStock()) {
             totalUnits += s.getStock();
         }
+        this.totalUnits = totalUnits;
         this.availableUnits = Math.max(0, totalUnits - p.getReservedUnits());
+        this.shopsWithStock = p.getShopsStock().size();
 
         //Total reviews and average rating
         double totalRating = 0.0;

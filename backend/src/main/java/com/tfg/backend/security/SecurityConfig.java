@@ -120,8 +120,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/products").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/products/*").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/active/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/active/").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/*/images").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*/images/*").hasAnyRole("MANAGER", "ADMIN")
+
 
                         // ReviewRestController
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyRole("USER")

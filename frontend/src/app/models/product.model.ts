@@ -8,9 +8,12 @@ export interface Product {
   description: string;
   previousPrice: number;
   currentPrice: number;
+  active: boolean;
   discount: string;
   categories: Category[];
+  totalUnits: number;
   availableUnits: number;
+  shopsWithStock: number;
   averageRating: number;
   totalReviews: number;
 }

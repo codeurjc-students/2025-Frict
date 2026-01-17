@@ -96,7 +96,7 @@ export class NavbarComponent implements OnInit {
 
 
   public adminItems = [
-    { label: 'Productos', icon: 'pi pi-desktop',   link: 'products' },
+    { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products' },
     { label: 'Pedidos',   icon: 'pi pi-box',       link: 'orders' },
     { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports' },
     { label: 'Reparto',   icon: 'pi pi-truck',     link: 'delivery' },

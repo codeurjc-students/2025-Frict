@@ -205,6 +205,28 @@ public class ProductRestController {
     }
 
 
+    @Operation(summary = "Toggle product global activation by ID")
+    @PostMapping("/active/{id}")
+    public ResponseEntity<ProductDTO> toggleGlobalActivation(@PathVariable Long id, @RequestParam boolean state) {
+        Product product = findProductHelper(id);
+        product.setActive(state);
+        Product savedProduct = productService.update(product);
+        return ResponseEntity.ok(new ProductDTO(savedProduct));
+    }
+
+
+    @Operation(summary = "Toggle all products global activation")
+    @PostMapping("/active/")
+    public ResponseEntity<Boolean> toggleAllGlobalActivations(@RequestParam boolean state) {
+        List<Product> products = productService.findAll();
+        for (Product product : products) {
+            product.setActive(state);
+        }
+        productService.saveAll(products);
+        return ResponseEntity.ok(state); //State all toggles should have in frontend
+    }
+
+
     @Operation(summary = "Add remote product image")
     @PostMapping("/{id}/images")
     public ResponseEntity<Product> uploadProductImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
