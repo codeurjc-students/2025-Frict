@@ -89,6 +89,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/recovery").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/auth/reset/*").hasRole("ADMIN")
 
                         // CategoryRestController
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/*").permitAll()

@@ -1,4 +1,4 @@
-import {AbstractControl, AsyncValidatorFn, ValidationErrors} from '@angular/forms';
+import {AbstractControl, AsyncValidatorFn, ValidationErrors, ValidatorFn} from '@angular/forms';
 import {UserService} from '../services/user.service';
 import {map, Observable, of, switchMap, timer} from 'rxjs';
 
@@ -46,4 +46,13 @@ export class CustomValidators {
       );
     };
   }
+
+  //Check if the passwords match
+  static passwordMatchValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
+    const password = group.get('password')?.value;
+    const repeatPassword = group.get('repeatPassword')?.value;
+
+    // Si no coinciden y ambos tienen valor, devolvemos error
+    return password === repeatPassword ? null : { mismatch: true };
+  };
 }

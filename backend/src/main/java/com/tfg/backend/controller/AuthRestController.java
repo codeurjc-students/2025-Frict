@@ -182,6 +182,37 @@ public class AuthRestController {
         return ResponseEntity.ok().build();
     }
 
+
+    @Operation(summary = "Reset an administration account password")
+    @PutMapping("/reset/{id}")
+    public ResponseEntity<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        String password = payload.get("password");
+        String repeatPassword = payload.get("repeatPassword");
+
+        if (password == null || repeatPassword == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missed required fields.");
+        }
+
+        if (!password.equals(repeatPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match.");
+        }
+
+        Optional<User> userOptional = userService.findById(id);
+
+        if (userOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
+        }
+        User user = userOptional.get();
+
+        if (user.getRoles().contains("USER")){
+            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "User password cannot be changed by other accounts.");
+        }
+
+        user.setEncodedPassword(passwordEncoder.encode(password));
+        userService.save(user);
+        return ResponseEntity.ok().build();
+    }
+
     private User findUserHelper(String username) {
         return this.userService.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user '" + username + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)

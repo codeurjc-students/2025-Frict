@@ -19,7 +19,6 @@ import {InputText} from 'primeng/inputtext';
 import {CustomValidators} from '../../../utils/customValidators.util';
 import {AuthService} from '../../../services/auth.service';
 import {Select} from 'primeng/select';
-import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-users-management',
@@ -46,8 +45,6 @@ export class UsersManagementComponent implements OnInit {
     { name: 'Conductor', code: 'DRIVER' },
     { name: 'Administrador', code: 'ADMIN' }
   ];
-
-  visibleNewInternalUserDialog: boolean = false;
 
   rawStats = signal<StatData[]>([]);
   options = signal<any>(null);
@@ -77,8 +74,13 @@ export class UsersManagementComponent implements OnInit {
     };
   });
 
+  visibleNewInternalUserDialog: boolean = false;
+  visibleChangePasswordDialog: boolean = false;
   newInternalUserForm: FormGroup;
-  showPassword = false;
+  changePasswordForm: FormGroup;
+  showPassword: boolean = false;
+  showNewPassword: boolean = false;
+  showNewPasswordConfirmation: boolean = false;
   selectedImage: File | null = null;
 
   constructor(private userService: UserService,
@@ -86,6 +88,11 @@ export class UsersManagementComponent implements OnInit {
               private fb: FormBuilder,
               private authService: AuthService,
               private messageService: MessageService,) {
+
+    this.changePasswordForm = this.fb.nonNullable.group({
+      password: ['', Validators.required],
+      repeatPassword: ['', Validators.required]
+    }, { validators: CustomValidators.passwordMatchValidator });
 
     this.newInternalUserForm = this.fb.nonNullable.group({
       name: ['', Validators.required],
@@ -105,28 +112,38 @@ export class UsersManagementComponent implements OnInit {
     this.loadStats();
   }
 
-  showNewInternalUserDialog() {
-    this.visibleNewInternalUserDialog = true;
-  }
-
   cancelUserCreation() {
     this.newInternalUserForm.reset();
     this.visibleNewInternalUserDialog = false;
   }
 
-  togglePassword() {
-    this.showPassword = !this.showPassword;
+  cancelChangePassword() {
+    this.changePasswordForm.reset();
+    this.visibleChangePasswordDialog = false;
   }
 
+  onChangePasswordSubmit(id: string){
+    console.log('Lo que voy a enviar al backend:', JSON.stringify(this.changePasswordForm.getRawValue(), null, 2));
+    this.authService.changeInternalUserPassword(id, this.changePasswordForm.value).subscribe({
+      next: () => {
+        this.cancelChangePassword();
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Contraseña del usuario ${this.selectedUser?.name} cambiada correctamente`});
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: `Ha ocurrido un error cambiando la contraseña del usuario ${this.selectedUser?.name}. Inténtalo de nuevo.` });
+      }
+    })
+  }
 
-  onSubmit() {
-    console.log('Lo que voy a enviar al backend:', JSON.stringify(this.newInternalUserForm.getRawValue(), null, 2));
+  onNewUserSubmit() {
     this.authService.signup(this.newInternalUserForm.value).subscribe({
       next: (loginInfo) => { //Backend returns some fields, one of them being the id of the user created
-        if (this.selectedImage) { this.uploadUserImage(loginInfo.id, this.selectedImage);}
+        if (this.selectedImage) {
+          this.uploadUserImage(loginInfo.id, this.selectedImage);
+        }
+        else this.loadUsers();
         this.cancelUserCreation();
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Usuario ${loginInfo.name} creado correctamente` });
-        this.loadUsers();
         this.loadStats();
       },
       error: () => {
@@ -139,6 +156,7 @@ export class UsersManagementComponent implements OnInit {
     this.userService.uploadUserImage(userId, selectedImage).subscribe({
       next: () => {
         this.selectedImage = null;
+        this.loadUsers();
       },
       error: () => {
         alert('Error subiendo la imagen.');
