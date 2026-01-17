@@ -83,6 +83,11 @@ export const routes: Routes = [
     canActivateChild: [routeGuard], // Users are blocked
     children: [
       // Admin-only components and routes
+      {
+        path: 'users',
+        loadComponent: () => import('./components/admin/users-management/users-management.component').then(m => m.UsersManagementComponent),
+        data: { roles: ['ADMIN'], title: 'Gestor de Usuarios', icon: 'admin', breadcrumb: 'Gestor de Usuarios' }
+      }
     ]
   },
 

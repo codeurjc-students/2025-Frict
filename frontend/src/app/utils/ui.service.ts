@@ -13,7 +13,8 @@ export class UiService {
   }
 
 
-  public readonly APP_NAME = 'MiTienda';
+  public readonly CLIENT_APP_NAME = 'MiTienda';
+  public readonly ADMIN_APP_NAME = 'Frict';
   public readonly APP_USER_LOGO = '/shopLogo.png';
   public readonly APP_ADMIN_LOGO = '/frictLogo.png';
   private readonly PREDEFINED_ICONS: Record<string, string> = {
@@ -24,7 +25,10 @@ export class UiService {
 
   // Update tab name
   setPageTitle(pageName: string) {
-    this.titleService.setTitle(`${pageName} - ${this.APP_NAME}`);
+    if(this.authService.isManager() || this.authService.isAdmin()){
+      this.titleService.setTitle(`${pageName} - ${this.ADMIN_APP_NAME}`);
+    }
+    else this.titleService.setTitle(`${pageName} - ${this.CLIENT_APP_NAME}`);
   }
 
   setTitle(fullTitle: string) {
@@ -60,7 +64,7 @@ export class UiService {
 
   //Reset
   resetDefault() {
-    this.setTitle(this.APP_NAME);
+    this.setTitle(this.CLIENT_APP_NAME);
     if(this.authService.isAdmin()){
       this.setFavicon(this.APP_ADMIN_LOGO);
     }

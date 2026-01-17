@@ -12,4 +12,10 @@ export interface User {
   cards: PaymentCard[];
   imageUrl: string;
   banned: boolean;
+  deleted: boolean;
+  logged: boolean;
+  lastConnection: string;
+
+  ordersCount: number;
+  favouriteProductsCount: number;
 }

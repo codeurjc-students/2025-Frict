@@ -1,16 +1,17 @@
-import {Component, Input} from '@angular/core';
+import {Component, computed, Input} from '@angular/core';
 import {RouterLink} from "@angular/router";
 import {Product} from '../../../models/product.model';
 import {NgIf} from '@angular/common';
 import {formatPrice, formatRating} from '../../../utils/numberFormat.util';
-import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
+import {Tag} from 'primeng/tag';
+import {getStockTagInfo} from '../../../utils/tagManager.util';
 
 @Component({
   selector: 'app-product-card',
   imports: [
     RouterLink,
     NgIf,
-    StockTagComponent
+    Tag
   ],
   templateUrl: './product-card.component.html',
   standalone: true,
@@ -21,6 +22,8 @@ export class ProductCardComponent {
   @Input() product!: Product;
 
   @Input() elementId: string = 'product';
+
+  stockStatus = computed(() => getStockTagInfo(this.product.availableUnits));
 
   protected readonly formatPrice = formatPrice;
   protected readonly formatRating = formatRating;

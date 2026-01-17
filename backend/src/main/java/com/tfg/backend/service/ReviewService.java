@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,6 +18,10 @@ public class ReviewService {
     private ReviewRepository reviewRepository;
 
     public Optional<Review> findById(Long id){ return reviewRepository.findById(id); }
+
+    public List<Review> findAllByUser(User u){
+        return reviewRepository.findAllByUser(u);
+    }
 
     public Page<Review> findAllByUser(User u, Pageable pageInfo){
         return reviewRepository.findAllByUser(u, pageInfo);

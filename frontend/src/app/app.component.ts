@@ -24,8 +24,7 @@ export class AppComponent implements OnInit {
     private uiService: UiService
   ) {
     effect(() => {
-      const isLoggedIn = this.authService.isLogged();
-      if (isLoggedIn) {
+      if (this.authService.isLogged() && this.authService.isUser()) {
         this.orderService.syncItemsCount();
       } else {
         this.orderService.setItemsCount(0);

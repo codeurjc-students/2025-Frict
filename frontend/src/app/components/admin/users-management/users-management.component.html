@@ -1,0 +1,296 @@
+<div class="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
+
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+    <div class="mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">Gestor de usuarios</h1>
+        <p class="text-slate-500">Administra las cuentas de los usuarios de la organización.</p>
+      </div>
+    </div>
+
+    <div class="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Acciones Globales</h2>
+      <div class="flex flex-wrap gap-3">
+        <p-button label="Nuevo Usuario" (click)="this.visibleNewInternalUserDialog = true" icon="pi pi-plus" styleClass="p-button-warning" rounded="true"></p-button>
+
+        <p-dialog [(visible)]="visibleNewInternalUserDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
+          <ng-template #headless>
+            <form [formGroup]="newInternalUserForm" (ngSubmit)="onNewUserSubmit()" class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+              <h4 class="font-bold mb-4">Crear nuevo usuario interno:</h4>
+              <div class="grid grid-cols-1 gap-4">
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre completo</label>
+                  <input pInputText placeholder="Nombre y apellidos" id="name" formControlName="name" class="w-full"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre de usuario</label>
+                  <input pInputText placeholder="Alias" id="username" formControlName="username" class="w-full md:col-span-2"
+                         [class.border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+                         [class.focus:border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
+                         [class.focus:ring-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"/>
+
+                  <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
+                    <span *ngIf="usernameControl?.hasError('usernameTaken')">El usuario ya existe.</span>
+                    <span *ngIf="usernameControl?.hasError('required')">Requerido.</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Correo electrónico</label>
+                  <input pInputText placeholder="Dirección de correo" id="email" formControlName="email" class="w-full md:col-span-2"
+                         [class.border-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"
+                         [class.focus:border-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"
+                         [class.focus:ring-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"/>
+
+                  <div *ngIf="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
+                    <span *ngIf="emailControl?.hasError('emailTaken')">El correo ya existe.</span>
+                    <span *ngIf="emailControl?.hasError('email')">Correo inválido.</span>
+                  </div>
+                </div>
+
+                <div class="relative">
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Contraseña</label>
+                  <input pInputText placeholder="Contraseña" id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password" class="w-full md:col-span-2" />
+                  <button type="button" (click)="this.showPassword = !this.showPassword;" class="absolute right-3 top-7.5 p-1 text-surface-400 hover:text-surface-600 transition-colors rounded-lg hover:bg-surface-200/50">
+                    <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                  </button>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Rol</label>
+                  <p-select formControlName="role" [options]="internalRoles" optionLabel="name" optionValue="code" placeholder="Selecciona un rol interno" class="w-full md:col-span-2" />
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-surface-600 mb-1 block">Imagen de perrfil (Opcional)</label>
+                  <input id="image" type="file" (change)="changeSelectedImage($event)" accept="image/jpeg"
+                         class="block w-full text-md text-surface-500
+                    file:mr-4 file:py-2.5 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-md file:font-bold
+                    file:bg-primary-500 file:text-white
+                    hover:file:bg-primary-600
+                    cursor-pointer rounded-lg border border-surface-200 focus:outline-none"/>
+                </div>
+              </div>
+              <div class="flex justify-end mt-4 gap-2">
+                <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelUserCreation()"></p-button>
+                <p-button label="Crear" styleClass="p-button-primary" type="submit" [disabled]="!newInternalUserForm.valid"></p-button>
+              </div>
+            </form>
+          </ng-template>
+        </p-dialog>
+
+        <div class="w-px h-10 bg-slate-200 mx-2 hidden md:block"></div>
+
+        <div class="flex-grow">
+          <p-button (onClick)="handleGlobalAction('Desbanear Todos')" label="Desbanear Todos" icon="pi pi-check-circle" severity="success" outlined="true" styleClass="mr-3" rounded="true"></p-button>
+          <p-button (onClick)="handleGlobalAction('Banear Todos')" label="Banear Todos" icon="pi pi-ban" severity="danger" outlined="true" rounded="true"></p-button>
+        </div>
+
+        <p-button (onClick)="confirmAction('Anonimizar Todos')" label="Anonimizar Todos" icon="pi pi-eraser" severity="secondary" outlined="true" styleClass="text-slate-600" rounded="true"></p-button>
+        <p-button (onClick)="confirmAction('Borrar Todos')" label="Borrar Todos" icon="pi pi-trash" severity="danger" rounded="true"></p-button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+      <div class="lg:col-span-1 flex flex-col gap-4">
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span class="block text-slate-500 text-sm">Totales</span>
+            <span class="text-2xl font-bold text-green-600">{{ getStatValue('Totales') }}</span>
+          </div>
+          <i class="pi pi-sign-in text-green-600/20 text-4xl"></i>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span class="block text-slate-500 text-sm">Baneados</span>
+            <span class="text-2xl font-bold text-red-600">{{ getStatValue('Baneados') }}</span>
+          </div>
+          <i class="pi pi-lock text-red-600/20 text-4xl"></i>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span class="block text-slate-500 text-sm">Anonimizados</span>
+            <span class="text-2xl font-bold text-cyan-600">{{ getStatValue('Anonimizados') }}</span>
+          </div>
+          <i class="pi pi-shield text-cyan-600/20 text-4xl"></i>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <span class="block text-slate-500 text-sm">Cuentas Internas</span>
+            <span class="text-2xl font-bold text-yellow-600">{{ getStatValue('Cuentas Internas') }}</span>
+          </div>
+          <i class="pi pi-wifi text-yellow-600/20 text-4xl"></i>
+        </div>
+      </div>
+
+      <div class="lg:col-span-3 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Distribución de usuarios</h3>
+        <div class="card flex justify-center">
+            <p-chart type="bar" [data]="data()" [options]="options()" class="w-full md:w-[40rem]" />
+        </div>
+      </div>
+    </div>
+
+    @if (selectedUser; as user) {
+      <div class="relative mb-8 bg-white border-l-4 border-cyan-500 rounded-r-2xl shadow-lg p-6">
+        <p-button (onClick)="clearSelection()" icon="pi pi-times" [text]="true" severity="secondary" pTooltip="Cerrar detalles" class="absolute top-0 left-0"></p-button>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div class="flex items-center gap-6">
+            <div class="relative ml-3">
+              <p-avatar [image]="user.imageUrl" shape="circle"
+                        [styleClass]="user.logged ? '!w-20 !h-20 ring-2 ring-green-500 ring-offset-2 ring-offset-white' : '!w-15 !h-15'">
+              </p-avatar>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                {{ user.name }}
+                <p-tag [severity]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).severity" [value]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).message" [icon]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).icon" [rounded]="true" styleClass="text-xs"></p-tag>
+              </h2>
+              <div class="flex flex-col lg:flex-row gap-4 text-slate-500 text-sm my-3">
+                <span class="flex items-center gap-1"><i class="pi pi-at"></i> {{ user.email }}</span>
+                <span class="flex items-center gap-1"><i class="pi pi-user"></i> {{ user.username }}</span>
+                <span class="flex items-center gap-1"><i class="pi pi-calendar"></i> Última vez: {{ user.lastConnection | date:'short' }}</span>
+              </div>
+              <div class="mt-3 flex gap-2">
+                <p-tag [value]="getUserRoleTagInfo(user.roles.at(0) ?? '').message" [severity]="getUserRoleTagInfo(user.roles.at(0) ?? '').severity" [icon]="getUserRoleTagInfo(user.roles.at(0) ?? '').icon" rounded="true"></p-tag>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end gap-2">
+            <div class="flex gap-2">
+              <p-button label="Ver Pedidos" icon="pi pi-shopping-cart" [disabled]="!user.roles.includes('USER')" [outlined]="true" size="small" styleClass="p-button-info"></p-button>
+              <p-button label="Ver Reseñas" icon="pi pi-star" [disabled]="!user.roles.includes('USER')" [outlined]="true" size="small" styleClass="p-button-help"></p-button>
+              <p-button label="Cambiar Contraseña" icon="pi pi-key" [disabled]="user.roles.includes('USER')" (click)="this.visibleChangePasswordDialog = true" [outlined]="true" severity="contrast" size="small"></p-button>
+
+              <p-dialog [(visible)]="visibleChangePasswordDialog" [modal]="true" styleClass="!border-0 !bg-transparent">
+                <ng-template #headless>
+                  <form [formGroup]="changePasswordForm" (ngSubmit)="onChangePasswordSubmit(user.id)" class="w-200 mt-2 p-6 bg-white border border-surface-200 rounded-xl">
+                    <h4 class="font-bold mb-4">Cambiar contraseña de usuario interno:</h4>
+                    <div class="grid grid-cols-1 gap-4">
+                      <div class="relative">
+                        <label class="text-sm font-medium text-surface-600 mb-1 block">Nueva contraseña</label>
+                        <input pInputText placeholder="Contraseña" id="password" [type]="showNewPassword ? 'text' : 'password'" formControlName="password" class="w-full"/>
+                        <button type="button" (click)="showNewPassword = !showNewPassword;" class="absolute right-3 top-7.5 p-1 text-surface-400 hover:text-surface-600 transition-colors rounded-lg hover:bg-surface-200/50">
+                          <i [class]="showNewPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                        </button>
+                      </div>
+                      <div class="relative">
+                        <label class="text-sm font-medium text-surface-600 mb-1 block">Repetir contraseña</label>
+                        <input pInputText placeholder="Repetir contraseña" id="repeatPassword" [type]="showNewPasswordConfirmation ? 'text' : 'password'" formControlName="repeatPassword" class="w-full"/>
+                        <button type="button" (click)="showNewPasswordConfirmation = !showNewPasswordConfirmation;" class="absolute right-3 top-7.5 p-1 text-surface-400 hover:text-surface-600 transition-colors rounded-lg hover:bg-surface-200/50">
+                          <i [class]="showNewPasswordConfirmation ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                        </button>
+                      </div>
+                      @if (changePasswordForm.hasError('mismatch') && changePasswordForm.get('repeatPassword')?.dirty) {
+                        <small class="text-red-500">
+                          Las contraseñas no coinciden.
+                        </small>
+                      }
+                    </div>
+                    <div class="flex justify-end mt-4 gap-2">
+                      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelChangePassword()"></p-button>
+                      <p-button label="Crear" styleClass="p-button-primary" type="submit" [disabled]="!changePasswordForm.valid"></p-button>
+                    </div>
+                  </form>
+                </ng-template>
+              </p-dialog>
+            </div>
+            <div class="flex gap-2 mt-2">
+              @if(!user.banned) {
+                <p-button (onClick)="handleUserAction('Banear Usuario')" [disabled]="user.roles.includes('ADMIN')" label="Banear Usuario" icon="pi pi-ban" severity="warn" size="small"></p-button>
+              } @else {
+                <p-button (onClick)="handleUserAction('Desbanear Usuario')" label="Desbanear Usuario" icon="pi pi-lock-open" severity="success" size="small"></p-button>
+              }
+              <p-button label="Anonimizar Usuario" (onClick)="handleUserAction('Anonimizar Usuario')" [disabled]="user.deleted || user.roles.includes('ADMIN')" icon="pi pi-eraser" severity="secondary" size="small"></p-button>
+              <p-button label="Borrar Usuario" (onClick)="handleUserAction('Borrar Usuario')" [disabled]="user.roles.includes('ADMIN')" icon="pi pi-trash" severity="danger" size="small"></p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <p-table #dt
+               [value]="usersPage.items"
+               [rowHover]="true"
+               selectionMode="single"
+               [(selection)]="selectedUser"
+               styleClass="p-datatable-sm"
+               responsiveLayout="scroll">
+
+        <ng-template #header>
+          <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
+            <th style="width: 3rem" class="pl-4">ID</th>
+            <th>Usuario</th>
+            <th>Roles</th>
+            <th>Estado</th>
+            <th>Pedidos / Reviews</th>
+            <th>Última Conexión</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-user>
+          <tr [pSelectableRow]="user" class="cursor-pointer transition-colors hover:bg-slate-50 text-slate-700 border-b border-slate-100 last:border-0">
+            <td class="font-mono text-slate-500 text-md pl-4">#{{ user.id }}</td>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <p-avatar [image]="user.imageUrl" shape="circle" styleClass="!w-10 !h-10"
+                            [style]="{'background-color': '#f1f5f9', 'color': '#475569', 'border': '1px solid #e2e8f0'}">
+                  </p-avatar>
+                  <span *ngIf="user.isOnline" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-medium text-slate-900 text-sm">{{ user.name }}</span>
+                  <span class="text-xs text-slate-500">{{ user.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="flex gap-1">
+                <p-tag [value]="getUserRoleTagInfo(user.roles.at(0) ?? '').message" [severity]="getUserRoleTagInfo(user.roles.at(0) ?? '').severity" [icon]="getUserRoleTagInfo(user.roles.at(0) ?? '').icon" rounded="true"></p-tag>
+              </div>
+            </td>
+            <td>
+                <p-tag [severity]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).severity" [value]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).message" [icon]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).icon" [rounded]="true" styleClass="text-xs"></p-tag>
+            </td>
+            <td>
+              <div class="flex gap-4 text-sm">
+          <span class="text-slate-600 font-semibold flex items-center gap-1.5" pTooltip="Pedidos">
+            <i class="pi pi-shopping-cart text-cyan-600"></i>{{ user.ordersCount }}
+          </span>
+                <span class="text-slate-600 font-semibold flex items-center gap-1.5" pTooltip="Reseñas">
+            <i class="pi pi-star text-yellow-600"></i>{{ user.favouriteProductsCount }}
+          </span>
+              </div>
+            </td>
+            <td class="text-sm text-slate-500">
+              {{ user.lastConnection | date:'dd/MM/yy HH:mm' }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="6" class="text-center p-4 text-slate-500">No se encontraron usuarios.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <p-paginator
+        (onPageChange)="onUsersPageChange($event)"
+        [first]="first"
+        [rows]="rows"
+        [totalRecords]="usersPage.totalItems"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [showCurrentPageReport]="true"
+        [dropdownAppendTo]="'body'"
+        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} usuarios"
+        styleClass="border-t border-slate-200 bg-slate-50 text-sm">
+      </p-paginator>
+    </div>
+  </div>
+</div>

@@ -20,4 +20,6 @@ public class OrderItemService {
     public Page<OrderItem> findUserCartItemsPage(Long id, Pageable pageable) { return orderItemRepository.findByUserIdAndOrderIsNull(id, pageable); }
 
     public List<OrderItem> findProductUnitsInCart(Long id) { return orderItemRepository.findByProductIdAndOrderIsNull(id); }
+
+    public void save(OrderItem item) { this.orderItemRepository.save(item); }
 }

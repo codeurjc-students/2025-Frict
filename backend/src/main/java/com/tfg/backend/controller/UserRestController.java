@@ -1,20 +1,17 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.AddressDTO;
-import com.tfg.backend.dto.PaymentCardDTO;
-import com.tfg.backend.dto.UserDTO;
-import com.tfg.backend.dto.UserLoginDTO;
-import com.tfg.backend.model.Address;
-import com.tfg.backend.model.ImageInfo;
-import com.tfg.backend.model.PaymentCard;
-import com.tfg.backend.model.User;
+import com.tfg.backend.dto.*;
+import com.tfg.backend.model.*;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.StatDataDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -56,6 +51,13 @@ public class UserRestController {
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
         return ResponseEntity.ok(new UserDTO(loggedUser));
+    }
+
+    @Operation(summary = "Get all users information")
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<UserDTO>> getAllUsers(Pageable pageable) {
+        Page<User> allUsers = userService.findAll(pageable);
+        return ResponseEntity.ok(toPageResponse(allUsers));
     }
 
 
@@ -95,32 +97,10 @@ public class UserRestController {
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
     @Operation(summary = "Anonymize logged user account")
     @DeleteMapping
-    public ResponseEntity<UserDTO> deleteLoggedUser(HttpServletRequest request) {
+    public ResponseEntity<UserDTO> anonymizeLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
-
-        //Erase and anonymize all user data but the name (in order to identify review creators)
-        String uniqueUuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-        loggedUser.setName("Usuario eliminado " + uniqueUuid);
-        loggedUser.setUsername("deleteduser_" + uniqueUuid);
-        loggedUser.setEncodedPassword(""); // Empty password, as it may contain sensible data
-        loggedUser.setOtpCode(null);
-        loggedUser.setOtpExpiration(null);
-        loggedUser.getRoles().clear(); // Unauthorized to access secured pages
-        loggedUser.setEmail("deleteduser_" + uniqueUuid + "@frictapp.com");
-        loggedUser.setPhone(null);
-        loggedUser.getAddresses().clear();
-        loggedUser.getCards().clear();
-
-        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().getS3Key().equals(GlobalDefaults.USER_IMAGE.getS3Key())) {
-            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-        }
-        loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
-
-        loggedUser.setDeleted(true); //Mark as deleted user
-        loggedUser.getAllOrderItems().removeIf(item -> item.getOrder() == null); //Clear cart items
-
-        User savedUser = userService.save(loggedUser);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        User anonymizedUser = userService.anonymizeUser(loggedUser);
+        return ResponseEntity.ok(new UserDTO(anonymizedUser));
     }
 
 
@@ -270,5 +250,120 @@ public class UserRestController {
     private User findLoggedUserHelper(HttpServletRequest request) {
         return this.userService.getLoggedUser(request)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
+    }
+
+    private PageResponse<UserDTO> toPageResponse(Page<User> users){
+        List<UserDTO> dtos = new ArrayList<>();
+        for (User u : users.getContent()) {
+            UserDTO dto = new UserDTO(u);
+            dtos.add(dto);
+        }
+        return new PageResponse<>(dtos, users.getTotalElements(), users.getNumber(), users.getTotalPages()-1, users.getSize());
+    }
+
+    //Reactive endpoints
+    @Operation(summary = "Check if a username is taken")
+    @GetMapping("/username")
+    public ResponseEntity<Boolean> checkUsername(@RequestParam String username) {
+        return ResponseEntity.ok(userService.isUsernameTaken(username));
+    }
+
+    @Operation(summary = "Check if an email is taken")
+    @GetMapping("/email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        return ResponseEntity.ok(userService.isEmailTaken(email));
+    }
+
+
+    //Ban / Anon / Delete endpoints
+    @Operation(summary = "Toggle all users ban (except admin)")
+    @PutMapping("/ban/")
+    public ResponseEntity<Boolean> toggleAllUsersBan(@RequestBody boolean banState){
+        List<User> allUsers = this.userService.findAll();
+        for (User u : allUsers) {
+            if (!u.getRoles().contains("ADMIN")){
+                u.setBanned(banState);
+            }
+        }
+        userService.saveAll(allUsers);
+        return ResponseEntity.ok(true);
+    }
+
+
+    @Operation(summary = "Unban user by ID")
+    @PutMapping("/ban/{id}")
+    public ResponseEntity<UserDTO> toggleUserBanById(@PathVariable Long id, @RequestBody boolean banState){
+        Optional<User> userOptional = userService.findById(id);
+        if(userOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
+        }
+        User user = userOptional.get();
+        user.setBanned(banState);
+        User savedUser = userService.save(user);
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+
+    @Operation(summary = "Anonymize all users (except admin)")
+    @PutMapping("/anon/")
+    public ResponseEntity<Boolean> anonAllUsers(){
+        List<User> allUsers = this.userService.findAll();
+        for (User u : allUsers) {
+            if (!u.getRoles().contains("ADMIN")){
+                User anonymizedUser = this.userService.anonymizeUser(u);
+                userService.save(anonymizedUser);
+            }
+        }
+        return ResponseEntity.ok(true);
+    }
+
+
+    @Operation(summary = "Anonymize user by ID")
+    @PutMapping("/anon/{id}")
+    public ResponseEntity<UserDTO> anonUserById(@PathVariable Long id){
+        Optional<User> userOptional = userService.findById(id);
+        if(userOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
+        }
+        User savedUser = userService.save(userService.anonymizeUser(userOptional.get()));
+        return ResponseEntity.ok(new UserDTO(savedUser));
+    }
+
+
+    @Operation(summary = "Delete all users (except admin)")
+    @DeleteMapping("/")
+    public ResponseEntity<Boolean> deleteAllUsers(){
+        List<User> allUsers = this.userService.findAll();
+        for (User u : allUsers) {
+            if (!u.getRoles().contains("ADMIN")){
+                userService.delete(u);
+            }
+        }
+        return ResponseEntity.ok(true);
+    }
+
+
+    @Operation(summary = "Delete user by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Boolean> deleteUserById(@PathVariable Long id){
+        Optional<User> userOptional = userService.findById(id);
+        if(userOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
+        }
+        userService.delete(userOptional.get());
+        return ResponseEntity.ok(true);
+    }
+
+
+    @Operation(summary = "Get users stats")
+    @GetMapping("/stats")
+    public ResponseEntity<List<StatDataDTO>> getUsersStats(){
+        List<StatDataDTO> stats = new ArrayList<>();
+        stats.add(new StatDataDTO("Totales", userService.count()));
+        stats.add(new StatDataDTO("Baneados", userService.countByIsBannedTrue()));
+        stats.add(new StatDataDTO("Anonimizados", userService.countByIsDeletedTrue()));
+        Long internalAccounts = userService.countByRole("ADMIN") + userService.countByRole("MANAGER") + userService.countByRole("DRIVER");
+        stats.add(new StatDataDTO("Cuentas Internas", internalAccounts));
+        return ResponseEntity.ok(stats);
     }
 }

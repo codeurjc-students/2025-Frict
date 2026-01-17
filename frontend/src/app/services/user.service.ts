@@ -1,9 +1,11 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {User} from '../models/user.model';
 import {PaymentCard} from '../models/paymentCard.model';
 import {Address} from '../models/address.model';
+import {PageResponse} from '../models/pageResponse.model';
+import {StatData} from '../utils/statData.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +26,14 @@ export class UserService {
     return this.http.get<User>(this.apiUrl + `/me`);
   }
 
-  public deleteLoggedUser(): Observable<User> {
+  public getAllUsers(page: number, size: number): Observable<PageResponse<User>> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<User>>(this.apiUrl + `/`, { params });
+  }
+
+  public anonLoggedUser(): Observable<User> {
     return this.http.delete<User>(this.apiUrl);
   }
 
@@ -57,4 +66,46 @@ export class UserService {
   public deletePaymentCard(id: string): Observable<User> {
     return this.http.delete<User>(this.apiUrl + `/cards/${id}`);
   }
+
+  //User Management component endpoints
+  public toggleAllBans(banState: boolean): Observable<boolean> {
+    return this.http.put<boolean>(this.apiUrl + `/ban/`, banState);
+  }
+
+  public toggleUserBan(id: string, banState: boolean): Observable<User> {
+    return this.http.put<User>(this.apiUrl + `/ban/${id}`, banState);
+  }
+
+  public anonAll(): Observable<boolean> {
+    return this.http.put<boolean>(this.apiUrl + `/anon/`, null);
+  }
+
+  public anonUser(id: string): Observable<User> {
+    return this.http.put<User>(this.apiUrl + `/anon/${id}`, null);
+  }
+
+  public deleteAll(): Observable<boolean> {
+    return this.http.delete<boolean>(this.apiUrl + `/`);
+  }
+
+  public deleteUser(id: string): Observable<boolean> {
+    return this.http.delete<boolean>(this.apiUrl + `/${id}`);
+  }
+
+  public getUsersStats(): Observable<StatData[]> {
+    return this.http.get<StatData[]>(this.apiUrl + `/stats`)
+  }
+
+  checkUsernameTaken(username: string): Observable<boolean> {
+    let params = new HttpParams();
+    params = params.append('username', username);
+    return this.http.get<boolean>(this.apiUrl + `/username`, { params });
+  }
+
+  checkEmailTaken(email: string): Observable<boolean> {
+    let params = new HttpParams();
+    params = params.append('email', email);
+    return this.http.get<boolean>(this.apiUrl + `/email`, { params });
+  }
+
 }

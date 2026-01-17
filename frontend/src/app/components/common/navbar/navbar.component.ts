@@ -100,7 +100,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Pedidos',   icon: 'pi pi-box',       link: 'orders' },
     { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports' },
     { label: 'Reparto',   icon: 'pi pi-truck',     link: 'delivery' },
-    { label: 'Usuarios',  icon: 'pi pi-users',     link: 'users' }
+    { label: 'Usuarios',  icon: 'pi pi-users',     link: '/admin/users' }
   ];
 
   // Settings for routerLinkActive to distinguish between query params

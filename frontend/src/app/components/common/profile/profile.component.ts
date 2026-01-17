@@ -17,15 +17,14 @@ import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
 import {Address} from '../../../models/address.model';
 import {PaymentCard} from '../../../models/paymentCard.model';
-import {Toast} from 'primeng/toast';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
-import {ConfirmDialog} from 'primeng/confirmdialog';
 import {AuthService} from '../../../services/auth.service';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Review} from '../../../models/review.model';
+import {formatPrice} from '../../../utils/numberFormat.util';
 
 @Component({
   selector: 'app-profile',
@@ -42,9 +41,7 @@ import {Review} from '../../../models/review.model';
     Paginator,
     Dialog,
     InputText,
-    Toast,
-    InputMask,
-    ConfirmDialog
+    InputMask
   ],
   templateUrl: './profile.component.html',
   styles: []
@@ -107,7 +104,7 @@ export class ProfileComponent implements OnInit {
 
       accept: () => {
         this.loading = true;
-        this.userService.deleteLoggedUser().subscribe({
+        this.userService.anonLoggedUser().subscribe({
           next: () => {
             this.logoutOnDelete();
           },
@@ -399,4 +396,6 @@ export class ProfileComponent implements OnInit {
     };
     return labels[status] || status;
   }
+
+  protected readonly formatPrice = formatPrice;
 }

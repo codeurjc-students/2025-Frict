@@ -1,9 +1,6 @@
 
 <app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
 
-<p-toast position="bottom-right"/>
-<p-confirmDialog></p-confirmDialog>
-
 <div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
   <section class="mt-6 mb-12 relative">
     <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 border border-surface-700">
@@ -396,7 +393,7 @@
 
             <div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto">
               <div class="text-right mr-4">
-                <p class="text-sm font-bold text-surface-900">{{ order.totalCost }}</p>
+                <p class="text-sm font-bold text-surface-900">{{ formatPrice(order.totalCost) }}</p>
                 <p class="text-xs text-surface-500">Total</p>
               </div>
 

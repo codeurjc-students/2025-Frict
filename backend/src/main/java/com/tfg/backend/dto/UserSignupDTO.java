@@ -10,14 +10,16 @@ public class UserSignupDTO {
     private String username;
     private String password;
     private String email;
+    private String role;
 
     public UserSignupDTO() {
     }
 
-    public UserSignupDTO(String name, String username, String password, String email) {
+    public UserSignupDTO(String name, String username, String password, String email, String role) {
         this.name = name;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.role = role;
     }
 }

@@ -3,14 +3,18 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
-import {NgOptimizedImage} from '@angular/common';
+import {NgIf, NgOptimizedImage} from '@angular/common';
+import {GoogleAuthComponent} from '../google-auth/google-auth.component';
+import {CustomValidators} from '../../../utils/customValidators.util';
 
 @Component({
   selector: 'app-signup',
   imports: [
     ReactiveFormsModule,
     RouterLink,
-    NgOptimizedImage
+    NgOptimizedImage,
+    GoogleAuthComponent,
+    NgIf
   ],
   templateUrl: './signup.component.html',
   standalone: true,
@@ -22,11 +26,18 @@ export class SignupComponent {
   showPassword = false;
   selectedImage: File | null = null;
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private userService: UserService, private router: Router) {
+  get usernameControl() { return this.registerForm.get('username'); }
+  get emailControl() { return this.registerForm.get('email'); }
+
+  constructor(private fb: FormBuilder,
+              private authService: AuthService,
+              private userService: UserService,
+              private router: Router) {
+
     this.registerForm = this.fb.nonNullable.group({
       name: ['', Validators.required],
-      username: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
+      username: ['', Validators.required, [CustomValidators.createUsernameValidator(this.userService)]],
+      email: ['', [Validators.required, Validators.email], [CustomValidators.createEmailValidator(this.userService)]],
       password: ['', Validators.required]
     });
   }
