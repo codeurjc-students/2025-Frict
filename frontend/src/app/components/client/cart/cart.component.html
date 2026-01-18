@@ -47,7 +47,7 @@
             <div class="flex flex-col sm:flex-row gap-5 relative z-10">
 
               <div class="w-full sm:w-32 h-32 bg-surface-50 rounded-xl border border-surface-100 flex items-center justify-center p-2 shrink-0">
-                <img [src]="item.product.imageUrls[0]" [alt]="item.product.name" class="w-full h-full object-contain mix-blend-multiply" />
+                <img [src]="item.product.imagesInfo[0].imageUrl" [alt]="item.product.name" class="w-full h-full object-contain mix-blend-multiply" />
               </div>
 
               <div class="flex-1 flex flex-col justify-between min-h-[128px]">
@@ -131,7 +131,7 @@
         <div *ngIf="foundProducts.totalItems > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div *ngFor="let product of foundProducts.items" class="bg-white p-4 rounded-xl border border-surface-200 flex gap-4 hover:border-surface-300 transition-all group">
             <div class="w-20 h-20 bg-surface-50 rounded-lg border border-surface-100 flex items-center justify-center shrink-0 p-1">
-              <img [src]="product.imageUrls[0]" [alt]="product.name" class="w-full h-full object-contain mix-blend-multiply" />
+              <img [src]="product.imagesInfo[0].imageUrl" [alt]="product.name" class="w-full h-full object-contain mix-blend-multiply" />
             </div>
             <div class="flex-1 flex flex-col justify-between">
               <div>

@@ -1,6 +1,7 @@
 package com.tfg.backend.dto;
 
 import com.tfg.backend.model.Category;
+import com.tfg.backend.model.ImageInfo;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +17,7 @@ public class CategoryDTO {
     private String bannerText;
     private String shortDescription;
     private String longDescription;
-    private String imageUrl;
+    private ImageInfo imageInfo;
     private Long parentId;
     private List<CategoryDTO> children = new ArrayList<>();
 
@@ -32,7 +33,7 @@ public class CategoryDTO {
         this.longDescription = c.getLongDescription();
 
         if (c.getCategoryImage() != null) {
-            this.imageUrl = c.getCategoryImage().getImageUrl();
+            this.imageInfo = c.getCategoryImage();
         }
 
         if(c.getParent() != null){

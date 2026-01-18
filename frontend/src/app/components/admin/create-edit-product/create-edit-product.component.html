@@ -9,8 +9,8 @@
         <p class="text-slate-500">Completa la información técnica y comercial del artículo.</p>
       </div>
       <div class="flex gap-3">
-        <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary" (onClick)="goBack()"></p-button>
-        <p-button label="Guardar Producto" icon="pi pi-check" severity="warn" (onClick)="onSubmit()"></p-button>
+        <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary" routerLink="/admin/products"></p-button>
+        <p-button label="Guardar Producto" icon="pi pi-check" severity="success" (onClick)="onSubmit()"></p-button>
       </div>
     </div>
 
@@ -36,7 +36,14 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label for="price" class="text-sm font-semibold text-slate-600">Precio de Venta</label>
+              <label for="price" class="text-sm font-semibold text-slate-600">
+                Precio actual
+                @if (product(); as p) {
+                  @if (p.previousPrice > 0) {
+                    (anterior: {{ formatPrice(p.previousPrice) }}, @if (p.discount !== '0%') { {{ p.discount }}})
+                  }
+                }
+              </label>
               <p-inputNumber id="price" formControlName="currentPrice" mode="currency" currency="EUR" locale="es-ES" placeholder="0,00 €" styleClass="w-full" [min]="0"></p-inputNumber>
             </div>
 
@@ -49,11 +56,9 @@
                 formControlName="selectedCategories"
                 display="chip"
                 [metaKeySelection]="false"
-                [propagateSelectionUp]="false"
-                (onNodeSelect)="onSelect($event)"
-                (onNodeUnselect)="onSelect($event)"
                 selectionMode="checkbox"
-                placeholder="Seleccionar categorías" />
+                placeholder="Seleccionar categorías"
+                (onNodeSelect)="printSelectedCategories()"/>
 
             </div>
           </div>
@@ -62,7 +67,7 @@
         <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Descripción Detallada</h2>
           <div class="flex flex-col gap-2">
-            <p-editor formControlName="text" [style]="{ height: '320px' }" />
+            <p-editor formControlName="description" [style]="{ height: '320px' }" />
             <small class="text-slate-400">Utiliza las herramientas de formato para estructurar la descripción del producto.</small>
           </div>
         </div>
@@ -78,52 +83,72 @@
             <p-toggleswitch formControlName="active"></p-toggleswitch>
           </div>
           <p class="text-xs text-slate-400 mt-2">
-            Si se desactiva, el producto dejará de ser visible para los clientes inmediatamente.
+            Si se desactiva, ninguna tienda podrá vender el producto aunque tenga stock.
           </p>
         </div>
 
         <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Galería de Imágenes</h2>
 
-          @if(existingImages().length > 0) {
-            <div class="mb-4">
-              <p class="text-sm font-semibold text-slate-600 mb-2">Imágenes actuales:</p>
-              <div class="grid grid-cols-2 gap-2">
-                @for(img of existingImages(); track $index) {
-                  <div class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
-                    <img [src]="img" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button type="button" (click)="removeExistingImage($index)" class="text-white hover:text-red-400 transition-colors">
-                        <i class="pi pi-trash text-xl"></i>
-                      </button>
-                    </div>
-                  </div>
-                }
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" *ngIf="existingImages().length > 0 || newImages().length > 0">
+
+            @for(img of existingImages(); track $index) {
+              <div class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
+                <img [src]="img.imageUrl" class="w-full h-full object-cover">
+                <span class="absolute top-1 left-1 bg-blue-500/80 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">Guardada</span>
+
+                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button type="button" (click)="removeExistingImage($index)" class="text-white hover:text-red-400 transition-colors">
+                    <i class="pi pi-trash text-xl"></i>
+                  </button>
+                </div>
               </div>
-            </div>
-          }
+            }
+
+            @for(imgInfo of newImages(); track $index) {
+              <div class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-square">
+                <img [src]="imgInfo.previewUrl" class="w-full h-full object-cover opacity-90">
+                <span class="absolute top-1 left-1 bg-green-500/90 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">Nueva</span>
+
+                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button type="button" (click)="removeNewImage($index)" class="text-white hover:text-red-400 transition-colors">
+                    <i class="pi pi-times-circle text-2xl"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
 
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-slate-600">Subir nuevas fotos</label>
+            <label class="text-sm font-semibold text-slate-600">Añadir más fotos</label>
+
             <p-fileupload
-              name="demo[]"
-              url="https://www.primefaces.org/cdn/api/upload.php"
-              (onUpload)="onUpload($event)"
+              mode="advanced"
               [multiple]="true"
               accept="image/*"
-              maxFileSize="1000000"
-              mode="advanced"
-              chooseLabel="Elegir"
-              uploadLabel="Subir"
-              cancelLabel="Cancelar"
+              [maxFileSize]=MAX_SIZE
+              [showUploadButton]="false"
+              [showCancelButton]="false"
+              invalidFileSizeMessageSummary="{0}: Tamaño de archivo inválido."
+              invalidFileSizeMessageDetail="El tamaño máximo permitido es de {0}."
+              chooseLabel="Seleccionar Fotos"
               chooseIcon="pi pi-images"
-              styleClass="w-full text-sm">
+              (onSelect)="onFileSelect($event)"
+              styleClass="w-full"
+              [auto]="false">
+
               <ng-template #content>
-                <div class="flex flex-col items-center justify-center py-4 text-slate-400" *ngIf="!existingImages().length">
-                  <i class="pi pi-cloud-upload text-4xl mb-2"></i>
-                  <p class="text-sm text-center">Arrastra imágenes aquí</p>
+                <div class="flex flex-col items-center justify-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer"
+                     *ngIf="newImages().length === 0">
+                  <i class="pi pi-cloud-upload text-4xl mb-2 text-slate-300"></i>
+                  <p class="text-sm font-medium">Arrastra imágenes o haz clic para seleccionar</p>
+                </div>
+                <div *ngIf="newImages().length > 0" class="py-4 text-center text-slate-400 text-sm">
+                  Sigue seleccionando para añadir más...
                 </div>
               </ng-template>
+
+              <ng-template #file></ng-template>
             </p-fileupload>
           </div>
         </div>

@@ -6,6 +6,8 @@ import {Product} from '../models/product.model';
 import {PageResponse} from '../models/pageResponse.model';
 import {ShopStock} from '../models/shopStock.model';
 import {ListResponse} from '../models/listResponse.model';
+import {ImageInfo} from '../models/imageInfo.model';
+import {LoginInfo} from '../models/loginInfo.model';
 
 @Injectable({
   providedIn: 'root'
@@ -116,5 +118,25 @@ export class ProductService {
     let params = new HttpParams();
     params = params.append('state', state);
     return this.http.post<Boolean>(this.apiUrl + `/active/`, null, { params });
+  }
+
+  public createProduct(productData: Product): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl, productData);
+  }
+
+  public updateProduct(id: string, productData: Product): Observable<Product> {
+    return this.http.put<Product>(this.apiUrl + `/${id}`, productData);
+  }
+
+  public updateProductImages(id: string, existingImages: any[], newImages: File[]): Observable<Product> {
+    const formData = new FormData();
+    const jsonPart = new Blob([JSON.stringify(existingImages)], { type: 'application/json' });
+    formData.append('existingImages', jsonPart);
+
+    if (newImages && newImages.length > 0) {
+      newImages.forEach(file => {formData.append('newImages', file);});
+    }
+
+    return this.http.post<Product>(this.apiUrl + `/${id}/images`, formData);
   }
 }

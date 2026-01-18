@@ -6,6 +6,7 @@ import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.StorageService;
+import com.tfg.backend.utils.GlobalDefaults;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,9 +100,7 @@ public class CategoryRestController {
         // B. Check if there is something to delete
         if (category.getCategoryImage() != null) {
             storageService.deleteFile(category.getCategoryImage().getS3Key());
-
-            // 2. Set embedded field to null -> JPA automatically updates image_url, s3_key,... colums to null in DB
-            category.setCategoryImage(null);
+            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE); //Set default category image
 
             // 3. Save changes
             return ResponseEntity.ok(categoryService.save(category));

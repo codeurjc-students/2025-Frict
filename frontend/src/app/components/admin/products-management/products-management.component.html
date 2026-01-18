@@ -94,8 +94,7 @@
             <td>
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
-                  <i *ngIf="!product.imageUrl" class="pi pi-image text-slate-400 text-xl"></i>
-                  <img *ngIf="product.imageUrl" [src]="product.imageUrl" class="w-full h-full object-cover">
+                  <img [src]="product.imagesInfo[0].imageUrl" class="w-full h-full object-cover">
                 </div>
                 <div class="flex flex-col">
                   <span class="font-bold text-slate-900 text-sm">{{ product.name }}</span>
@@ -132,7 +131,7 @@
             <td>
               <div class="flex gap-2 justify-end">
                 <p-button [routerLink]="['/product', product.id]" icon="pi pi-eye" [text]="true" [rounded]="true" severity="info" pTooltip="Ver Detalles"></p-button>
-                <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar"></p-button>
+                <p-button [routerLink]="['/admin/products/edit', product.id]" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar"></p-button>
                 <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar"></p-button>
               </div>
             </td>

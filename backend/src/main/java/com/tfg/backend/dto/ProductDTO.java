@@ -15,7 +15,7 @@ public class ProductDTO {
     private Long id;
     private String referenceCode;
     private String name;
-    private List<String> imageUrls = new ArrayList<>();
+    private List<ImageInfo> imagesInfo = new ArrayList<>();
     private String description;
     private double previousPrice;
     private double currentPrice;
@@ -36,7 +36,7 @@ public class ProductDTO {
         this.name = p.getName();
         this.referenceCode = p.getReferenceCode();
         for (ProductImageInfo image : p.getImages()) {
-            this.imageUrls.add(image.getImageUrl());
+            this.imagesInfo.add(new ImageInfo(image.getImageUrl(), image.getS3Key(), image.getFileName()));
         }
         this.description = p.getDescription();
         this.previousPrice = p.getPreviousPrice();

@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import {NgIf} from '@angular/common';
 import {FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule} from '@angular/forms';
-import {Router, ActivatedRoute} from '@angular/router';
+import {Router, ActivatedRoute, RouterLink} from '@angular/router';
 
 // PrimeNG Imports
 import {InputText} from 'primeng/inputtext';
@@ -13,8 +13,17 @@ import {ToggleSwitch} from 'primeng/toggleswitch';
 import {MessageService, TreeNode} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {CategoryService} from '../../../services/category.service';
-import {fixKeys, mapToTreeNodes} from '../../../utils/nodeMapper.util';
+import {fixKeys, mapToCategories, mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {TreeSelect} from 'primeng/treeselect';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {formatPrice} from '../../../utils/numberFormat.util';
+import {Product} from '../../../models/product.model';
+import {ImageInfo} from '../../../models/imageInfo.model';
+
+interface LocalImage {
+  file: File;
+  previewUrl: SafeUrl;
+}
 
 @Component({
   selector: 'app-create-edit-product',
@@ -29,7 +38,8 @@ import {TreeSelect} from 'primeng/treeselect';
     FileUpload,
     NgIf,
     TreeSelect,
-    FormsModule
+    FormsModule,
+    RouterLink
   ],
   templateUrl: './create-edit-product.component.html',
   styleUrl: 'create-edit-product.component.css'
@@ -41,9 +51,10 @@ export class CreateEditProductComponent implements OnInit {
               private messageService: MessageService,
               private route: ActivatedRoute,
               private productService: ProductService,
-              private categoryService: CategoryService) {
+              private categoryService: CategoryService,
+              private sanitizer: DomSanitizer) {
 
-    this.productForm = this.fb.nonNullable.group({
+    this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       currentPrice: [0, [Validators.required, Validators.min(0.01)]],
       description: ['', [Validators.required]],
@@ -55,8 +66,11 @@ export class CreateEditProductComponent implements OnInit {
 
 
   isEditMode = signal<boolean>(false);
-  existingImages = signal<string[]>([]);
+  product = signal<Product | null>(null);
+  existingImages = signal<ImageInfo[]>([]);
+  newImages = signal<LocalImage[]>([]);
 
+  protected readonly MAX_SIZE = 5000000;
   productForm: FormGroup;
   categories: TreeNode[] = [];
   selectedCategories: TreeNode[] = []
@@ -92,8 +106,10 @@ export class CreateEditProductComponent implements OnInit {
     this.productService.getProductById(id).subscribe({
       next: (product) => {
         this.selectedCategories = mapToTreeNodes(product.categories);
+        this.product.set(product);
         this.productForm.patchValue(product);
-        this.existingImages.set(product.imageUrls);
+        this.existingImages.set(product.imagesInfo);
+        console.log(product);
       },
       error: (err) => {
         console.error('Error al cargar el producto:', err);
@@ -112,19 +128,41 @@ export class CreateEditProductComponent implements OnInit {
     }
   }
 
-  onSelect(event: any) {
-    console.log(this.productForm.get('selectedCategories')?.value);
+  onFileSelect(event: any) {
+    const incomingFiles: File[] = Array.from(event.files || []);
+
+    const validFiles: File[] = [];
+
+    incomingFiles.forEach(file => {
+      if (file.size <= this.MAX_SIZE) {
+        validFiles.push(file);
+      }
+    });
+
+    // Process valid files only
+    if (validFiles.length > 0) {
+      const currentNewImages = this.newImages();
+      const processedFiles: LocalImage[] = validFiles.map(file => ({
+        file: file,
+        previewUrl: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file))
+      }));
+
+      this.newImages.set([...currentNewImages, ...processedFiles]);
+      console.log("Imágenes válidas añadidas:", validFiles.length);
+    }
   }
 
-  onUpload(event: any) {
-    // Aquí capturas los archivos NUEVOS subidos por el componente FileUpload
-    // En un escenario real, PrimeNG puede subirlos automáticamente o puedes usar (onSelect) para guardarlos en un array y enviarlos al final.
-    this.messageService.add({ severity: 'info', summary: 'Imagen cargada', detail: 'Archivo listo para enviar' });
+  removeNewImage(index: number) {
+    this.newImages.update(imgs => imgs.filter((_, i) => i !== index));
+  }
+
+  removeExistingImage(index: number) {
+    this.existingImages.update(imgs => imgs.filter((_, i) => i !== index));
   }
 
   onSubmit() {
     if (this.productForm.invalid) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Por favor completa los campos requeridos.' });
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Completa los campos requeridos.' });
       return;
     }
 
@@ -132,20 +170,59 @@ export class CreateEditProductComponent implements OnInit {
     console.log('Datos a enviar al Backend:', formValue);
     console.log('Descripción (HTML):', formValue.description);
 
-    // Lógica de guardado...
-    this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto guardado correctamente' });
+    if(this.isEditMode()){
+      const editingProduct = this.product();
+      if(editingProduct){
+        const formValue = this.productForm.getRawValue();
+        const productData: Product = {
+          ...formValue,
+          categories: mapToCategories(formValue.selectedCategories),
+          images: this.existingImages() // Añadimos las imágenes existentes que no se borraron
+        };
+        this.productService.updateProduct(editingProduct.id, productData).subscribe({
+          next: (product) => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Producto ${editingProduct.name} actualizado correctamente.` });
+            this.updateProductImages(product.id);
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido actualizar el producto ${editingProduct.name}.` });
 
-    setTimeout(() => {
-      this.goBack();
-    }, 1000);
+          }
+        })
+      }
+    }
+    else{
+      const formValue = this.productForm.getRawValue();
+      const productData: Product = {
+        ...formValue,
+        categories: mapToCategories(formValue.selectedCategories),
+        images: this.existingImages() // Añadimos las imágenes existentes que no se borraron
+      };
+      this.productService.createProduct(productData).subscribe({
+        next: (product) => {
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente.' });
+          this.updateProductImages(product.id);
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido crear el nuevo producto.` });
+
+        }
+      })
+    }
   }
 
-  goBack() {
-    this.router.navigate(['/admin/products']); // Ajusta la ruta según tu routing
+  updateProductImages(id: string){
+    this.productService.updateProductImages(id, this.existingImages(), this.newImages().map(img => img.file)).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Imágenes del producto ${this.product()?.name} actualizadas correctamente.` });
+        this.router.navigate(['/admin/products']);
+      }
+    })
   }
 
-  removeExistingImage(index: number) {
-    // Lógica para marcar imagen para borrar en backend
-    this.existingImages.update(imgs => imgs.filter((_, i) => i !== index));
+  printSelectedCategories(){
+    console.log(this.productForm.value);
   }
+
+  protected readonly formatPrice = formatPrice;
 }

@@ -165,9 +165,9 @@ export class ProductInfoComponent implements OnInit {
         next: (product) => {
           this.product = product;
 
-          if (product.imageUrls && Array.isArray(product.imageUrls)) {
-            this.images = product.imageUrls.map((imgUrl) => ({
-              itemImageSrc: imgUrl
+          if (product.imagesInfo && Array.isArray(product.imagesInfo)) {
+            this.images = product.imagesInfo.map((imgInfo) => ({
+              itemImageSrc: imgInfo.imageUrl
             }));
           } else {
             this.images = [];

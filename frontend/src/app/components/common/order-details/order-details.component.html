@@ -154,7 +154,7 @@
       <div *ngFor="let item of order.orderItems" class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-surface-100 last:border-0 last:pb-0">
 
         <div class="w-24 h-24 sm:w-32 sm:h-32 bg-surface-50 rounded-xl flex items-center justify-center p-2 border border-surface-100 shrink-0">
-          <img [src]="item.product.imageUrls && item.product.imageUrls.length > 0 ? item.product.imageUrls[0] : 'assets/placeholder.png'"
+          <img [src]="item.product.imagesInfo && item.product.imagesInfo.length > 0 ? item.product.imagesInfo[0].imageUrl : 'assets/placeholder.png'"
                [alt]="item.product.name"
                class="w-full h-full object-contain mix-blend-multiply">
         </div>

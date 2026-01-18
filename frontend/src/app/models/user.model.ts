@@ -1,5 +1,6 @@
 import {Address} from './address.model';
 import {PaymentCard} from './paymentCard.model';
+import {ImageInfo} from './imageInfo.model';
 
 export interface User {
   id: string;
@@ -10,7 +11,7 @@ export interface User {
   phone: string;
   addresses: Address[];
   cards: PaymentCard[];
-  imageUrl: string;
+  imageInfo: ImageInfo;
   banned: boolean;
   deleted: boolean;
   logged: boolean;

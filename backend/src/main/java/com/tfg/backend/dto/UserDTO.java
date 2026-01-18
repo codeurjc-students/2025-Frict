@@ -2,6 +2,7 @@ package com.tfg.backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tfg.backend.model.Address;
+import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.PaymentCard;
 import com.tfg.backend.model.User;
 import lombok.Getter;
@@ -23,7 +24,7 @@ public class UserDTO {
     private String phone;
     private List<AddressDTO> addresses = new ArrayList<>();
     private List<PaymentCardDTO> cards = new ArrayList<>();
-    private String imageUrl;
+    private ImageInfo imageInfo;
     private boolean banned;
     private boolean deleted;
     private boolean logged;
@@ -50,7 +51,7 @@ public class UserDTO {
         this.lastConnection = user.getLastConnection();
         this.roles = user.getRoles();
         this.id = user.getId();
-        this.imageUrl = user.getUserImage().getImageUrl();
+        this.imageInfo = user.getUserImage();
         for (Address address : user.getAddresses()) {
             this.addresses.add(new AddressDTO(address));
         }

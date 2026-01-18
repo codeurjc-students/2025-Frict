@@ -1,4 +1,5 @@
 import {TreeNode} from 'primeng/api';
+import {Category} from '../models/category.model';
 
 //Create an unselected category tree
 export function mapToTreeNodes(categories: any[], parentKey: string | null = null): TreeNode[] {
@@ -11,6 +12,27 @@ export function mapToTreeNodes(categories: any[], parentKey: string | null = nul
       children: cat.children ? mapToTreeNodes(cat.children, currentKey) : [],
     };
   });
+}
+
+//Create a category object list from tree nodes (valuable fields: id and name only)
+export function mapToCategories(nodes: TreeNode[], parentId: string = ''): Category[] {
+  if (!nodes) return [];
+
+  const result = nodes.map(node => ({
+    id: String(node.data),
+    name: node.label || '',
+    parentId: parentId,
+    children: mapToCategories(node.children || [], String(node.data)),
+
+    // Boilerplate in order to fit to interface
+    icon: '',
+    bannerText: '',
+    shortDescription: '',
+    longDescription: '',
+    imageInfo: { id: 0, imageUrl: '', s3Key: '', fileName: '' } as any
+  }));
+  console.log(result);
+  return result;
 }
 
 //Mark selected categories in category tree from backend data

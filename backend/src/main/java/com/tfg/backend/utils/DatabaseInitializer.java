@@ -371,12 +371,7 @@ public class DatabaseInitializer {
         products.add(p30);
 
         for (Product p : products) {
-            ProductImageInfo pImage = new ProductImageInfo(
-                    GlobalDefaults.PRODUCT_IMAGE.getImageUrl(),
-                    GlobalDefaults.PRODUCT_IMAGE.getS3Key(),
-                    GlobalDefaults.PRODUCT_IMAGE.getFileName(),
-                    p
-            );
+            ProductImageInfo pImage = new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, p);
             p.getImages().add(pImage);
             productRepository.save(p);
         }
