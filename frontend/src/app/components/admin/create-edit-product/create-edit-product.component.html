@@ -1,0 +1,135 @@
+<div class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+
+    <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">
+          {{ isEditMode() ? 'Editar Producto' : 'Nuevo Producto' }}
+        </h1>
+        <p class="text-slate-500">Completa la información técnica y comercial del artículo.</p>
+      </div>
+      <div class="flex gap-3">
+        <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary" (onClick)="goBack()"></p-button>
+        <p-button label="Guardar Producto" icon="pi pi-check" severity="warn" (onClick)="onSubmit()"></p-button>
+      </div>
+    </div>
+
+    <form [formGroup]="productForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2 md:col-span-2">
+              <label for="name" class="text-sm font-semibold text-slate-600">Nombre del Producto</label>
+              <input pInputText id="name" formControlName="name" placeholder="Ej: Laptop Gamer X500" class="w-full" />
+              <small class="text-red-500" *ngIf="productForm.get('name')?.invalid && productForm.get('name')?.touched">
+                El nombre es obligatorio (min 3 caracteres).
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="ref" class="text-sm font-semibold text-slate-600">Código Referencia</label>
+              <input pInputText id="ref" formControlName="referenceCode" placeholder="Generado automáticamente" class="w-full bg-slate-100 text-slate-500" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="price" class="text-sm font-semibold text-slate-600">Precio de Venta</label>
+              <p-inputNumber id="price" formControlName="currentPrice" mode="currency" currency="EUR" locale="es-ES" placeholder="0,00 €" styleClass="w-full" [min]="0"></p-inputNumber>
+            </div>
+
+            <div class="flex flex-col gap-2 md:col-span-2">
+              <label class="text-sm font-semibold text-slate-600">Categorías</label>
+
+              <p-treeSelect
+                containerStyleClass="w-full"
+                [options]="categories"
+                formControlName="selectedCategories"
+                display="chip"
+                [metaKeySelection]="false"
+                [propagateSelectionUp]="false"
+                (onNodeSelect)="onSelect($event)"
+                (onNodeUnselect)="onSelect($event)"
+                selectionMode="checkbox"
+                placeholder="Seleccionar categorías" />
+
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Descripción Detallada</h2>
+          <div class="flex flex-col gap-2">
+            <p-editor formControlName="text" [style]="{ height: '320px' }" />
+            <small class="text-slate-400">Utiliza las herramientas de formato para estructurar la descripción del producto.</small>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Visibilidad</h2>
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <span class="text-slate-700 font-medium">Disponible para tiendas</span>
+            <p-toggleswitch formControlName="active"></p-toggleswitch>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">
+            Si se desactiva, el producto dejará de ser visible para los clientes inmediatamente.
+          </p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Galería de Imágenes</h2>
+
+          @if(existingImages().length > 0) {
+            <div class="mb-4">
+              <p class="text-sm font-semibold text-slate-600 mb-2">Imágenes actuales:</p>
+              <div class="grid grid-cols-2 gap-2">
+                @for(img of existingImages(); track $index) {
+                  <div class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
+                    <img [src]="img" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button type="button" (click)="removeExistingImage($index)" class="text-white hover:text-red-400 transition-colors">
+                        <i class="pi pi-trash text-xl"></i>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-slate-600">Subir nuevas fotos</label>
+            <p-fileupload
+              name="demo[]"
+              url="https://www.primefaces.org/cdn/api/upload.php"
+              (onUpload)="onUpload($event)"
+              [multiple]="true"
+              accept="image/*"
+              maxFileSize="1000000"
+              mode="advanced"
+              chooseLabel="Elegir"
+              uploadLabel="Subir"
+              cancelLabel="Cancelar"
+              chooseIcon="pi pi-images"
+              styleClass="w-full text-sm">
+              <ng-template #content>
+                <div class="flex flex-col items-center justify-center py-4 text-slate-400" *ngIf="!existingImages().length">
+                  <i class="pi pi-cloud-upload text-4xl mb-2"></i>
+                  <p class="text-sm text-center">Arrastra imágenes aquí</p>
+                </div>
+              </ng-template>
+            </p-fileupload>
+          </div>
+        </div>
+
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -13,6 +13,7 @@ import {PrimeTemplate, TreeNode} from 'primeng/api';
 import {Tree} from 'primeng/tree';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
+import {mapToTreeNodes} from '../../../utils/nodeMapper.util';
 
 interface SortOption {
   name: string;
@@ -74,7 +75,7 @@ export class SearchComponent implements OnInit {
     this.categoryService.getAllCategories().subscribe({
       next: (response) => {
         const rawCategories = response || [];
-        this.categories = this.mapToTreeNodes(rawCategories);
+        this.categories = mapToTreeNodes(rawCategories);
 
         this.route.queryParamMap.subscribe(params => {
           this.syncStateWithUrl(params);
@@ -84,19 +85,6 @@ export class SearchComponent implements OnInit {
         console.error('Error cargando categorías', err);
         this.route.queryParamMap.subscribe(params => this.syncStateWithUrl(params));
       }
-    });
-  }
-
-
-  private mapToTreeNodes(categories: any[], parentKey: string | null = null): TreeNode[] {
-    return categories.map((cat, index) => {
-      const currentKey = parentKey !== null ? `${parentKey}-${index}` : `${index}`;
-      return {
-        key: currentKey,
-        label: cat.name,
-        data: cat.id,
-        children: cat.children ? this.mapToTreeNodes(cat.children, currentKey) : [],
-      };
     });
   }
 

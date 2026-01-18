@@ -92,6 +92,16 @@ export const routes: Routes = [
         path: 'products',
         loadComponent: () => import('./components/admin/products-management/products-management.component').then(m => m.ProductsManagementComponent),
         data: { roles: ['ADMIN'], title: 'Gestor de Productos', icon: 'admin', breadcrumb: 'Gestor de Productos' }
+      },
+      {
+        path: 'products/new',
+        loadComponent: () => import('./components/admin/create-edit-product/create-edit-product.component').then(m => m.CreateEditProductComponent),
+        data: { roles: ['ADMIN'], title: 'Nuevo producto', icon: 'admin', breadcrumb: 'Nuevo Producto' }
+      },
+      {
+        path: 'products/edit/:id',
+        loadComponent: () => import('./components/admin/create-edit-product/create-edit-product.component').then(m => m.CreateEditProductComponent),
+        data: { roles: ['ADMIN'], title: 'Editar producto', icon: 'admin', breadcrumb: 'Editar Producto' }
       }
     ]
   },

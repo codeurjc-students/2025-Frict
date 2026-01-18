@@ -32,7 +32,7 @@ public class CategoryRestController {
     private StorageService storageService;
 
 
-    @Operation(summary = "Get all categories (paged)")
+    @Operation(summary = "Get all categories (listed)")
     @GetMapping("/")
     public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
         List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
