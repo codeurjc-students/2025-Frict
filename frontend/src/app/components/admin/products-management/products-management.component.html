@@ -1,5 +1,4 @@
 <div class="min-h-screen bg-slate-50 font-sans text-slate-800">
-
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -104,21 +103,17 @@
             </td>
 
             <td>
-              <span class="font-medium text-slate-800">{{ formatPrice(product.currentPrice) }}</span>
+              @for (c of product.categories; track c.id){
+                <p-tag severity="info" [value]="c.name" [icon]="c.icon.length > 0 ? c.icon : 'pi pi-tag'" [rounded]="true" styleClass="mx-1"></p-tag>
+              }
             </td>
 
             <td>
               <span class="font-medium text-slate-800">{{ formatPrice(product.currentPrice) }}</span>
             </td>
 
-            <td class="text-center">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      [ngClass]="{
-                        'bg-green-100 text-green-800': product.totalUnits > 10,
-                        'bg-red-100 text-red-800': product.totalUnits <= 10
-                      }">
-                    {{ product.totalUnits }} unidades
-                </span>
+            <td class="text-center text-sm">
+              <p-tag [severity]="product.totalUnits > 5 ? 'success' : 'danger'" [value]="product.totalUnits +  ' unidades'" icon="pi pi-box" [rounded]="true" styleClass="mx-1"></p-tag>
             </td>
 
             <td>

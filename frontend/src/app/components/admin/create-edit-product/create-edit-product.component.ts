@@ -3,7 +3,6 @@ import {NgIf} from '@angular/common';
 import {FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule} from '@angular/forms';
 import {Router, ActivatedRoute, RouterLink} from '@angular/router';
 
-// PrimeNG Imports
 import {InputText} from 'primeng/inputtext';
 import {InputNumber} from 'primeng/inputnumber';
 import {Button} from 'primeng/button';
@@ -19,6 +18,8 @@ import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {formatPrice} from '../../../utils/numberFormat.util';
 import {Product} from '../../../models/product.model';
 import {ImageInfo} from '../../../models/imageInfo.model';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {forkJoin} from 'rxjs';
 
 interface LocalImage {
   file: File;
@@ -39,7 +40,8 @@ interface LocalImage {
     NgIf,
     TreeSelect,
     FormsModule,
-    RouterLink
+    RouterLink,
+    LoadingScreenComponent
   ],
   templateUrl: './create-edit-product.component.html',
   styleUrl: 'create-edit-product.component.css'
@@ -64,8 +66,7 @@ export class CreateEditProductComponent implements OnInit {
     });
   }
 
-
-  isEditMode = signal<boolean>(false);
+  productId = signal<string | null>(null);
   product = signal<Product | null>(null);
   existingImages = signal<ImageInfo[]>([]);
   newImages = signal<LocalImage[]>([]);
@@ -75,47 +76,62 @@ export class CreateEditProductComponent implements OnInit {
   categories: TreeNode[] = [];
   selectedCategories: TreeNode[] = []
 
+  loading: boolean = true;
+  error: boolean = false;
 
   ngOnInit() {
-    const productId = this.route.snapshot.paramMap.get('id');
-    if (productId) {
-      this.isEditMode.set(true);
-      this.loadProductData(productId);
+    this.productId.set(this.route.snapshot.paramMap.get('id'));
+    this.loadData();
+  }
+
+  loadData(){
+    const productId = this.productId();
+    if (productId){
+      forkJoin({
+        list: this.categoryService.getAllCategories(),
+        product: this.productService.getProductById(productId)
+      }).subscribe({
+        next: ({ list, product }) => {
+          const rawCategories = list || [];
+          this.categories = mapToTreeNodes(rawCategories);
+          this.selectedCategories = mapToTreeNodes(product.categories);
+          this.product.set(product);
+          this.productForm.patchValue(product);
+          this.existingImages.set(product.imagesInfo);
+
+          if (this.categories.length > 0 && this.selectedCategories.length > 0){
+            this.productForm.patchValue({ selectedCategories: fixKeys(this.selectedCategories, this.categories) });
+          }
+          //this.disableParents(this.categories);
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.error = true;
+        }
+      })
     }
-    this.loadCategories();
-  }
-
-  loadCategories(){
-    this.categoryService.getAllCategories().subscribe({
-      next: (list) => {
-        const rawCategories = list || [];
-        this.categories = mapToTreeNodes(rawCategories);
-        this.assignSelectedCategories();
-        //this.disableParents(this.categories);
-      }
-    })
-  }
-
-  assignSelectedCategories(){
-    if (this.categories.length > 0 && this.selectedCategories.length > 0){
-      this.productForm.patchValue({ selectedCategories: fixKeys(this.selectedCategories, this.categories) });
+    else {
+      this.categoryService.getAllCategories().subscribe({
+        next: (list) => {
+          const rawCategories = list || [];
+          this.categories = mapToTreeNodes(rawCategories);
+          if (this.categories.length > 0 && this.selectedCategories.length > 0){
+            this.productForm.patchValue({ selectedCategories: fixKeys(this.selectedCategories, this.categories) });
+          }
+          //this.disableParents(this.categories);
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.error = true;
+        }
+      })
     }
   }
 
-  loadProductData(id: string) {
-    this.productService.getProductById(id).subscribe({
-      next: (product) => {
-        this.selectedCategories = mapToTreeNodes(product.categories);
-        this.product.set(product);
-        this.productForm.patchValue(product);
-        this.existingImages.set(product.imagesInfo);
-        console.log(product);
-      },
-      error: (err) => {
-        console.error('Error al cargar el producto:', err);
-      }
-    });
-  }
+
+
 
   private disableParents(nodes: TreeNode[]) {
     for (const node of nodes) {
@@ -170,7 +186,7 @@ export class CreateEditProductComponent implements OnInit {
     console.log('Datos a enviar al Backend:', formValue);
     console.log('Descripción (HTML):', formValue.description);
 
-    if(this.isEditMode()){
+    if(this.productId()){
       const editingProduct = this.product();
       if(editingProduct){
         const formValue = this.productForm.getRawValue();

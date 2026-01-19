@@ -1,10 +1,14 @@
-<div class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
 
     <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-bold text-yellow-600">
-          {{ isEditMode() ? 'Editar Producto' : 'Nuevo Producto' }}
+          {{ productId() ? 'Editar Producto' : 'Nuevo Producto' }}
         </h1>
         <p class="text-slate-500">Completa la información técnica y comercial del artículo.</p>
       </div>

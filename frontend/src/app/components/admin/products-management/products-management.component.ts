@@ -14,13 +14,15 @@ import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/numberFormat.util';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
+import {Tag} from 'primeng/tag';
+import {getUserStatusTagInfo} from '../../../utils/tagManager.util';
 
 
 @Component({
   selector: 'app-products-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select,
+    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag,
   ],
   templateUrl: './products-management.component.html',
   styles: [`:host { display: block; }`]
@@ -103,6 +105,7 @@ export class ProductsManagementComponent implements OnInit {
     this.productService.getAllProducts(this.first/this.rows, this.rows).subscribe({
       next: (products) => {
         this.productsPage = products;
+        this.chartProductSelector.set(this.productsPage.items[0]);
         this.initCharts();
       },
       error: () => {
@@ -113,7 +116,7 @@ export class ProductsManagementComponent implements OnInit {
   private initCharts() {
     const documentStyle = getComputedStyle(document.documentElement);
     const textColor = documentStyle.getPropertyValue('--text-color') || '#334155';
-    const topStockProducts = this.productsPage.items.slice(0, 5);
+    const topStockProducts = this.productsPage.items; //.slice(0, 5);
 
     this.pieData.set({
       labels: topStockProducts.map(p => p.name),
@@ -128,7 +131,14 @@ export class ProductsManagementComponent implements OnInit {
 
     this.pieOptions.set({
       plugins: {
-        legend: { labels: { usePointStyle: true, color: textColor } }
+        legend: {
+          display: topStockProducts.length <= 10,
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            color: textColor
+          }
+        }
       }
     });
 
@@ -170,4 +180,5 @@ export class ProductsManagementComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
+  protected readonly getUserStatusTagInfo = getUserStatusTagInfo;
 }

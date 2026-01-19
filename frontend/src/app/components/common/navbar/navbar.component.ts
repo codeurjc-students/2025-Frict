@@ -1,5 +1,4 @@
 import {Component, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
-import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {Button} from 'primeng/button';
@@ -26,7 +25,6 @@ interface CategoryUI {
   selector: 'app-navbar',
   standalone: true,
   imports: [
-    FontAwesomeModule,
     RouterLink,
     RouterLinkActive,
     NgIf,
