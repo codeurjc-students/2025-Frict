@@ -95,7 +95,17 @@ public class OrderRestController {
 
         //Find cart items
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
-        Order newOrder = new Order(loggedUser, cartItems, addressOptional.get(), cardOptional.get());
+
+        //Set the snapshot fields for later order details queries
+        for (OrderItem i : cartItems) {
+            i.setProductName(i.getProduct().getName());
+            i.setProductImageUrl(i.getProduct().getImages().getFirst().getImageUrl());
+            i.setProductPrice(i.getProduct().getCurrentPrice());
+            i.setProduct(null); //This order item no longer depends on the current product
+        }
+        List<OrderItem> savedItems = orderItemService.saveAll(cartItems);
+
+        Order newOrder = new Order(loggedUser, savedItems, addressOptional.get(), cardOptional.get());
 
         newOrder.setFullSendingAddress(addressOptional.get().toString());
         PaymentCard card = cardOptional.get();

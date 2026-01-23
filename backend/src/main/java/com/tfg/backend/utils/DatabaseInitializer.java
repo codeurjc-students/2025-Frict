@@ -411,7 +411,7 @@ public class DatabaseInitializer {
 
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAllWithImages();
 
         if (user1 == null || user2 == null || products.isEmpty()) {
             log.error("CANNOT INIT ORDERS: Users or Products missing in DB.");

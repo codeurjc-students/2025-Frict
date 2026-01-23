@@ -57,7 +57,7 @@ public class Product {
     private Set<User> usersAsFavourite = new HashSet<>();
 
     //Controlled by the intermediate entities OrderItem and ShopStock
-    //Not Cascade.ALL, as it deletes all previous user's orders registries too
+    //Only in cart items are deleted with product deletion
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 

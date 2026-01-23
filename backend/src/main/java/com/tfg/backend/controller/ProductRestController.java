@@ -2,10 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
-import com.tfg.backend.service.CategoryService;
-import com.tfg.backend.service.ProductService;
-import com.tfg.backend.service.StorageService;
-import com.tfg.backend.service.UserService;
+import com.tfg.backend.service.*;
 import com.tfg.backend.utils.GlobalDefaults;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +39,8 @@ public class ProductRestController {
 
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private OrderItemService orderItemService;
 
 
     @Operation(summary = "Get all products (paged)")
@@ -200,6 +199,12 @@ public class ProductRestController {
         //Delete the Product entities, as OrderItem entities will have a product snapshot with all necessary information
         //Remove the relations not marked as CascadeType.ALL in Product
         product.getCategories().clear();
+
+        List<OrderItem> items = orderItemService.findByProductIdAndOrderIsNotNull(product.getId());
+        for (OrderItem item : items) {
+            item.setProduct(null); //Unlink order items from the deleting product to be able to delete it. In case of cart items (null order), they will be deleted on cascade.
+        }
+        orderItemService.saveAll(items);
 
         productService.deleteById(id);
         return ResponseEntity.ok(new ProductDTO(product));

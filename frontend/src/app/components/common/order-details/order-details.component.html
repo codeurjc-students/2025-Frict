@@ -1,7 +1,9 @@
 
-<app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información del pedido..."></app-loading-screen>
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
 
-<div *ngIf="!loading && order" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
+<div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
 
   <div class="mt-6 mb-4">
     <a routerLink="/profile" class="inline-flex items-center gap-2 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer font-bold text-sm">
@@ -154,19 +156,14 @@
       <div *ngFor="let item of order.orderItems" class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-surface-100 last:border-0 last:pb-0">
 
         <div class="w-24 h-24 sm:w-32 sm:h-32 bg-surface-50 rounded-xl flex items-center justify-center p-2 border border-surface-100 shrink-0">
-          <img [src]="item.product.imagesInfo && item.product.imagesInfo.length > 0 ? item.product.imagesInfo[0].imageUrl : 'assets/placeholder.png'"
-               [alt]="item.product.name"
-               class="w-full h-full object-contain mix-blend-multiply">
+          <img [src]="item.productImageUrl" [alt]="item.productName" class="w-full h-full object-contain mix-blend-multiply">
         </div>
 
         <div class="flex-1 text-center sm:text-left w-full">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
             <div>
-              <span class="text-xs text-primary-500 font-bold uppercase tracking-wider" *ngIf="item.product.categories && item.product.categories.length > 0">
-                {{ item.product.categories[0].name }}
-              </span>
-              <h4 [routerLink]="['/product', item.product.id]" class="text-lg font-bold text-surface-900 hover:text-primary-600 cursor-pointer transition-colors">
-                {{ item.product.name }}
+              <h4 [routerLink]="['/product', item.product?.id ?? 0]" class="text-lg font-bold text-surface-900 hover:text-primary-600 cursor-pointer transition-colors">
+                {{ item.productName }}
               </h4>
             </div>
             <div class="hidden sm:block text-right">
