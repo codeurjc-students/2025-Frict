@@ -19,6 +19,7 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order = null; //Initially, this orderItem will belong to a user's cart
 
+    //Necessary, as it is required by Cart Component to show the current product information
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;

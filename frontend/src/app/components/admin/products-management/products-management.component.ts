@@ -16,6 +16,7 @@ import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {Tag} from 'primeng/tag';
 import {getUserStatusTagInfo} from '../../../utils/tagManager.util';
+import {ConfirmationService, MessageService} from 'primeng/api';
 
 
 @Component({
@@ -25,7 +26,7 @@ import {getUserStatusTagInfo} from '../../../utils/tagManager.util';
     CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag,
   ],
   templateUrl: './products-management.component.html',
-  styles: [`:host { display: block; }`]
+  styleUrl: 'products-management.component.css'
 })
 export class ProductsManagementComponent implements OnInit {
 
@@ -48,7 +49,40 @@ export class ProductsManagementComponent implements OnInit {
   // Sales chart selector
   chartProductSelector = signal<Product | null>(null);
 
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService,
+              private confirmationService: ConfirmationService,
+              private messageService: MessageService) {}
+
+  confirmDelete(event: Event, id: string) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: 'Se eliminarán del sistema la información del producto, su stock y reseñas publicadas.',
+      header: 'Borrar producto',
+      closable: true,
+      closeOnEscape: true,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonProps: {
+        label: 'Cancel',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Save',
+        severity: 'danger',
+      },
+      accept: () => {
+        this.productService.deleteProduct(id).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Se ha borrado el producto correctamente.' });
+            this.loadProducts();
+          },
+          error: () => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error borrando el producto.' });
+          }
+        })
+      }
+    });
+  }
 
   ngOnInit() {
     this.loadProducts();

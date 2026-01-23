@@ -58,7 +58,7 @@ public class Product {
 
     //Controlled by the intermediate entities OrderItem and ShopStock
     //Not Cascade.ALL, as it deletes all previous user's orders registries too
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

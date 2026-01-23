@@ -128,6 +128,10 @@ export class ProductService {
     return this.http.put<Product>(this.apiUrl + `/${id}`, productData);
   }
 
+  public deleteProduct(id: string): Observable<Product> {
+    return this.http.delete<Product>(this.apiUrl + `/${id}`);
+  }
+
   public updateProductImages(id: string, existingImages: any[], newImages: File[]): Observable<Product> {
     const formData = new FormData();
     const jsonPart = new Blob([JSON.stringify(existingImages)], { type: 'application/json' });
@@ -139,4 +143,5 @@ export class ProductService {
 
     return this.http.post<Product>(this.apiUrl + `/${id}/images`, formData);
   }
+
 }

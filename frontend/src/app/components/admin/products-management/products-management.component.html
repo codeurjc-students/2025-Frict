@@ -75,7 +75,7 @@
           <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
             <th>Activo</th>
             <th>Nombre / Referencia</th>
-            <th>Categoría</th>
+            <th>Categorías</th>
             <th>Precio</th>
             <th>Stock Total</th>
             <th>Tiendas con Stock</th>
@@ -127,7 +127,7 @@
               <div class="flex gap-2 justify-end">
                 <p-button [routerLink]="['/product', product.id]" icon="pi pi-eye" [text]="true" [rounded]="true" severity="info" pTooltip="Ver Detalles"></p-button>
                 <p-button [routerLink]="['/admin/products/edit', product.id]" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar"></p-button>
-                <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar"></p-button>
+                <p-button (click)="confirmDelete($event, product.id)" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar"></p-button>
               </div>
             </td>
           </tr>

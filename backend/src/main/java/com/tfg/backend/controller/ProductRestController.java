@@ -197,12 +197,9 @@ public class ProductRestController {
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
         Product product = findProductHelper(id);
 
-        //Option 1 (active): delete intermediate table relations from Order entities -> Order info will not contain deleted products info
-        //Option 2: Apply soft delete to products by adding a "deleted" boolean field -> No product removal, all orders will access products info, manage not retrieving deleted products info
-
+        //Delete the Product entities, as OrderItem entities will have a product snapshot with all necessary information
         //Remove the relations not marked as CascadeType.ALL in Product
         product.getCategories().clear();
-        product.getOrderItems().clear();
 
         productService.deleteById(id);
         return ResponseEntity.ok(new ProductDTO(product));
