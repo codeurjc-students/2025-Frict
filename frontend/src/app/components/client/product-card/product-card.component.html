@@ -7,13 +7,13 @@
 
     <div class="relative w-full aspect-[4/3] bg-surface-50 shrink-0">
       <img
-        [src]="product.imageUrls[0]"
+        [src]="product.imagesInfo[0].imageUrl"
         [alt]="product.name"
         class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 mix-blend-multiply"
       />
 
       <div class="absolute top-0 right-0 w-full p-3 flex justify-end items-start pointer-events-none">
-        <div *ngIf="product.availableUnits <= 10">
+        <div *ngIf="product.totalUnits <= 10">
           <p-tag [value]="stockStatus().message" [severity]="stockStatus().severity" [icon]="stockStatus().icon" rounded="true"></p-tag>
         </div>
       </div>

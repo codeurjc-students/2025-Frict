@@ -1,0 +1,160 @@
+<div class="min-h-screen bg-slate-50 font-sans text-slate-800">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+
+    <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">Gestor de Productos</h1>
+        <p class="text-slate-500">Administra el catálogo, modifica datos o gestiona los productos disponibles.</p>
+      </div>
+    </div>
+
+    <div class="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Acciones</h2>
+      <div class="flex flex-wrap gap-3">
+        <p-button routerLink="/admin/products/new" label="Nuevo Producto" icon="pi pi-plus" styleClass="p-button-warning" rounded="true"></p-button>
+
+        <div class="w-px h-10 bg-slate-200 mx-2 hidden md:block"></div>
+
+        <p-button (onClick)="onGlobalAction('activate_all')" label="Activar Todos" icon="pi pi-check-square" styleClass="p-button-outlined p-button-success" rounded="true"></p-button>
+        <p-button (onClick)="onGlobalAction('deactivate_all')" label="Desactivar Todos" icon="pi pi-power-off" styleClass="p-button-outlined p-button-secondary text-slate-500" rounded="true"></p-button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i class="pi pi-box text-yellow-600"></i> Distribución de Stock (página actual)
+        </h3>
+        <p class="text-sm text-slate-400 mb-4">Unidades disponibles para venta online.</p>
+        <div class="card flex justify-center">
+          <p-chart type="doughnut" [data]="pieData()" [options]="pieOptions()" class="w-full md:w-[25rem]"></p-chart>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="pi pi-chart-line text-cyan-600"></i> Historial de Ventas
+            </h3>
+            <p class="text-sm text-slate-400">Unidades vendidas durante los últimos 6 meses.</p>
+          </div>
+          <p-select [options]="productsPage.items" [(ngModel)]="chartProductSelector" (onChange)="onChartProductChange($event)" optionLabel="name" placeholder="Seleccionar Producto" class="w-48 text-sm" appendTo="body"/>
+        </div>
+        <div class="card flex justify-center">
+          <p-chart type="line" [data]="lineData()" [options]="lineOptions()" class="w-full md:w-[40rem]"></p-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+
+      <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
+        <h3 class="text-xl font-bold text-slate-800">Catálogo Global ({{ productsPage.totalItems }} productos)</h3>
+        <!-- Search bar for table elements
+        <p-iconfield iconPosition="left" class="w-full sm:w-auto">
+          <p-inputicon styleClass="pi pi-search text-slate-500" />
+
+          <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar por ref, nombre..."
+            class="w-full sm:w-64 p-inputtext-sm bg-white border-slate-300 text-slate-800 focus:border-yellow-500 rounded-lg"
+          />
+
+        </p-iconfield>
+        -->
+      </div>
+
+      <p-table #dt
+               [value]="productsPage.items"
+               [rowHover]="true"
+               [(selection)]="selectedProduct"
+               styleClass="p-datatable-sm"
+               responsiveLayout="scroll">
+
+        <ng-template pTemplate="header">
+          <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
+            <th>Activo</th>
+            <th>Nombre / Referencia</th>
+            <th>Categorías</th>
+            <th>Precio</th>
+            <th>Stock Total</th>
+            <th>Tiendas con Stock</th>
+            <th style="width: 8rem">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-product>
+          <tr class="transition-colors hover:bg-slate-50 border-b border-slate-100 last:border-0 text-slate-700">
+
+            <td class="text-center">
+              <p-toggleswitch [ngModel]="product.active" (onChange)="onToggleActive(product, $event)"></p-toggleswitch>
+            </td>
+
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
+                  <img [src]="product.imagesInfo[0].imageUrl" class="w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-900 text-sm">{{ product.name }}</span>
+                  <span class="text-xs font-mono text-slate-500 bg-slate-100 px-1 rounded w-fit">{{ product.referenceCode }}</span>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              @for (c of product.categories; track c.id){
+                <p-tag severity="info" [value]="c.name" [icon]="c.icon.length > 0 ? c.icon : 'pi pi-tag'" [rounded]="true" styleClass="mx-1"></p-tag>
+              }
+            </td>
+
+            <td>
+              <span class="font-medium text-slate-800">{{ formatPrice(product.currentPrice) }}</span>
+            </td>
+
+            <td class="text-center text-sm">
+              <p-tag [severity]="product.totalUnits > 5 ? 'success' : 'danger'" [value]="product.totalUnits +  ' unidades'" icon="pi pi-box" [rounded]="true" styleClass="mx-1"></p-tag>
+            </td>
+
+            <td>
+              <div class="flex gap-1 text-slate-600 text-sm">
+                <i class="pi pi-building text-slate-400"></i>
+                <span>{{ product.shopsWithStock }}</span>
+              </div>
+            </td>
+
+            <td>
+              <div class="flex gap-2 justify-end">
+                <p-button [routerLink]="['/product', product.id]" icon="pi pi-eye" [text]="true" [rounded]="true" severity="info" pTooltip="Ver Detalles"></p-button>
+                <p-button [routerLink]="['/admin/products/edit', product.id]" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar"></p-button>
+                <p-button (click)="confirmDelete($event, product.id)" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar"></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center p-8 text-slate-500">
+              <i class="pi pi-inbox text-4xl mb-2 block text-slate-300"></i>
+              No se encontraron productos en el catálogo.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <p-paginator
+        (onPageChange)="onProductsPageChange($event)"
+        [first]="first"
+        [rows]="rows"
+        [totalRecords]="productsPage.totalItems"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        [showCurrentPageReport]="true"
+        [dropdownAppendTo]="'body'"
+        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} productos"
+        styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl">
+      </p-paginator>
+
+    </div>
+  </div>
+</div>

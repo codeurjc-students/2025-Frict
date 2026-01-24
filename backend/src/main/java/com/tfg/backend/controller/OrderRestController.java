@@ -5,10 +5,7 @@ import com.tfg.backend.dto.OrderDTO;
 import com.tfg.backend.dto.OrderItemDTO;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
-import com.tfg.backend.service.OrderItemService;
-import com.tfg.backend.service.OrderService;
-import com.tfg.backend.service.ProductService;
-import com.tfg.backend.service.UserService;
+import com.tfg.backend.service.*;
 import com.tfg.backend.utils.EmailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,6 +35,9 @@ public class OrderRestController {
 
     @Autowired
     private OrderItemService orderItemService;
+
+    @Autowired
+    private ShopStockService shopStockService;
 
     @Autowired
     private OrderService orderService;
@@ -95,7 +95,43 @@ public class OrderRestController {
 
         //Find cart items
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
-        Order newOrder = new Order(loggedUser, cartItems, addressOptional.get(), cardOptional.get());
+
+        //First check if there is enough stock of each product
+        for (OrderItem i : cartItems) {
+            int totalStock = i.getProduct().getShopsStock().stream().mapToInt(ShopStock::getStock).sum(); //Total stock units
+            if (totalStock < i.getQuantity()){
+                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product " + i.getProduct().getName() + " is not enough to complete the order.");
+            }
+        }
+
+        //Reduce the shops stock with the corresponding product units
+        //Set the snapshot fields for later order details queries
+        for (OrderItem i : cartItems) {
+            List<ShopStock> shopsStock = i.getProduct().getShopsStock();
+            int remainingUnits = i.getQuantity();
+            int shopIndex = 0;
+            while (remainingUnits > 0 && shopIndex < shopsStock.size()) {
+
+                ShopStock currentShopStock = shopsStock.get(shopIndex);
+                int availableStock = currentShopStock.getStock();
+
+                if (availableStock > 0) {
+                    int unitsToTake = Math.min(remainingUnits, availableStock);
+                    currentShopStock.setStock(availableStock - unitsToTake);
+                    remainingUnits -= unitsToTake;
+                    shopStockService.save(currentShopStock);
+                }
+                shopIndex++;
+            }
+
+            i.setProductName(i.getProduct().getName());
+            i.setProductImageUrl(i.getProduct().getImages().getFirst().getImageUrl());
+            i.setProductPrice(i.getProduct().getCurrentPrice());
+            i.setProduct(null); //This order item no longer depends on the current product
+        }
+        List<OrderItem> savedItems = orderItemService.saveAll(cartItems);
+
+        Order newOrder = new Order(loggedUser, savedItems, addressOptional.get(), cardOptional.get());
 
         newOrder.setFullSendingAddress(addressOptional.get().toString());
         PaymentCard card = cardOptional.get();
@@ -110,7 +146,6 @@ public class OrderRestController {
                 savedOrder.getItems(),
                 savedOrder.getTotalCost()
         );
-
 
         return ResponseEntity.ok(new OrderDTO(savedOrder));
     }
@@ -162,11 +197,14 @@ public class OrderRestController {
 
         for (OrderItem item : cartItems) {
             Product p = item.getProduct();
+            double currentPrice = item.getProductPrice();
+            double previousPrice = 0.0;
+            if(p != null){
+                previousPrice = p.getPreviousPrice();
+            }
+
             int quantity = item.getQuantity();
             totalItems += quantity;
-
-            double currentPrice = p.getCurrentPrice();
-            double previousPrice = p.getPreviousPrice();
 
             // Subtotal
             double unitSubtotal = (previousPrice > 0) ? previousPrice : currentPrice;
@@ -293,42 +331,24 @@ public class OrderRestController {
 
         // 3. Get product (to check total stock)
         Product product = itemToUpdate.getProduct();
-        int totalStock = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
-
-        // 4. Get all carts item units
-        int totalInAllCarts = orderItemService.findProductUnitsInCart(id).stream()
-                .mapToInt(OrderItem::getQuantity)
-                .sum();
-
-        // 5. Limits
-        // Free stock = Total stock - Stock in carts
-        int freeStock = totalStock - totalInAllCarts;
-
-        // Maximum items for this user: Current units + Free units
-        int maxAchievableQuantity = itemToUpdate.getQuantity() + freeStock;
+        int maxAchievableQuantity = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
 
         // CASE A: Quantity is bigger than available
         if (quantity > maxAchievableQuantity) {
             quantity = maxAchievableQuantity; // Maximum available units
         }
         else if (quantity < 0) {
-            if(itemToUpdate.getQuantity() > 0 || freeStock > 0){
+            if(maxAchievableQuantity > 0){
                 quantity = 1;
             }
-            else{
-                quantity = 0;
+            else {
+                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Updating order item not available.");
             }
-        }
-
-        // Validation: If after adjustments quantity is 0, throw an error
-        if (quantity == 0) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Order item quantity must not be zero.");
         }
 
         // 6. Directly update quantity
         itemToUpdate.setQuantity(quantity);
         userService.save(loggedUser);
-
         return this.getCartSummary(request);
     }
 

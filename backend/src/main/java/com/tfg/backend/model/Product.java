@@ -6,7 +6,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,6 +18,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "products")
+@FilterDef(name = "activeProductFilter")
+@Filter(name = "activeProductFilter", condition = "is_active = true")
 public class Product {
 
     @Id
@@ -40,12 +43,8 @@ public class Product {
 
     private double currentPrice;
 
+    @Column(name = "is_active")
     private boolean active = true;
-
-    //It is NOT a column in Product table, and Hibernate automatically calculates its value
-    @Formula("(SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = id AND oi.order_id IS NULL)")
-    @Setter(AccessLevel.NONE)
-    private int reservedUnits; //Contains the exact number of items with this product id that are in all users carts
 
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Category> categories = new ArrayList<>();
@@ -57,8 +56,8 @@ public class Product {
     private Set<User> usersAsFavourite = new HashSet<>();
 
     //Controlled by the intermediate entities OrderItem and ShopStock
-    //Not Cascade.ALL, as it deletes all previous user's orders registries too
-    @OneToMany(mappedBy = "product")
+    //Only in cart items are deleted with product deletion
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

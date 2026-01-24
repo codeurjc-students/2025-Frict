@@ -8,6 +8,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {Category} from '../../../models/category.model';
+import {ImageInfo} from '../../../models/imageInfo.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Product} from '../../../models/product.model';
 
 describe('ClientHomeComponent', () => {
   let component: ClientHomeComponent;
@@ -43,19 +46,25 @@ describe('ClientHomeComponent', () => {
     component = fixture.componentInstance;
 
     // IMPORTANTE: Configuración base por defecto para que no se bloquee la cadena
+    const mockImageInfo: ImageInfo = { id: '1', imageUrl: '', s3Key: '', fileName: ''};
     categoryServiceSpy.getAllCategories.and.returnValue(of([
-      { id: '1', name: 'Ordenadores', imageUrl: '', icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] },
-      { id: '2', name: 'Periféricos', imageUrl: '', icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] }
+      { id: '1', name: 'Ordenadores', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] },
+      { id: '2', name: 'Periféricos', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] }
     ]));
   });
 
   it('debe mostrar los productos cuando el servicio devuelve datos', () => {
-    const mockCategory: Category = { id: '1', name: 'Cat1', imageUrl: '', icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] };
-    const mockProducts = {
+    const mockImageInfo: ImageInfo = { id: '1', imageUrl: '', s3Key: '', fileName: ''};
+    const mockCategory: Category = { id: '1', name: 'Cat1', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] };
+    const mockProducts : PageResponse<Product> = {
       items: [
-        { id: '1', referenceCode: 'A', name: 'Producto A', description: 'Desc', currentPrice: 100, imageUrls: [], previousPrice: 0, discount: "0%", categories: [mockCategory], availableUnits: 10, averageRating: 5, totalReviews: 1},
-        { id: '2', referenceCode: 'B', name: 'Producto B', description: 'Desc', currentPrice: 200, imageUrls: [], previousPrice: 0, discount: "0%", categories: [mockCategory], availableUnits: 5, averageRating: 4, totalReviews: 2}
-      ]
+        { id: '1', referenceCode: 'A', name: 'Producto A', description: 'Desc', currentPrice: 100, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 5, totalReviews: 1},
+        { id: '2', referenceCode: 'B', name: 'Producto B', description: 'Desc', currentPrice: 200, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 4, totalReviews: 2}
+      ],
+      totalItems: 2,
+      currentPage: 0,
+      lastPage: 0,
+      pageSize: 5
     };
 
     productServiceSpy.getProductsByCategoryName.and.returnValue(of(mockProducts as any));

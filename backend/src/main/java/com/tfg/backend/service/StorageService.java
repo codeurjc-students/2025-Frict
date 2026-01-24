@@ -72,7 +72,7 @@ public class StorageService {
         }
     }
 
-    // Web controllers method
+    // Rest controllers method
     public Map<String, String> uploadFile(MultipartFile file, String folderName) throws IOException {
         return uploadFile(
                 file.getInputStream(),

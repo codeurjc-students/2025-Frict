@@ -15,13 +15,15 @@ public class ProductDTO {
     private Long id;
     private String referenceCode;
     private String name;
-    private List<String> imageUrls = new ArrayList<>();
+    private List<ImageInfo> imagesInfo = new ArrayList<>();
     private String description;
     private double previousPrice;
     private double currentPrice;
+    private boolean active;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
-    private int availableUnits; //Available units will be all units stock which are not in any user cart yet
+    private int totalUnits;
+    private int shopsWithStock;
     private double averageRating;
     private int totalReviews;
 
@@ -33,11 +35,12 @@ public class ProductDTO {
         this.name = p.getName();
         this.referenceCode = p.getReferenceCode();
         for (ProductImageInfo image : p.getImages()) {
-            this.imageUrls.add(image.getImageUrl());
+            this.imagesInfo.add(new ImageInfo(image.getImageUrl(), image.getS3Key(), image.getFileName()));
         }
         this.description = p.getDescription();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();
+        this.active = p.isActive();
         if (previousPrice != 0.0 && currentPrice < previousPrice){
             this.discount = "-" + String.valueOf((int) Math.floor(((this.previousPrice - this.currentPrice) / this.previousPrice) * 100)) + "%";
         }
@@ -49,12 +52,12 @@ public class ProductDTO {
         }
         this.categories = dtos;
 
-        //Available units (total - reserved)
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {
             totalUnits += s.getStock();
         }
-        this.availableUnits = Math.max(0, totalUnits - p.getReservedUnits());
+        this.totalUnits = totalUnits;
+        this.shopsWithStock = p.getShopsStock().size();
 
         //Total reviews and average rating
         double totalRating = 0.0;

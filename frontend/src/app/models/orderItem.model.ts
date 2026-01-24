@@ -6,9 +6,11 @@ export interface OrderItem {
 
   product: Product;
 
-  userId: string;
+  productName: string;
+  productImageUrl: string;
+  productPrice: number;
 
-  maxQuantity: number;
+  userId: string;
   quantity: number;
 
   itemsCost: number;

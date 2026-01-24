@@ -2,10 +2,8 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
-import com.tfg.backend.service.CategoryService;
-import com.tfg.backend.service.ProductService;
-import com.tfg.backend.service.StorageService;
-import com.tfg.backend.service.UserService;
+import com.tfg.backend.service.*;
+import com.tfg.backend.utils.GlobalDefaults;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -39,6 +39,8 @@ public class ProductRestController {
 
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private OrderItemService orderItemService;
 
 
     @Operation(summary = "Get all products (paged)")
@@ -172,6 +174,7 @@ public class ProductRestController {
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setCurrentPrice(productDTO.getCurrentPrice());
+        product.setActive(productDTO.isActive());
 
         List<Category> categories = new ArrayList<>();
         for (CategoryDTO c : productDTO.getCategories()) {
@@ -193,36 +196,102 @@ public class ProductRestController {
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
         Product product = findProductHelper(id);
 
-        //Option 1 (active): delete intermediate table relations from Order entities -> Order info will not contain deleted products info
-        //Option 2: Apply soft delete to products by adding a "deleted" boolean field -> No product removal, all orders will access products info, manage not retrieving deleted products info
-
+        //Delete the Product entities, as OrderItem entities will have a product snapshot with all necessary information
         //Remove the relations not marked as CascadeType.ALL in Product
         product.getCategories().clear();
-        product.getOrderItems().clear();
+
+        List<OrderItem> items = orderItemService.findByProductIdAndOrderIsNotNull(product.getId());
+        for (OrderItem item : items) {
+            item.setProduct(null); //Unlink order items from the deleting product to be able to delete it. In case of cart items (null order), they will be deleted on cascade.
+        }
+        orderItemService.saveAll(items);
 
         productService.deleteById(id);
         return ResponseEntity.ok(new ProductDTO(product));
     }
 
 
-    @Operation(summary = "Add remote product image")
-    @PostMapping("/{id}/images")
-    public ResponseEntity<Product> uploadProductImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
+    @Operation(summary = "Toggle product global activation by ID")
+    @PostMapping("/active/{id}")
+    public ResponseEntity<ProductDTO> toggleGlobalActivation(@PathVariable Long id, @RequestParam boolean state) {
         Product product = findProductHelper(id);
+        product.setActive(state);
+        //If the global product state is false, it must not be in any user cart
+        if (!state){
+            product.getOrderItems().removeIf(item -> {
+                if (item.getOrder() == null) {
+                    orderItemService.delete(item);
+                    return true;
+                }
+                return false;
+            });
+        }
+        Product savedProduct = productService.update(product);
+        return ResponseEntity.ok(new ProductDTO(savedProduct));
+    }
 
-        // 1. Upload
-        Map<String, String> res = storageService.uploadFile(file, "products");
 
-        // 2. Create ProductImage entity
-        ProductImageInfo img = new ProductImageInfo();
-        img.setImageUrl(res.get("url"));
-        img.setS3Key(res.get("key"));
-        img.setFileName(file.getOriginalFilename());
+    @Operation(summary = "Toggle all products global activation")
+    @PostMapping("/active/")
+    public ResponseEntity<Boolean> toggleAllGlobalActivations(@RequestParam boolean state) {
+        List<Product> products = productService.findAll();
+        for (Product product : products) {
+            product.setActive(state);
+            if (!state){
+                product.getOrderItems().removeIf(item -> {
+                    if (item.getOrder() == null) {
+                        orderItemService.delete(item);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+        }
+        productService.saveAll(products);
+        return ResponseEntity.ok(state); //State all toggles should have in frontend
+    }
 
-        // 3. Add to the list
-        product.getImages().add(img);
 
-        return ResponseEntity.ok(productService.save(product));
+    @Operation(summary = "Update product images (remove unused, add new)")
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Product> updateProductImages(
+            @PathVariable Long id,
+            @RequestPart("existingImages") List<ProductImageInfo> existingImages,
+            @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
+    ) throws IOException {
+
+        Product product = findProductHelper(id);
+        List<ProductImageInfo> currentImages = product.getImages();
+
+        // Delete images not present in existingImages
+        Set<Long> keepIds = existingImages.stream().map(ProductImageInfo::getId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Iterator<ProductImageInfo> iterator = currentImages.iterator();
+        while (iterator.hasNext()) {
+            ProductImageInfo currentImg = iterator.next();
+            if (!keepIds.contains(currentImg.getId())) {
+                if(!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())){
+                    storageService.deleteFile(currentImg.getS3Key());
+                }
+                iterator.remove();
+            }
+        }
+
+        // Add new images
+        if (newImages != null && !newImages.isEmpty()) {
+            for (MultipartFile file : newImages) {
+                Map<String, String> res = storageService.uploadFile(file, "products");
+
+                ProductImageInfo newImg = new ProductImageInfo();
+                newImg.setImageUrl(res.get("url"));
+                newImg.setS3Key(res.get("key"));
+                newImg.setFileName(file.getOriginalFilename());
+                newImg.setProduct(product);
+
+                currentImages.add(newImg);
+            }
+        }
+
+        return ResponseEntity.ok(productService.update(product));
     }
 
 
@@ -243,6 +312,10 @@ public class ProductRestController {
 
         // 4. Delete from image list
         product.getImages().remove(imageToRemove);
+
+        if(product.getImages().isEmpty()){
+            product.getImages().add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
+        }
 
         // 5. Save product (orphanRemoval erases the image from BD)
         Product savedProduct = productService.save(product);

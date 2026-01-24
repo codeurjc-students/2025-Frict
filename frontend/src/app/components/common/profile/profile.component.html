@@ -12,7 +12,7 @@
         <div class="p-1 bg-gradient-to-br from-primary-400 to-cyan-400 rounded-full">
 
           <div class="relative group cursor-pointer rounded-full overflow-hidden" (click)="visibleImageDialog = true">
-            <p-avatar [image]="user.imageUrl" shape="circle" styleClass="!w-30 !h-30 border-4 border-surface-900 block"/>
+            <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" styleClass="!w-30 !h-30 border-4 border-surface-900 block"/>
             <div class="absolute inset-[0px] rounded-full bg-surface-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
               <i class="pi pi-pencil text-white text-2xl drop-shadow-md"></i>
             </div>
@@ -40,7 +40,7 @@
               <div class="p-8 flex flex-col items-center gap-6">
 
                 <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface-100 shadow-inner shrink-0">
-                  <img [src]="previewUrl || user.imageUrl" class="w-full h-full object-cover" alt="Foto de perfil actual"/>
+                  <img [src]="previewUrl || user.imageInfo.imageUrl" class="w-full h-full object-cover" alt="Foto de perfil actual"/>
                 </div>
 
                 <div class="w-full">

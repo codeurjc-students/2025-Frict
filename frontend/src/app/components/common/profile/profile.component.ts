@@ -220,7 +220,7 @@ export class ProfileComponent implements OnInit {
     if (this.selectedImage){
       this.userService.uploadUserImage(this.user.id, this.selectedImage).subscribe({
         next: (user) => {
-          this.user.imageUrl = user.imageUrl;
+          this.user.imageInfo = user.imageInfo;
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Imagen de perfil actualizada.' });
           this.cancelUploadImage();
         },

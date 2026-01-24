@@ -82,11 +82,14 @@ public class Order {
 
         for (OrderItem item : this.getItems()) {
             Product p = item.getProduct();
+            double currentPrice = item.getProductPrice();
+            double previousPrice = 0.0;
+            if(p != null){
+                previousPrice = p.getPreviousPrice();
+            }
+
             int quantity = item.getQuantity();
             totalItems += quantity;
-
-            double currentPrice = p.getCurrentPrice();
-            double previousPrice = p.getPreviousPrice();
 
             // Subtotal
             double unitSubtotal = (previousPrice > 0) ? previousPrice : currentPrice;

@@ -1,0 +1,164 @@
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+
+    <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">
+          {{ productId() ? 'Editar Producto' : 'Nuevo Producto' }}
+        </h1>
+        <p class="text-slate-500">Completa la información técnica y comercial del artículo.</p>
+      </div>
+      <div class="flex gap-3">
+        <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary" routerLink="/admin/products"></p-button>
+        <p-button label="Guardar Producto" icon="pi pi-check" severity="success" (onClick)="onSubmit()"></p-button>
+      </div>
+    </div>
+
+    <form [formGroup]="productForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2 md:col-span-2">
+              <label for="name" class="text-sm font-semibold text-slate-600">Nombre del Producto</label>
+              <input pInputText id="name" formControlName="name" placeholder="Ej: Laptop Gamer X500" class="w-full" />
+              <small class="text-red-500" *ngIf="productForm.get('name')?.invalid && productForm.get('name')?.touched">
+                El nombre es obligatorio (min 3 caracteres).
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="ref" class="text-sm font-semibold text-slate-600">Código Referencia</label>
+              <input pInputText id="ref" formControlName="referenceCode" placeholder="Generado automáticamente" class="w-full bg-slate-100 text-slate-500" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="price" class="text-sm font-semibold text-slate-600">
+                Precio actual
+                @if (product(); as p) {
+                  @if (p.previousPrice > 0) {
+                    (anterior: {{ formatPrice(p.previousPrice) }}, @if (p.discount !== '0%') { {{ p.discount }}})
+                  }
+                }
+              </label>
+              <p-inputNumber id="price" formControlName="currentPrice" mode="currency" currency="EUR" locale="es-ES" placeholder="0,00 €" styleClass="w-full" [min]="0"></p-inputNumber>
+            </div>
+
+            <div class="flex flex-col gap-2 md:col-span-2">
+              <label class="text-sm font-semibold text-slate-600">Categorías</label>
+
+              <p-treeSelect
+                containerStyleClass="w-full"
+                [options]="categories"
+                formControlName="selectedCategories"
+                display="chip"
+                [metaKeySelection]="false"
+                selectionMode="checkbox"
+                placeholder="Seleccionar categorías"
+                (onNodeSelect)="printSelectedCategories()"/>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Descripción Detallada</h2>
+          <div class="flex flex-col gap-2">
+            <p-editor formControlName="description" [style]="{ height: '320px' }" />
+            <small class="text-slate-400">Utiliza las herramientas de formato para estructurar la descripción del producto.</small>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Visibilidad</h2>
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <span class="text-slate-700 font-medium">Disponible para tiendas</span>
+            <p-toggleswitch formControlName="active"></p-toggleswitch>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">
+            Si se desactiva, ninguna tienda podrá vender el producto aunque tenga stock.
+          </p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Galería de Imágenes</h2>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" *ngIf="existingImages().length > 0 || newImages().length > 0">
+
+            @for(img of existingImages(); track $index) {
+              <div class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
+                <img [src]="img.imageUrl" class="w-full h-full object-cover">
+                <span class="absolute top-1 left-1 bg-blue-500/80 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">Guardada</span>
+
+                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button type="button" (click)="removeExistingImage($index)" class="text-white hover:text-red-400 transition-colors">
+                    <i class="pi pi-trash text-xl"></i>
+                  </button>
+                </div>
+              </div>
+            }
+
+            @for(imgInfo of newImages(); track $index) {
+              <div class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-square">
+                <img [src]="imgInfo.previewUrl" class="w-full h-full object-cover opacity-90">
+                <span class="absolute top-1 left-1 bg-green-500/90 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">Nueva</span>
+
+                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button type="button" (click)="removeNewImage($index)" class="text-white hover:text-red-400 transition-colors">
+                    <i class="pi pi-times-circle text-2xl"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-slate-600">Añadir más fotos</label>
+
+            <p-fileupload
+              mode="advanced"
+              [multiple]="true"
+              accept="image/*"
+              [maxFileSize]=MAX_SIZE
+              [showUploadButton]="false"
+              [showCancelButton]="false"
+              invalidFileSizeMessageSummary="{0}: Tamaño de archivo inválido."
+              invalidFileSizeMessageDetail="El tamaño máximo permitido es de {0}."
+              chooseLabel="Seleccionar Fotos"
+              chooseIcon="pi pi-images"
+              (onSelect)="onFileSelect($event)"
+              styleClass="w-full"
+              [auto]="false">
+
+              <ng-template #content>
+                <div class="flex flex-col items-center justify-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer"
+                     *ngIf="newImages().length === 0">
+                  <i class="pi pi-cloud-upload text-4xl mb-2 text-slate-300"></i>
+                  <p class="text-sm font-medium">Arrastra imágenes o haz clic para seleccionar</p>
+                </div>
+                <div *ngIf="newImages().length > 0" class="py-4 text-center text-slate-400 text-sm">
+                  Sigue seleccionando para añadir más...
+                </div>
+              </ng-template>
+
+              <ng-template #file></ng-template>
+            </p-fileupload>
+          </div>
+        </div>
+
+      </div>
+
+    </form>
+  </div>
+</div>

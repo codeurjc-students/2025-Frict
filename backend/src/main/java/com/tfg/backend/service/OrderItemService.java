@@ -1,6 +1,7 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.OrderItem;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.OrderItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,9 @@ public class OrderItemService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
+    public List<OrderItem> findByProductIdAndOrderIsNotNull(Long id){ return orderItemRepository.findByProductIdAndOrderIsNotNull(id); }
+
+
     public List<OrderItem> findUserCartItemsList(Long id) { return orderItemRepository.findByUserIdAndOrderIsNull(id); }
 
     public Page<OrderItem> findUserCartItemsPage(Long id, Pageable pageable) { return orderItemRepository.findByUserIdAndOrderIsNull(id, pageable); }
@@ -22,4 +26,8 @@ public class OrderItemService {
     public List<OrderItem> findProductUnitsInCart(Long id) { return orderItemRepository.findByProductIdAndOrderIsNull(id); }
 
     public void save(OrderItem item) { this.orderItemRepository.save(item); }
+
+    public List<OrderItem> saveAll(List<OrderItem> l) { return this.orderItemRepository.saveAll(l); }
+
+    public void delete(OrderItem i) { this.orderItemRepository.delete(i); }
 }

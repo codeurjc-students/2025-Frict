@@ -1,5 +1,4 @@
 import {Component, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
-import {FontAwesomeModule} from '@fortawesome/angular-fontawesome';
 import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {Button} from 'primeng/button';
@@ -26,7 +25,6 @@ interface CategoryUI {
   selector: 'app-navbar',
   standalone: true,
   imports: [
-    FontAwesomeModule,
     RouterLink,
     RouterLinkActive,
     NgIf,
@@ -96,7 +94,7 @@ export class NavbarComponent implements OnInit {
 
 
   public adminItems = [
-    { label: 'Productos', icon: 'pi pi-desktop',   link: 'products' },
+    { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products' },
     { label: 'Pedidos',   icon: 'pi pi-box',       link: 'orders' },
     { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports' },
     { label: 'Reparto',   icon: 'pi pi-truck',     link: 'delivery' },

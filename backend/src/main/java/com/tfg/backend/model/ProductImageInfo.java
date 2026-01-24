@@ -26,10 +26,10 @@ public class ProductImageInfo {
     public ProductImageInfo() {
     }
 
-    public ProductImageInfo(String imageUrl, String s3Key, String fileName, Product product) {
-        this.imageUrl = imageUrl;
-        this.s3Key = s3Key;
-        this.fileName = fileName;
+    public ProductImageInfo(ImageInfo info, Product product) {
+        this.imageUrl = info.getImageUrl();
+        this.s3Key = info.getS3Key();
+        this.fileName = info.getFileName();
         this.product = product;
     }
 }

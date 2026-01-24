@@ -84,7 +84,7 @@ export class ProductInfoComponent implements OnInit {
   protected product!: Product;
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
-  stockStatus = computed(() => getStockTagInfo(this.product.availableUnits));
+  stockStatus = computed(() => getStockTagInfo(this.product.totalUnits));
 
   protected visibleShippingDialog: boolean = false;
   protected visibleAvailabilityDialog: boolean = false;
@@ -165,9 +165,9 @@ export class ProductInfoComponent implements OnInit {
         next: (product) => {
           this.product = product;
 
-          if (product.imageUrls && Array.isArray(product.imageUrls)) {
-            this.images = product.imageUrls.map((imgUrl) => ({
-              itemImageSrc: imgUrl
+          if (product.imagesInfo && Array.isArray(product.imagesInfo)) {
+            this.images = product.imagesInfo.map((imgInfo) => ({
+              itemImageSrc: imgInfo.imageUrl
             }));
           } else {
             this.images = [];
@@ -292,7 +292,7 @@ export class ProductInfoComponent implements OnInit {
       this.orderService.addItemToCart(this.product.id, this.quantity).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
-          this.product.availableUnits -= this.quantity;
+          this.product.totalUnits -= this.quantity;
           this.orderService.incrementItemsCount(this.quantity);
         },
         error: (error: HttpErrorResponse) => {

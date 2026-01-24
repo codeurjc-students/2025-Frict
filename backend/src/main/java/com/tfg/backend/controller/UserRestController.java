@@ -99,8 +99,8 @@ public class UserRestController {
     @DeleteMapping
     public ResponseEntity<UserDTO> anonymizeLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
-        User anonymizedUser = userService.anonymizeUser(loggedUser);
-        return ResponseEntity.ok(new UserDTO(anonymizedUser));
+        User savedUser = userService.save(userService.anonymizeUser(loggedUser));
+        return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
 
@@ -113,9 +113,7 @@ public class UserRestController {
         if (loggedUser.getUserImage() != null) {
             // Delete from MinIO
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-
-            // Unlink (orphanRemoval deletes it from DB)
-            loggedUser.setUserImage(null);
+            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE); //Set default user image
 
             // Save changes
             return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));

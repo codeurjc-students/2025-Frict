@@ -1,3 +1,5 @@
+import {ImageInfo} from './imageInfo.model';
+
 export interface Category {
   id: string;
   name: string;
@@ -5,7 +7,7 @@ export interface Category {
   bannerText: string;
   shortDescription: string;
   longDescription: string;
-  imageUrl: string;
+  imageInfo: ImageInfo;
   parentId: string;
   children: Category[];
 }

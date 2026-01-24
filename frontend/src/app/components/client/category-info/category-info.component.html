@@ -22,7 +22,7 @@
         </div>
 
         <div class="w-full md:w-1/2 lg:w-1/3 flex justify-center md:justify-end">
-          <img [src]="mainCategory.imageUrl"
+          <img [src]="mainCategory.imageInfo.imageUrl"
                alt="Seguridad Banner"
                class="rounded-xl w-full h-60 md:h-74 object-cover object-center mix-blend-multiply">
         </div>
@@ -88,7 +88,7 @@
         @for (cat of similarCategories; track cat.id) {
           @let hasChildren = cat.children && cat.children.length > 0;
           <div [routerLink]="hasChildren ? ['/category', cat.id] : ['/search']" [queryParams]="hasChildren ? null : { categories: cat.id }" class="relative h-64 rounded-xl overflow-hidden cursor-pointer group">
-            <img [src]="cat.imageUrl" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+            <img [src]="cat.imageInfo.imageUrl" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
               <h3 class="text-white font-bold text-lg leading-tight mb-1">{{ cat.name }}</h3>
               <p class="text-surface-300 text-xs">{{ cat.shortDescription }}</p>

@@ -19,9 +19,20 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order = null; //Initially, this orderItem will belong to a user's cart
 
+    //Necessary, as it is required by Cart Component to show the current product information
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
+    //Snapshot fields (used when the order is made, as the paid price is fixed at that moment)
+    @Column(name = "product_name_snapshot")
+    private String productName;
+
+    @Column(name = "product_image_snapshot")
+    private String productImageUrl;
+
+    @Column(name = "product_price_snapshot")
+    private double productPrice;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -29,17 +40,19 @@ public class OrderItem {
 
     private int quantity;
 
-    @Column (nullable = false)
-    private double totalPrice;
-
     public OrderItem() {
     }
 
-    //Order items with null order means products that are already in assigned user's cart
+    //Order items with null order and snapshot fields means products that are already in assigned user's cart
     public OrderItem(Product product, User user, int quantity) {
         this.product = product;
+
+        //Rubbish values until the order is placed (orderId not null)
+        this.productName = product.getName();
+        this.productImageUrl = product.getImages().getFirst().getImageUrl();
+        this.productPrice = product.getCurrentPrice();
+
         this.user = user;
         this.quantity = quantity;
-        this.totalPrice = product.getCurrentPrice() * quantity;
     }
 }

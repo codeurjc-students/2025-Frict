@@ -13,6 +13,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     boolean existsByReferenceCode(String referenceCode);
 
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.images")
+    List<Product> findAllWithImages();
+
     @Query("SELECT p FROM User u JOIN u.favouriteProducts p WHERE u.id = :userId")
     Page<Product> findFavouritesByUserId(@Param("userId") Long userId, Pageable pageable);
 

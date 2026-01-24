@@ -116,7 +116,7 @@ public class DatabaseInitializer {
         if (userRepository.count() > 0) return;
         log.info(">>> Initializing Users...");
 
-        User user1 = new User("Usuario", "user", "wekax56917@cucadas.com", passwordEncoder.encode("pass"), "USER");
+        User user1 = new User("Usuario", "user", "laxari3928@1200b.com", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
         PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
         Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
@@ -371,12 +371,7 @@ public class DatabaseInitializer {
         products.add(p30);
 
         for (Product p : products) {
-            ProductImageInfo pImage = new ProductImageInfo(
-                    GlobalDefaults.PRODUCT_IMAGE.getImageUrl(),
-                    GlobalDefaults.PRODUCT_IMAGE.getS3Key(),
-                    GlobalDefaults.PRODUCT_IMAGE.getFileName(),
-                    p
-            );
+            ProductImageInfo pImage = new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, p);
             p.getImages().add(pImage);
             productRepository.save(p);
         }
@@ -416,7 +411,7 @@ public class DatabaseInitializer {
 
         User user1 = userRepository.findByUsername("user").orElse(null);
         User user2 = userRepository.findByUsername("admin").orElse(null);
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAllWithImages();
 
         if (user1 == null || user2 == null || products.isEmpty()) {
             log.error("CANNOT INIT ORDERS: Users or Products missing in DB.");
