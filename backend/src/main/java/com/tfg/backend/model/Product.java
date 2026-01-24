@@ -6,7 +6,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,6 +18,8 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "products")
+@FilterDef(name = "activeProductFilter")
+@Filter(name = "activeProductFilter", condition = "is_active = true")
 public class Product {
 
     @Id
@@ -40,6 +43,7 @@ public class Product {
 
     private double currentPrice;
 
+    @Column(name = "is_active")
     private boolean active = true;
 
     @ManyToMany(fetch = FetchType.EAGER)

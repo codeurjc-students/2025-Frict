@@ -28,4 +28,6 @@ public class OrderItemService {
     public void save(OrderItem item) { this.orderItemRepository.save(item); }
 
     public List<OrderItem> saveAll(List<OrderItem> l) { return this.orderItemRepository.saveAll(l); }
+
+    public void delete(OrderItem i) { this.orderItemRepository.delete(i); }
 }

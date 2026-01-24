@@ -216,6 +216,16 @@ public class ProductRestController {
     public ResponseEntity<ProductDTO> toggleGlobalActivation(@PathVariable Long id, @RequestParam boolean state) {
         Product product = findProductHelper(id);
         product.setActive(state);
+        //If the global product state is false, it must not be in any user cart
+        if (!state){
+            product.getOrderItems().removeIf(item -> {
+                if (item.getOrder() == null) {
+                    orderItemService.delete(item);
+                    return true;
+                }
+                return false;
+            });
+        }
         Product savedProduct = productService.update(product);
         return ResponseEntity.ok(new ProductDTO(savedProduct));
     }
@@ -227,6 +237,15 @@ public class ProductRestController {
         List<Product> products = productService.findAll();
         for (Product product : products) {
             product.setActive(state);
+            if (!state){
+                product.getOrderItems().removeIf(item -> {
+                    if (item.getOrder() == null) {
+                        orderItemService.delete(item);
+                        return true;
+                    }
+                    return false;
+                });
+            }
         }
         productService.saveAll(products);
         return ResponseEntity.ok(state); //State all toggles should have in frontend
