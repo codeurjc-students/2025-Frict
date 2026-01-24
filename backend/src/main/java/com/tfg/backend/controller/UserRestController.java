@@ -99,8 +99,8 @@ public class UserRestController {
     @DeleteMapping
     public ResponseEntity<UserDTO> anonymizeLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
-        User anonymizedUser = userService.anonymizeUser(loggedUser);
-        return ResponseEntity.ok(new UserDTO(anonymizedUser));
+        User savedUser = userService.save(userService.anonymizeUser(loggedUser));
+        return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
 

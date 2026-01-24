@@ -11,8 +11,6 @@ export interface OrderItem {
   productPrice: number;
 
   userId: string;
-
-  maxQuantity: number;
   quantity: number;
 
   itemsCost: number;

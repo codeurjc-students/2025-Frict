@@ -19,7 +19,6 @@ public class OrderItemDTO {
     private Long userId;
 
     //Maximum number of items of this product that a user can select (cart)
-    private int maxQuantity; // units selected by the user + (stock - reserved)
     private int quantity;
 
     //Stores the price of an item at the moment of the OrderItem creation (cart items = updated with currentPrice * quantity, historic items = original price preserved)
@@ -31,14 +30,15 @@ public class OrderItemDTO {
 
         if (i.getProduct() != null){
             this.product = new ProductDTO(i.getProduct());
-            this.maxQuantity = this.quantity + (this.product.getAvailableUnits()); // availableUnits = total - reserved
             this.itemsCost = i.getProduct().getCurrentPrice() * i.getQuantity();
+        }
+        else {
+            this.itemsCost = i.getProductPrice() * i.getQuantity();
         }
 
         this.productName = i.getProductName();
         this.productImageUrl = i.getProductImageUrl();
         this.productPrice = i.getProductPrice();
-        this.itemsCost = i.getProductPrice() * i.getQuantity();
 
         this.userId = i.getUser().getId();
         this.quantity = i.getQuantity();

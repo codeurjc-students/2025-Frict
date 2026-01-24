@@ -172,11 +172,14 @@ public class OrderRestController {
 
         for (OrderItem item : cartItems) {
             Product p = item.getProduct();
+            double currentPrice = item.getProductPrice();
+            double previousPrice = 0.0;
+            if(p != null){
+                previousPrice = p.getPreviousPrice();
+            }
+
             int quantity = item.getQuantity();
             totalItems += quantity;
-
-            double currentPrice = p.getCurrentPrice();
-            double previousPrice = p.getPreviousPrice();
 
             // Subtotal
             double unitSubtotal = (previousPrice > 0) ? previousPrice : currentPrice;
@@ -303,42 +306,24 @@ public class OrderRestController {
 
         // 3. Get product (to check total stock)
         Product product = itemToUpdate.getProduct();
-        int totalStock = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
-
-        // 4. Get all carts item units
-        int totalInAllCarts = orderItemService.findProductUnitsInCart(id).stream()
-                .mapToInt(OrderItem::getQuantity)
-                .sum();
-
-        // 5. Limits
-        // Free stock = Total stock - Stock in carts
-        int freeStock = totalStock - totalInAllCarts;
-
-        // Maximum items for this user: Current units + Free units
-        int maxAchievableQuantity = itemToUpdate.getQuantity() + freeStock;
+        int maxAchievableQuantity = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
 
         // CASE A: Quantity is bigger than available
         if (quantity > maxAchievableQuantity) {
             quantity = maxAchievableQuantity; // Maximum available units
         }
         else if (quantity < 0) {
-            if(itemToUpdate.getQuantity() > 0 || freeStock > 0){
+            if(maxAchievableQuantity > 0){
                 quantity = 1;
             }
-            else{
-                quantity = 0;
+            else {
+                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Updating order item not available.");
             }
-        }
-
-        // Validation: If after adjustments quantity is 0, throw an error
-        if (quantity == 0) {
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Order item quantity must not be zero.");
         }
 
         // 6. Directly update quantity
         itemToUpdate.setQuantity(quantity);
         userService.save(loggedUser);
-
         return this.getCartSummary(request);
     }
 

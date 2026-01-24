@@ -62,10 +62,10 @@
                       {{ item.product.name }}
                     </h3>
                     <div class="flex items-center gap-2 mt-1">
-                      <div *ngIf="item.maxQuantity > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
+                      <div *ngIf="item.product.totalUnits > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
                         <i class="pi pi-check-circle text-[10px]"></i> Disponible
                       </div>
-                      <div *ngIf="!(item.maxQuantity > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
+                      <div *ngIf="!(item.product.totalUnits > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
                         <i class="pi pi-times-circle text-[10px]"></i> Agotado
                       </div>
                     </div>
@@ -84,7 +84,7 @@
                         <i class="pi pi-minus text-xs"></i>
                       </button>
                       <span class="w-8 text-center font-bold text-surface-900 text-sm">{{ item.quantity }}</span>
-                      <button (click)="updateItemQuantity(item, item.quantity + 1)" [disabled]="item.quantity >= item.maxQuantity" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-white rounded-md transition-all disabled:opacity-30">
+                      <button (click)="updateItemQuantity(item, item.quantity + 1)" [disabled]="item.quantity >= item.product.totalUnits" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-white rounded-md transition-all disabled:opacity-30">
                         <i class="pi pi-plus text-xs"></i>
                       </button>
                     </div>
@@ -139,11 +139,11 @@
                 <div class="flex items-center justify-start gap-3">
                   <div class="text-lg font-bold text-surface-900">{{ formatPrice(product.currentPrice) }}</div>
                   <ng-container>
-                    <div *ngIf="product.availableUnits > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 shrink-0">
+                    <div *ngIf="product.totalUnits > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 shrink-0">
                       <i class="pi pi-check-circle text-[10px]"></i> Disponible
                     </div>
 
-                    <div *ngIf="!(product.availableUnits > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 shrink-0">
+                    <div *ngIf="!(product.totalUnits > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 shrink-0">
                       <i class="pi pi-times-circle text-[10px]"></i> Agotado
                     </div>
                   </ng-container>
@@ -151,7 +151,7 @@
               </div>
 
               <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-50">
-                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.availableUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
+                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.totalUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
                   <i class="pi pi-cart-plus"></i> Mover al carro
                 </button>
                 <button (click)="removeFavorite(product.id)" class="text-surface-400 hover:text-red-500 transition-colors p-1" pTooltip="Eliminar" tooltipPosition="top">

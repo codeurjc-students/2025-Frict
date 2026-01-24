@@ -42,11 +42,6 @@ public class Product {
 
     private boolean active = true;
 
-    //It is NOT a column in Product table, and Hibernate automatically calculates its value
-    @Formula("(SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = id AND oi.order_id IS NULL)")
-    @Setter(AccessLevel.NONE)
-    private int reservedUnits; //Contains the exact number of items with this product id that are in all users carts
-
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Category> categories = new ArrayList<>();
 

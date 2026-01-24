@@ -23,7 +23,7 @@ export class ProductCardComponent {
 
   @Input() elementId: string = 'product';
 
-  stockStatus = computed(() => getStockTagInfo(this.product.availableUnits));
+  stockStatus = computed(() => getStockTagInfo(this.product.totalUnits));
 
   protected readonly formatPrice = formatPrice;
   protected readonly formatRating = formatRating;

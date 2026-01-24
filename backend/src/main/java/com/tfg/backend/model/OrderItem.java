@@ -40,9 +40,6 @@ public class OrderItem {
 
     private int quantity;
 
-    @Column (nullable = false)
-    private double totalPrice;
-
     public OrderItem() {
     }
 
@@ -57,6 +54,5 @@ public class OrderItem {
 
         this.user = user;
         this.quantity = quantity;
-        this.totalPrice = product.getCurrentPrice() * quantity;
     }
 }

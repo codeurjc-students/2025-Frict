@@ -19,7 +19,7 @@
         <div class="flex items-center gap-4 text-sm">
           <span class="text-surface-500 font-medium">Ref: {{ product.referenceCode }}</span>
           <div class="h-4 w-px bg-surface-300"></div>
-          <div *ngIf="product.availableUnits <= 10">
+          <div *ngIf="product.totalUnits <= 10">
             <p-tag [value]="stockStatus().message" [severity]="stockStatus().severity" [icon]="stockStatus().icon" rounded="true"></p-tag>
           </div>
         </div>
@@ -213,7 +213,7 @@
           <div class="bg-surface-50 p-3 rounded-xl border border-surface-200">
             <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
             <p-inputnumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
-                           [min]="1" [max]="product.availableUnits"
+                           [min]="1" [max]="product.totalUnits"
                            styleClass="w-full input-number-modern"
                            [inputStyle]="{'width': '100%', 'background': 'transparent', 'border': 'none', 'text-align': 'center', 'font-weight': 'bold' }">
               <ng-template pTemplate="incrementbuttonicon"><span class="pi pi-plus"></span></ng-template>
@@ -223,11 +223,11 @@
         </div>
 
         <div class="space-y-3">
-          <button (click)="addItemToCart()" [disabled]="!product.availableUnits || quantity == 0"
+          <button (click)="addItemToCart()" [disabled]="!product.totalUnits || quantity == 0"
                   class="w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                  [class]="product.availableUnits ? 'bg-primary-500 hover:bg-primary-600 text-white' : 'bg-surface-200 text-surface-400 cursor-not-allowed'">
-            <i [class]="product.availableUnits ? 'pi pi-shopping-cart' : 'pi pi-times'"></i>
-            {{ product.availableUnits ? 'Añadir a la cesta' : 'Agotado' }}
+                  [class]="product.totalUnits ? 'bg-primary-500 hover:bg-primary-600 text-white' : 'bg-surface-200 text-surface-400 cursor-not-allowed'">
+            <i [class]="product.totalUnits ? 'pi pi-shopping-cart' : 'pi pi-times'"></i>
+            {{ product.totalUnits ? 'Añadir a la cesta' : 'Agotado' }}
           </button>
 
           <button (click)="toggleInFavourites()"

@@ -58,8 +58,8 @@ describe('ClientHomeComponent', () => {
     const mockCategory: Category = { id: '1', name: 'Cat1', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] };
     const mockProducts : PageResponse<Product> = {
       items: [
-        { id: '1', referenceCode: 'A', name: 'Producto A', description: 'Desc', currentPrice: 100, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, availableUnits: 10, averageRating: 5, totalReviews: 1},
-        { id: '2', referenceCode: 'B', name: 'Producto B', description: 'Desc', currentPrice: 200, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, availableUnits: 5, averageRating: 4, totalReviews: 2}
+        { id: '1', referenceCode: 'A', name: 'Producto A', description: 'Desc', currentPrice: 100, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 5, totalReviews: 1},
+        { id: '2', referenceCode: 'B', name: 'Producto B', description: 'Desc', currentPrice: 200, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 4, totalReviews: 2}
       ],
       totalItems: 2,
       currentPage: 0,
