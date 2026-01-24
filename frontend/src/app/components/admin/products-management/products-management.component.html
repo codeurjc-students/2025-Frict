@@ -3,13 +3,13 @@
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-yellow-600">Gestión de Productos</h1>
-        <p class="text-slate-500">Administración de catálogo, precios y distribución en tiendas.</p>
+        <h1 class="text-3xl font-bold text-yellow-600">Gestor de Productos</h1>
+        <p class="text-slate-500">Administra el catálogo, modifica datos o gestiona los productos disponibles.</p>
       </div>
     </div>
 
     <div class="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-      <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Acciones de Catálogo</h2>
+      <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Acciones</h2>
       <div class="flex flex-wrap gap-3">
         <p-button routerLink="/admin/products/new" label="Nuevo Producto" icon="pi pi-plus" styleClass="p-button-warning" rounded="true"></p-button>
 
@@ -24,9 +24,9 @@
 
       <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col">
         <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <i class="pi pi-box text-yellow-600"></i> Distribución de Stock (Top 5)
+          <i class="pi pi-box text-yellow-600"></i> Distribución de Stock (página actual)
         </h3>
-        <p class="text-sm text-slate-400 mb-4">Unidades físicas disponibles globalmente.</p>
+        <p class="text-sm text-slate-400 mb-4">Unidades disponibles para venta online.</p>
         <div class="card flex justify-center">
           <p-chart type="doughnut" [data]="pieData()" [options]="pieOptions()" class="w-full md:w-[25rem]"></p-chart>
         </div>
@@ -38,7 +38,7 @@
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
               <i class="pi pi-chart-line text-cyan-600"></i> Historial de Ventas
             </h3>
-            <p class="text-sm text-slate-400">Unidades vendidas últimos 6 meses.</p>
+            <p class="text-sm text-slate-400">Unidades vendidas durante los últimos 6 meses.</p>
           </div>
           <p-select [options]="productsPage.items" [(ngModel)]="chartProductSelector" (onChange)="onChartProductChange($event)" optionLabel="name" placeholder="Seleccionar Producto" class="w-48 text-sm" appendTo="body"/>
         </div>
@@ -51,7 +51,7 @@
     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
 
       <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
-        <h3 class="text-xl font-bold text-slate-800">Inventario Global  ({{ productsPage.totalItems }} productos)</h3>
+        <h3 class="text-xl font-bold text-slate-800">Catálogo Global ({{ productsPage.totalItems }} productos)</h3>
         <!-- Search bar for table elements
         <p-iconfield iconPosition="left" class="w-full sm:w-auto">
           <p-inputicon styleClass="pi pi-search text-slate-500" />

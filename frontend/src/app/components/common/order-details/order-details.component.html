@@ -163,7 +163,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
             <div>
               @if(item.product){
-                <h4 [routerLink]="['/product', item.product?.id ?? 0]" class="text-lg font-bold text-surface-900 hover:text-primary-600 cursor-pointer transition-colors">
+                <h4 [routerLink]="['/product', item.product.id]" class="text-lg font-bold text-surface-900 hover:text-primary-600 cursor-pointer transition-colors">
                   {{ item.productName }}
                 </h4>
               } @else {
