@@ -97,6 +97,7 @@ export class NavbarComponent implements OnInit {
     { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products' },
     { label: 'Pedidos',   icon: 'pi pi-box',       link: 'orders' },
     { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports' },
+    { label: 'Tiendas',   icon: 'pi pi-shop',      link: '/admin/shops' },
     { label: 'Reparto',   icon: 'pi pi-truck',     link: 'delivery' },
     { label: 'Usuarios',  icon: 'pi pi-users',     link: '/admin/users' }
   ];
