@@ -44,6 +44,7 @@ public class DatabaseInitializer {
     private final ClassPathResource defaultProductResource = new ClassPathResource("static/img/defaultProductImage.jpg");
     private final ClassPathResource defaultCategoryResource = new ClassPathResource("static/img/defaultCategoryImage.jpg");
     private final ClassPathResource defaultUserResource = new ClassPathResource("static/img/defaultUserImage.jpg");
+    private final ClassPathResource defaultShopResource = new ClassPathResource("static/img/defaultShopImage.jpg");
 
     @PostConstruct
     @Transactional
@@ -106,6 +107,7 @@ public class DatabaseInitializer {
         GlobalDefaults.USER_IMAGE = uploadDefaultImage(defaultUserResource, "users");
         GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories");
         GlobalDefaults.PRODUCT_IMAGE = uploadDefaultImage(defaultProductResource, "products");
+        GlobalDefaults.SHOP_IMAGE = uploadDefaultImage(defaultShopResource, "shops");
     }
 
     // --------------------------------------------------------------------------------
@@ -395,7 +397,9 @@ public class DatabaseInitializer {
         log.info(">>> Initializing Shops and Trucks...");
 
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
-        Shop shop1 = shopRepository.save(new Shop("52552", "Madrid-Recoletos", address1));
+        Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
+        shop1.setImage(GlobalDefaults.SHOP_IMAGE);
+        shopRepository.save(shop1);
 
         Truck truck1 = truckRepository.save(new Truck("2C4RD"));
         Truck truck2 = truckRepository.save(new Truck("5U7TH"));

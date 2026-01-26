@@ -12,7 +12,7 @@ import {ProductCardComponent} from '../product-card/product-card.component';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
 import {Dialog} from 'primeng/dialog';

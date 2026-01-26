@@ -1,0 +1,175 @@
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+
+    <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">
+          {{ shopId() ? 'Editar Tienda' : 'Nueva Tienda' }}
+        </h1>
+        <p class="text-slate-500">Gestiona la ubicación e información logística del punto de venta.</p>
+      </div>
+      <div class="flex gap-3">
+        <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary" routerLink="/admin/shops"></p-button>
+        <p-button label="Guardar Tienda" icon="pi pi-check" severity="success" (onClick)="onSubmit()"></p-button>
+      </div>
+    </div>
+
+    <form [formGroup]="shopForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+              <label for="name" class="text-sm font-semibold text-slate-600">Nombre de la Tienda</label>
+              <input pInputText id="name" formControlName="name" placeholder="Ej: Tienda Central Madrid" class="w-full" />
+              <small class="text-red-500" *ngIf="shopForm.get('name')?.invalid && shopForm.get('name')?.touched">
+                El nombre es obligatorio.
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="ref" class="text-sm font-semibold text-slate-600">Código Referencia</label>
+              <input pInputText id="ref" formControlName="referenceCode" placeholder="Generado automáticamente" class="w-full bg-slate-100 text-slate-500" />
+            </div>
+
+            @if (shop(); as s) {
+              <div class="flex flex-col gap-2 bg-blue-50 p-3 rounded border border-blue-100">
+                <span class="text-xs text-blue-600 font-bold uppercase">Productos en Catálogo</span>
+                <span class="text-xl font-mono text-blue-900">{{ s.totalAvailableProducts }}</span>
+              </div>
+              <div class="flex flex-col gap-2 bg-purple-50 p-3 rounded border border-purple-100">
+                <span class="text-xs text-purple-600 font-bold uppercase">Camiones Asignados</span>
+                <span class="text-xl font-mono text-purple-900">{{ s.totalAssignedTrucks }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Ubicación y Dirección</h2>
+
+          <div class="flex flex-col gap-4">
+            <div class="relative w-full h-[350px] rounded-lg overflow-hidden border border-slate-300">
+              <div id="map" class="w-full h-full z-0"></div>
+              <div class="absolute bottom-2 left-2 bg-white/90 p-2 rounded text-xs z-[1000] shadow">
+                Haz clic en el mapa para ubicar
+              </div>
+            </div>
+
+            <div formGroupName="address" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="text-sm font-semibold text-slate-600">Alias de dirección</label>
+                <input pInputText formControlName="alias" class="w-full"/>
+              </div>
+              <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="text-sm font-semibold text-slate-600">Calle / Avenida</label>
+                <input pInputText formControlName="street" class="w-full"/>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">Número</label>
+                <input pInputText formControlName="number" class="w-full"/>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">Piso</label>
+                <input pInputText formControlName="floor" class="w-full"/>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">Ciudad</label>
+                <input pInputText formControlName="city" class="w-full"/>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">Código Postal</label>
+                <input pInputText formControlName="postalCode" class="w-full"/>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">País</label>
+                <input pInputText formControlName="country" class="w-full"/>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-2 border-t pt-4 border-slate-100">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-slate-500">Latitud</label>
+                <p-inputNumber formControlName="latitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-slate-500">Longitud</label>
+                <p-inputNumber formControlName="longitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-lg font-bold text-slate-800 m-0">Imagen de Tienda</h2>
+            <p-button label="Restaurar" (click)="restoreImage()" icon="pi pi-undo" [text]="true" severity="info" />
+          </div>
+
+          <div class="mb-4">
+
+            <div *ngIf="existingImage()" class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-video">
+              <img [src]="existingImage()" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Actual</span>
+              <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="newImage() as img" class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-video">
+              <img [src]="img.previewUrl" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Nueva</span>
+              <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="!existingImage() && !newImage()" class="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400">
+              <i class="pi pi-image text-4xl mb-2"></i>
+              <span class="text-sm">Sin imagen asignada</span>
+            </div>
+
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-slate-600">Cambiar Foto</label>
+
+            <p-fileupload
+              #fileUploader
+              mode="advanced"
+              [multiple]="false"
+              accept="image/*"
+              [maxFileSize]=MAX_SIZE
+              [showUploadButton]="false"
+              [showCancelButton]="false"
+              invalidFileSizeMessageSummary="{0}: Tamaño inválido."
+              chooseLabel="Seleccionar Foto"
+              chooseIcon="pi pi-camera"
+              (onSelect)="onFileSelect($event)"
+              (onRemove)="onFileRemove($event)"
+              styleClass="w-full"
+              [auto]="false">
+            </p-fileupload>
+          </div>
+        </div>
+
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -15,16 +15,12 @@ import {CategoryService} from '../../../services/category.service';
 import {fixKeys, mapToCategories, mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {TreeSelect} from 'primeng/treeselect';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {Product} from '../../../models/product.model';
 import {ImageInfo} from '../../../models/imageInfo.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {forkJoin} from 'rxjs';
-
-interface LocalImage {
-  file: File;
-  previewUrl: SafeUrl;
-}
+import {LocalImage} from '../../../models/localImage.model';
 
 @Component({
   selector: 'app-create-edit-product',

@@ -254,7 +254,7 @@ public class ProductRestController {
 
     @Operation(summary = "Update product images (remove unused, add new)")
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> updateProductImages(
+    public ResponseEntity<ProductDTO> updateProductImages(
             @PathVariable Long id,
             @RequestPart("existingImages") List<ProductImageInfo> existingImages,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
@@ -290,37 +290,36 @@ public class ProductRestController {
                 currentImages.add(newImg);
             }
         }
+        else if (currentImages.isEmpty()) { //No current images + No new images -> Set default image
+            currentImages.add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
+        }
 
-        return ResponseEntity.ok(productService.update(product));
+        return ResponseEntity.ok(new ProductDTO(productService.update(product)));
     }
 
 
     @Operation(summary = "Delete remote product image by ID")
     @DeleteMapping("/{productId}/images/{imageId}")
-    public ResponseEntity<Product> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
-        // 1. Retrieve the product
+    public ResponseEntity<ProductDTO> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
         Product product = findProductHelper(productId);
 
-        // 2. Find the image in product images list
         ProductImageInfo imageToRemove = product.getImages().stream()
                 .filter(img -> img.getId().equals(imageId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Image not found in this product."));
 
         // 3. Delete from MinIO
-        storageService.deleteFile(imageToRemove.getS3Key());
-
-        // 4. Delete from image list
-        product.getImages().remove(imageToRemove);
+        if(!imageToRemove.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+            storageService.deleteFile(imageToRemove.getS3Key());
+            product.getImages().remove(imageToRemove);
+        }
 
         if(product.getImages().isEmpty()){
             product.getImages().add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
         }
 
-        // 5. Save product (orphanRemoval erases the image from BD)
         Product savedProduct = productService.save(product);
-
-        return ResponseEntity.ok(savedProduct);
+        return ResponseEntity.ok(new ProductDTO(savedProduct));
     }
 
 

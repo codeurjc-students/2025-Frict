@@ -4,11 +4,13 @@ import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.ListResponse;
 import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
+import com.tfg.backend.model.User;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.utils.GlobalDefaults;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,10 +46,8 @@ public class CategoryRestController {
     @Operation(summary = "Get category by ID")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        return categoryService.findById(id)
-                .map(CategoryDTO::new)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found."));
+        Category category = findCategoryHelper(id);
+        return ResponseEntity.ok(new CategoryDTO(category));
     }
 
 
@@ -57,31 +57,22 @@ public class CategoryRestController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) throws IOException {
 
-        // A. Find category
-        Optional<Category> categoryOptional = categoryService.findById(id);
-        if(categoryOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
-        }
-        Category category = categoryOptional.get();
+        Category category = findCategoryHelper(id);
 
-        // B. Previous cleaning: If there is already a photo, delete the one from MinIO
-        if (category.getCategoryImage() != null && category.getCategoryImage().getS3Key() != null) {
+        // Delete the previous image from MinIO if it is not the default photo
+        if (!category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
             storageService.deleteFile(category.getCategoryImage().getS3Key());
         }
 
-        // C. Upload to "categories" folder
         Map<String, String> res = storageService.uploadFile(file, "categories");
 
-        // D. Create ImageInfo object
         ImageInfo imageInfo = new ImageInfo(
                 res.get("url"),
                 res.get("key"),
                 file.getOriginalFilename()
         );
 
-        // E. Save
         category.setCategoryImage(imageInfo);
-
         return ResponseEntity.ok(categoryService.save(category));
     }
 
@@ -89,24 +80,20 @@ public class CategoryRestController {
     @Operation(summary = "Delete remote category image")
     @DeleteMapping("/{id}/image")
     public ResponseEntity<Category> deleteCategoryImage(@PathVariable Long id) {
+        Category category = findCategoryHelper(id);
 
-        //A. Find category
-        Optional<Category> categoryOptional = categoryService.findById(id);
-        if(categoryOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " not found.");
-        }
-        Category category = categoryOptional.get();
-
-        // B. Check if there is something to delete
-        if (category.getCategoryImage() != null) {
+        if (!category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
             storageService.deleteFile(category.getCategoryImage().getS3Key());
-            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE); //Set default category image
-
-            // 3. Save changes
+            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
             return ResponseEntity.ok(categoryService.save(category));
         }
 
-        // If there were no image, return the original category
+        //Default category image -> Do not delete
         return ResponseEntity.ok(category);
+    }
+
+    private Category findCategoryHelper(Long id) {
+        return this.categoryService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " does not exist."));
     }
 }

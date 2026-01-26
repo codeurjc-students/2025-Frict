@@ -12,18 +12,11 @@ import {InputText} from 'primeng/inputtext';
 
 import * as L from 'leaflet';
 import {Tooltip} from 'primeng/tooltip';
-
-export interface ShopDTO {
-  id: number;
-  referenceCode: string;
-  name: string;
-  fullAddress: string;
-  city: string;
-  productsCount: number; // availableProducts.size()
-  trucksCount: number;   // assignedTrucks.size()
-  lat: number;
-  lng: number;
-}
+import {Shop} from '../../../models/shop.model';
+import {ShopService} from '../../../services/shop.service';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {formatAddress} from '../../../utils/textFormat.util';
 
 interface ShopAlert {
   shopName: string;
@@ -37,15 +30,13 @@ interface ShopAlert {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip
+    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent
   ],
   templateUrl: './shops-management.component.html',
   styleUrl: 'shops-management.component.css'
 })
-export class ShopsManagementComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ShopsManagementComponent implements OnInit, OnDestroy {
 
-  shops = signal<ShopDTO[]>([]);
-  selectedShop = signal<ShopDTO | null>(null);
   shopAlerts = signal<ShopAlert[]>([
     {
       shopName: 'Nombre de Tienda 1',
@@ -74,25 +65,22 @@ export class ShopsManagementComponent implements OnInit, AfterViewInit, OnDestro
   ]);
 
   // Pagination
+  shopsPage: PageResponse<Shop> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   first = 0;
-  rows = 5;
-  totalRecords = 0;
+  rows = 10;
 
   // Leaflet map
   private map: L.Map | undefined;
   private markers: L.Marker[] = [];
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    this.generateMockData();
-  }
+  // Loading
+  protected loading: boolean = true;
+  protected error: boolean = false;
+
+  constructor(private shopService: ShopService) {}
 
   ngOnInit() {
-  }
-
-  ngAfterViewInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.initMap();
-    }
+    this.loadShops();
   }
 
   ngOnDestroy(): void {
@@ -110,7 +98,7 @@ export class ShopsManagementComponent implements OnInit, AfterViewInit, OnDestro
     L.control.zoom({ position: 'topright' }).addTo(this.map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+      attribution: '&copy; OpenStreetMap',
       maxZoom: 19
     }).addTo(this.map);
 
@@ -122,21 +110,21 @@ export class ShopsManagementComponent implements OnInit, AfterViewInit, OnDestro
 
     // Custom shops icon
     const shopIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/7509/7509698.png',
+      iconUrl: './location-pointer.png',
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -28]
     });
 
-    this.shops().forEach(shop => {
-      const marker = L.marker([shop.lat, shop.lng], { icon: shopIcon })
+    this.shopsPage.items.forEach(shop => {
+      const marker = L.marker([shop.latitude, shop.longitude], { icon: shopIcon })
         .addTo(this.map!)
         .bindPopup(`
             <div class="p-2 min-w-[140px] text-center">
-                <h4 class="font-bold text-slate-800 text-sm">${shop.name}</h4>
-                <p class="text-xs text-slate-500 mb-2">${shop.city}</p>
+                <h4 class="font-bold text-slate-800 text-sm">Tienda ${shop.name}</h4>
+                <p class="text-xs text-slate-500 mb-2">${formatAddress(shop.address)}</p>
                 <span class="bg-cyan-100 text-cyan-800 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                    Stock: ${shop.productsCount}
+                    Stock: ${shop.totalAvailableProducts} productos
                 </span>
             </div>
         `);
@@ -145,44 +133,43 @@ export class ShopsManagementComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
+  loadShops(){
+    this.shopService.getShopsPage(this.first/this.rows, this.rows).subscribe({
+      next: (shops) => {
+        this.shopsPage = shops;
+        console.log(this.shopsPage);
+        this.loading = false;
+
+        // SOLUCIÓN: Usar setTimeout para esperar un ciclo de renderizado
+        setTimeout(() => {
+          this.initMap();
+        }, 10);
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    })
+  }
+
   //Fly to selected shop in map
-  locateShopOnMap(shop: ShopDTO) {
+  locateShopOnMap(shop: Shop) {
     if (this.map) {
-      this.map.flyTo([shop.lat, shop.lng], 14, {
+      this.map.flyTo([shop.latitude, shop.longitude], 14, {
         duration: 1.5 //Seconds
       });
     }
   }
 
-  onManageShop(shop: ShopDTO) {
+  onManageShop(shop: Shop) {
     console.log("Navegando a gestión de tienda:", shop.id);
   }
 
   onPageChange(event: any) {
     this.first = event.first;
     this.rows = event.rows;
+    this.loadShops();
   }
 
-  // --- Helpers & Mock Data ---
-  private generateMockData() {
-    const cities = [
-      { name: 'Madrid', lat: 40.4168, lng: -3.7038 },
-      { name: 'Barcelona', lat: 41.3851, lng: 2.1734 },
-      { name: 'Valencia', lat: 39.4699, lng: -0.3763 },
-      { name: 'Sevilla', lat: 37.3891, lng: -5.9845 },
-      { name: 'Bilbao', lat: 43.2630, lng: -2.9350 }
-    ];
-    this.shops.set(cities.map((city, i) => ({
-      id: i + 1,
-      referenceCode: `SHOP-${100+i}`,
-      name: `Tienda ${city.name}`,
-      city: city.name,
-      fullAddress: `Polígono Ind. ${city.name}, Nave ${i+4}`,
-      productsCount: Math.floor(Math.random() * 5000) + 1000,
-      trucksCount: Math.floor(Math.random() * 8) + 1,
-      lat: city.lat,
-      lng: city.lng
-    })));
-    this.totalRecords = 5;
-  }
+  protected readonly formatAddress = formatAddress;
 }

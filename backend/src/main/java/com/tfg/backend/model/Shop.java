@@ -1,5 +1,6 @@
 package com.tfg.backend.model;
 
+import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,13 @@ public class Shop {
     @JoinColumn(name = "address_id")
     private Address address;
 
+    @Embedded
+    private ImageInfo image;
+
+    private double longitude;
+
+    private double latitude;
+
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ShopStock> availableProducts = new HashSet<>();
 
@@ -35,9 +43,11 @@ public class Shop {
     public Shop() {
     }
 
-    public Shop(String referenceCode, String name, Address address) {
-        this.referenceCode = referenceCode;
+    public Shop(String name, Address address, double longitude, double latitude) {
+        this.referenceCode = ReferenceNumberGenerator.generateShopReferenceNumber();
         this.name = name;
         this.address = address;
+        this.longitude = longitude;
+        this.latitude = latitude;
     }
 }

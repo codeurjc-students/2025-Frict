@@ -72,7 +72,7 @@ public class UserRestController {
         User loggedUser = userOptional.get();
 
         // Clean previous image (if exists and it is not the default user image)
-        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().getS3Key().equals(GlobalDefaults.USER_IMAGE.getS3Key())) {
+        if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
         }
 
@@ -105,21 +105,17 @@ public class UserRestController {
 
 
     @Operation(summary = "Delete logged user image")
-    @DeleteMapping("/avatar")
-    public ResponseEntity<UserDTO> deleteAvatar(HttpServletRequest request) {
+    @DeleteMapping("/image")
+    public ResponseEntity<UserDTO> deleteUserImage(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
 
         // Check if there is something to delete
-        if (loggedUser.getUserImage() != null) {
-            // Delete from MinIO
+        if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE); //Set default user image
-
-            // Save changes
+            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
             return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
         }
-
-        return ResponseEntity.ok(new UserDTO(loggedUser)); // Return original user if did not have image
+        return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
 

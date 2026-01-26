@@ -11,7 +11,7 @@ import {Tooltip} from 'primeng/tooltip';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {Tag} from 'primeng/tag';
