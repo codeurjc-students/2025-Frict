@@ -72,7 +72,7 @@ public class UserRestController {
         User loggedUser = userOptional.get();
 
         // Clean previous image (if exists and it is not the default user image)
-        if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
+        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
         }
 

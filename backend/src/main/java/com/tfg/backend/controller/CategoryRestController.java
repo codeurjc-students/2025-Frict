@@ -60,7 +60,7 @@ public class CategoryRestController {
         Category category = findCategoryHelper(id);
 
         // Delete the previous image from MinIO if it is not the default photo
-        if (!category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
+        if (category.getCategoryImage() != null && !category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
             storageService.deleteFile(category.getCategoryImage().getS3Key());
         }
 
