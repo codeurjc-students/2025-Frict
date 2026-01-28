@@ -22,7 +22,7 @@
       <div class="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[400px] lg:h-[500px] relative">
         <div class="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-700 text-xs flex items-center gap-2">
-            <i class="pi pi-map text-green-600"></i> Distribución de tiendas
+            <i class="pi pi-map text-green-600"></i> Mapa de tiendas
           </h3>
         </div>
 
@@ -114,7 +114,7 @@
 
         <ng-template pTemplate="body" let-shop>
           <tr [pSelectableRow]="shop" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group">
-            <td class="pl-4 font-mono text-xs text-slate-500">{{ shop.referenceCode }}</td>
+            <td class="pl-4 font-mono text-sm text-slate-500">{{ shop.referenceCode }}</td>
 
             <td class="font-bold text-slate-800 text-sm py-3">
               {{ shop.name }}
@@ -140,16 +140,23 @@
             <td class="text-right pr-4">
               <div class="flex justify-start gap-2">
                 <p-button icon="pi pi-map-marker" (click)="locateShopOnMap(shop); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Ver en Mapa"></p-button>
-                <p-button icon="pi pi-cog" pTooltip="Administrar Tienda" (onClick)="onManageShop(shop)" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true"></p-button>
-                <p-button icon="pi pi-pencil" styleClass="p-button-xs p-button-outlined p-button-warning" rounded="true" pTooltip="Editar Tienda"></p-button>
-                <p-button icon="pi pi-trash" pTooltip="Eliminar tienda" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true"></p-button>
+                <p-button icon="pi pi-cog" [routerLink]="['/admin/shops', shop.id]" pTooltip="Administrar Tienda" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true"></p-button>
+                <p-button icon="pi pi-pencil" [routerLink]="['/admin/shops/edit', shop.id]" styleClass="p-button-xs p-button-outlined p-button-warning" rounded="true" pTooltip="Editar Tienda"></p-button>
+                <p-button icon="pi pi-trash" (click)="deleteShop(shop.id)" pTooltip="Eliminar tienda" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true"></p-button>
               </div>
             </td>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
-          <tr><td colspan="6" class="text-center p-4 text-slate-400">No hay tiendas disponibles.</td></tr>
+          <tr>
+            <td colspan="6" class="p-0 border-0">
+              <div class="flex flex-col items-center justify-center w-full h-32 text-slate-400 bg-slate-50">
+                <i class="pi pi-inbox text-4xl mb-2 text-slate-300"></i>
+                <span class="font-medium">No hay tiendas disponibles.</span>
+              </div>
+            </td>
+          </tr>
         </ng-template>
       </p-table>
 

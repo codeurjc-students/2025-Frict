@@ -27,4 +27,8 @@ public class ShopService {
     public Shop save(Shop s) {
         return repository.save(s);
     }
+
+    public void delete(Shop s) {
+        repository.delete(s);
+    }
 }

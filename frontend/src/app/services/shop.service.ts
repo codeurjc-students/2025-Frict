@@ -34,6 +34,10 @@ export class ShopService {
     return this.http.put<Shop>(this.apiUrl + `/${id}`, shopData);
   }
 
+  public deleteShop(id: string): Observable<Shop> {
+    return this.http.delete<Shop>(this.apiUrl + `/${id}`);
+  }
+
   public updateShopImage(shopId: string, selectedImage: File): Observable<Shop> {
     const formData = new FormData();
     formData.append('image', selectedImage);

@@ -17,6 +17,7 @@ import {ShopService} from '../../../services/shop.service';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {formatAddress} from '../../../utils/textFormat.util';
+import {MessageService} from 'primeng/api';
 
 interface ShopAlert {
   shopName: string;
@@ -39,25 +40,25 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
 
   shopAlerts = signal<ShopAlert[]>([
     {
-      shopName: 'Nombre de Tienda 1',
+      shopName: 'Tienda de Ejemplo 1',
       message: 'Stock crítico (-15%)',
       severity: 'high',
       icon: 'pi pi-exclamation-triangle'
     },
     {
-      shopName: 'Madrid Central',
+      shopName: 'Tienda de Ejemplo 2',
       message: 'Nuevo camión asignado',
       severity: 'info',
       icon: 'pi pi-truck'
     },
     {
-      shopName: 'Barcelona Port',
-      message: 'Retraso en entrega #992',
+      shopName: 'Tienda de Ejemplo 3',
+      message: 'Retraso en entrega OR-442-Y5O3',
       severity: 'medium',
       icon: 'pi pi-clock'
     },
     {
-      shopName: 'Valencia Hub',
+      shopName: 'Tienda de Ejemplo 4',
       message: 'Inventario completado',
       severity: 'info',
       icon: 'pi pi-check-circle'
@@ -77,7 +78,8 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   protected loading: boolean = true;
   protected error: boolean = false;
 
-  constructor(private shopService: ShopService) {}
+  constructor(private shopService: ShopService,
+              private messageService: MessageService) {}
 
   ngOnInit() {
     this.loadShops();
@@ -161,8 +163,16 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  onManageShop(shop: Shop) {
-    console.log("Navegando a gestión de tienda:", shop.id);
+  deleteShop(id: string) {
+    this.shopService.deleteShop(id).subscribe({
+      next: (shop) => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Tienda ${shop.name} borrada correctamente.` });
+        this.loadShops();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido borrar la tienda.` });
+      }
+    })
   }
 
   onPageChange(event: any) {

@@ -16,4 +16,6 @@ public class TruckService {
     public List<Truck> findAll() { return repository.findAll(); }
 
     public Truck save(Truck t) { return repository.save(t); }
+
+    public List<Truck> saveAll(List<Truck> l) { return repository.saveAll(l); }
 }

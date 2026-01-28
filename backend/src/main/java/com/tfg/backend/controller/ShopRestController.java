@@ -4,6 +4,7 @@ import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.StorageService;
+import com.tfg.backend.service.TruckService;
 import com.tfg.backend.utils.GlobalDefaults;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,10 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/shops")
@@ -29,6 +27,9 @@ public class ShopRestController {
 
     @Autowired
     private ShopService shopService;
+
+    @Autowired
+    private TruckService truckService;
 
     @Autowired
     private StorageService storageService;
@@ -72,6 +73,28 @@ public class ShopRestController {
         Shop updatedShop = shopService.save(shop);
 
         return ResponseEntity.accepted().body(new ShopDTO(updatedShop));
+    }
+
+
+    @Operation(summary = "Delete shop by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ShopDTO> deleteShop(@PathVariable Long id) {
+        Shop shop = findShopHelper(id);
+
+        //Unlink trucks
+        List<Truck> assignedTrucks = shop.getAssignedTrucks();
+        for (Truck truck : assignedTrucks) {
+            truck.setAssignedShop(null);
+        }
+        truckService.saveAll(assignedTrucks);
+
+        shopService.delete(shop);
+        //Delete shop image (if it is not the default photo)
+        if (!shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+            storageService.deleteFile(shop.getImage().getS3Key());
+        }
+
+        return ResponseEntity.ok(new ShopDTO(shop));
     }
 
 
