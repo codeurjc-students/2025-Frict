@@ -27,10 +27,7 @@
       <div class="flex w-full group">
         <p-inputgroup>
           <input pInputText placeholder="Buscar productos…" [(ngModel)]="searchBarInput" class="!bg-surface-800 !text-surface-200"/>
-          <p-button
-            [routerLink]="['/search']"
-            [queryParams]="{ query: searchBarInput }"
-            [disabled]="!(searchBarInput.length > 0)">
+          <p-button (click)="search()">
             <ng-template pTemplate="content">
               <i class="pi pi-search"></i>
               <span class="hidden md:inline ml-2 font-bold">Buscar</span>

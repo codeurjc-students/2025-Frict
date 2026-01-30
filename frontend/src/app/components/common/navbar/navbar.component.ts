@@ -137,5 +137,15 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  protected search() {
+    if (this.searchBarInput.length > 0){
+      this.router.navigate(['/search'], {
+        queryParams: {
+          query: this.searchBarInput
+        }
+      });
+    }
+  }
+
   protected readonly transformToNumber = transformToNumber;
 }

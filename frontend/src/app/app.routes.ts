@@ -94,6 +94,11 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'MANAGER'], title: 'Gestor de Tiendas', icon: 'admin', breadcrumb: 'Gestor de Tiendas' }
       },
       {
+        path: 'shop/:id',
+        loadComponent: () => import('./components/admin/shop-details/shop-details.component').then(m => m.ShopDetailsComponent),
+        data: { roles: ['ADMIN', 'MANAGER'], title: 'Administrar Tienda', icon: 'admin', breadcrumb: 'Administrar Tienda' }
+      },
+      {
         path: 'shops/new',
         loadComponent: () => import('./components/admin/create-edit-shop/create-edit-shop.component').then(m => m.CreateEditShopComponent),
         data: { roles: ['ADMIN', 'MANAGER'], title: 'Nueva Tienda', icon: 'admin', breadcrumb: 'Nueva Tienda' }

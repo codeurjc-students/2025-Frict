@@ -2,7 +2,7 @@ import {Component, OnInit, AfterViewInit, signal, Inject, PLATFORM_ID, ViewChild
 import { NgIf, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http'; // Para geocoding
+import { HttpClient } from '@angular/common/http';
 
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
@@ -11,10 +11,10 @@ import { FileUpload } from 'primeng/fileupload';
 import { MessageService } from 'primeng/api';
 import { DomSanitizer } from '@angular/platform-browser';
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { ShopService } from '../../../services/shop.service'; // Asumiendo que existe
-import { Shop } from '../../../models/shop.model'; // Tu interfaz
+import { ShopService } from '../../../services/shop.service';
+import { Shop } from '../../../models/shop.model';
 import { LocalImage } from '../../../models/localImage.model';
-import * as L from 'leaflet'; // Importamos Leaflet
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-create-edit-shop',
@@ -31,7 +31,7 @@ import * as L from 'leaflet'; // Importamos Leaflet
     LoadingScreenComponent
   ],
   templateUrl: './create-edit-shop.component.html',
-  styleUrl: './create-edit-shop.component.css' // Asumiendo mismo estilo base
+  styleUrl: './create-edit-shop.component.css'
 })
 export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
@@ -87,9 +87,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Inicializamos el mapa solo si estamos en el navegador y ya cargó la data (o si es nuevo)
     if (isPlatformBrowser(this.platformId)) {
-      // Pequeño delay para asegurar que el DOM del div 'map' existe si loading pasa a false
       setTimeout(() => {
         if (!this.loading) this.initMap();
       }, 10);
@@ -124,19 +122,18 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       });
     } else {
       this.loading = false;
-      // Esperar al ciclo de vista para initMap en modo creación
+      // Wait for initMap in creation mode
       setTimeout(() => this.initMap(), 100);
     }
   }
 
   // --- LEAFLET MAP LOGIC ---
   private initMap(): void {
-    if (this.map) return; // Evitar reinicialización
+    if (this.map) return;
 
     const container = document.getElementById('map');
     if (!container) return;
 
-    // Coordenadas por defecto (Madrid) o las de la tienda
     const lat = this.shopForm.get('latitude')?.value || 40.4168;
     const lng = this.shopForm.get('longitude')?.value || -3.7038;
     const zoom = this.shopId() ? 15 : 6;
@@ -148,7 +145,6 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       attribution: '© OpenStreetMap'
     }).addTo(this.map);
 
-    // Icono por defecto (fix para webpack/angular)
     const iconDefault = L.icon({
       iconUrl: './location-pointer.png',
       iconSize: [25, 41],
@@ -216,16 +212,15 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
   // --- IMAGE LOGIC (SINGLE) ---
   onFileSelect(event: any) {
-    const file = event.files[0]; // Solo tomamos el primero
+    const file = event.files[0];
     if (file && file.size <= this.MAX_SIZE) {
       const preview = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file));
 
-      // Reemplazamos cualquier imagen previa
+      // Replace previous images
       this.newImage.set({
         file: file,
         previewUrl: preview
       });
-      // Si subimos una nueva, visualmente "borramos" la existente del backend para mostrar la nueva
       this.existingImage.set(null);
     }
   }
@@ -236,7 +231,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
   removeImage() {
     this.newImage.set(null);
-    this.existingImage.set(null); // Deja al usuario sin imagen (o podrías restaurar la original)
+    this.existingImage.set(null);
     if (this.fileUploader) {
       this.fileUploader.clear();
     }
@@ -258,10 +253,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     }
 
     const formValue = this.shopForm.getRawValue();
-    // Aplanar estructura si tu Backend espera lat/long fuera de address (como indica la interfaz Shop)
     const shopData: Shop = {
-      ...formValue, // name, ref, lat, long, address object
-      // totalAvailableProducts y trucks no se envían al editar/crear usualmente, o se ignoran en back
+      ...formValue
     };
 
     const imageFile = this.newImage()?.file;
