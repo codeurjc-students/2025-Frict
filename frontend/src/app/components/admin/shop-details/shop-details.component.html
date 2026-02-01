@@ -1,10 +1,10 @@
 <div class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
-  <div class="max-w-[95%] xl:max-w-[92%] mx-auto p-4 py-6 flex flex-col gap-8">
+
+  <div class="max-w-[95%] xl:max-w-[95%] mx-auto p-4 py-6 flex flex-col gap-8">
 
     <div class="relative w-full h-64 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
       <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + shop()?.imageUrl + ')'"></div>
       <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-transparent"></div>
-
       <div class="relative h-full flex flex-col justify-end p-8 text-white z-10">
         <div class="flex justify-between items-end">
           <div>
@@ -13,210 +13,209 @@
               <span class="text-slate-300 text-xs font-mono border border-slate-600 px-2 rounded">{{ shop()?.referenceCode }}</span>
             </div>
             <h1 class="text-4xl font-bold mb-1">{{ shop()?.name }}</h1>
-            <p class="text-slate-300 flex items-center gap-2 text-sm">
-              <i class="pi pi-map-marker text-yellow-500"></i> {{ shop()?.address }}
-            </p>
+            <p class="text-slate-300 flex items-center gap-2 text-sm"><i class="pi pi-map-marker text-yellow-500"></i> {{ shop()?.address }}</p>
           </div>
-
-          <div class="hidden md:flex gap-4">
-            <div class="bg-white/10 backdrop-blur-md p-3 px-5 rounded-xl border border-white/20">
-              <span class="block text-xs text-slate-400 uppercase">Manager</span>
-              <span class="font-bold text-white">{{ shop()?.managerName }}</span>
-            </div>
-            <div class="bg-white/10 backdrop-blur-md p-3 px-5 rounded-xl border border-white/20 text-right">
-              <span class="block text-xs text-slate-400 uppercase">Valor Stock</span>
-              <span class="font-bold text-yellow-400 text-xl">{{ shop()?.totalValue | currency:'EUR' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button (click)="goBack()" class="absolute top-6 left-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-colors border border-white/10">
-        <i class="pi pi-arrow-left"></i>
-      </button>
-    </div>
-
-
-    <div>
-      <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-        <i class="pi pi-compass text-cyan-600"></i> Control de Flota en Tiempo Real
-      </h2>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[450px]">
-
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-          <p-table [value]="trucks()" [scrollable]="true" scrollHeight="flex" selectionMode="single"
-                   styleClass="p-datatable-sm" [rowHover]="true">
-            <ng-template pTemplate="header">
-              <tr class="bg-slate-50 text-slate-600 text-xs uppercase">
-                <th class="pl-4">Vehículo</th>
-                <th class="text-center">Estado</th>
-                <th class="text-right pr-4">Ubicación</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-truck>
-              <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-b border-slate-100" (click)="focusTruckOnMap(truck)">
-                <td class="pl-4 py-3">
-                  <div class="font-bold text-slate-800 flex items-center gap-2">
-                    <i class="pi pi-truck text-slate-400"></i> {{ truck.plate }}
-                  </div>
-                  <div class="text-xs text-slate-500 pl-6">{{ truck.driverName }}</div>
-                </td>
-                <td class="text-center">
-                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase"
-                                      [ngClass]="{
-                                        'bg-green-100 text-green-700': truck.status === 'AVAILABLE',
-                                        'bg-blue-100 text-blue-700': truck.status === 'ON_ROUTE',
-                                        'bg-red-100 text-red-700': truck.status === 'MAINTENANCE'
-                                      }">
-                                    {{ truck.status }}
-                                </span>
-                </td>
-                <td class="text-right pr-4">
-                  <button class="text-xs text-cyan-600 hover:text-cyan-800 font-bold flex items-center gap-1 ml-auto">
-                    <i class="pi pi-crosshairs"></i> Localizar
-                  </button>
-                  <span class="text-[10px] text-slate-400">Act: {{ truck.lastUpdate }}</span>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-
-        <div class="bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden relative shadow-inner">
-          <div class="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur px-3 py-1 rounded-lg border border-slate-200 shadow-sm text-xs font-bold text-slate-600">
-            <i class="pi pi-map text-green-600"></i> Posición GPS
-          </div>
-          <div id="fleet-map" class="w-full h-full"></div>
+          <button (click)="goBack()" class="absolute top-6 left-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/10"><i class="pi pi-arrow-left"></i></button>
         </div>
       </div>
     </div>
 
 
-    <div>
-      <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-        <i class="pi pi-box text-yellow-600"></i> Gestión de Inventario
-      </h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <div class="flex flex-col lg:flex-row gap-6 items-start">
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[500px]">
 
-        <div class="flex-grow bg-white border border-slate-200 rounded-2xl shadow-sm w-full lg:w-2/3">
-
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center gap-4">
-            <p-iconfield iconPosition="left" class="w-full">
-              <p-inputicon styleClass="pi pi-search text-slate-400" />
-              <input pInputText type="text" (input)="dtStock.filterGlobal($any($event.target).value, 'contains')"
-                     placeholder="Buscar referencia o nombre..." class="w-full p-inputtext-sm" />
-            </p-iconfield>
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h3 class="text-xl font-bold text-slate-800">Flota de Camiones</h3>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <p-inputgroup class="w-full sm:w-auto">
+              <input pInputText placeholder="Buscar camión..." class="p-inputtext-sm" />
+              <p-inputgroup-addon>
+                <p-button icon="pi pi-search" severity="secondary" variant="text" size="small"/>
+              </p-inputgroup-addon>
+            </p-inputgroup>
+            <p-button label="Nuevo" icon="pi pi-plus" size="small" severity="warn"></p-button>
           </div>
-
-          <p-table #dtStock [value]="stocks()" [paginator]="true" [rows]="5"
-                   [globalFilterFields]="['productName','productRef']"
-                   selectionMode="single" [(selection)]="selectedStock"
-                   styleClass="p-datatable-sm" responsiveLayout="scroll">
-            <ng-template pTemplate="header">
-              <tr class="text-xs text-slate-500 uppercase bg-slate-50">
-                <th class="pl-6">Producto</th>
-                <th class="text-center">Stock</th>
-                <th class="text-right pr-6">Acción</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-item>
-              <tr [pSelectableRow]="item" class="border-b border-slate-50 transition-colors hover:bg-slate-50 cursor-pointer"
-                  [ngClass]="{'bg-yellow-50/50': selectedStock()?.id === item.id}">
-                <td class="pl-6 py-3">
-                  <div class="font-bold text-slate-800 text-sm">{{ item.productName }}</div>
-                  <div class="text-xs font-mono text-slate-400">{{ item.productRef }}</div>
-                </td>
-                <td class="text-center">
-                                <span class="inline-flex flex-col items-center">
-                                    <span class="font-bold text-sm" [ngClass]="{'text-red-500': item.quantity < item.minStock, 'text-slate-700': item.quantity >= item.minStock}">
-                                        {{ item.quantity }}
-                                    </span>
-                                  @if(item.quantity < item.minStock) {
-                                    <span class="text-[9px] bg-red-100 text-red-600 px-1 rounded uppercase font-bold">Bajo</span>
-                                  }
-                                </span>
-                </td>
-                <td class="text-right pr-6">
-                  <button (click)="selectProductForReplenish(item); $event.stopPropagation()"
-                          class="text-xs border border-slate-200 bg-white hover:bg-yellow-50 text-slate-600 hover:text-yellow-700 px-3 py-1 rounded-lg transition-colors shadow-sm">
-                    Gestionar
-                  </button>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
         </div>
 
-        <div class="w-full lg:w-1/3 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sticky top-4 flex flex-col h-auto min-h-[400px]">
+        <p-table [value]="trucks()" [rows]="5" styleClass="p-datatable-sm" responsiveLayout="scroll" [scrollable]="true" scrollHeight="flex">
+          <ng-template pTemplate="header">
+            <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
+              <th class="pl-4 font-semibold">Ref</th>
+              <th class="font-semibold">Conductor</th>
+              <th class="text-center font-semibold">Estado</th>
+              <th class="font-semibold">Pedido Actual</th>
+              <th class="text-right pr-4 font-semibold">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-truck>
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group cursor-pointer" (click)="focusTruckOnMap(truck)">
 
-          @if(selectedStock(); as stock) {
-            <div class="animate-fade-in">
-              <div class="flex justify-between items-start mb-6">
-                <h3 class="font-bold text-slate-800 text-lg">Orden de Reposición</h3>
-                <button (click)="selectedStock.set(null)" class="text-slate-400 hover:text-slate-600"><i class="pi pi-times"></i></button>
-              </div>
+              <td class="pl-4 font-mono text-sm text-slate-500">{{ truck.referenceCode }}</td>
 
-              <div class="flex gap-4 mb-6">
-                <div class="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">
-                  <i class="pi pi-box text-2xl text-slate-400"></i>
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-slate-800 leading-tight">{{ stock.productName }}</p>
-                  <p class="text-xs font-mono text-slate-500 mt-1">{{ stock.productRef }}</p>
-                  <p class="text-xs text-yellow-600 font-bold mt-2">Precio: {{ stock.price | currency:'EUR' }}</p>
-                </div>
-              </div>
-
-              <p-divider></p-divider>
-
-              <div class="py-4">
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Cantidad a ingresar</label>
-                <div class="flex gap-2">
-                  <p-inputNumber [(ngModel)]="replenishQuantity" [showButtons]="true" buttonLayout="horizontal"
-                                 inputId="replenish" [min]="1" [max]="5000"
-                                 decrementButtonClass="p-button-secondary p-button-outlined"
-                                 incrementButtonClass="p-button-secondary p-button-outlined"
-                                 styleClass="w-full font-bold">
-                  </p-inputNumber>
-                </div>
-                <div class="flex justify-between text-xs text-slate-400 mt-2">
-                  <span>Actual: {{ stock.quantity }}</span>
-                  <span>Nuevo total: <b class="text-slate-800">{{ stock.quantity + replenishQuantity() }}</b></span>
-                </div>
-              </div>
-
-              <button (click)="confirmReplenish()"
-                      class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-lg shadow-slate-200 transition-all active:scale-95 flex justify-center items-center gap-2">
-                <i class="pi pi-check-circle"></i> Confirmar Entrada
-              </button>
-
-              <div class="mt-8">
-                <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Últimos movimientos</h4>
-                <div class="flex flex-col gap-3">
-                  <div class="flex justify-between text-xs">
-                    <span class="text-slate-600">Entrada Manual</span>
-                    <span class="text-green-600 font-bold">+50 uds</span>
+              <td>
+                @if (truck.driver) {
+                  <div class="flex items-center gap-2">
+                    <p-avatar [label]="truck.driver.name.charAt(0)" shape="circle" styleClass="bg-slate-200 text-slate-600 text-xs" />
+                    <span class="text-sm font-medium text-slate-700">{{ truck.driver.name }}</span>
                   </div>
-                  <div class="flex justify-between text-xs">
-                    <span class="text-slate-600">Venta Online #992</span>
-                    <span class="text-red-500 font-bold">-2 uds</span>
-                  </div>
+                } @else {
+                  <span class="text-xs text-slate-400 italic">Sin asignar</span>
+                }
+              </td>
+
+              <td class="text-center">
+                <p-tag [value]="truck.status === 'ON_ROUTE' ? 'En Ruta' : (truck.status === 'AVAILABLE' ? 'Disponible' : 'Taller')"
+                       [severity]="truck.status === 'AVAILABLE' ? 'success' : (truck.status === 'ON_ROUTE' ? 'info' : 'danger')"
+                       [rounded]="true" styleClass="text-[10px] uppercase">
+                </p-tag>
+              </td>
+
+              <td>
+                @if(truck.currentOrderId) {
+                  <span class="font-mono text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-100">{{ truck.currentOrderId }}</span>
+                } @else {
+                  <span class="text-slate-400 text-xs">-</span>
+                }
+              </td>
+
+              <td class="text-right pr-4">
+                <div class="flex justify-end gap-2">
+                  <p-button icon="pi pi-map-marker" (onClick)="focusTruckOnMap(truck); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar"></p-button>
+                  <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
                 </div>
-              </div>
-            </div>
-          } @else {
-            <div class="h-full flex flex-col items-center justify-center text-center text-slate-400 py-12">
-              <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                <i class="pi pi-arrow-left text-2xl"></i>
-              </div>
-              <p class="font-bold text-slate-600">Selecciona un producto</p>
-              <p class="text-sm px-4">Haz clic en "Gestionar" en la tabla de la izquierda para abrir el panel de reposición.</p>
-            </div>
-          }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5" class="text-center p-4 text-slate-400">No hay camiones asignados.</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden relative shadow-inner h-[500px]">
+        <div class="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur px-3 py-1 rounded-lg border border-slate-200 shadow-sm text-xs font-bold text-slate-600">
+          <i class="pi pi-map text-green-600"></i> Localización Flota
         </div>
+        <div id="fleet-map" class="w-full h-full"></div>
       </div>
     </div>
+
+
+    <div class="flex flex-col lg:flex-row gap-6 items-start">
+
+      <div class="flex-grow bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col w-full lg:w-2/3">
+
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col xl:flex-row justify-between items-center gap-4">
+          <div class="flex items-center gap-4 w-full xl:w-auto">
+            <h3 class="text-xl font-bold text-slate-800">Inventario</h3>
+
+            <div class="flex-col gap-1 w-48 hidden sm:flex">
+              <div class="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
+                <span>Ocupado</span>
+                <span>{{ calculateStorageUsage() }}%</span>
+              </div>
+              <p-progressBar [value]="calculateStorageUsage()" [showValue]="false" styleClass="h-2"
+                             [color]="calculateStorageUsage() > 90 ? '#ef4444' : '#22c55e'">
+              </p-progressBar>
+            </div>
+          </div>
+
+          <div class="flex gap-2 w-full xl:w-auto">
+            <p-inputgroup class="flex-grow xl:flex-grow-0">
+              <input pInputText placeholder="Buscar producto..." class="p-inputtext-sm" />
+              <p-inputgroup-addon>
+                <p-button icon="pi pi-search" severity="secondary" variant="text" size="small"/>
+              </p-inputgroup-addon>
+            </p-inputgroup>
+            <p-button label="Nuevo" icon="pi pi-plus" size="small" severity="warn"></p-button>
+          </div>
+        </div>
+
+        <p-table #dtStock [value]="stocks()" [rows]="5" [paginator]="true" styleClass="p-datatable-sm" responsiveLayout="scroll" selectionMode="single" [(selection)]="selectedStock">
+          <ng-template pTemplate="header">
+            <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
+              <th class="pl-4 font-semibold w-16 text-center">Activo</th>
+              <th class="font-semibold">Producto</th>
+              <th class="text-center font-semibold">Stock Total</th>
+              <th class="text-center font-semibold">Límite</th>
+              <th class="text-right pr-4 font-semibold">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr [pSelectableRow]="item" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
+                [ngClass]="{'bg-yellow-50/60': selectedStock()?.id === item.id}">
+
+              <td class="pl-4 text-center">
+                <p-toggleswitch [(ngModel)]="item.active" (onChange)="toggleStockActive(item, $event)" />
+              </td>
+
+              <td class="py-3">
+                <div class="font-bold text-slate-800 text-sm">{{ item.productName }}</div>
+                <div class="text-xs font-mono text-slate-400">{{ item.productRef }}</div>
+              </td>
+
+              <td class="text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border"
+                                  [ngClass]="{
+                                    'bg-green-50 text-green-700 border-green-100': item.quantity > item.minStock,
+                                    'bg-red-50 text-red-700 border-red-100': item.quantity <= item.minStock
+                                  }">
+                                {{ item.quantity }} uds
+                            </span>
+              </td>
+
+              <td class="text-center">
+                <span class="text-sm text-slate-600 font-mono">{{ item.maxLimit }}</span>
+              </td>
+
+              <td class="text-right pr-4">
+                <div class="flex justify-end gap-2">
+                  <p-button icon="pi pi-plus" (onClick)="selectProductForReplenish(item); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Reponer"></p-button>
+                  <p-button icon="pi pi-trash" (onClick)="deleteStock(item.id); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="w-full lg:w-1/3 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sticky top-4 flex flex-col h-auto" *ngIf="selectedStock()">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="font-bold text-slate-800 text-lg">Reponer Stock</h3>
+          <button (click)="selectedStock.set(null)" class="text-slate-400 hover:text-slate-600"><i class="pi pi-times"></i></button>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+          <p class="font-bold text-slate-700">{{ selectedStock()?.productName }}</p>
+          <div class="flex justify-between mt-2 text-sm">
+            <span class="text-slate-500">Actual: {{ selectedStock()?.quantity }}</span>
+            <span class="text-slate-500">Límite: {{ selectedStock()?.maxLimit }}</span>
+          </div>
+          <p-progressBar [value]="(selectedStock()!.quantity / selectedStock()!.maxLimit) * 100" [showValue]="false" styleClass="h-1.5 mt-2"></p-progressBar>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Cantidad a ingresar</label>
+          <p-inputNumber [(ngModel)]="replenishQuantity" [showButtons]="true" buttonLayout="horizontal"
+                         inputId="replenish" [min]="1" [max]="1000"
+                         decrementButtonClass="p-button-secondary p-button-outlined"
+                         incrementButtonClass="p-button-secondary p-button-outlined"
+                         styleClass="w-full font-bold">
+          </p-inputNumber>
+        </div>
+
+        <button (click)="confirmReplenish()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-slate-200">
+          Confirmar
+        </button>
+      </div>
+
+      <div class="w-full lg:w-1/3 bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 h-[300px]" *ngIf="!selectedStock()">
+        <i class="pi pi-box text-3xl mb-2"></i>
+        <p class="text-sm font-medium">Selecciona un producto para gestionar su stock</p>
+      </div>
+
+    </div>
+
   </div>
 </div>

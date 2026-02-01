@@ -18,6 +18,11 @@ import {PageResponse} from '../../../models/pageResponse.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {formatAddress} from '../../../utils/textFormat.util';
 import {MessageService} from 'primeng/api';
+import {Dialog} from 'primeng/dialog';
+import {User} from '../../../models/user.model';
+import {Select} from 'primeng/select';
+import {UserService} from '../../../services/user.service';
+import {Avatar} from 'primeng/avatar';
 
 interface ShopAlert {
   shopName: string;
@@ -31,7 +36,7 @@ interface ShopAlert {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent
+    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent, Dialog, Select, Avatar
   ],
   templateUrl: './shops-management.component.html',
   styleUrl: 'shops-management.component.css'
@@ -78,7 +83,14 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   protected loading: boolean = true;
   protected error: boolean = false;
 
+  // Assignment dialog
+  protected managers: User[] = [];
+  protected selectedManager: User | undefined = undefined;
+  protected visibleAssignmentDialog: boolean = false;
+  protected visibleUnassignButton: boolean = false;
+
   constructor(private shopService: ShopService,
+              private userService: UserService,
               private messageService: MessageService) {}
 
   ngOnInit() {
@@ -179,6 +191,51 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     this.first = event.first;
     this.rows = event.rows;
     this.loadShops();
+  }
+
+  showAssignmentDialog(shopId: string) {
+    this.userService.getAllUsersByRole("MANAGER").subscribe({
+      next: (managers) => {
+        this.managers = managers;
+        const foundShop = this.shopsPage.items.find(shop => shop.id === shopId);
+        if (foundShop){
+          this.selectedManager = foundShop.assignedManager;
+        }
+        if (this.selectedManager){
+          this.visibleUnassignButton = true;
+        }
+        this.visibleAssignmentDialog = true;
+        console.log(this.managers);
+      },
+      error: () => {
+        this.visibleAssignmentDialog = true;
+      }
+    })
+  }
+
+  cancelAssignment(){
+    this.selectedManager = undefined;
+    this.visibleAssignmentDialog = false;
+    this.visibleUnassignButton = false;
+  }
+
+  setManagerAssignment(id: string, userId: string | undefined, state: boolean){
+    let managerId = userId;
+    if (!managerId){
+      managerId = '0';
+    }
+    this.shopService.assignManager(id, managerId, state).subscribe({
+      next: (shop) => {
+        const index = this.shopsPage.items.findIndex(item => item.id == shop.id);
+        if (index !== -1) {
+          this.shopsPage.items[index] = shop;
+        }
+        this.cancelAssignment();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido completar la asignación del gerente a la tienda.` });
+      }
+    })
   }
 
   protected readonly formatAddress = formatAddress;

@@ -154,6 +154,9 @@ public class UserService {
         return userRepository.existsByEmailAndIsDeletedTrue(email);
     }
 
+    //Role-based queries
+    public List<User> findAllByRole(String role){ return userRepository.findByRolesContaining(role); }
+
     //Stats
     public Long count(){ return this.userRepository.count(); }
     public Long countByRole(String role){ return this.userRepository.countByRolesContaining(role); }

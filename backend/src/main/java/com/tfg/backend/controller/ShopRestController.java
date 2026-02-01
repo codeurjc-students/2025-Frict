@@ -5,6 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.TruckService;
+import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +34,9 @@ public class ShopRestController {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private UserService userService;
 
     @Operation(summary = "(Admin) Get all shops information (paged)")
     @GetMapping("/")
@@ -98,6 +102,22 @@ public class ShopRestController {
     }
 
 
+    @Operation(summary = "(Admin) Set manager assignment to a shop")
+    @PostMapping("/{id}/assign/{userId}")
+    public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long id, @PathVariable Long userId, @RequestParam boolean state) {
+        Shop shop = findShopHelper(id);
+        if (state){
+            User user = findUserHelper(userId);
+            shop.setAssignedManager(user);
+        }
+        else {
+            shop.setAssignedManager(null);
+        }
+        Shop savedShop = shopService.save(shop);
+        return ResponseEntity.ok(new ShopDTO(savedShop));
+    }
+
+
     @Operation(summary = "(Admin) Update remote shop image")
     @PostMapping("/image/{id}")
     public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
@@ -148,6 +168,11 @@ public class ShopRestController {
             dtos.add(dto);
         }
         return new PageResponse<>(dtos, shops.getTotalElements(), shops.getNumber(), shops.getTotalPages()-1, shops.getSize());
+    }
+
+    private User findUserHelper(Long id) {
+        return this.userService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist."));
     }
 
     private Shop findShopHelper(Long id) {

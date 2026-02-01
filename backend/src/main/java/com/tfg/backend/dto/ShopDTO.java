@@ -17,6 +17,7 @@ public class ShopDTO {
     private int totalAssignedTrucks;
     private double longitude;
     private double latitude;
+    private UserDTO assignedManager;
 
     public ShopDTO() {
     }
@@ -31,5 +32,8 @@ public class ShopDTO {
         this.totalAssignedTrucks = s.getAssignedTrucks().size();
         this.longitude = s.getLongitude();
         this.latitude = s.getLatitude();
+        if (s.getAssignedManager() != null){
+            this.assignedManager = new UserDTO(s.getAssignedManager());
+        }
     }
 }

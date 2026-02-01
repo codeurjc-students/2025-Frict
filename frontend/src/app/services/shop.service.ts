@@ -43,4 +43,10 @@ export class ShopService {
     formData.append('image', selectedImage);
     return this.http.post<Shop>(this.apiUrl + `/image/${shopId}`, formData);
   }
+
+  public assignManager(id: string, userId: string, state: boolean): Observable<Shop>{
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Shop>(this.apiUrl + `/${id}/assign/${userId}`, null, { params });
+  }
 }

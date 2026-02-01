@@ -1,5 +1,6 @@
 import {Address} from './address.model';
 import {ImageInfo} from './imageInfo.model';
+import {User} from './user.model';
 
 export interface Shop {
   id: string;
@@ -11,4 +12,5 @@ export interface Shop {
   totalAssignedTrucks: number;
   longitude: number;
   latitude: number;
+  assignedManager: User;
 }

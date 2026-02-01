@@ -18,6 +18,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -131,7 +132,6 @@ public class DatabaseInitializer {
 
         // Assign GLOBAL default image
         user1.setUserImage(GlobalDefaults.USER_IMAGE);
-
         userRepository.save(user1);
 
         User user2 = new User("Administrador", "admin", "laxari3928@1200b.com", passwordEncoder.encode("adminpass"), "ADMIN");
@@ -139,11 +139,13 @@ public class DatabaseInitializer {
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
         user2.getAddresses().add(address3);
-
-        // Assign GLOBAL default image
         user2.setUserImage(GlobalDefaults.USER_IMAGE);
-
         userRepository.save(user2);
+
+
+        User user3 = new User("Gerente", "manager", "manager@gmail.com", passwordEncoder.encode("managerpass"), "MANAGER");
+        user3.setUserImage(GlobalDefaults.USER_IMAGE);
+        userRepository.save(user3);
     }
 
     private void initCategories() {
@@ -399,6 +401,12 @@ public class DatabaseInitializer {
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
+
+        Optional<User> manager = userRepository.findByUsername("manager");
+        if(manager.isPresent()){
+            shop1.setAssignedManager(manager.get());
+        }
+
         shopRepository.save(shop1);
 
         Truck truck1 = truckRepository.save(new Truck("2C4RD"));

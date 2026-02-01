@@ -76,6 +76,12 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> publishedReviews = new HashSet<>();
 
+    @OneToOne(mappedBy = "assignedManager")
+    private Shop assignedShop;
+
+    @OneToOne(mappedBy = "assignedDriver")
+    private Truck assignedTruck;
+
 	public User() {
 	}
 

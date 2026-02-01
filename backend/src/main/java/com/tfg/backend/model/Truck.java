@@ -26,6 +26,10 @@ public class Truck {
     @ManyToOne
     private Shop assignedShop;
 
+    @OneToOne
+    @JoinColumn(name = "driver_id")
+    private User assignedDriver;
+
     public Truck() {
     }
 

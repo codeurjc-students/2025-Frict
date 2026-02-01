@@ -53,6 +53,19 @@ public class UserRestController {
         return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
+
+    @Operation(summary = "(Admin) Get all users by role")
+    @GetMapping("/role/")
+    public ResponseEntity<List<UserDTO>> getAllUsersByRole(@RequestParam String role) {
+        List<User> allUsers = userService.findAllByRole(role);
+        List<UserDTO> dtos = new ArrayList<>();
+        for (User u : allUsers) {
+            dtos.add(new UserDTO(u));
+        }
+        return ResponseEntity.ok(dtos);
+    }
+
+
     @Operation(summary = "(Admin) Get all users information")
     @GetMapping("/")
     public ResponseEntity<PageResponse<UserDTO>> getAllUsers(Pageable pageable) {
