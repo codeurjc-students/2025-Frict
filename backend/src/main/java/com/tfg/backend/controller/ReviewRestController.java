@@ -38,7 +38,7 @@ public class ReviewRestController {
     private UserService userService;
 
 
-    @Operation(summary = "Get logged user reviews (paged)")
+    @Operation(summary = "(All) Get logged user reviews (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
@@ -50,7 +50,7 @@ public class ReviewRestController {
 
 
     //Get all the reviews of a product
-    @Operation(summary = "Get all reviews by product ID")
+    @Operation(summary = "(All) Get all reviews by product ID")
     @GetMapping("/")
     public ResponseEntity<ListResponse<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
         Product product = findProductHelper(productId);
@@ -62,7 +62,7 @@ public class ReviewRestController {
     }
 
 
-    @Operation(summary = "Create review")
+    @Operation(summary = "(User) Create review")
     @PostMapping
     public ResponseEntity<ReviewDTO> createReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
@@ -81,7 +81,7 @@ public class ReviewRestController {
     }
 
 
-    @Operation(summary = "Update review")
+    @Operation(summary = "(User) Update review")
     @PutMapping
     public ResponseEntity<ReviewDTO> updateReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
@@ -102,7 +102,7 @@ public class ReviewRestController {
     }
 
 
-    @Operation(summary = "Delete review by ID")
+    @Operation(summary = "(Admin, User) Delete review by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ReviewDTO> deleteReview(HttpServletRequest request, @PathVariable Long id) {
         //Check that the review exists

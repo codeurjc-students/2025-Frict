@@ -52,7 +52,7 @@ public class AuthRestController {
     private String googleClientId;
 
 
-    @Operation(summary = "Login with Google account")
+    @Operation(summary = "(User) Login with Google account")
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginWithGoogle(HttpServletResponse response,
                                              @RequestBody GoogleTokenDTO tokenDTO) {
@@ -85,7 +85,7 @@ public class AuthRestController {
     }
 
 
-    @Operation(summary = "Login with local account")
+    @Operation(summary = "(All) Login with local account")
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(
 			@RequestBody LoginRequest loginRequest,
@@ -105,7 +105,7 @@ public class AuthRestController {
 
 
     //Spring automatically matches the form fields with the same name and generates an UserSignupDTO object
-    @Operation(summary = "Create user account")
+    @Operation(summary = "(User) Create user account")
     @PostMapping("/signup")
     public ResponseEntity<UserLoginDTO> registerUser(@RequestBody UserSignupDTO registerDTO) {
         if (userService.isUsernameTaken(registerDTO.getUsername()) || userService.isEmailTaken(registerDTO.getEmail())) {
@@ -122,7 +122,7 @@ public class AuthRestController {
     }
 
 
-    @Operation(summary = "Refresh logged user JWT access token")
+    @Operation(summary = "(All) Refresh logged user JWT access token")
 	@PostMapping("/refresh")
 	public ResponseEntity<AuthResponse> refreshToken(
 			@CookieValue(name = "RefreshToken", required = false) String refreshToken, HttpServletResponse response) {
@@ -131,14 +131,14 @@ public class AuthRestController {
 	}
 
 
-    @Operation(summary = "Log out logged user")
+    @Operation(summary = "(All) Log out logged user")
 	@PostMapping("/logout")
 	public ResponseEntity<AuthResponse> logOut(HttpServletResponse response) {
 		return ResponseEntity.ok(new AuthResponse(Status.SUCCESS, loginService.logout(response)));
 	}
 
 
-    @Operation(summary = "Recover user account")
+    @Operation(summary = "(All) Recover user account")
     @PostMapping("/recovery")
     public ResponseEntity<Void> recoverPassword(@RequestBody Map<String, String> payload) {
         User user = findUserHelper(payload.get("username"));
@@ -154,7 +154,7 @@ public class AuthRestController {
     }
 
 
-    @Operation(summary = "Verify user OTP")
+    @Operation(summary = "(All) Verify user OTP")
     @PostMapping("/verification")
     public ResponseEntity<Boolean> verifyOtp(@RequestBody Map<String, String> payload) {
         User user = findUserHelper(payload.get("username"));
@@ -168,7 +168,7 @@ public class AuthRestController {
     }
 
 
-    @Operation(summary = "Reset user password")
+    @Operation(summary = "(All) Reset user password")
     @PostMapping("/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody Map<String, String> payload) {
         User user = findUserHelper(payload.get("username"));
@@ -183,7 +183,7 @@ public class AuthRestController {
     }
 
 
-    @Operation(summary = "Reset an administration account password")
+    @Operation(summary = "(Admin) Reset an administration account password")
     @PutMapping("/reset/{id}")
     public ResponseEntity<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         String password = payload.get("password");

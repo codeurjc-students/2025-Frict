@@ -35,7 +35,7 @@ public class CategoryRestController {
     private StorageService storageService;
 
 
-    @Operation(summary = "Get all categories (listed)")
+    @Operation(summary = "(All) Get all categories (listed)")
     @GetMapping("/")
     public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
         List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
@@ -43,7 +43,7 @@ public class CategoryRestController {
     }
 
 
-    @Operation(summary = "Get category by ID")
+    @Operation(summary = "(All) Get category by ID")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
         Category category = findCategoryHelper(id);
@@ -51,7 +51,7 @@ public class CategoryRestController {
     }
 
 
-    @Operation(summary = "Update remote category image")
+    @Operation(summary = "(Admin) Update remote category image")
     @PostMapping(value = "/{id}/image")
     public ResponseEntity<Category> uploadCategoryImage(
             @PathVariable Long id,
@@ -77,7 +77,7 @@ public class CategoryRestController {
     }
 
 
-    @Operation(summary = "Delete remote category image")
+    @Operation(summary = "(Admin) Delete remote category image")
     @DeleteMapping("/{id}/image")
     public ResponseEntity<Category> deleteCategoryImage(@PathVariable Long id) {
         Category category = findCategoryHelper(id);

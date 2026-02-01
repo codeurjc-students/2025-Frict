@@ -34,7 +34,7 @@ public class ShopRestController {
     @Autowired
     private StorageService storageService;
 
-    @Operation(summary = "Get all shops information (paged)")
+    @Operation(summary = "(Admin) Get all shops information (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<ShopDTO>> getShopsPage(Pageable pageable) {
         Page<Shop> allShops = shopService.findAll(pageable);
@@ -42,14 +42,14 @@ public class ShopRestController {
     }
 
 
-    @Operation(summary = "Get shop information by ID")
+    @Operation(summary = "(Manager) Get shop information by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ShopDTO> getShopById(@PathVariable Long id) {
         Shop shop = findShopHelper(id);
         return ResponseEntity.ok(new ShopDTO(shop));
     }
 
-    @Operation(summary = "Create shop")
+    @Operation(summary = "(Admin) Create shop")
     @PostMapping
     public ResponseEntity<ShopDTO> createShop(@RequestBody ShopDTO shopDTO) {
         AddressDTO dto = shopDTO.getAddress();
@@ -60,7 +60,7 @@ public class ShopRestController {
         return ResponseEntity.accepted().body(new ShopDTO(savedShop));
     }
 
-    @Operation(summary = "Update shop by ID")
+    @Operation(summary = "(Admin) Update shop by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ShopDTO> updateShop(@PathVariable Long id, @RequestBody ShopDTO shopDTO) {
         Shop shop = findShopHelper(id);
@@ -76,7 +76,7 @@ public class ShopRestController {
     }
 
 
-    @Operation(summary = "Delete shop by ID")
+    @Operation(summary = "(Admin) Delete shop by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ShopDTO> deleteShop(@PathVariable Long id) {
         Shop shop = findShopHelper(id);
@@ -98,7 +98,7 @@ public class ShopRestController {
     }
 
 
-    @Operation(summary = "Update remote shop image")
+    @Operation(summary = "(Admin) Update remote shop image")
     @PostMapping("/image/{id}")
     public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Shop shop = findShopHelper(id);
@@ -125,7 +125,7 @@ public class ShopRestController {
     }
 
 
-    @Operation(summary = "Delete remote shop image")
+    @Operation(summary = "(Admin) Delete remote shop image")
     @DeleteMapping("/image/{id}")
     public ResponseEntity<ShopDTO> deleteShopImage(@PathVariable Long id) {
         Shop shop = findShopHelper(id);

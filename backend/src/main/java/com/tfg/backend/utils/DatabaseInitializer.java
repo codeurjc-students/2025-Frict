@@ -134,7 +134,7 @@ public class DatabaseInitializer {
 
         userRepository.save(user1);
 
-        User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
+        User user2 = new User("Administrador", "admin", "laxari3928@1200b.com", passwordEncoder.encode("adminpass"), "ADMIN");
         PaymentCard paymentCard3 = new PaymentCard("Tarjeta de la empresa", "Laura Miño", "1233453212231346", "345", YearMonth.of(2028, 7));
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
