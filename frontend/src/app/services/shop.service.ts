@@ -1,10 +1,12 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {map, Observable} from 'rxjs';
 import {PageResponse} from '../models/pageResponse.model';
 import {Shop} from '../models/shop.model';
 import {Product} from '../models/product.model';
 import {User} from '../models/user.model';
+import {ShopStock} from '../models/shopStock.model';
+import {ListResponse} from '../models/listResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +26,10 @@ export class ShopService {
 
   public getShopById(id: string): Observable<Shop> {
     return this.http.get<Shop>(this.apiUrl + `/${id}`);
+  }
+
+  public getStockByShopId(id: string): Observable<ShopStock[]> {
+    return this.http.get<ListResponse<ShopStock>>(this.apiUrl + `/stock/${id}`).pipe(map(response => response.items));
   }
 
   public createShop(shopData: Shop): Observable<Shop> {

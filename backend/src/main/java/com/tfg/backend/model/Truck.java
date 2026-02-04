@@ -30,10 +30,16 @@ public class Truck {
     @JoinColumn(name = "driver_id")
     private User assignedDriver;
 
+    private double longitude;
+
+    private double latitude;
+
     public Truck() {
     }
 
-    public Truck(String referenceCode) {
+    public Truck(String referenceCode, double longitude, double latitude) {
         this.referenceCode = referenceCode;
+        this.longitude = longitude;
+        this.latitude = latitude;
     }
 }

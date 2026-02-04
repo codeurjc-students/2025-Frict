@@ -98,7 +98,7 @@ public class OrderRestController {
 
         //First check if there is enough stock of each product
         for (OrderItem i : cartItems) {
-            int totalStock = i.getProduct().getShopsStock().stream().mapToInt(ShopStock::getStock).sum(); //Total stock units
+            int totalStock = i.getProduct().getShopsStock().stream().mapToInt(ShopStock::getUnits).sum(); //Total stock units
             if (totalStock < i.getQuantity()){
                 throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product " + i.getProduct().getName() + " is not enough to complete the order.");
             }
@@ -113,11 +113,11 @@ public class OrderRestController {
             while (remainingUnits > 0 && shopIndex < shopsStock.size()) {
 
                 ShopStock currentShopStock = shopsStock.get(shopIndex);
-                int availableStock = currentShopStock.getStock();
+                int availableStock = currentShopStock.getUnits();
 
                 if (availableStock > 0) {
                     int unitsToTake = Math.min(remainingUnits, availableStock);
-                    currentShopStock.setStock(availableStock - unitsToTake);
+                    currentShopStock.setUnits(availableStock - unitsToTake);
                     remainingUnits -= unitsToTake;
                     shopStockService.save(currentShopStock);
                 }
@@ -281,7 +281,7 @@ public class OrderRestController {
 
         int inStockUnits = 0;
         for (ShopStock s : product.getShopsStock()) {
-            inStockUnits += s.getStock();
+            inStockUnits += s.getUnits();
         }
 
         if(inCartUnits + quantity > inStockUnits){
@@ -331,7 +331,7 @@ public class OrderRestController {
 
         // 3. Get product (to check total stock)
         Product product = itemToUpdate.getProduct();
-        int maxAchievableQuantity = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
+        int maxAchievableQuantity = product.getShopsStock().stream().mapToInt(ShopStock::getUnits).sum();
 
         // CASE A: Quantity is bigger than available
         if (quantity > maxAchievableQuantity) {

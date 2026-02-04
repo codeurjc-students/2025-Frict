@@ -5,4 +5,6 @@ export interface Truck {
   referenceCode: string;
   shopId: string;
   assignedDriver: User;
+  longitude: number;
+  latitude: number;
 }

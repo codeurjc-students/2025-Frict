@@ -12,6 +12,8 @@ public class ShopStockDTO {
     private String shopName;
     private String shopAddress;
     private Long productId;
+    private String productName;
+    private String productReferenceCode;
     private int units;
     private boolean active;
 
@@ -24,7 +26,9 @@ public class ShopStockDTO {
         this.shopName = s.getShop().getName();
         this.shopAddress = s.getShop().getAddress().toString();
         this.productId = s.getProduct().getId();
-        this.units = s.getStock();
+        this.productName = s.getProduct().getName();
+        this.productReferenceCode = s.getProduct().getReferenceCode();
+        this.units = s.getUnits();
         this.active = s.isActive();
     }
 }

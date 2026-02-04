@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @Table(
         uniqueConstraints = @UniqueConstraint(columnNames = {"shop_id", "product_id"}), //Restriction not to allow multiple product-shop assignments
-        name = "products_shops"
+        name = "shops_stocks"
 )
 public class ShopStock {
 
@@ -28,16 +28,16 @@ public class ShopStock {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    private int stock;
+    private int units;
 
     private boolean active = true;
 
     public ShopStock() {
     }
 
-    public ShopStock(Shop shop, Product product, int stock) {
+    public ShopStock(Shop shop, Product product, int units) {
         this.shop = shop;
         this.product = product;
-        this.stock = stock;
+        this.units = units;
     }
 }

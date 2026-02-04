@@ -11,6 +11,8 @@ public class TruckDTO {
     private String referenceCode;
     private Long shopId;
     private UserDTO assignedDriver;
+    private double longitude;
+    private double latitude;
 
     public TruckDTO() {
     }
@@ -20,5 +22,7 @@ public class TruckDTO {
         this.referenceCode = t.getReferenceCode();
         this.shopId = t.getAssignedShop().getId();
         this.assignedDriver = new UserDTO(t.getAssignedDriver());
+        this.longitude = t.getLongitude();
+        this.latitude = t.getLatitude();
     }
 }

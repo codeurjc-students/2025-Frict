@@ -53,6 +53,20 @@ public class ShopRestController {
         return ResponseEntity.ok(new ShopDTO(shop));
     }
 
+
+    @Operation(summary = "(All) Get shop stock by ID")
+    @GetMapping("/stock/{id}")
+    public ResponseEntity<ListResponse<ShopStockDTO>> getShopStocks(@PathVariable Long id) {
+        Shop shop = findShopHelper(id);
+
+        List<ShopStockDTO> dtos = new ArrayList<>();
+        for (ShopStock s : shop.getAvailableProducts()) {
+            dtos.add(new ShopStockDTO(s));
+        }
+        return ResponseEntity.ok(new ListResponse<>(dtos));
+    }
+
+
     @Operation(summary = "(Admin) Create shop")
     @PostMapping
     public ResponseEntity<ShopDTO> createShop(@RequestBody ShopDTO shopDTO) {
