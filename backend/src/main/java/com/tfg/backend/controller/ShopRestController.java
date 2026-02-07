@@ -2,11 +2,9 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
-import com.tfg.backend.service.ShopService;
-import com.tfg.backend.service.StorageService;
-import com.tfg.backend.service.TruckService;
-import com.tfg.backend.service.UserService;
+import com.tfg.backend.service.*;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +36,15 @@ public class ShopRestController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ShopStockService shopStockService;
+
+
     @Operation(summary = "(Admin) Get all shops information (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<ShopDTO>> getShopsPage(Pageable pageable) {
         Page<Shop> allShops = shopService.findAll(pageable);
-        return ResponseEntity.ok(toPageResponse(allShops));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(allShops, ShopDTO::new));
     }
 
 
@@ -54,16 +56,11 @@ public class ShopRestController {
     }
 
 
-    @Operation(summary = "(All) Get shop stock by ID")
+    @Operation(summary = "(All) Get shop stock page by ID")
     @GetMapping("/stock/{id}")
-    public ResponseEntity<ListResponse<ShopStockDTO>> getShopStocks(@PathVariable Long id) {
-        Shop shop = findShopHelper(id);
-
-        List<ShopStockDTO> dtos = new ArrayList<>();
-        for (ShopStock s : shop.getAvailableProducts()) {
-            dtos.add(new ShopStockDTO(s));
-        }
-        return ResponseEntity.ok(new ListResponse<>(dtos));
+    public ResponseEntity<PageResponse<ShopStockDTO>> getShopStocks(@PathVariable Long id, Pageable pageable) {
+        Page<ShopStock> stocks = shopStockService.findAllByShopId(id, pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(stocks, ShopStockDTO::new));
     }
 
 
@@ -174,15 +171,6 @@ public class ShopRestController {
         return ResponseEntity.ok(new ShopDTO(shop));
     }
 
-
-    private PageResponse<ShopDTO> toPageResponse(Page<Shop> shops){
-        List<ShopDTO> dtos = new ArrayList<>();
-        for (Shop s : shops.getContent()) {
-            ShopDTO dto = new ShopDTO(s);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, shops.getTotalElements(), shops.getNumber(), shops.getTotalPages()-1, shops.getSize());
-    }
 
     private User findUserHelper(Long id) {
         return this.userService.findById(id)

@@ -7,4 +7,5 @@ export interface Truck {
   assignedDriver: User;
   longitude: number;
   latitude: number;
+  activeOrdersToDeliver: number;
 }

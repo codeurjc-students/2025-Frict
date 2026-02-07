@@ -5,6 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.StatDataDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -70,7 +71,7 @@ public class UserRestController {
     @GetMapping("/")
     public ResponseEntity<PageResponse<UserDTO>> getAllUsers(Pageable pageable) {
         Page<User> allUsers = userService.findAll(pageable);
-        return ResponseEntity.ok(toPageResponse(allUsers));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(allUsers, UserDTO::new));
     }
 
 
@@ -259,14 +260,6 @@ public class UserRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
-    private PageResponse<UserDTO> toPageResponse(Page<User> users){
-        List<UserDTO> dtos = new ArrayList<>();
-        for (User u : users.getContent()) {
-            UserDTO dto = new UserDTO(u);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, users.getTotalElements(), users.getNumber(), users.getTotalPages()-1, users.getSize());
-    }
 
     //Reactive endpoints
     @Operation(summary = "(All) Check if a username is taken")

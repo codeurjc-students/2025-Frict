@@ -4,6 +4,7 @@ import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,7 +48,7 @@ public class ProductRestController {
     @GetMapping("/")
     public ResponseEntity<PageResponse<ProductDTO>> getAllProducts(Pageable pageable) {
         Page<Product> products = productService.findAll(pageable);
-        return ResponseEntity.ok(toPageResponse(products));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
 
 
@@ -57,7 +58,7 @@ public class ProductRestController {
                                                                         @RequestParam(value = "query", required = false) String searchTerm,
                                                                         @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
         Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
-        return ResponseEntity.ok(toPageResponse(products));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
 
 
@@ -68,7 +69,7 @@ public class ProductRestController {
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
-        return ResponseEntity.ok(toPageResponse(favouriteProducts));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(favouriteProducts, ProductDTO::new));
     }
 
 
@@ -334,14 +335,4 @@ public class ProductRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
     }
 
-
-    //Creates Page<ProductDTO> objects with necessary fields only
-    private PageResponse<ProductDTO> toPageResponse(Page<Product> products){
-        List<ProductDTO> dtos = new ArrayList<>();
-        for (Product p : products.getContent()) {
-            ProductDTO dto = new ProductDTO(p);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
-    }
 }

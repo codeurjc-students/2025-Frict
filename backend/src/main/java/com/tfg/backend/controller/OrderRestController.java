@@ -7,6 +7,7 @@ import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.EmailService;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,7 +54,7 @@ public class OrderRestController {
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toPageResponse(userOrders));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 
 
@@ -238,7 +239,7 @@ public class OrderRestController {
         User loggedUser = findLoggedUserHelper(request);
 
         Page<OrderItem> cartItems = orderItemService.findUserCartItemsPage(loggedUser.getId(), pageable);
-        return ResponseEntity.ok(toOrderItemsPageDTO(cartItems));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(cartItems, OrderItemDTO::new));
     }
 
 
@@ -380,27 +381,5 @@ public class OrderRestController {
     private User findLoggedUserHelper(HttpServletRequest request) {
         return this.userService.getLoggedUser(request)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
-    }
-
-
-    //Creates OrderPageDTO objects with necessary fields only
-    private PageResponse<OrderDTO> toPageResponse(Page<Order> orders){
-        List<OrderDTO> dtos = new ArrayList<>();
-        for (Order o : orders.getContent()) {
-            OrderDTO dto = new OrderDTO(o);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, orders.getTotalElements(), orders.getNumber(), orders.getTotalPages()-1, orders.getSize());
-    }
-
-
-    //Creates OrderItemsPageDTO objects with necessary fields only
-    private PageResponse<OrderItemDTO> toOrderItemsPageDTO(Page<OrderItem> items){
-        List<OrderItemDTO> dtos = new ArrayList<>();
-        for (OrderItem i : items.getContent()) {
-            OrderItemDTO dto = new OrderItemDTO(i);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, items.getTotalElements(), items.getNumber(), items.getTotalPages()-1, items.getSize());
     }
 }

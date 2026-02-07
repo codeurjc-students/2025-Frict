@@ -409,7 +409,7 @@ public class DatabaseInitializer {
 
         shopRepository.save(shop1);
 
-        Truck truck1 = truckRepository.save(new Truck("2C4RD", -3.7038, 40.4168));
+        Truck truck1 = truckRepository.save(new Truck("2C4RD", -3.6038, 40.6168));
         Truck truck2 = truckRepository.save(new Truck("5U7TH", -3.9038, 40.5168));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);

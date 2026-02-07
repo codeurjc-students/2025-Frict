@@ -28,8 +28,11 @@ export class ShopService {
     return this.http.get<Shop>(this.apiUrl + `/${id}`);
   }
 
-  public getStockByShopId(id: string): Observable<ShopStock[]> {
-    return this.http.get<ListResponse<ShopStock>>(this.apiUrl + `/stock/${id}`).pipe(map(response => response.items));
+  public getStocksPageByShopId(id: string, page: number, size: number): Observable<PageResponse<ShopStock>> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<ShopStock>>(this.apiUrl + `/stock/${id}`, { params });
   }
 
   public createShop(shopData: Shop): Observable<Shop> {

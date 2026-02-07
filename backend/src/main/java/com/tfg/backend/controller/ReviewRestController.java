@@ -9,6 +9,7 @@ import com.tfg.backend.model.User;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.ReviewService;
 import com.tfg.backend.service.UserService;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,7 +46,7 @@ public class ReviewRestController {
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toPageResponse(userReviews));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
     }
 
 
@@ -135,16 +136,5 @@ public class ReviewRestController {
     private Review findReviewHelper(Long id) {
         return this.reviewService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review with ID " + id + " does not exist."));
-    }
-
-
-    //Creates ReviewsPageDTO objects with necessary fields only
-    private PageResponse<ReviewDTO> toPageResponse(Page<Review> reviews){
-        List<ReviewDTO> dtos = new ArrayList<>();
-        for (Review r : reviews.getContent()) {
-            ReviewDTO dto = new ReviewDTO(r);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, reviews.getTotalElements(), reviews.getNumber(), reviews.getTotalPages()-1, reviews.getSize());
     }
 }
