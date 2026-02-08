@@ -63,9 +63,15 @@ export class ShopService {
     return this.http.post<Shop>(this.apiUrl + `/image/${shopId}`, formData);
   }
 
-  public assignManager(id: string, userId: string, state: boolean): Observable<Shop>{
+  public assignTruck(shopId: string, truckId: string, state: boolean): Observable<Shop>{
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Shop>(this.apiUrl + `/${id}/assign/${userId}`, null, { params });
+    return this.http.post<Shop>(this.apiUrl + `/${shopId}/assign/truck/${truckId}`, null, { params });
+  }
+
+  public assignManager(shopId: string, userId: string, state: boolean): Observable<Shop>{
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Shop>(this.apiUrl + `/${shopId}/assign/manager/${userId}`, null, { params });
   }
 }

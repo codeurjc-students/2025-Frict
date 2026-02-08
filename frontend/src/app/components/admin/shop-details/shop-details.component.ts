@@ -3,7 +3,7 @@ import {isPlatformBrowser, NgClass, NgIf} from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import * as L from 'leaflet';
-import { MessageService } from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import { ShopService } from '../../../services/shop.service';
 import { TruckService } from '../../../services/truck.service';
 import {Shop} from '../../../models/shop.model';
@@ -25,6 +25,9 @@ import {InputNumber} from 'primeng/inputnumber';
 import {Tooltip} from 'primeng/tooltip';
 import {formatAddress} from '../../../utils/textFormat.util';
 import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
+import {Dialog} from 'primeng/dialog';
+import {Select} from 'primeng/select';
+import {User} from '../../../models/user.model';
 
 @Component({
   selector: 'app-shop-details',
@@ -44,7 +47,9 @@ import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
     FormsModule,
     InputNumber,
     NgIf,
-    Tooltip
+    Tooltip,
+    Dialog,
+    Select
   ],
   templateUrl: './shop-details.component.html',
   styleUrl: 'shop-details.component.css'
@@ -70,6 +75,10 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   private map: L.Map | undefined;
   private markersLayer: L.LayerGroup | undefined;
 
+  protected unassignedTrucks: Truck[] = [];
+  protected selectedTruck: Truck | undefined = undefined;
+  protected visibleAddTruckDialog: boolean = false;
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private router: Router,
@@ -77,6 +86,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private shopService: ShopService,
     private truckService: TruckService,
+    private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -117,7 +127,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     this.shopService.getStocksPageByShopId(this.shop.id, this.firstStock / this.stocksRows, this.stocksRows).subscribe({
       next: (page) => {
         this.stocksPage = page;
-        console.log(this.stocksPage);
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error cargando stock' })
     });
@@ -129,7 +138,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     this.truckService.getTrucksPageByShopId(this.shop.id, this.firstTruck / this.trucksRows, this.trucksRows).subscribe({
       next: (page) => {
         this.trucksPage = page;
-        console.log(this.trucksPage);
 
         //MAP LOADING
         this.loading = false;
@@ -144,6 +152,69 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+
+  // --- DIALOGS ---
+  showAddTruckDialog() {
+    this.truckService.getUnassignedTrucks().subscribe({
+      next: (list) => {
+        this.unassignedTrucks = list;
+        this.visibleAddTruckDialog = true;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los camiones disponibles.' });
+      }
+    });
+  }
+
+  cancelAddTruck(){
+    this.selectedTruck = undefined;
+    this.visibleAddTruckDialog = false;
+  }
+
+  //If state is true then assign the truck to the shop, if state is false then unassign the truck from the shop
+  manageTruckAssignment(truckId: string | undefined, state: boolean){
+    if (truckId){
+      if (state){
+        this.confirmTruckAssignment(this.shop.id, truckId, state);
+      }
+      else {
+        this.confirmationService.confirm({
+          message: '¿Quieres desvincular el camión de la tienda? Todos sus pedidos asignados pasarán a no tener un camión asignado.',
+          header: 'Desvincular camión',
+          icon: 'pi pi-info-circle',
+          rejectLabel: 'Cancelar',
+          rejectButtonProps: {
+            label: 'Cancelar',
+            severity: 'secondary',
+            outlined: true,
+          },
+          acceptButtonProps: {
+            label: 'Desvincular',
+            severity: 'warn',
+          },
+
+          accept: () => {
+            this.confirmTruckAssignment(this.shop.id, truckId, state);
+          }
+        });
+      }
+    }
+  }
+
+
+  confirmTruckAssignment(shopId: string, truckId: string, state: boolean){
+    this.shopService.assignTruck(shopId, truckId, state).subscribe({
+      next: () => {
+        this.loadTrucksPage();
+        this.cancelAddTruck();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido completar la asignación del camión a la tienda.` });
+      }
+    });
+  }
+
 
   // --- PAGINATION ---
   onStocksPageChange(event: PaginatorState) {
@@ -247,10 +318,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
   deleteStock(id: number) {
     this.messageService.add({severity: 'warn', summary: 'Eliminar', detail: 'Funcionalidad de borrado simulada'});
-  }
-
-  deleteTruck(id: number) {
-    this.messageService.add({severity: 'error', summary: 'Eliminar Camión', detail: 'Camión desvinculado'});
   }
 
   focusTruckOnMap(truck: Truck) {

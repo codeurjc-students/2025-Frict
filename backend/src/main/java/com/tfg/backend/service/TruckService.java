@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TruckService {
@@ -16,6 +17,10 @@ public class TruckService {
     private TruckRepository truckRepository;
 
     public List<Truck> findAll() { return truckRepository.findAll(); }
+
+    public List<Truck> findAllByAssignedShopIsNull() { return truckRepository.findByAssignedShopIsNull(); }
+
+    public Optional<Truck> findById (Long id) { return truckRepository.findById(id); }
 
     public Page<Truck> findAllByAssignedShopId(Long shopId, Pageable pageable) { return this.truckRepository.findAllByAssignedShopId(shopId, pageable); };
 

@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/trucks")
 @Tag(name = "Trucks Management", description = "System trucks data management")
@@ -26,6 +28,12 @@ public class TruckRestController {
     @Autowired
     private TruckService truckService;
 
+    @Operation(summary = "(Admin, Manager) Get all unassigned trucks")
+    @GetMapping("/available/")
+    public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
+        List<TruckDTO> dtos = truckService.findAllByAssignedShopIsNull().stream().map(TruckDTO::new).toList();
+        return ResponseEntity.ok(dtos);
+    }
 
     @Operation(summary = "(All) Get trucks page by shop ID")
     @GetMapping("/shop/{shopId}")

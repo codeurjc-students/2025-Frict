@@ -123,10 +123,28 @@ public class ShopRestController {
     }
 
 
+    @Operation(summary = "(Manager) Set truck assignment to a shop")
+    @PostMapping("/{shopId}/assign/truck/{truckId}")
+    public ResponseEntity<TruckDTO> setAssignedTruck(@PathVariable Long shopId, @PathVariable Long truckId, @RequestParam boolean state) {
+        Shop shop = findShopHelper(shopId);
+        Truck truck = findTruckHelper(truckId);
+
+        if (state) {
+            truck.setAssignedShop(shop);
+        }
+        else {
+            truck.setAssignedShop(null);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.ok(new TruckDTO(savedTruck));
+    }
+
+
     @Operation(summary = "(Admin) Set manager assignment to a shop")
-    @PostMapping("/{id}/assign/{userId}")
-    public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long id, @PathVariable Long userId, @RequestParam boolean state) {
-        Shop shop = findShopHelper(id);
+    @PostMapping("/{shopId}/assign/manager/{userId}")
+    public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long shopId, @PathVariable Long userId, @RequestParam boolean state) {
+        Shop shop = findShopHelper(shopId);
 
         if (state) {
             User newManager = findUserHelper(userId);
@@ -201,5 +219,10 @@ public class ShopRestController {
     private Shop findShopHelper(Long id) {
         return this.shopService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
+    }
+
+    private Truck findTruckHelper(Long id) {
+        return this.truckService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
     }
 }

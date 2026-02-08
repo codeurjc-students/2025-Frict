@@ -25,7 +25,9 @@ public class TruckDTO {
     public TruckDTO(Truck t){
         this.id = t.getId();
         this.referenceCode = t.getReferenceCode();
-        this.shopId = t.getAssignedShop().getId();
+        if (t.getAssignedShop() != null){
+            this.shopId = t.getAssignedShop().getId();
+        }
         if (t.getAssignedDriver() != null){
             this.assignedDriver = new UserDTO(t.getAssignedDriver());
         }

@@ -16,6 +16,11 @@ export class TruckService {
 
   private apiUrl = '/api/v1/trucks';
 
+
+  public getUnassignedTrucks(): Observable<Truck[]> {
+    return this.http.get<Truck[]>(this.apiUrl + `/available/`);
+  }
+
   public getTrucksPageByShopId(shopId: string, page: number, size: number): Observable<PageResponse<Truck>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());

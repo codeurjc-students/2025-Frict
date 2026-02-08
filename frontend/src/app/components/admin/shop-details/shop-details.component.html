@@ -8,17 +8,26 @@
     <div class="relative w-full h-64 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
       <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + shop.imageInfo.imageUrl + ')'"></div>
       <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-transparent"></div>
-      <div class="relative h-full flex flex-col justify-end p-8 text-white z-10">
-        <div class="flex justify-between items-end">
-          <div>
-            <div class="flex items-center gap-3 mb-2">
-              <span class="bg-yellow-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Tienda Física</span>
-              <span class="text-slate-300 text-xs font-mono border border-slate-600 px-2 rounded">{{ shop.referenceCode }}</span>
-            </div>
-            <h1 class="text-4xl font-bold mb-1">{{ shop.name }}</h1>
-            <p class="text-slate-300 flex items-center gap-2 text-sm"><i class="pi pi-map-marker text-yellow-500"></i> {{ formatAddress(shop.address) }}</p>
+      <p-button
+        (click)="goBack()"
+        icon="pi pi-arrow-left"
+        [rounded]="true"
+        [text]="true"
+        styleClass="absolute top-4 left-4 z-20 text-white bg-black/20 hover:bg-black/40 border-0"
+      />
+      <div class="absolute inset-0 flex flex-col justify-end p-8 z-10 pointer-events-none">
+        <div class="pointer-events-auto">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="bg-yellow-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Tienda</span>
+            <span class="text-slate-300 text-xs font-mono border border-slate-600 px-2 rounded">{{ shop.referenceCode }}</span>
           </div>
-          <button (click)="goBack()" class="absolute top-6 left-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/10"><i class="pi pi-arrow-left"></i></button>
+
+          <h1 class="text-4xl font-bold mb-1 text-white leading-tight">{{ shop.name }}</h1>
+
+          <div class="text-slate-200 flex items-start gap-2 text-sm mt-1">
+            <i class="pi pi-map-marker text-yellow-500 mt-1 flex-shrink-0"></i>
+            <span class="leading-snug">{{ formatAddress(shop.address) }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -29,15 +38,17 @@
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col h-[500px]">
 
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h3 class="text-xl font-bold text-slate-800">Flota de Camiones</h3>
+          <h3 class="text-xl font-bold text-slate-800">Camiones asignados</h3>
           <div class="flex gap-2 w-full sm:w-auto">
+            <!--
             <p-inputgroup class="w-full sm:w-auto">
               <input pInputText placeholder="Buscar camión..." class="p-inputtext-sm" />
               <p-inputgroup-addon>
                 <p-button icon="pi pi-search" severity="secondary" variant="text" size="small"/>
               </p-inputgroup-addon>
             </p-inputgroup>
-            <p-button label="Nuevo" icon="pi pi-plus" size="small" severity="warn"></p-button>
+            -->
+            <p-button (click)="showAddTruckDialog()" label="Añadir" icon="pi pi-plus" size="small"></p-button>
           </div>
         </div>
 
@@ -90,7 +101,7 @@
               <td class="text-right pr-4">
                 <div class="flex justify-end gap-2">
                   <p-button icon="pi pi-map-marker" (onClick)="focusTruckOnMap(truck); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar"></p-button>
-                  <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
+                  <p-button icon="pi pi-trash" (onClick)="manageTruckAssignment(truck.id, false); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
                 </div>
               </td>
             </tr>
@@ -116,12 +127,36 @@
           styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl mt-auto">
         </p-paginator>
 
+        <p-dialog header="Asignar Camión" [modal]="true" [(visible)]="visibleAddTruckDialog">
+          <span class="p-text-secondary block mb-4">Añade uno de los camiones disponibles de la organización para repartir los pedidos de esta tienda.</span>
+          <p-select [options]="unassignedTrucks" [(ngModel)]="selectedTruck" optionLabel="name" placeholder="Selecciona un camión libre..." appendTo="body" class="w-full mb-4">
+            <ng-template #empty>
+              <div class="flex items-center gap-2 px-2 py-1 text-surface-500">
+                <span>No existen camiones disponibles.</span>
+              </div>
+            </ng-template>
+            <ng-template let-truck #selectedItem>
+              <div class="flex items-center gap-2">
+                <p-avatar image="./truckIcon.png" shape="circle" />
+                <div>{{ truck.referenceCode }} ({{ truck.assignedDriver?.name ?? 'No asignado' }})</div>
+              </div>
+            </ng-template>
+            <ng-template let-truck #item>
+              <div class="flex items-center gap-2">
+                <p-avatar image="./truckIcon.png" shape="circle" />
+                <div>{{ truck.referenceCode }} ({{ truck.assignedDriver?.name ?? 'No asignado' }})</div>
+              </div>
+            </ng-template>
+          </p-select>
+          <div class="flex justify-end gap-2">
+            <p-button label="Cancelar" severity="secondary" (click)="cancelAddTruck()" />
+            <p-button label="Guardar" (click)="manageTruckAssignment(this.selectedTruck?.id, true)" />
+          </div>
+        </p-dialog>
+
       </div>
 
       <div class="bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden relative shadow-inner h-[500px]">
-        <div class="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur px-3 py-1 rounded-lg border border-slate-200 shadow-sm text-xs font-bold text-slate-600">
-          <i class="pi pi-map text-green-600"></i> Localización Flota
-        </div>
         <div id="fleet-map" class="w-full h-full"></div>
       </div>
     </div>
@@ -137,13 +172,15 @@
           </div>
 
           <div class="flex gap-2 w-full xl:w-auto">
+            <!--
             <p-inputgroup class="flex-grow xl:flex-grow-0">
               <input pInputText placeholder="Buscar producto..." class="p-inputtext-sm" />
               <p-inputgroup-addon>
                 <p-button icon="pi pi-search" severity="secondary" variant="text" size="small"/>
               </p-inputgroup-addon>
             </p-inputgroup>
-            <p-button label="Nuevo" icon="pi pi-plus" size="small" severity="warn"></p-button>
+            -->
+            <p-button label="Añadir" icon="pi pi-plus" size="small"></p-button>
           </div>
         </div>
 
@@ -224,7 +261,7 @@
       <div class="w-full lg:w-1/3 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sticky top-4 flex flex-col h-auto" *ngIf="selectedStock">
         <div class="flex justify-between items-start mb-4">
           <h3 class="font-bold text-slate-800 text-lg">Reponer Stock</h3>
-          <button (click)="selectedStock = undefined" class="text-slate-400 hover:text-slate-600"><i class="pi pi-times"></i></button>
+          <p-button (click)="selectedStock = undefined" icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" />
         </div>
 
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
@@ -246,9 +283,7 @@
           </p-inputNumber>
         </div>
 
-        <button (click)="confirmReplenish()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-slate-200">
-          Confirmar
-        </button>
+        <p-button label="Confirmar" (click)="confirmReplenish()" styleClass="w-full"/>
       </div>
 
       <div class="w-full lg:w-1/3 bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 h-[350px]" *ngIf="!selectedStock">
