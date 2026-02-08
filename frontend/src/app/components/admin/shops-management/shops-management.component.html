@@ -9,10 +9,11 @@
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-bold text-yellow-600">Gestor de Tiendas</h1>
-        <p class="text-slate-500">Administra las diferentes puntos de venta de la organización.</p>
+        <p *ngIf="authService.isAdmin()" class="text-slate-500">Administra las diferentes puntos de venta de la organización.</p>
+        <p *ngIf="authService.isManager()" class="text-slate-500">Administra las tiendas a las que estás asignado.</p>
       </div>
 
-      <div>
+      <div *ngIf="authService.isAdmin()">
         <p-button routerLink="/admin/shops/new" label="Nueva Tienda" icon="pi pi-plus" styleClass="p-button-warning" rounded="true"></p-button>
       </div>
     </div>
@@ -39,7 +40,8 @@
           </div>
 
           <div class="flex flex-col z-10">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiendas Totales</span>
+            <span *ngIf="authService.isAdmin()" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiendas Totales</span>
+            <span *ngIf="authService.isManager()" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiendas Asignadas</span>
 
             <div class="flex items-center gap-3 mt-1">
               <span class="text-4xl font-extrabold text-slate-800">{{ shopsPage.totalItems }}</span>
@@ -50,7 +52,7 @@
         <div class="flex-grow flex flex-col min-h-0">
           <div class="flex justify-between items-center mb-3 shrink-0">
             <h3 class="font-bold text-slate-700 text-sm">Notificaciones relacionadas (todas las tiendas)</h3>
-            <button class="text-xs text-cyan-600 font-bold hover:underline">Ver todas</button>
+            <button class="text-xs text-cyan-600 font-bold hover:underline">Ver todas las alertas</button>
           </div>
 
           <div class="flex flex-col gap-2 overflow-y-auto max-h-[380px] pr-1 custom-scrollbar">
@@ -84,7 +86,8 @@
     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
 
       <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h3 class="text-xl font-bold text-slate-800">Todas las tiendas</h3>
+        <h3 *ngIf="authService.isAdmin()"  class="text-xl font-bold text-slate-800">Todas las tiendas</h3>
+        <h3 *ngIf="authService.isManager()"  class="text-xl font-bold text-slate-800">Tiendas asignadas</h3>
         <div class="flex gap-2 w-full sm:w-auto">
           <p-inputgroup>
             <input pInputText placeholder="Buscar..." />
@@ -104,7 +107,7 @@
         <ng-template pTemplate="header">
           <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
             <th class="font-semibold">Código de referencia</th>
-            <th class="font-semibold">Gerente</th>
+            <th *ngIf="authService.isAdmin()" class="font-semibold">Gerente</th>
             <th class="font-semibold">Tienda</th>
             <th class="font-semibold">Dirección</th>
             <th class="font-semibold">Productos totales</th>
@@ -117,7 +120,7 @@
           <tr [pSelectableRow]="shop" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group">
             <td class="pl-4 font-mono text-sm text-slate-500">{{ shop.referenceCode }}</td>
 
-            <td>
+            <td *ngIf="authService.isAdmin()">
               @if (shop.assignedManager) {
                 <div class="flex items-center gap-2">
                   <p-avatar [image]="shop.assignedManager.imageInfo.imageUrl" shape="circle" />
@@ -153,40 +156,11 @@
 
             <td class="text-right pr-4">
               <div class="flex justify-start gap-2">
-                <p-dialog header="Asignar Gerente" [modal]="true" [(visible)]="visibleAssignmentDialog" emptyMessage="No hay gerentes disponibles">
-                  <span class="p-text-secondary block mb-4">Proporciona acceso de una cuenta de gerente a la gestión de esta tienda.</span>
-                  <p-select [options]="managers" [(ngModel)]="selectedManager" optionLabel="name" placeholder="Selecciona una cuenta..." class="w-full mb-4">
-                    <ng-template #empty>
-                      <div class="flex items-center gap-2 px-2 py-1 text-surface-500">
-                        <span>No existen gerentes disponibles.</span>
-                      </div>
-                    </ng-template>
-                    <ng-template let-user #selectedItem>
-                      <div class="flex items-center gap-2">
-                        <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" />
-                        <div>{{ user.name }}</div>
-                      </div>
-                    </ng-template>
-                    <ng-template let-user #item>
-                      <div class="flex items-center gap-2">
-                        <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" />
-                        <div>{{ user.name }}</div>
-                      </div>
-                    </ng-template>
-                  </p-select>
-                  <div class="flex justify-end gap-2">
-                    <p-button label="Cancelar" severity="secondary" (click)="cancelAssignment()" />
-                    <div *ngIf="visibleUnassignButton">
-                      <p-button label="Desasignar" severity="secondary" (click)="setManagerAssignment(shop.id, '0', false)" />
-                    </div>
-                    <p-button label="Guardar" (click)="setManagerAssignment(shop.id, selectedManager?.id, true)" />
-                  </div>
-                </p-dialog>
-
-                <p-button icon="pi pi-link" (click)="showAssignmentDialog(shop.id)" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Asignar Gerente"></p-button>
+                <p-button *ngIf="authService.isAdmin()" icon="pi pi-link" (click)="showAssignmentDialog(shop.id)" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Asignar Gerente"></p-button>
+                <p-button *ngIf="authService.isManager()" icon="pi pi-briefcase" [routerLink]="['/admin/shop', shop.id]" styleClass="p-button-xs p-button-outlined p-button-success" rounded="true" pTooltip="Administrar tienda"></p-button>
                 <p-button icon="pi pi-map-marker" (click)="locateShopOnMap(shop); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Ver en Mapa"></p-button>
                 <p-button icon="pi pi-pencil" [routerLink]="['/admin/shops/edit', shop.id]" styleClass="p-button-xs p-button-outlined p-button-warning" rounded="true" pTooltip="Editar Tienda"></p-button>
-                <p-button icon="pi pi-trash" (click)="deleteShop(shop.id)" pTooltip="Eliminar Tienda" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true"></p-button>
+                <p-button *ngIf="authService.isAdmin()" icon="pi pi-trash" (click)="deleteShop(shop.id)" pTooltip="Eliminar Tienda" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true"></p-button>
               </div>
             </td>
           </tr>
@@ -194,15 +168,45 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="p-0 border-0">
+            <td colspan="7" class="p-0 border-0">
               <div class="flex flex-col items-center justify-center w-full h-32 text-slate-400 bg-slate-50">
-                <i class="pi pi-inbox text-4xl mb-2 text-slate-300"></i>
+                <i class="pi pi-shop text-4xl mb-2 text-slate-300"></i>
                 <span class="font-medium">No hay tiendas disponibles.</span>
               </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
+
+      <p-dialog header="Asignar Gerente" [modal]="true" [(visible)]="visibleAssignmentDialog" emptyMessage="No hay gerentes disponibles">
+        <span class="p-text-secondary block mb-4">Proporciona acceso de una cuenta de gerente a la gestión de esta tienda.</span>
+        <p-select [options]="managers" [(ngModel)]="selectedManager" optionLabel="name" placeholder="Selecciona una cuenta..." class="w-full mb-4">
+          <ng-template #empty>
+            <div class="flex items-center gap-2 px-2 py-1 text-surface-500">
+              <span>No existen gerentes disponibles.</span>
+            </div>
+          </ng-template>
+          <ng-template let-user #selectedItem>
+            <div class="flex items-center gap-2">
+              <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" />
+              <div>{{ user.name }}</div>
+            </div>
+          </ng-template>
+          <ng-template let-user #item>
+            <div class="flex items-center gap-2">
+              <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" />
+              <div>{{ user.name }}</div>
+            </div>
+          </ng-template>
+        </p-select>
+        <div class="flex justify-end gap-2">
+          <p-button label="Cancelar" severity="secondary" (click)="cancelAssignment()" />
+          <div *ngIf="visibleUnassignButton">
+            <p-button label="Desasignar" severity="secondary" (click)="setManagerAssignment(selectedManager?.id, false)" />
+          </div>
+          <p-button label="Guardar" (click)="setManagerAssignment(selectedManager?.id, true)" />
+        </div>
+      </p-dialog>
 
       <p-paginator (onPageChange)="onPageChange($event)" [rows]="rows" [totalRecords]="shopsPage.totalItems" [dropdownAppendTo]="'body'" styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl"></p-paginator>
     </div>

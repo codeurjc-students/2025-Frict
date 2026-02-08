@@ -7,6 +7,7 @@ import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,9 +41,18 @@ public class ShopRestController {
     private ShopStockService shopStockService;
 
 
+    @Operation(summary = "(Manager) Get assigned shops information (paged)")
+    @GetMapping
+    public ResponseEntity<PageResponse<ShopDTO>> getAssignedShopsPage(HttpServletRequest request, Pageable pageable) {
+        User loggedUser = findLoggedUserHelper(request);
+        Page<Shop> assignedShops = shopService.findAllByAssignedManagerId(loggedUser.getId(), pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(assignedShops, ShopDTO::new));
+    }
+
+
     @Operation(summary = "(Admin) Get all shops information (paged)")
     @GetMapping("/")
-    public ResponseEntity<PageResponse<ShopDTO>> getShopsPage(Pageable pageable) {
+    public ResponseEntity<PageResponse<ShopDTO>> getAllShopsPage(Pageable pageable) {
         Page<Shop> allShops = shopService.findAll(pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(allShops, ShopDTO::new));
     }
@@ -117,13 +127,18 @@ public class ShopRestController {
     @PostMapping("/{id}/assign/{userId}")
     public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long id, @PathVariable Long userId, @RequestParam boolean state) {
         Shop shop = findShopHelper(id);
-        if (state){
-            User user = findUserHelper(userId);
-            shop.setAssignedManager(user);
+
+        if (state) {
+            User newManager = findUserHelper(userId);
+            shop.setAssignedManager(newManager);
         }
         else {
-            shop.setAssignedManager(null);
+            User currentManager = shop.getAssignedManager();
+            if (currentManager != null && currentManager.getId().equals(userId)) {
+                shop.setAssignedManager(null);
+            }
         }
+
         Shop savedShop = shopService.save(shop);
         return ResponseEntity.ok(new ShopDTO(savedShop));
     }
@@ -169,6 +184,12 @@ public class ShopRestController {
         }
 
         return ResponseEntity.ok(new ShopDTO(shop));
+    }
+
+
+    private User findLoggedUserHelper(HttpServletRequest request) {
+        return this.userService.getLoggedUser(request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
 

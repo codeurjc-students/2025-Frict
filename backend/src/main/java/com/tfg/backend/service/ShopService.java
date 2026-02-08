@@ -20,6 +20,8 @@ public class ShopService {
 
     public Page<Shop> findAll(Pageable pageInfo) { return repository.findAll(pageInfo); }
 
+    public Page<Shop> findAllByAssignedManagerId(Long userId, Pageable pageInfo) { return repository.findAllByAssignedManagerId(userId, pageInfo); }
+
     public Optional<Shop> findById(Long id) {
         return repository.findById(id);
     }

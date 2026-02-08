@@ -146,6 +146,10 @@ public class DatabaseInitializer {
         User user3 = new User("Gerente", "manager", "manager@gmail.com", passwordEncoder.encode("managerpass"), "MANAGER");
         user3.setUserImage(GlobalDefaults.USER_IMAGE);
         userRepository.save(user3);
+
+        User user4 = new User("Conductor", "driver", "driver@gmail.com", passwordEncoder.encode("driverpass"), "DRIVER");
+        user4.setUserImage(GlobalDefaults.USER_IMAGE);
+        userRepository.save(user4);
     }
 
     private void initCategories() {
@@ -401,13 +405,16 @@ public class DatabaseInitializer {
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
-
         Optional<User> manager = userRepository.findByUsername("manager");
         if(manager.isPresent()){
             shop1.setAssignedManager(manager.get());
         }
-
         shopRepository.save(shop1);
+
+        Address address2 = new Address("Alicante", "Calle Por Defecto", "43", "", "03002", "Alicante", "España");
+        Shop shop2 = new Shop("Alicante", address2, -0.485225, 38.348045);
+        shop2.setImage(GlobalDefaults.SHOP_IMAGE);
+        shopRepository.save(shop2);
 
         Truck truck1 = truckRepository.save(new Truck("2C4RD", -3.6038, 40.6168));
         Truck truck2 = truckRepository.save(new Truck("5U7TH", -3.9038, 40.5168));

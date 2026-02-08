@@ -23,6 +23,7 @@ import {User} from '../../../models/user.model';
 import {Select} from 'primeng/select';
 import {UserService} from '../../../services/user.service';
 import {Avatar} from 'primeng/avatar';
+import {AuthService} from '../../../services/auth.service';
 
 interface ShopAlert {
   shopName: string;
@@ -84,6 +85,7 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   protected error: boolean = false;
 
   // Assignment dialog
+  protected currentShop: Shop | undefined = undefined;
   protected managers: User[] = [];
   protected selectedManager: User | undefined = undefined;
   protected visibleAssignmentDialog: boolean = false;
@@ -91,7 +93,8 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
 
   constructor(private shopService: ShopService,
               private userService: UserService,
-              private messageService: MessageService) {}
+              private messageService: MessageService,
+              protected authService: AuthService) {}
 
   ngOnInit() {
     this.loadShops();
@@ -148,7 +151,14 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   }
 
   loadShops(){
-    this.shopService.getShopsPage(this.first/this.rows, this.rows).subscribe({
+    let request$;
+    if (this.authService.isAdmin()) {
+      request$ = this.shopService.getAllShopsPage(this.first/this.rows, this.rows);
+    } else {
+      request$ = this.shopService.getAssignedShopsPage(this.first/this.rows, this.rows);
+    }
+
+    request$.subscribe({
       next: (shops) => {
         this.shopsPage = shops;
         console.log(this.shopsPage);
@@ -198,44 +208,44 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
       next: (managers) => {
         this.managers = managers;
         const foundShop = this.shopsPage.items.find(shop => shop.id === shopId);
-        if (foundShop){
+
+        if (foundShop) {
+          this.currentShop = foundShop;
           this.selectedManager = foundShop.assignedManager;
-        }
-        if (this.selectedManager){
-          this.visibleUnassignButton = true;
+          this.visibleUnassignButton = !!this.selectedManager;
         }
         this.visibleAssignmentDialog = true;
-        console.log(this.managers);
       },
       error: () => {
-        this.visibleAssignmentDialog = true;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los gerentes' });
       }
-    })
+    });
   }
 
   cancelAssignment(){
     this.selectedManager = undefined;
+    this.currentShop = undefined;
     this.visibleAssignmentDialog = false;
     this.visibleUnassignButton = false;
   }
 
-  setManagerAssignment(id: string, userId: string | undefined, state: boolean){
-    let managerId = userId;
-    if (!managerId){
-      managerId = '0';
-    }
-    this.shopService.assignManager(id, managerId, state).subscribe({
-      next: (shop) => {
-        const index = this.shopsPage.items.findIndex(item => item.id == shop.id);
-        if (index !== -1) {
-          this.shopsPage.items[index] = shop;
+  setManagerAssignment(userId: string | undefined, state: boolean){
+    const managerId = userId;
+    const shopId = this.currentShop?.id;
+    if (managerId && shopId){
+      this.shopService.assignManager(shopId, managerId, state).subscribe({
+        next: (shop) => {
+          const index = this.shopsPage.items.findIndex(item => item.id == shop.id);
+          if (index !== -1) {
+            this.shopsPage.items[index] = shop;
+          }
+          this.cancelAssignment();
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido completar la asignación del gerente a la tienda.` });
         }
-        this.cancelAssignment();
-      },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido completar la asignación del gerente a la tienda.` });
-      }
-    })
+      })
+    }
   }
 
   protected readonly formatAddress = formatAddress;

@@ -17,15 +17,25 @@ export class ShopService {
 
   private apiUrl = '/api/v1/shops';
 
-  public getShopsPage(page: number, size: number): Observable<PageResponse<Shop>> {
+
+  public getShopById(id: string): Observable<Shop> {
+    return this.http.get<Shop>(this.apiUrl + `/${id}`);
+  }
+
+  //Managers: retrieve only shops that have the logged user assigned
+  public getAssignedShopsPage(page: number, size: number): Observable<PageResponse<Shop>> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<Shop>>(this.apiUrl, { params });
+  }
+
+  //Admin: Retrieve all organization shops
+  public getAllShopsPage(page: number, size: number): Observable<PageResponse<Shop>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
     return this.http.get<PageResponse<Shop>>(this.apiUrl + `/`, { params });
-  }
-
-  public getShopById(id: string): Observable<Shop> {
-    return this.http.get<Shop>(this.apiUrl + `/${id}`);
   }
 
   public getStocksPageByShopId(id: string, page: number, size: number): Observable<PageResponse<ShopStock>> {

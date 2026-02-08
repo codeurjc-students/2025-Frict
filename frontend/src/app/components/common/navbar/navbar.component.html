@@ -46,7 +46,7 @@
         </p-button>
         <p-menu #menu [model]="items" [popup]="true" styleClass="!bg-surface-800 !border-surface-700 !mt-2" appendTo="body"/>
 
-        <div *ngIf="!authService.isAdmin()">
+        <div *ngIf="!authService.isAdmin() && !authService.isManager() && !authService.isDriver()">
           <p-button iconPos="left" styleClass="!bg-primary-500/90 hover:!bg-primary/70 border-none h-11 !text-white rounded-lg px-3" routerLink="/cart">
             <ng-template pTemplate="content">
               <i class="pi pi-shopping-cart text-lg"></i>
@@ -99,6 +99,16 @@
 
           <li>
             <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+               [routerLink]="['/']"
+               routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
+               [routerLinkActiveOptions]="routerOptions">
+              <i class="pi pi-home mr-3 text-lg"></i>
+              <span class="font-medium">Inicio</span>
+            </a>
+          </li>
+
+          <li>
+            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
                [routerLink]="['/search']"
                routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
                [routerLinkActiveOptions]="routerOptions">
@@ -118,20 +128,22 @@
 
             <ul [class.hidden]="!isCategoriesExpanded()" class="list-none p-0 m-0 overflow-hidden block">
 
-              <div *ngIf="!authService.isAdmin()">
+              <div *ngIf="!authService.isAdmin() && !authService.isManager && !authService.isDriver">
                 <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
               </div>
 
-              <div *ngIf="authService.isAdmin()">
+              <div *ngIf="authService.isAdmin() || authService.isManager || authService.isDriver">
                 @for (item of adminItems; track item.link) {
-                  <li>
-                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
-                       [routerLink]="item.link"
-                       routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
-                      <i [class]="item.icon + ' mr-3'"></i>
-                      <span class="font-medium">{{ item.label }}</span>
-                    </a>
-                  </li>
+                  @if (canViewItem(item)) {
+                    <li>
+                      <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+                         [routerLink]="item.link"
+                         routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
+                        <i [class]="item.icon + ' mr-3'"></i>
+                        <span class="font-medium">{{ item.label }}</span>
+                      </a>
+                    </li>
+                  }
                 }
               </div>
             </ul>
@@ -156,14 +168,6 @@
                     <span class="font-medium">Perfil</span>
                   </a>
                 </li>
-                <div *ngIf="authService.isUser()">
-                  <li>
-                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/favourites" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
-                      <i class="pi pi-bookmark mr-3"></i>
-                      <span class="font-medium">Productos guardados</span>
-                    </a>
-                  </li>
-                </div>
                 <li>
                   <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/alerts" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-bell mr-3"></i>

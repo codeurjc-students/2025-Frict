@@ -161,7 +161,7 @@
               <th class="pl-4 font-semibold w-16 text-center">Activo</th>
               <th class="font-semibold">Producto</th>
               <th class="text-center font-semibold">Stock Total</th>
-              <th class="text-right pr-4 font-semibold">Acciones</th>
+              <th class="text-right font-semibold">Acciones</th>
             </tr>
           </ng-template>
 
@@ -189,7 +189,7 @@
               </td>
 
               <td class="text-right pr-4">
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-start gap-2">
                   <p-button icon="pi pi-plus" (onClick)="selectProductForReplenish(item); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Reponer"></p-button>
                   <p-button icon="pi pi-cog" (onClick)="selectProductForReplenish(item); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true" pTooltip="Configurar"></p-button>
                   <p-button icon="pi pi-trash" (onClick)="deleteStock(item.id)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>

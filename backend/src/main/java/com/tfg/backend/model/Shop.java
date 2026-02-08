@@ -42,8 +42,7 @@ public class Shop {
     @OneToMany(mappedBy = "assignedShop")
     private List<Truck> assignedTrucks = new ArrayList<>();
 
-    @OneToOne
-    @JoinColumn(name = "manager_id")
+    @ManyToOne
     private User assignedManager;
 
     public Shop() {
