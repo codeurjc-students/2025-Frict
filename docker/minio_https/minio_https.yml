@@ -1,0 +1,18 @@
+# docker-compose -f minio_https.yml up -d
+services:
+  minio_https:
+      image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+      container_name: minio_server_https
+      ports:
+        - "9000:9000"
+        - "9001:9001"
+      environment:
+        MINIO_ROOT_USER: "admin"
+        MINIO_ROOT_PASSWORD: "password123"
+      command: server /data --console-address ":9001"
+      volumes:
+        - minio_data_https:/data
+        - ./certs:/root/.minio/certs    # Mandatory certificates for HTTPS connection
+
+volumes:
+  minio_data_https:

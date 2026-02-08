@@ -128,11 +128,11 @@
 
             <ul [class.hidden]="!isCategoriesExpanded()" class="list-none p-0 m-0 overflow-hidden block">
 
-              <div *ngIf="!authService.isAdmin() && !authService.isManager && !authService.isDriver">
+              <div *ngIf="!authService.isAdmin() && !authService.isManager() && !authService.isDriver()">
                 <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
               </div>
 
-              <div *ngIf="authService.isAdmin() || authService.isManager || authService.isDriver">
+              <div *ngIf="authService.isAdmin() || authService.isManager() || authService.isDriver()">
                 @for (item of adminItems; track item.link) {
                   @if (canViewItem(item)) {
                     <li>
