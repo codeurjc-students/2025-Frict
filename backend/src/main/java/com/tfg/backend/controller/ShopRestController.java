@@ -40,6 +40,9 @@ public class ShopRestController {
     @Autowired
     private ShopStockService shopStockService;
 
+    @Autowired
+    private ProductService productService;
+
 
     @Operation(summary = "(Manager) Get assigned shops information (paged)")
     @GetMapping
@@ -120,6 +123,26 @@ public class ShopRestController {
         }
 
         return ResponseEntity.ok(new ShopDTO(shop));
+    }
+
+
+    @Operation(summary = "(Manager) Set stock assignment to a shop")
+    @PostMapping("/{shopId}/assign/stock/{stockId}")
+    public ResponseEntity<ShopStockDTO> setAssignedStock(@PathVariable Long shopId, @PathVariable Long stockId, @RequestParam boolean state) {
+        Shop shop = findShopHelper(shopId);
+        ShopStock targetStock;
+
+        //Add a stock: stockId is the product identifier
+        if (state) {
+            Product product = findProductHelper(stockId);
+            targetStock = this.shopStockService.save(new ShopStock(shop, product, 0));
+        }
+        //Remove a stock: stockId is the stock identifier
+        else {
+            targetStock = findShopStockHelper(stockId);
+            this.shopStockService.deleteById(stockId);
+        }
+        return ResponseEntity.ok(new ShopStockDTO(targetStock));
     }
 
 
@@ -210,6 +233,11 @@ public class ShopRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
+    private Product findProductHelper(Long id) {
+        return this.productService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
+    }
+
 
     private User findUserHelper(Long id) {
         return this.userService.findById(id)
@@ -219,6 +247,11 @@ public class ShopRestController {
     private Shop findShopHelper(Long id) {
         return this.shopService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
+    }
+
+    private ShopStock findShopStockHelper(Long id) {
+        return this.shopStockService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock with ID " + id + " does not exist."));
     }
 
     private Truck findTruckHelper(Long id) {

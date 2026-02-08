@@ -40,8 +40,12 @@ public class ProductRestController {
 
     @Autowired
     private StorageService storageService;
+
     @Autowired
     private OrderItemService orderItemService;
+
+    @Autowired
+    private ShopService shopService;
 
 
     @Operation(summary = "(Admin) Get all products (paged)")
@@ -107,6 +111,14 @@ public class ProductRestController {
             dtos.add(new ShopStockDTO(s));
         }
         return ResponseEntity.ok(new ListResponse<>(dtos));
+    }
+
+
+    @Operation(summary = "(Manager) Get eligible products by shop ID")
+    @GetMapping("/available/{shopId}")
+    public ResponseEntity<List<ProductDTO>> getEligibleProducts(@PathVariable Long shopId) {
+        List<ProductDTO> availableProducts = productService.findProductsNotAssignedToShop(shopId).stream().map(ProductDTO::new).toList();
+        return ResponseEntity.ok(availableProducts);
     }
 
 
@@ -329,6 +341,10 @@ public class ProductRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
+    private Shop findShopHelper(Long id) {
+        return this.shopService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
+    }
 
     private Product findProductHelper(Long id) {
         return this.productService.findById(id)

@@ -7,13 +7,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class ShopStockService {
 
     @Autowired
     private ShopStockRepository shopStockRepository;
 
+    public Optional<ShopStock> findById(Long id) { return this.shopStockRepository.findById(id); };
+
     public Page<ShopStock> findAllByShopId(Long shopId, Pageable pageable) { return this.shopStockRepository.findAllByShopId(shopId, pageable); };
 
     public ShopStock save(ShopStock s){ return this.shopStockRepository.save(s); }
+
+    public void deleteById(Long id){ this.shopStockRepository.deleteById(id); }
 }

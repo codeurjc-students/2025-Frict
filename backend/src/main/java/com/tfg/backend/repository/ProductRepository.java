@@ -13,6 +13,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     boolean existsByReferenceCode(String referenceCode);
 
+    @Query("SELECT p FROM Product p WHERE p.id NOT IN " +
+            "(SELECT ss.product.id FROM ShopStock ss WHERE ss.shop.id = :shopId)")
+    List<Product> findProductsNotAssignedToShop(@Param("shopId") Long shopId);
+
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.images")
     List<Product> findAllWithImages();
 

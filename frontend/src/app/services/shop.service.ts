@@ -63,6 +63,13 @@ export class ShopService {
     return this.http.post<Shop>(this.apiUrl + `/image/${shopId}`, formData);
   }
 
+  //stockId will act as an identifier for a product and for a stock (when assigning it will be a product id, whereas when unassigning it will be a stock id)
+  public assignStock(shopId: string, stockId: string, state: boolean): Observable<Shop>{
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Shop>(this.apiUrl + `/${shopId}/assign/stock/${stockId}`, null, { params });
+  }
+
   public assignTruck(shopId: string, truckId: string, state: boolean): Observable<Shop>{
     let params = new HttpParams();
     params = params.append('state', state);

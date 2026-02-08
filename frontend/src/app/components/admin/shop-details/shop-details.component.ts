@@ -12,9 +12,6 @@ import {ShopStock} from '../../../models/shopStock.model';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {InputGroup} from 'primeng/inputgroup';
-import {InputText} from 'primeng/inputtext';
-import {InputGroupAddon} from 'primeng/inputgroupaddon';
 import {Button} from 'primeng/button';
 import {TableModule} from 'primeng/table';
 import {Avatar} from 'primeng/avatar';
@@ -27,16 +24,14 @@ import {formatAddress} from '../../../utils/textFormat.util';
 import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
-import {User} from '../../../models/user.model';
+import {Product} from '../../../models/product.model';
+import {ProductService} from '../../../services/product.service';
 
 @Component({
   selector: 'app-shop-details',
   standalone: true,
   imports: [
     LoadingScreenComponent,
-    InputGroup,
-    InputText,
-    InputGroupAddon,
     Button,
     TableModule,
     Avatar,
@@ -67,7 +62,10 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   stocksRows: number = 5;
 
   selectedStock: ShopStock | undefined = undefined;
+  selectedProduct: Product | undefined = undefined;
   restockQuantity: number = 0;
+  protected eligibleProducts: Product[] = []; //Available products that do not have an stock assigned to this shop
+  protected visibleAddProductStockDialog: boolean = false;
 
   loading: boolean = true;
   error: boolean = false;
@@ -87,6 +85,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     private shopService: ShopService,
     private truckService: TruckService,
     private confirmationService: ConfirmationService,
+    private productService: ProductService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -202,7 +201,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-
   confirmTruckAssignment(shopId: string, truckId: string, state: boolean){
     this.shopService.assignTruck(shopId, truckId, state).subscribe({
       next: () => {
@@ -211,6 +209,69 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido completar la asignación del camión a la tienda.` });
+      }
+    });
+  }
+
+
+  showAddStockDialog() {
+    this.productService.getEligibleProducts(this.shop.id).subscribe({
+      next: (list) => {
+        this.eligibleProducts = list;
+        console.log(this.eligibleProducts);
+        this.visibleAddProductStockDialog = true;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los nuevos productos disponibles.' });
+      }
+    });
+  }
+
+  cancelAddStock(){
+    this.selectedProduct = undefined;
+    this.visibleAddProductStockDialog = false;
+  }
+
+  //If state is true then add the stock to the shop, if state is false then delete the stock from the stock
+  //NOTE: The different offered options correspond to products, NOT STOCKS, as not all shops might have stock for all products.
+  //If state is true then stockId is the corresponding product id for the stock to be created, if false is the stock id to remove.
+  manageStockAssignment(stockId: string | undefined, state: boolean){
+    if (stockId){
+      if (state){
+        this.confirmStockAssignment(this.shop.id, stockId, state);
+      }
+      else {
+        this.confirmationService.confirm({
+          message: '¿Quieres eliminar el stock de la tienda? Todas las unidades registradas del producto se borrarán.',
+          header: 'Eliminar stock',
+          icon: 'pi pi-info-circle',
+          rejectLabel: 'Cancelar',
+          rejectButtonProps: {
+            label: 'Cancelar',
+            severity: 'secondary',
+            outlined: true,
+          },
+          acceptButtonProps: {
+            label: 'Eliminar',
+            severity: 'warn',
+          },
+
+          accept: () => {
+            this.confirmStockAssignment(this.shop.id, stockId, state);
+          }
+        });
+      }
+    }
+  }
+
+  confirmStockAssignment(shopId: string, stockId: string, state: boolean){
+    this.shopService.assignStock(shopId, stockId, state).subscribe({
+      next: () => {
+        this.loadStocksPage();
+        this.cancelAddStock();
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se ha podido completar la asignación del stock a la tienda.` });
       }
     });
   }
@@ -314,10 +375,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       this.messageService.add({severity: 'success', summary: 'Stock repuesto', detail: `+${qty} unidades`});
       this.restockQuantity = 0;
     }
-  }
-
-  deleteStock(id: number) {
-    this.messageService.add({severity: 'warn', summary: 'Eliminar', detail: 'Funcionalidad de borrado simulada'});
   }
 
   focusTruckOnMap(truck: Truck) {

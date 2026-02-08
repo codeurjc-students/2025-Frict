@@ -41,6 +41,11 @@ export class ProductService {
     return this.http.get<ListResponse<ShopStock>>(this.apiUrl + `/stock/${id}`).pipe(map(response => response.items));
   }
 
+  //Shop details component: Search for the products that do not have a stock assigned in a shop
+  public getEligibleProducts(shopId: string): Observable<Product[]> {
+    return this.http.get<Product[]>(this.apiUrl + `/available/${shopId}`);
+  }
+
   public getFilteredProducts(
     page: number,
     size: number,
