@@ -4,18 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main # On successfully merged PRs into main branch
+      - main
 
 jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
-
-    env:
-      MINIO_URL: "https://localhost:9000"
-      MINIO_ACCESS_KEY: ${{ secrets.MINIO_ROOT_USER }}
-      MINIO_SECRET_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
-      MINIO_SSL_INSECURE: "true"
 
     services:
       mysql:
@@ -31,7 +25,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
 
       - name: Start MinIO and Create Bucket
         env:
@@ -52,6 +45,7 @@ jobs:
             minio/minio server /data --console-address ":9001"
 
           sleep 5
+
           aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
 
 
@@ -92,6 +86,7 @@ jobs:
 
 
       - name: Build and analyze
+        working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,5 +96,9 @@ jobs:
           SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
           GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
 
-        working-directory: backend
+          MINIO_URL: "https://localhost:9000"
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          MINIO_SSL_INSECURE: "true"
+
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test
