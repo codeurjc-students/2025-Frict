@@ -9,6 +9,7 @@ import com.tfg.backend.model.User;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.ReviewService;
 import com.tfg.backend.service.UserService;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,19 +39,19 @@ public class ReviewRestController {
     private UserService userService;
 
 
-    @Operation(summary = "Get logged user reviews (paged)")
+    @Operation(summary = "(All) Get logged user reviews (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toPageResponse(userReviews));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
     }
 
 
     //Get all the reviews of a product
-    @Operation(summary = "Get all reviews by product ID")
+    @Operation(summary = "(All) Get all reviews by product ID")
     @GetMapping("/")
     public ResponseEntity<ListResponse<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
         Product product = findProductHelper(productId);
@@ -62,7 +63,7 @@ public class ReviewRestController {
     }
 
 
-    @Operation(summary = "Create review")
+    @Operation(summary = "(User) Create review")
     @PostMapping
     public ResponseEntity<ReviewDTO> createReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
@@ -81,7 +82,7 @@ public class ReviewRestController {
     }
 
 
-    @Operation(summary = "Update review")
+    @Operation(summary = "(User) Update review")
     @PutMapping
     public ResponseEntity<ReviewDTO> updateReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
@@ -102,7 +103,7 @@ public class ReviewRestController {
     }
 
 
-    @Operation(summary = "Delete review by ID")
+    @Operation(summary = "(Admin, User) Delete review by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ReviewDTO> deleteReview(HttpServletRequest request, @PathVariable Long id) {
         //Check that the review exists
@@ -135,16 +136,5 @@ public class ReviewRestController {
     private Review findReviewHelper(Long id) {
         return this.reviewService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review with ID " + id + " does not exist."));
-    }
-
-
-    //Creates ReviewsPageDTO objects with necessary fields only
-    private PageResponse<ReviewDTO> toPageResponse(Page<Review> reviews){
-        List<ReviewDTO> dtos = new ArrayList<>();
-        for (Review r : reviews.getContent()) {
-            ReviewDTO dto = new ReviewDTO(r);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, reviews.getTotalElements(), reviews.getNumber(), reviews.getTotalPages()-1, reviews.getSize());
     }
 }

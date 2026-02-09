@@ -4,6 +4,7 @@ import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,40 +40,44 @@ public class ProductRestController {
 
     @Autowired
     private StorageService storageService;
+
     @Autowired
     private OrderItemService orderItemService;
 
+    @Autowired
+    private ShopService shopService;
 
-    @Operation(summary = "Get all products (paged)")
+
+    @Operation(summary = "(Admin) Get all products (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<ProductDTO>> getAllProducts(Pageable pageable) {
         Page<Product> products = productService.findAll(pageable);
-        return ResponseEntity.ok(toPageResponse(products));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
 
 
-    @Operation(summary = "Get products with applied filters (paged)")
+    @Operation(summary = "(All) Get products with applied filters (paged)")
     @GetMapping("/filter")
     public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(Pageable pageable,
                                                                         @RequestParam(value = "query", required = false) String searchTerm,
                                                                         @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
         Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
-        return ResponseEntity.ok(toPageResponse(products));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
 
 
-    @Operation(summary = "Get logged user favourite products (paged)")
+    @Operation(summary = "(User) Get logged user favourite products (paged)")
     @GetMapping("/favourites")
     public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
-        return ResponseEntity.ok(toPageResponse(favouriteProducts));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(favouriteProducts, ProductDTO::new));
     }
 
 
-    @Operation(summary = "Check a product in logged user favourites")
+    @Operation(summary = "(User) Check a product in logged user favourites")
     @GetMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> checkProductInFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -88,7 +93,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Get product by ID")
+    @Operation(summary = "(All) Get product by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         Product product = findProductHelper(id);
@@ -96,7 +101,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Get product stock by ID")
+    @Operation(summary = "(All) Get product stock by ID")
     @GetMapping("/stock/{id}")
     public ResponseEntity<ListResponse<ShopStockDTO>> getProductStock(@PathVariable Long id) {
         Product product = findProductHelper(id);
@@ -109,7 +114,15 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Add product to logged user favourites")
+    @Operation(summary = "(Manager) Get eligible products by shop ID")
+    @GetMapping("/available/{shopId}")
+    public ResponseEntity<List<ProductDTO>> getEligibleProducts(@PathVariable Long shopId) {
+        List<ProductDTO> availableProducts = productService.findProductsNotAssignedToShop(shopId).stream().map(ProductDTO::new).toList();
+        return ResponseEntity.ok(availableProducts);
+    }
+
+
+    @Operation(summary = "(User) Add product to logged user favourites")
     @PostMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -125,7 +138,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Delete product from logged user favourites")
+    @Operation(summary = "(User) Delete product from logged user favourites")
     @DeleteMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> deleteProductFromFavourites(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -140,7 +153,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Create product")
+    @Operation(summary = "(Admin) Create product")
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
@@ -166,7 +179,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Update product by ID")
+    @Operation(summary = "(Admin) Update product by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
         Product product = findProductHelper(id);
@@ -191,7 +204,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Delete product by ID")
+    @Operation(summary = "(Admin) Delete product by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
         Product product = findProductHelper(id);
@@ -211,7 +224,7 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Toggle product global activation by ID")
+    @Operation(summary = "(Admin) Toggle product global activation by ID")
     @PostMapping("/active/{id}")
     public ResponseEntity<ProductDTO> toggleGlobalActivation(@PathVariable Long id, @RequestParam boolean state) {
         Product product = findProductHelper(id);
@@ -231,13 +244,14 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Toggle all products global activation")
+    @Operation(summary = "(Admin) Toggle all products global activation")
     @PostMapping("/active/")
     public ResponseEntity<Boolean> toggleAllGlobalActivations(@RequestParam boolean state) {
         List<Product> products = productService.findAll();
         for (Product product : products) {
             product.setActive(state);
             if (!state){
+                //Remove the products from user carts
                 product.getOrderItems().removeIf(item -> {
                     if (item.getOrder() == null) {
                         orderItemService.delete(item);
@@ -252,9 +266,9 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "Update product images (remove unused, add new)")
+    @Operation(summary = "(Admin) Update product images (remove unused, add new)")
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> updateProductImages(
+    public ResponseEntity<ProductDTO> updateProductImages(
             @PathVariable Long id,
             @RequestPart("existingImages") List<ProductImageInfo> existingImages,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
@@ -290,37 +304,36 @@ public class ProductRestController {
                 currentImages.add(newImg);
             }
         }
+        else if (currentImages.isEmpty()) { //No current images + No new images -> Set default image
+            currentImages.add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
+        }
 
-        return ResponseEntity.ok(productService.update(product));
+        return ResponseEntity.ok(new ProductDTO(productService.update(product)));
     }
 
 
-    @Operation(summary = "Delete remote product image by ID")
+    @Operation(summary = "(Admin) Delete remote product image by ID")
     @DeleteMapping("/{productId}/images/{imageId}")
-    public ResponseEntity<Product> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
-        // 1. Retrieve the product
+    public ResponseEntity<ProductDTO> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
         Product product = findProductHelper(productId);
 
-        // 2. Find the image in product images list
         ProductImageInfo imageToRemove = product.getImages().stream()
                 .filter(img -> img.getId().equals(imageId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Image not found in this product."));
 
         // 3. Delete from MinIO
-        storageService.deleteFile(imageToRemove.getS3Key());
-
-        // 4. Delete from image list
-        product.getImages().remove(imageToRemove);
+        if(!imageToRemove.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+            storageService.deleteFile(imageToRemove.getS3Key());
+            product.getImages().remove(imageToRemove);
+        }
 
         if(product.getImages().isEmpty()){
             product.getImages().add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
         }
 
-        // 5. Save product (orphanRemoval erases the image from BD)
         Product savedProduct = productService.save(product);
-
-        return ResponseEntity.ok(savedProduct);
+        return ResponseEntity.ok(new ProductDTO(savedProduct));
     }
 
 
@@ -329,20 +342,14 @@ public class ProductRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
+    private Shop findShopHelper(Long id) {
+        return this.shopService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
+    }
 
     private Product findProductHelper(Long id) {
         return this.productService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
     }
 
-
-    //Creates Page<ProductDTO> objects with necessary fields only
-    private PageResponse<ProductDTO> toPageResponse(Page<Product> products){
-        List<ProductDTO> dtos = new ArrayList<>();
-        for (Product p : products.getContent()) {
-            ProductDTO dto = new ProductDTO(p);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, products.getTotalElements(), products.getNumber(), products.getTotalPages()-1, products.getSize());
-    }
 }

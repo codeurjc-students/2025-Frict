@@ -10,6 +10,7 @@ public class GlobalDefaults {
     public static ImageInfo USER_IMAGE;
     public static ImageInfo CATEGORY_IMAGE;
     public static ImageInfo PRODUCT_IMAGE;
+    public static ImageInfo SHOP_IMAGE;
 
     private GlobalDefaults() {}
 }

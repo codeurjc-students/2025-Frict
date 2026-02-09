@@ -1,4 +1,6 @@
 //Formats numbers to adapt them to a country digits system
+import {Address} from '../models/address.model';
+
 export function formatPrice(price: number | null | undefined): string {
   if (price == null) return '';
 
@@ -39,4 +41,8 @@ export function formatCardDueDate(isoDate: string | undefined): string { //Input
     return `${month}/${year.slice(-2)}`; // year.slice(-2) takes the two last characters of the year (2028 -> 28)
   }
   return '';
+}
+
+export function formatAddress(address: Address): string {
+  return `${address.street}, ${address.number} ${address.floor} ${address.postalCode} ${address.city} (${address.country})`
 }

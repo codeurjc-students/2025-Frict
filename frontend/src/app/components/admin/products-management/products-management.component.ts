@@ -11,11 +11,10 @@ import {Tooltip} from 'primeng/tooltip';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {Tag} from 'primeng/tag';
-import {getUserStatusTagInfo} from '../../../utils/tagManager.util';
 import {ConfirmationService, MessageService} from 'primeng/api';
 
 
@@ -141,8 +140,6 @@ export class ProductsManagementComponent implements OnInit {
         this.productsPage = products;
         this.chartProductSelector.set(this.productsPage.items[0]);
         this.initCharts();
-      },
-      error: () => {
       }
     })
   }
@@ -214,5 +211,4 @@ export class ProductsManagementComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
-  protected readonly getUserStatusTagInfo = getUserStatusTagInfo;
 }

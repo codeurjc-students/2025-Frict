@@ -1,10 +1,13 @@
 package com.tfg.backend.model;
 
+import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -26,18 +29,30 @@ public class Shop {
     @JoinColumn(name = "address_id")
     private Address address;
 
+    @Embedded
+    private ImageInfo image;
+
+    private double longitude;
+
+    private double latitude;
+
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ShopStock> availableProducts = new HashSet<>();
 
     @OneToMany(mappedBy = "assignedShop")
-    private Set<Truck> assignedTrucks = new HashSet<>();
+    private List<Truck> assignedTrucks = new ArrayList<>();
+
+    @ManyToOne
+    private User assignedManager;
 
     public Shop() {
     }
 
-    public Shop(String referenceCode, String name, Address address) {
-        this.referenceCode = referenceCode;
+    public Shop(String name, Address address, double longitude, double latitude) {
+        this.referenceCode = ReferenceNumberGenerator.generateShopReferenceNumber();
         this.name = name;
         this.address = address;
+        this.longitude = longitude;
+        this.latitude = latitude;
     }
 }

@@ -15,7 +15,6 @@ export class OrderService {
 
   private apiUrl = '/api/v1/orders';
 
-// Tu signal actual
   itemsCount = signal<number>(0);
 
   public syncItemsCount() {

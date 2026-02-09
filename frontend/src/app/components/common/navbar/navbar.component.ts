@@ -14,12 +14,6 @@ import {CategoryService} from '../../../services/category.service';
 import {Avatar} from 'primeng/avatar';
 import {InputGroup} from 'primeng/inputgroup';
 import {InputText} from 'primeng/inputtext';
-import {transformToNumber} from 'primeng/utils';
-
-interface CategoryUI {
-  icon?: string;
-  label?: string;
-}
 
 @Component({
   selector: 'app-navbar',
@@ -94,11 +88,13 @@ export class NavbarComponent implements OnInit {
 
 
   public adminItems = [
-    { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products' },
-    { label: 'Pedidos',   icon: 'pi pi-box',       link: 'orders' },
-    { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports' },
-    { label: 'Reparto',   icon: 'pi pi-truck',     link: 'delivery' },
-    { label: 'Usuarios',  icon: 'pi pi-users',     link: '/admin/users' }
+    { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products', roles: ['ADMIN'] },
+    { label: 'Categorías', icon: 'pi pi-tag',   link: '/admin/categories', roles: ['ADMIN', 'MANAGER'] },
+    { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports', roles: ['ADMIN', 'MANAGER', 'DRIVER'] },
+    { label: 'Tiendas',   icon: 'pi pi-shop',      link: '/admin/shops', roles: ['ADMIN', 'MANAGER'] },
+    { label: 'Pedidos',   icon: 'pi pi-box',       link: 'orders', roles: ['ADMIN', 'MANAGER', 'DRIVER'] },
+    { label: 'Reparto',   icon: 'pi pi-truck',     link: 'delivery', roles: ['ADMIN', 'MANAGER', 'DRIVER'] },
+    { label: 'Usuarios',  icon: 'pi pi-users',     link: '/admin/users', roles: ['ADMIN'] }
   ];
 
   // Settings for routerLinkActive to distinguish between query params
@@ -136,5 +132,20 @@ export class NavbarComponent implements OnInit {
     });
   }
 
-  protected readonly transformToNumber = transformToNumber;
+  protected search() {
+    if (this.searchBarInput.length > 0){
+      this.router.navigate(['/search'], {
+        queryParams: {
+          query: this.searchBarInput
+        }
+      });
+    }
+  }
+
+  canViewItem(item: any): boolean {
+    if (item.roles.includes('ADMIN') && this.authService.isAdmin()) return true;
+    if (item.roles.includes('MANAGER') && this.authService.isManager()) return true;
+    if (item.roles.includes('DRIVER') && this.authService.isDriver()) return true;
+    return false;
+  }
 }

@@ -1,7 +1,10 @@
+import {Truck} from '../models/truck.model';
+import {User} from '../models/user.model';
+
 export interface TagInformation {
   message: string;
   icon: string;
-  severity: 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast'; // Tipos de PrimeNG/Tailwind
+  severity: 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 }
 
 //USER ROLE TAGS
@@ -82,6 +85,34 @@ export function getStockTagInfo(units: number): TagInformation {
       message: 'Agotado',
       icon: 'pi pi-times',
       severity: 'danger'
+    };
+  }
+}
+
+
+//TRUCK STATUS TAGS
+export function getTruckStatusTagInfo(activeOrders: number, logged: boolean): TagInformation {
+  if (activeOrders > 0){
+    if (logged){
+      return {
+        message: `En servicio`,
+        icon: 'pi pi-truck',
+        severity: 'warn'
+      };
+    }
+    else {
+      return {
+        message: `Ausente`,
+        icon: 'pi pi-clock',
+        severity: 'info'
+      };
+    }
+  }
+  else {
+    return {
+      message: `Libre`,
+      icon: 'pi pi-verified',
+      severity: 'success'
     };
   }
 }

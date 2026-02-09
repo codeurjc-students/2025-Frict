@@ -12,7 +12,7 @@ import {DividerModule} from 'primeng/divider';
 import {Order} from '../../../models/order.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 
 @Component({
   selector: 'app-order-details',

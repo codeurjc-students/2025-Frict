@@ -27,4 +27,14 @@ public class ReferenceNumberGenerator {
         }
         return sb.toString();
     }
+
+    public static String generateShopReferenceNumber() {
+        StringBuilder sb = new StringBuilder("TI-");
+        for (int i = 0; i < 8; i++) {
+            if (i == 4) sb.append("-");
+            int index = RANDOM.nextInt(ALPHABET.length());
+            sb.append(ALPHABET.charAt(index));
+        }
+        return sb.toString();
+    }
 }

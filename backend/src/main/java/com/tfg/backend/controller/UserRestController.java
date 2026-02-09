@@ -5,6 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.StatDataDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +36,7 @@ public class UserRestController {
     private StorageService storageService;
 
 
-    @Operation(summary = "Get current session information")
+    @Operation(summary = "(All) Get current session information")
 	@GetMapping("/session")
 	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
         Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
@@ -46,23 +47,36 @@ public class UserRestController {
 	}
 
 
-    @Operation(summary = "Get logged user information")
+    @Operation(summary = "(All) Get logged user information")
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
         return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
-    @Operation(summary = "Get all users information")
+
+    @Operation(summary = "(Admin) Get all users by role")
+    @GetMapping("/role/")
+    public ResponseEntity<List<UserDTO>> getAllUsersByRole(@RequestParam String role) {
+        List<User> allUsers = userService.findAllByRole(role);
+        List<UserDTO> dtos = new ArrayList<>();
+        for (User u : allUsers) {
+            dtos.add(new UserDTO(u));
+        }
+        return ResponseEntity.ok(dtos);
+    }
+
+
+    @Operation(summary = "(Admin) Get all users information")
     @GetMapping("/")
     public ResponseEntity<PageResponse<UserDTO>> getAllUsers(Pageable pageable) {
         Page<User> allUsers = userService.findAll(pageable);
-        return ResponseEntity.ok(toPageResponse(allUsers));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(allUsers, UserDTO::new));
     }
 
 
     //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
-    @Operation(summary = "Update remote user image")
+    @Operation(summary = "(User) Update remote user image")
     @PostMapping("/image/{id}")
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.findById(id);
@@ -72,7 +86,7 @@ public class UserRestController {
         User loggedUser = userOptional.get();
 
         // Clean previous image (if exists and it is not the default user image)
-        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().getS3Key().equals(GlobalDefaults.USER_IMAGE.getS3Key())) {
+        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
         }
 
@@ -95,7 +109,7 @@ public class UserRestController {
 
     //Option 1: Delete User entities (statistics information will be lost, reviews and orders need to be reassigned to a generic anon user, which affects data possession)
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
-    @Operation(summary = "Anonymize logged user account")
+    @Operation(summary = "(User) Anonymize logged user account")
     @DeleteMapping
     public ResponseEntity<UserDTO> anonymizeLoggedUser(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
@@ -104,26 +118,22 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Delete logged user image")
-    @DeleteMapping("/avatar")
-    public ResponseEntity<UserDTO> deleteAvatar(HttpServletRequest request) {
+    @Operation(summary = "(User) Delete logged user image")
+    @DeleteMapping("/image")
+    public ResponseEntity<UserDTO> deleteUserImage(HttpServletRequest request) {
         User loggedUser = findLoggedUserHelper(request);
 
         // Check if there is something to delete
-        if (loggedUser.getUserImage() != null) {
-            // Delete from MinIO
+        if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE); //Set default user image
-
-            // Save changes
+            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
             return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
         }
-
-        return ResponseEntity.ok(new UserDTO(loggedUser)); // Return original user if did not have image
+        return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
 
-    @Operation(summary = "Update logged user data")
+    @Operation(summary = "(User) Update logged user data")
     @PutMapping("/data")
     public ResponseEntity<UserDTO> updateLoggedUserData(HttpServletRequest request, @RequestBody UserDTO userDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -144,7 +154,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Create logged user address")
+    @Operation(summary = "(User) Create logged user address")
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -157,7 +167,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Edit logged user address")
+    @Operation(summary = "(User) Edit logged user address")
     @PutMapping("/addresses")
     public ResponseEntity<UserDTO> editAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -181,7 +191,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Delete logged user address by ID")
+    @Operation(summary = "(User) Delete logged user address by ID")
     @DeleteMapping("/addresses/{id}")
     public ResponseEntity<UserDTO> deleteAddress(HttpServletRequest request, @PathVariable Long id){
         User loggedUser = findLoggedUserHelper(request);
@@ -196,7 +206,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Create logged user card")
+    @Operation(summary = "(User) Create logged user card")
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO cardDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -210,7 +220,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Update logged user card")
+    @Operation(summary = "(User) Update logged user card")
     @PutMapping("/cards")
     public ResponseEntity<UserDTO> editPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO paymentCardDTO){
         User loggedUser = findLoggedUserHelper(request);
@@ -231,7 +241,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Delete logged user card by ID")
+    @Operation(summary = "(User) Delete logged user card by ID")
     @DeleteMapping("/cards/{id}")
     public ResponseEntity<UserDTO> deletePaymentCard(HttpServletRequest request, @PathVariable Long id){
         User loggedUser = findLoggedUserHelper(request);
@@ -250,23 +260,15 @@ public class UserRestController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 
-    private PageResponse<UserDTO> toPageResponse(Page<User> users){
-        List<UserDTO> dtos = new ArrayList<>();
-        for (User u : users.getContent()) {
-            UserDTO dto = new UserDTO(u);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, users.getTotalElements(), users.getNumber(), users.getTotalPages()-1, users.getSize());
-    }
 
     //Reactive endpoints
-    @Operation(summary = "Check if a username is taken")
+    @Operation(summary = "(All) Check if a username is taken")
     @GetMapping("/username")
     public ResponseEntity<Boolean> checkUsername(@RequestParam String username) {
         return ResponseEntity.ok(userService.isUsernameTaken(username));
     }
 
-    @Operation(summary = "Check if an email is taken")
+    @Operation(summary = "(All) Check if an email is taken")
     @GetMapping("/email")
     public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
         return ResponseEntity.ok(userService.isEmailTaken(email));
@@ -274,7 +276,7 @@ public class UserRestController {
 
 
     //Ban / Anon / Delete endpoints
-    @Operation(summary = "Toggle all users ban (except admin)")
+    @Operation(summary = "(Admin) Toggle all users ban (except admin)")
     @PutMapping("/ban/")
     public ResponseEntity<Boolean> toggleAllUsersBan(@RequestBody boolean banState){
         List<User> allUsers = this.userService.findAll();
@@ -288,7 +290,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Unban user by ID")
+    @Operation(summary = "(Admin) Unban user by ID")
     @PutMapping("/ban/{id}")
     public ResponseEntity<UserDTO> toggleUserBanById(@PathVariable Long id, @RequestBody boolean banState){
         Optional<User> userOptional = userService.findById(id);
@@ -302,7 +304,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Anonymize all users (except admin)")
+    @Operation(summary = "(Admin) Anonymize all users (except admin)")
     @PutMapping("/anon/")
     public ResponseEntity<Boolean> anonAllUsers(){
         List<User> allUsers = this.userService.findAll();
@@ -316,7 +318,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Anonymize user by ID")
+    @Operation(summary = "(Admin) Anonymize user by ID")
     @PutMapping("/anon/{id}")
     public ResponseEntity<UserDTO> anonUserById(@PathVariable Long id){
         Optional<User> userOptional = userService.findById(id);
@@ -328,7 +330,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Delete all users (except admin)")
+    @Operation(summary = "(Admin) Delete all users (except admin)")
     @DeleteMapping("/")
     public ResponseEntity<Boolean> deleteAllUsers(){
         List<User> allUsers = this.userService.findAll();
@@ -341,7 +343,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Delete user by ID")
+    @Operation(summary = "(Admin) Delete user by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Boolean> deleteUserById(@PathVariable Long id){
         Optional<User> userOptional = userService.findById(id);
@@ -353,7 +355,7 @@ public class UserRestController {
     }
 
 
-    @Operation(summary = "Get users stats")
+    @Operation(summary = "(Admin) Get users stats")
     @GetMapping("/stats")
     public ResponseEntity<List<StatDataDTO>> getUsersStats(){
         List<StatDataDTO> stats = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +33,7 @@ public class Category {
     private String longDescription;
 
     @Embedded
-    private ImageInfo categoryImage;
+    private ImageInfo categoryImage = GlobalDefaults.CATEGORY_IMAGE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")

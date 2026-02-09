@@ -2,7 +2,7 @@ import {Component, computed, Input} from '@angular/core';
 import {RouterLink} from "@angular/router";
 import {Product} from '../../../models/product.model';
 import {NgIf} from '@angular/common';
-import {formatPrice, formatRating} from '../../../utils/numberFormat.util';
+import {formatPrice, formatRating} from '../../../utils/textFormat.util';
 import {Tag} from 'primeng/tag';
 import {getStockTagInfo} from '../../../utils/tagManager.util';
 

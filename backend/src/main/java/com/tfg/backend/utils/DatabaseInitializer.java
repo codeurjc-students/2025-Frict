@@ -18,6 +18,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +45,7 @@ public class DatabaseInitializer {
     private final ClassPathResource defaultProductResource = new ClassPathResource("static/img/defaultProductImage.jpg");
     private final ClassPathResource defaultCategoryResource = new ClassPathResource("static/img/defaultCategoryImage.jpg");
     private final ClassPathResource defaultUserResource = new ClassPathResource("static/img/defaultUserImage.jpg");
+    private final ClassPathResource defaultShopResource = new ClassPathResource("static/img/defaultShopImage.jpg");
 
     @PostConstruct
     @Transactional
@@ -106,6 +108,7 @@ public class DatabaseInitializer {
         GlobalDefaults.USER_IMAGE = uploadDefaultImage(defaultUserResource, "users");
         GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories");
         GlobalDefaults.PRODUCT_IMAGE = uploadDefaultImage(defaultProductResource, "products");
+        GlobalDefaults.SHOP_IMAGE = uploadDefaultImage(defaultShopResource, "shops");
     }
 
     // --------------------------------------------------------------------------------
@@ -129,19 +132,24 @@ public class DatabaseInitializer {
 
         // Assign GLOBAL default image
         user1.setUserImage(GlobalDefaults.USER_IMAGE);
-
         userRepository.save(user1);
 
-        User user2 = new User("Administrador", "admin", "admin@gmail.com", passwordEncoder.encode("adminpass"), "ADMIN");
+        User user2 = new User("Administrador", "admin", "laxari3928@1200b.com", passwordEncoder.encode("adminpass"), "ADMIN");
         PaymentCard paymentCard3 = new PaymentCard("Tarjeta de la empresa", "Laura Miño", "1233453212231346", "345", YearMonth.of(2028, 7));
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
         user2.getAddresses().add(address3);
-
-        // Assign GLOBAL default image
         user2.setUserImage(GlobalDefaults.USER_IMAGE);
-
         userRepository.save(user2);
+
+
+        User user3 = new User("Gerente", "manager", "manager@gmail.com", passwordEncoder.encode("managerpass"), "MANAGER");
+        user3.setUserImage(GlobalDefaults.USER_IMAGE);
+        userRepository.save(user3);
+
+        User user4 = new User("Conductor", "driver", "driver@gmail.com", passwordEncoder.encode("driverpass"), "DRIVER");
+        user4.setUserImage(GlobalDefaults.USER_IMAGE);
+        userRepository.save(user4);
     }
 
     private void initCategories() {
@@ -395,10 +403,21 @@ public class DatabaseInitializer {
         log.info(">>> Initializing Shops and Trucks...");
 
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
-        Shop shop1 = shopRepository.save(new Shop("52552", "Madrid-Recoletos", address1));
+        Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
+        shop1.setImage(GlobalDefaults.SHOP_IMAGE);
+        Optional<User> manager = userRepository.findByUsername("manager");
+        if(manager.isPresent()){
+            shop1.setAssignedManager(manager.get());
+        }
+        shopRepository.save(shop1);
 
-        Truck truck1 = truckRepository.save(new Truck("2C4RD"));
-        Truck truck2 = truckRepository.save(new Truck("5U7TH"));
+        Address address2 = new Address("Alicante", "Calle Por Defecto", "43", "", "03002", "Alicante", "España");
+        Shop shop2 = new Shop("Alicante", address2, -0.485225, 38.348045);
+        shop2.setImage(GlobalDefaults.SHOP_IMAGE);
+        shopRepository.save(shop2);
+
+        Truck truck1 = truckRepository.save(new Truck("2C4RD", -3.6038, 40.6168));
+        Truck truck2 = truckRepository.save(new Truck("5U7TH", -3.9038, 40.5168));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);
         truckRepository.save(truck1);

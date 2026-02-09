@@ -77,4 +77,8 @@ public class ProductService {
     public Page<Product> findUserFavouriteProductsPage(Long id, Pageable pageable) {
         return productRepository.findFavouritesByUserId(id, pageable);
     }
+
+    public List<Product> findProductsNotAssignedToShop(Long shopId) {
+        return productRepository.findProductsNotAssignedToShop(shopId);
+    }
 }

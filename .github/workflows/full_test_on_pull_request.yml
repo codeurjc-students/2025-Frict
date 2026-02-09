@@ -10,12 +10,15 @@ jobs:
   full-stack-test:
     runs-on: ubuntu-latest
 
-    #Necessary for steps "Run Backend Unit & Integration Tests" and "Run E2E System Tests", which need to start the app and read the env variables values
     env:
       SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
       SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
       SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
       GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
+
+      # MinIO variables (override the values within application.properties)
+      MINIO_URL: "https://localhost:9000"
+      MINIO_SSL_INSECURE: "true"
 
     services:
       mysql:
@@ -36,16 +39,20 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
           AWS_REGION: us-east-1
         run: |
+          mkdir -p /tmp/minio_certs
+          cp -r $(pwd)/docker/minio_https/certs/* /tmp/minio_certs/
+          
           docker run -d \
             -p 9000:9000 \
             -p 9001:9001 \
             --name minio \
+            -v /tmp/minio_certs:/root/.minio/certs \
             -e MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }} \
             -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }} \
-            minio/minio server /data
+            minio/minio server /data --console-address ":9001"
           
           sleep 5
-          aws --endpoint-url http://localhost:9000 s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
+          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
 
 
       - name: Set up JDK 21

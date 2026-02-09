@@ -33,6 +33,12 @@ export class UserService {
     return this.http.get<PageResponse<User>>(this.apiUrl + `/`, { params });
   }
 
+  public getAllUsersByRole(role: string): Observable<User[]> {
+    let params = new HttpParams();
+    params = params.append('role', role);
+    return this.http.get<User[]>(this.apiUrl + `/role/`, { params });
+  }
+
   public anonLoggedUser(): Observable<User> {
     return this.http.delete<User>(this.apiUrl);
   }

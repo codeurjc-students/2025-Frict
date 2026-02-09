@@ -24,7 +24,7 @@ import {AuthService} from '../../../services/auth.service';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Review} from '../../../models/review.model';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 
 @Component({
   selector: 'app-profile',

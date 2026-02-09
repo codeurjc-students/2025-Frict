@@ -7,6 +7,7 @@ import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.EmailService;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,18 +47,18 @@ public class OrderRestController {
     private EmailService emailService;
 
 
-    @Operation(summary = "Get logged user orders (paged)")
+    @Operation(summary = "(User) Get logged user orders (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
-        return ResponseEntity.ok(toPageResponse(userOrders));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 
 
-    @Operation(summary = "Get order by ID")
+    @Operation(summary = "(User) Get order by ID")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id){
         Optional<Order> orderOptional = this.orderService.findById(id);
@@ -71,7 +72,7 @@ public class OrderRestController {
 
     //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
     //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
-    @Operation(summary = "Create order for logged user")
+    @Operation(summary = "(User) Create order for logged user")
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(HttpServletRequest request,
                                                 @RequestParam Long addressId,
@@ -98,7 +99,7 @@ public class OrderRestController {
 
         //First check if there is enough stock of each product
         for (OrderItem i : cartItems) {
-            int totalStock = i.getProduct().getShopsStock().stream().mapToInt(ShopStock::getStock).sum(); //Total stock units
+            int totalStock = i.getProduct().getShopsStock().stream().mapToInt(ShopStock::getUnits).sum(); //Total stock units
             if (totalStock < i.getQuantity()){
                 throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product " + i.getProduct().getName() + " is not enough to complete the order.");
             }
@@ -113,11 +114,11 @@ public class OrderRestController {
             while (remainingUnits > 0 && shopIndex < shopsStock.size()) {
 
                 ShopStock currentShopStock = shopsStock.get(shopIndex);
-                int availableStock = currentShopStock.getStock();
+                int availableStock = currentShopStock.getUnits();
 
                 if (availableStock > 0) {
                     int unitsToTake = Math.min(remainingUnits, availableStock);
-                    currentShopStock.setStock(availableStock - unitsToTake);
+                    currentShopStock.setUnits(availableStock - unitsToTake);
                     remainingUnits -= unitsToTake;
                     shopStockService.save(currentShopStock);
                 }
@@ -151,7 +152,7 @@ public class OrderRestController {
     }
 
 
-    @Operation(summary = "Cancel logged user order by ID")
+    @Operation(summary = "(User) Cancel logged user order by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(HttpServletRequest request, @PathVariable Long id){
         //Get logged user info if any (User class)
@@ -182,7 +183,7 @@ public class OrderRestController {
     }
 
 
-    @Operation(summary = "Get logged user cart summary")
+    @Operation(summary = "(User) Get logged user cart summary")
     @GetMapping("/cart/summary")
     public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {
         //Get logged user info if any (User class)
@@ -231,18 +232,18 @@ public class OrderRestController {
 
 
     //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
-    @Operation(summary = "Get logged user cart products (paged)")
+    @Operation(summary = "(User) Get logged user cart products (paged)")
     @GetMapping("/cart")
     public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
         User loggedUser = findLoggedUserHelper(request);
 
         Page<OrderItem> cartItems = orderItemService.findUserCartItemsPage(loggedUser.getId(), pageable);
-        return ResponseEntity.ok(toOrderItemsPageDTO(cartItems));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(cartItems, OrderItemDTO::new));
     }
 
 
-    @Operation(summary = "Clear logged user cart products")
+    @Operation(summary = "(User) Clear logged user cart products")
     @DeleteMapping("/cart")
     public ResponseEntity<CartSummaryDTO> clearCartItems(HttpServletRequest request) {
         //Get logged user info if any (User class)
@@ -258,7 +259,7 @@ public class OrderRestController {
     }
 
 
-    @Operation(summary = "Add item to logged user cart")
+    @Operation(summary = "(User) Add item to logged user cart")
     @PostMapping("/cart/{id}")
     public ResponseEntity<OrderItemDTO> addItemToCart(HttpServletRequest request,
                                                       @PathVariable Long id,
@@ -281,7 +282,7 @@ public class OrderRestController {
 
         int inStockUnits = 0;
         for (ShopStock s : product.getShopsStock()) {
-            inStockUnits += s.getStock();
+            inStockUnits += s.getUnits();
         }
 
         if(inCartUnits + quantity > inStockUnits){
@@ -311,7 +312,7 @@ public class OrderRestController {
     }
 
 
-    @Operation(summary = "Update logged user cart product quantity")
+    @Operation(summary = "(User) Update logged user cart product quantity")
     @PutMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> updateItemQuantity(HttpServletRequest request,
                                                            @PathVariable Long id,
@@ -331,7 +332,7 @@ public class OrderRestController {
 
         // 3. Get product (to check total stock)
         Product product = itemToUpdate.getProduct();
-        int maxAchievableQuantity = product.getShopsStock().stream().mapToInt(ShopStock::getStock).sum();
+        int maxAchievableQuantity = product.getShopsStock().stream().mapToInt(ShopStock::getUnits).sum();
 
         // CASE A: Quantity is bigger than available
         if (quantity > maxAchievableQuantity) {
@@ -353,7 +354,7 @@ public class OrderRestController {
     }
 
 
-    @Operation(summary = "Delete logged user cart item")
+    @Operation(summary = "(User) Delete logged user cart item")
     @DeleteMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
@@ -380,27 +381,5 @@ public class OrderRestController {
     private User findLoggedUserHelper(HttpServletRequest request) {
         return this.userService.getLoggedUser(request)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
-    }
-
-
-    //Creates OrderPageDTO objects with necessary fields only
-    private PageResponse<OrderDTO> toPageResponse(Page<Order> orders){
-        List<OrderDTO> dtos = new ArrayList<>();
-        for (Order o : orders.getContent()) {
-            OrderDTO dto = new OrderDTO(o);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, orders.getTotalElements(), orders.getNumber(), orders.getTotalPages()-1, orders.getSize());
-    }
-
-
-    //Creates OrderItemsPageDTO objects with necessary fields only
-    private PageResponse<OrderItemDTO> toOrderItemsPageDTO(Page<OrderItem> items){
-        List<OrderItemDTO> dtos = new ArrayList<>();
-        for (OrderItem i : items.getContent()) {
-            OrderItemDTO dto = new OrderItemDTO(i);
-            dtos.add(dto);
-        }
-        return new PageResponse<>(dtos, items.getTotalElements(), items.getNumber(), items.getTotalPages()-1, items.getSize());
     }
 }

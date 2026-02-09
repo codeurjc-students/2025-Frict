@@ -54,7 +54,7 @@ public class ProductDTO {
 
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {
-            totalUnits += s.getStock();
+            totalUnits += s.getUnits();
         }
         this.totalUnits = totalUnits;
         this.shopsWithStock = p.getShopsStock().size();

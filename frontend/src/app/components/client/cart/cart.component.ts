@@ -4,7 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {OrderService} from '../../../services/order.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ProductService} from '../../../services/product.service';
-import {formatPrice} from '../../../utils/numberFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {RouterLink} from '@angular/router';
 import {OrderItem} from '../../../models/orderItem.model';
 import {catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap} from 'rxjs';

@@ -89,6 +89,26 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'], title: 'Gestor de Usuarios', icon: 'admin', breadcrumb: 'Gestor de Usuarios' }
       },
       {
+        path: 'shops',
+        loadComponent: () => import('./components/admin/shops-management/shops-management.component').then(m => m.ShopsManagementComponent),
+        data: { roles: ['ADMIN', 'MANAGER'], title: 'Gestor de Tiendas', icon: 'admin', breadcrumb: 'Gestor de Tiendas' }
+      },
+      {
+        path: 'shop/:id',
+        loadComponent: () => import('./components/admin/shop-details/shop-details.component').then(m => m.ShopDetailsComponent),
+        data: { roles: ['ADMIN', 'MANAGER'], title: 'Administrar Tienda', icon: 'admin', breadcrumb: 'Administrar Tienda' }
+      },
+      {
+        path: 'shops/new',
+        loadComponent: () => import('./components/admin/create-edit-shop/create-edit-shop.component').then(m => m.CreateEditShopComponent),
+        data: { roles: ['ADMIN', 'MANAGER'], title: 'Nueva Tienda', icon: 'admin', breadcrumb: 'Nueva Tienda' }
+      },
+      {
+        path: 'shops/edit/:id',
+        loadComponent: () => import('./components/admin/create-edit-shop/create-edit-shop.component').then(m => m.CreateEditShopComponent),
+        data: { roles: ['ADMIN', 'MANAGER'], title: 'Editar Tienda', icon: 'admin', breadcrumb: 'Editar Tienda' }
+      },
+      {
         path: 'products',
         loadComponent: () => import('./components/admin/products-management/products-management.component').then(m => m.ProductsManagementComponent),
         data: { roles: ['ADMIN'], title: 'Gestor de Productos', icon: 'admin', breadcrumb: 'Gestor de Productos' }

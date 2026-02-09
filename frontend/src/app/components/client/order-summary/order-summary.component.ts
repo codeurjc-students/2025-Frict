@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 import {InputTextModule} from 'primeng/inputtext';
 import {CheckboxModule} from 'primeng/checkbox';
-import {formatCardDueDate, formatPrice} from '../../../utils/numberFormat.util';
+import {formatCardDueDate, formatPrice} from '../../../utils/textFormat.util';
 import {CartSummary} from '../../../models/cartSummary.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
