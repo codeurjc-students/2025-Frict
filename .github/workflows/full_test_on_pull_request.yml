@@ -18,8 +18,6 @@ jobs:
 
       # MinIO variables (override the values within application.properties)
       MINIO_URL: "https://localhost:9000"
-      MINIO_ACCESS_KEY: ${{ secrets.MINIO_ROOT_USER }}
-      MINIO_SECRET_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
       MINIO_SSL_INSECURE: "true"
 
     services:
@@ -41,11 +39,14 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
           AWS_REGION: us-east-1
         run: |
+          mkdir -p /tmp/minio_certs
+          cp -r $(pwd)/docker/minio_https/certs/* /tmp/minio_certs/
+          
           docker run -d \
             -p 9000:9000 \
             -p 9001:9001 \
             --name minio \
-            -v $(pwd)/docker/minio_https/certs:/root/.minio/certs \
+            -v /tmp/minio_certs:/root/.minio/certs \
             -e MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }} \
             -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }} \
             minio/minio server /data --console-address ":9001"
