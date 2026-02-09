@@ -63,6 +63,24 @@ export class ShopService {
     return this.http.post<Shop>(this.apiUrl + `/image/${shopId}`, formData);
   }
 
+  public toggleLocalActivation(id: string, state: boolean): Observable<Product> {
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Product>(this.apiUrl + `/active/${id}`, null, { params });
+  }
+
+  public toggleAllLocalActivations(shopId: string, state: boolean): Observable<Boolean> {
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Boolean>(this.apiUrl + `/${shopId}/active/`, null, { params });
+  }
+
+  public restockProduct(stockId: string, units: number): Observable<ShopStock>{
+    let params = new HttpParams();
+    params = params.append('units', units);
+    return this.http.post<ShopStock>(this.apiUrl + `/restock/${stockId}`, null, { params });
+  }
+
   //stockId will act as an identifier for a product and for a stock (when assigning it will be a product id, whereas when unassigning it will be a stock id)
   public assignStock(shopId: string, stockId: string, state: boolean): Observable<Shop>{
     let params = new HttpParams();

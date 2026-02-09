@@ -26,6 +26,7 @@ import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
+import {Message} from 'primeng/message';
 
 @Component({
   selector: 'app-shop-details',
@@ -44,7 +45,8 @@ import {ProductService} from '../../../services/product.service';
     NgIf,
     Tooltip,
     Dialog,
-    Select
+    Select,
+    Message
   ],
   templateUrl: './shop-details.component.html',
   styleUrl: 'shop-details.component.css'
@@ -357,8 +359,38 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       return Math.round((s.stock / s.maxStorage) * 100);
     }
   */
-  toggleStockActive(stock: ShopStock) {
-    this.messageService.add({ severity: 'info', summary: 'Estado actualizado', detail: `${stock.productId} ahora está ${stock.active ? 'Activo' : 'Inactivo'}` });
+
+  onGlobalAction(action: string) {
+    if (action === 'activate_all') {
+      this.shopService.toggleAllLocalActivations(this.shop.id, true).subscribe({
+        next: () => {
+          this.stocksPage.items.forEach(p => p.active = true);
+        }
+      });
+    } else if (action === 'deactivate_all') {
+      this.shopService.toggleAllLocalActivations(this.shop.id, false).subscribe({
+        next: () => {
+          this.stocksPage.items.forEach(p => p.active = false);
+        }
+      });
+    }
+  }
+
+  onToggleActive(stock: ShopStock, event: any) {
+    const originalValue = stock.active;
+    const newValue = event.checked;
+
+    stock.active = newValue;
+
+    this.shopService.toggleLocalActivation(stock.id, newValue).subscribe({
+      next: () => {
+        console.log('Estado actualizado correctamente');
+      },
+      error: () => {
+        console.error('Error al actualizar, revirtiendo cambios...');
+        stock.active = originalValue;
+      }
+    });
   }
 
   selectProductForReplenish(stock: ShopStock) {
@@ -371,9 +403,16 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     const qty = this.restockQuantity;
 
     if (stock && qty > 0) {
-      this.stocksPage.items = this.stocksPage.items.map(i => i.id === stock.id ? { ...i, quantity: i.units + qty } : i);
-      this.messageService.add({severity: 'success', summary: 'Stock repuesto', detail: `+${qty} unidades`});
-      this.restockQuantity = 0;
+      this.shopService.restockProduct(stock.id, qty).subscribe({
+        next: () => {
+          this.stocksPage.items = this.stocksPage.items.map(i => i.id === stock.id ? { ...i, units: i.units + qty } : i);
+          this.messageService.add({severity: 'success', summary: 'Stock repuesto correctamente', detail: `${qty} unidades añadidas`});
+          this.restockQuantity = 0;
+        },
+        error: () => {
+          this.messageService.add({severity: 'error', summary: 'Error', detail: `No se ha podido reponer el stock de esta tienda.`});
+        }
+      })
     }
   }
 

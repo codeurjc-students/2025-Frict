@@ -251,6 +251,7 @@ public class ProductRestController {
         for (Product product : products) {
             product.setActive(state);
             if (!state){
+                //Remove the products from user carts
                 product.getOrderItems().removeIf(item -> {
                     if (item.getOrder() == null) {
                         orderItemService.delete(item);

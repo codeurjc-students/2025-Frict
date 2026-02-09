@@ -99,7 +99,7 @@
                 }
               </td>
               <td class="text-right pr-4">
-                <div class="flex justify-end gap-2">
+                <div class="flex justify-start gap-2">
                   <p-button icon="pi pi-map-marker" (onClick)="focusTruckOnMap(truck); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar"></p-button>
                   <p-button icon="pi pi-trash" (onClick)="manageTruckAssignment(truck.id, false); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
                 </div>
@@ -164,7 +164,7 @@
 
     <div class="flex flex-col lg:flex-row gap-6 items-start">
 
-      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col w-full lg:w-2/3 h-[500px]">
+      <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col w-full lg:w-2/3 h-[497px]">
 
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col xl:flex-row justify-between items-center gap-4">
           <div class="flex items-center gap-4 w-full xl:w-auto">
@@ -181,6 +181,8 @@
             </p-inputgroup>
             -->
             <p-button (click)="showAddStockDialog()" label="Añadir" icon="pi pi-plus" size="small"></p-button>
+            <p-button (click)="onGlobalAction('activate_all')" severity="success" label="Activar todos" icon="pi pi-check" size="small"></p-button>
+            <p-button (click)="onGlobalAction('deactivate_all')" severity="warn" label="Desactivar todos" icon="pi pi-times" size="small"></p-button>
           </div>
         </div>
 
@@ -202,34 +204,33 @@
             </tr>
           </ng-template>
 
-          <ng-template pTemplate="body" let-item>
-            <tr [pSelectableRow]="item" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
-                [ngClass]="{'bg-yellow-50/60': selectedStock?.id === item.id}">
+          <ng-template pTemplate="body" let-stock>
+            <tr [pSelectableRow]="stock" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
+                [ngClass]="{'bg-primary-50/60': selectedStock?.id === stock.id}">
 
               <td class="pl-4 text-center">
-                <p-toggleswitch [(ngModel)]="item.active" (onChange)="toggleStockActive(item)" />
+                <p-toggleswitch [(ngModel)]="stock.active" (onChange)="onToggleActive(stock, $event)" />
               </td>
 
               <td class="py-3">
-                <div class="font-bold text-slate-800 text-sm">{{ item.productName }}</div>
-                <div class="text-xs font-mono text-slate-400">{{ item.productReferenceCode }}</div>
+                <div class="font-bold text-slate-800 text-sm">{{ stock.productName }}</div>
+                <div class="text-xs font-mono text-slate-400">{{ stock.productReferenceCode }}</div>
               </td>
 
               <td class="text-center">
           <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border"
                 [ngClass]="{
-                  'bg-green-50 text-green-700 border-green-100': item.units > 10,
-                  'bg-red-50 text-red-700 border-red-100': item.units <= 10
+                  'bg-green-50 text-green-700 border-green-100': stock.units > 10,
+                  'bg-red-50 text-red-700 border-red-100': stock.units <= 10
                 }">
-              {{ item.units }} uds
+              {{ stock.units }} uds
           </span>
               </td>
 
               <td class="text-right pr-4">
                 <div class="flex justify-start gap-2">
-                  <p-button icon="pi pi-plus" (onClick)="selectProductForReplenish(item); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Reponer"></p-button>
-                  <p-button icon="pi pi-cog" (onClick)="selectProductForReplenish(item); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true" pTooltip="Configurar"></p-button>
-                  <p-button icon="pi pi-trash" (onClick)="manageStockAssignment(item.id, false)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
+                  <p-button icon="pi pi-plus" (onClick)="selectProductForReplenish(stock); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Reponer"></p-button>
+                  <p-button icon="pi pi-trash" (onClick)="manageStockAssignment(stock.id, false)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
                 </div>
               </td>
             </tr>
@@ -291,6 +292,8 @@
           <p-button (click)="selectedStock = undefined" icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" />
         </div>
 
+        <p-message severity="info" icon="pi pi-info-circle" styleClass="mb-4">Las unidades repuestas se mostrarán inmediatamente como disponibles en esta tienda si este stock está activo.</p-message>
+
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
           <p class="font-bold text-slate-700">{{ selectedStock.productName }}</p>
           <div class="flex justify-between mt-2 text-sm">
@@ -301,7 +304,7 @@
         </div>
 
         <div class="mb-4">
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Cantidad a ingresar</label>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Unidades a reponer</label>
           <p-inputNumber [(ngModel)]="restockQuantity" [showButtons]="true" buttonLayout="horizontal"
                          inputId="replenish" [min]="1" [max]="1000"
                          decrementButtonClass="p-button-secondary p-button-outlined"

@@ -126,6 +126,41 @@ public class ShopRestController {
     }
 
 
+    @Operation(summary = "(Manager) Toggle stock local activation by ID")
+    @PostMapping("/active/{id}")
+    public ResponseEntity<ShopStockDTO> toggleLocalActivation(@PathVariable Long id, @RequestParam boolean state) {
+        ShopStock stock = findShopStockHelper(id);
+        stock.setActive(state);
+        ShopStock savedStock = shopStockService.save(stock);
+        return ResponseEntity.ok(new ShopStockDTO(savedStock));
+    }
+
+
+    @Operation(summary = "(Manager) Toggle all stocks local activation")
+    @PostMapping("/{shopId}/active/")
+    public ResponseEntity<Boolean> toggleAllLocalActivations(@PathVariable Long shopId, @RequestParam boolean state) {
+        List<ShopStock> stocks = this.shopStockService.findAllByShopId(shopId);
+        for (ShopStock s : stocks) {
+            s.setActive(state);
+        }
+        shopStockService.saveAll(stocks);
+        return ResponseEntity.ok(state); //State all toggles should have in frontend
+    }
+
+
+    @Operation(summary = "(Manager) Add n units to a shop's product stock (if exists)")
+    @PostMapping("/restock/{stockId}")
+    public ResponseEntity<ShopStockDTO> restockProduct(@PathVariable Long stockId, @RequestParam int units) {
+        ShopStock targetStock = findShopStockHelper(stockId);
+        if (units > 0){
+            targetStock.setUnits(targetStock.getUnits() + units);
+            ShopStock savedStock = shopStockService.save(targetStock);
+            return ResponseEntity.ok(new ShopStockDTO(savedStock));
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restock units must be positive, " + units + " is not a valid number.");
+    }
+
+
     @Operation(summary = "(Manager) Set stock assignment to a shop")
     @PostMapping("/{shopId}/assign/stock/{stockId}")
     public ResponseEntity<ShopStockDTO> setAssignedStock(@PathVariable Long shopId, @PathVariable Long stockId, @RequestParam boolean state) {
