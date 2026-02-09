@@ -6,10 +6,22 @@ on:
     branches:
       - main # On successfully merged PRs into main branch
 
+permissions:
+  contents: read
+  packages: read
+  statuses: write
+  security-events: write
+
 jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
+
+    env:
+      MINIO_URL: "https://localhost:9000"
+      MINIO_ACCESS_KEY: ${{ secrets.MINIO_ROOT_USER }}
+      MINIO_SECRET_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
+      MINIO_SSL_INSECURE: "true"
 
     services:
       mysql:
@@ -33,16 +45,20 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
           AWS_REGION: us-east-1
         run: |
+          mkdir -p /tmp/minio_certs
+          cp -r $(pwd)/docker/minio_https/certs/* /tmp/minio_certs/
+
           docker run -d \
             -p 9000:9000 \
             -p 9001:9001 \
             --name minio \
+            -v /tmp/minio_certs:/root/.minio/certs \
             -e MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }} \
             -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }} \
-            minio/minio server /data
+            minio/minio server /data --console-address ":9001"
 
           sleep 5
-          aws --endpoint-url http://localhost:9000 s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
+          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
 
 
       - name: Set up JDK 21
@@ -85,9 +101,11 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
           SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
           SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
           SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
           GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
+
         working-directory: backend
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test
