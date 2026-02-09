@@ -218,13 +218,8 @@
               </td>
 
               <td class="text-center">
-          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border"
-                [ngClass]="{
-                  'bg-green-50 text-green-700 border-green-100': stock.units > 10,
-                  'bg-red-50 text-red-700 border-red-100': stock.units <= 10
-                }">
-              {{ stock.units }} uds
-          </span>
+                <p-tag [severity]="stock.units > 10 ? 'success' : 'danger'" [value]="stock.units + ' unidades'" [rounded]="true" styleClass="text-xs">
+                </p-tag>
               </td>
 
               <td class="text-right pr-4">
