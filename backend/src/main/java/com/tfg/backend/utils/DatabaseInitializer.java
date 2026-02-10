@@ -510,22 +510,28 @@ public class DatabaseInitializer {
     // --- AUXILIARY METHODS ---
     private ImageInfo uploadDefaultImage(ClassPathResource resource, String folder) {
         try {
-            Map<String, String> result = uploadToMinio(resource, resource.getFilename(), folder);
+            // Use getContentAsByteArray() instead of getInputStream()
+            byte[] bytes = resource.getContentAsByteArray();
+            Map<String, String> result = storageService.uploadFile(
+                    bytes,
+                    resource.getFilename(),
+                    "image/jpeg",
+                    folder
+            );
             return new ImageInfo(result.get("url"), result.get("key"), resource.getFilename());
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("FATAL ERROR uploading default image {}: {}", resource.getFilename(), e.getMessage());
             throw new RuntimeException("CRITICAL: Error uploading default image: " + resource.getFilename(), e);
         }
     }
 
+
     private Map<String, String> uploadToMinio(ClassPathResource resource, String originalName, String folder) throws IOException {
-        try (InputStream inputStream = resource.getInputStream()) {
-            return storageService.uploadFile(
-                    inputStream,
-                    originalName,
-                    "image/jpeg",
-                    resource.contentLength(),
-                    folder
-            );
-        }
+        return storageService.uploadFile(
+                resource.getContentAsByteArray(),
+                originalName,
+                "image/jpeg",
+                folder
+        );
     }
 }

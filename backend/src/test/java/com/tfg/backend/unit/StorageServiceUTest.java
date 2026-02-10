@@ -113,16 +113,14 @@ class StorageServiceUTest {
     }
 
     @Test
-    void uploadFile_InputStream_ShouldUploadAndReturnMap() throws IOException {
+    void uploadFile_ByteArray_ShouldUploadAndReturnMap() {
         String fileName = "data.txt";
         String contentType = "text/plain";
         String folderName = "docs";
-        long size = 50L;
-        InputStream inputStream = new ByteArrayInputStream("content".getBytes());
+        byte[] content = "content".getBytes();
 
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
-
-        Map<String, String> result = storageService.uploadFile(inputStream, fileName, contentType, size, folderName);
+        Map<String, String> result = storageService.uploadFile(content, fileName, contentType, folderName);
 
         assertNotNull(result);
         String key = result.get("key");
@@ -132,6 +130,7 @@ class StorageServiceUTest {
         assertTrue(key.endsWith("_" + fileName));
         assertEquals(String.format("%s/%s/%s", MINIO_URL, BUCKET_NAME, key), url);
 
+        // S3 Client interaction verification
         verify(s3Client).putObject(requestCaptor.capture(), any(RequestBody.class));
 
         PutObjectRequest capturedRequest = requestCaptor.getValue();
