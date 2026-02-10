@@ -1,3 +1,4 @@
+# Command (from root folder): docker build -t mjpulido/frict -f docker/Dockerfile .
 # ==========================================
 # STAGE 1: Frontend Build (Angular)
 # ==========================================
@@ -6,7 +7,7 @@ FROM node:20-alpine AS frontend-build
 WORKDIR /app-ui
 
 # 1. Copy package.json and package-lock.json (if exist)
-COPY frontend/package*.json ./
+COPY /frontend/package*.json ./
 
 # 2. Clean dependencies installation
 RUN npm ci
