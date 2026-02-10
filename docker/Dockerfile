@@ -34,7 +34,7 @@ RUN mvn dependency:go-offline -B
 COPY /backend/src ./src
 
 # 3. Frontend incrustation
-COPY --from=frontend-build /app-ui/dist/frontend/ ./src/main/resources/static/
+COPY --from=frontend-build /app-ui/dist/frontend/browser/ ./src/main/resources/static/
 
 # 4. JAR packaging
 RUN mvn clean package -DskipTests

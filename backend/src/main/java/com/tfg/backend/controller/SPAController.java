@@ -31,6 +31,7 @@ public class SPAController {
      * Static files must be served directly by the server, not forwarded to index.html.
      */
     @RequestMapping(value = {
+            "/",
             "/{path:[^\\.]*}",          // Catches top-level routes (e.g., /login)
             "/**/{path:[^\\.]*}"        // Catches nested routes (e.g., /users/profile/123)
     }, method = RequestMethod.GET)

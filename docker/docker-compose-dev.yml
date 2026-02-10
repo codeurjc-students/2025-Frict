@@ -1,11 +1,13 @@
 # docker compose --env-file ../backend/.env -f docker-compose-dev.yml up -d --build (docker folder)
+name: frict-dev
+
 services:
   # ----------------------------------------------------------------
   # 1. DATABASE SERVICE (MYSQL)
   # ----------------------------------------------------------------
   mysql:
     image: mysql:8.0
-    container_name: frict-db-dev
+    container_name: db-dev
     restart: unless-stopped
     ports:
       - "3307:3306" # local:container
@@ -53,7 +55,7 @@ services:
   # ----------------------------------------------------------------
   app:
     image: mjpulido/frict:dev
-    container_name: frict-app-dev
+    container_name: app-dev
     restart: unless-stopped
 
     build:
