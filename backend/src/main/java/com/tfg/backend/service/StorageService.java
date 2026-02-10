@@ -26,6 +26,9 @@ public class StorageService {
     @Value("${minio.url}")
     private String minioUrl;
 
+    @Value("${minio.public-url}")
+    private String publicUrl;
+
     @Value("${minio.bucket-name}")
     private String bucketName;
 
@@ -81,10 +84,11 @@ public class StorageService {
                         .key(key)
                         .contentType(contentType)
                         .build(),
-                RequestBody.fromBytes(data) // The SDK handles the bytes array with no issues
+                RequestBody.fromBytes(data)
         );
 
-        String url = String.format("%s/%s/%s", minioUrl, bucketName, key);
+        // Use publicUrl instead of minioUrl
+        String url = String.format("%s/%s/%s", publicUrl, bucketName, key);
         return Map.of("key", key, "url", url);
     }
 
