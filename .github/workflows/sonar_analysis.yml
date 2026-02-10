@@ -96,11 +96,9 @@ jobs:
           SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
           GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
 
-        run: >
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          -Dsonar.projectKey=codeurjc-students_2025-Frict
-          -Dspring.profiles.active=test
-          -Dminio.url=https://localhost:9000
-          -Dminio.access-key=${{ secrets.MINIO_ROOT_USER }}
-          -Dminio.secret-key=${{ secrets.MINIO_ROOT_PASSWORD }}
-          -Dminio.ssl.insecure=true
+          MINIO_URL: "https://localhost:9000"
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          MINIO_SSL_INSECURE: "true"
+
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test
