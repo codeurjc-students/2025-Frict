@@ -1,10 +1,15 @@
-name: Publish OCI Compose Artifact (dev)
+name: Publish Docker Image & Compose OCI
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  release:
+    types: [ "published" ]
+
+env:
+  IMAGE_NAME: mjpulido/frict
+  COMPOSE_FILE: docker/docker-compose-dev.yml
 
 jobs:
   publish:
@@ -12,9 +17,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        with:
+          # Necessary to successfully obtain the commit SHA in manual runs
+          fetch-depth: 0
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -22,13 +27,46 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # --- 1. TAGS COMPOSITION BY TRIGGERS ---
+      - name: Set tags
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "img_tags=${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }},${{ env.IMAGE_NAME }}:latest"
+            echo "compose_tag_v=${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }}-compose"
+            echo "compose_tag_latest=${{ env.IMAGE_NAME }}:latest-compose"
+            echo "is_release=true" >> $GITHUB_OUTPUT
+
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-')
+            TIMESTAMP=$(date +'%Y%m%d%H%M')
+            SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+            TAG="${BRANCH}-${TIMESTAMP}-${SHA}"
+          
+            echo "img_tags=${{ env.IMAGE_NAME }}:${TAG}"
+            echo "compose_tag_v=${{ env.IMAGE_NAME }}:${TAG}-compose"
+            echo "is_release=false" >> $GITHUB_OUTPUT
+
+          else
+            echo "img_tags=${{ env.IMAGE_NAME }}:dev"
+            echo "compose_tag_v=${{ env.IMAGE_NAME }}:dev-compose"
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi >> $GITHUB_OUTPUT
+
+      # --- 2. BUILD AND UPLOAD IMAGE ---
       - name: Build and push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/frict:dev
+          tags: ${{ steps.vars.outputs.img_tags }}
 
-      - name: Publish Compose OCI Artifact
-        run: yes | docker compose -f docker/docker-compose-dev.yml publish --with-env ${{ secrets.DOCKERHUB_USERNAME }}/frict:dev-compose
+      # --- 3. PUBLISH COMPOSE (MAIN TAG) ---
+      - name: Publish Compose Artifact
+        run: yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_v }}
+
+      # --- 4. PUBLISH COMPOSE (LATEST) - Release cases only ---
+      - name: Publish Compose Artifact (Latest)
+        if: steps.vars.outputs.is_release == 'true'
+        run: yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_latest }}
