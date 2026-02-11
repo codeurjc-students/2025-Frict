@@ -3,14 +3,30 @@ name: frict-dev
 
 services:
   # ----------------------------------------------------------------
-  # 1. DATABASE SERVICE (MYSQL)
+  # 1. HTTPS CERTIFICATES GENERATOR (Init Container)
+  # ----------------------------------------------------------------
+  cert-gen:
+    image: alpine/openssl
+    container_name: cert-gen-dev
+    volumes:
+      - minio_certs:/certs
+    working_dir: /certs
+    command: >
+      req -x509 -nodes -days 365 -newkey rsa:2048 
+      -keyout private.key 
+      -out public.crt 
+      -subj "/CN=minio" 
+      -addext "subjectAltName = DNS:minio, DNS:localhost, IP:127.0.0.1"
+
+  # ----------------------------------------------------------------
+  # 2. DATABASE SERVICE (MYSQL)
   # ----------------------------------------------------------------
   mysql:
     image: mysql:8.0
     container_name: db-dev
     restart: unless-stopped
     ports:
-      - "3307:3306" # local:container
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: Frict
@@ -26,9 +42,9 @@ services:
       start_period: 30s
 
   # ----------------------------------------------------------------
-  # 2. MINIO HTTPS SERVICE
+  # 3. MINIO HTTPS SERVICE
   # ----------------------------------------------------------------
-  minio: # Service internal name for DNS: "minio"
+  minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: minio_https_dev
     restart: unless-stopped
@@ -43,7 +59,10 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data_https:/data
-      - ./minio_https/certs:/root/.minio/certs
+      - minio_certs:/root/.minio/certs
+    depends_on:
+      cert-gen:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-k", "-f", "https://localhost:9000/minio/health/live"]
       interval: 10s
@@ -51,7 +70,7 @@ services:
       retries: 5
 
   # ----------------------------------------------------------------
-  # 3. APPLICATION (Spring Boot + Angular)
+  # 4. APPLICATION (Spring Boot + Angular)
   # ----------------------------------------------------------------
   app:
     image: mjpulido/frict:dev
@@ -88,8 +107,9 @@ services:
       mysql:
         condition: service_healthy
       minio:
-        condition: service_healthy # Wait for MinIO to respond OK to HTTPS health check
+        condition: service_healthy
 
 volumes:
   mysql_data_dev:
   minio_data_https:
+  minio_certs: # Shared volume for certificates persistence
