@@ -33,7 +33,7 @@ else
     exit 1
 fi
 
-FULL_IMAGE="$DOCKER_USER/$IMAGE_NAME:$TAG"
+FULL_IMAGE="$DOCKERHUB_USERNAME/$IMAGE_NAME:$TAG"
 
 # 4. Go to root folder
 cd "$PROJECT_ROOT"
@@ -43,7 +43,7 @@ echo "📂 Context:     $(pwd)"
 docker build -t "$FULL_IMAGE" -f "$SCRIPT_DIR/Dockerfile" .
 
 echo "🔑 DockerHub Login..."
-echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
 echo "🚀 Uploading image..."
 docker push "$FULL_IMAGE"
