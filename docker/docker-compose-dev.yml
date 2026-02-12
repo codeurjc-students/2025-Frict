@@ -1,0 +1,115 @@
+# docker compose --env-file ../backend/.env -f docker-compose-dev.yml up -d --build (docker folder)
+name: frict-dev
+
+services:
+  # ----------------------------------------------------------------
+  # 1. HTTPS CERTIFICATES GENERATOR (Init Container)
+  # ----------------------------------------------------------------
+  cert-gen:
+    image: alpine/openssl
+    container_name: cert-gen-dev
+    volumes:
+      - minio_certs:/certs
+    working_dir: /certs
+    command: >
+      req -x509 -nodes -days 365 -newkey rsa:2048 
+      -keyout private.key 
+      -out public.crt 
+      -subj "/CN=minio" 
+      -addext "subjectAltName = DNS:minio, DNS:localhost, IP:127.0.0.1"
+
+  # ----------------------------------------------------------------
+  # 2. DATABASE SERVICE (MYSQL)
+  # ----------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: db-dev
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Frict
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: dev_password
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------------
+  # 3. MINIO HTTPS SERVICE
+  # ----------------------------------------------------------------
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: minio_https_dev
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "admin"
+      MINIO_ROOT_PASSWORD: "password123"
+      MINIO_SERVER_URL: "https://localhost:9000"
+      MINIO_BROWSER_REDIRECT_URL: "https://localhost:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data_https:/data
+      - minio_certs:/root/.minio/certs
+    depends_on:
+      cert-gen:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------
+  # 4. APPLICATION (Spring Boot + Angular)
+  # ----------------------------------------------------------------
+  app:
+    image: mjpulido/frict:dev
+    container_name: app-dev
+    restart: unless-stopped
+
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+
+    ports:
+      - "443:8443"
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: dev_user
+      SPRING_DATASOURCE_PASSWORD: dev_password
+
+      MINIO_ENDPOINT: https://minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
+      MINIO_BUCKET_NAME: images
+      MINIO_SSL_INSECURE: "true"
+
+      SERVER_SSL_KEY_STORE: /app/keystore.p12
+      SERVER_SSL_KEY_STORE_PASSWORD: password
+
+      SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}
+      SENDER_MAIL_ADDRESS: ${SENDER_MAIL_ADDRESS}
+      SENDER_MAIL_PASSWORD: ${SENDER_MAIL_PASSWORD}
+      GOOGLE_AUTH_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  mysql_data_dev:
+  minio_data_https:
+  minio_certs: # Shared volume for certificates persistence

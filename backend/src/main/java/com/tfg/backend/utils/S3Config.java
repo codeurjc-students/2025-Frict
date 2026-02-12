@@ -44,29 +44,21 @@ public class S3Config {
                         .pathStyleAccessEnabled(true)
                         .build());
 
-        // Conditional logic: Local (Insecure MinIO) vs Prod (Secure AWS S3)
         if (insecureMode) {
-            // Inject the modified UrlConnection client
+            log.warn("MinIO: Using selfsigned certificate with Trust All.");
             builder.httpClient(getUnsafeUrlConnectionClient());
-            builder.endpointOverride(URI.create(url));
-            log.warn("MinIO: Using UrlConnectionHttpClient in INSECURE mode.");
         } else {
-            //In production instances, let SDK use its own default client (also UrlConnection), but with SSL security activated by default
             builder.httpClient(UrlConnectionHttpClient.builder().build());
+        }
 
-            if (!url.isEmpty() && !url.contains("amazonaws.com")) {
-                builder.endpointOverride(URI.create(url));
-            }
+        if (url != null && !url.isEmpty()) {
+            builder.endpointOverride(URI.create(url));
         }
 
         return builder.build();
     }
 
-    /**
-     * Creates an instance of UrlConnectionHttpClient that trusts any certificate.
-     */
     private SdkHttpClient getUnsafeUrlConnectionClient() {
-        // Create the TrustManager, that does not make any validations
         TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     public X509Certificate[] getAcceptedIssuers() { return null; }
@@ -75,7 +67,6 @@ public class S3Config {
                 }
         };
 
-        // Build the UrlConnectionHttpClient by injecting the created TrustManager
         return UrlConnectionHttpClient.builder()
                 .tlsTrustManagersProvider(() -> trustAllCerts)
                 .build();
