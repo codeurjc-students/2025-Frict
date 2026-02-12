@@ -1,25 +1,22 @@
 name: Publish Docker Image & Compose OCI
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
   release:
     types: [ "published" ]
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: mjpulido/frict
-  COMPOSE_FILE: docker/docker-compose-dev.yml
+  COMPOSE_FILE: docker/docker-compose.yml
 
 jobs:
-  publish:
+  build-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          # Necessary to successfully obtain the commit SHA in manual runs
-          fetch-depth: 0
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -27,46 +24,57 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- 1. TAGS COMPOSITION BY TRIGGERS ---
-      - name: Set tags
+      # --- 1. IMAGE VERSION DECISION LOGIC ---
+      - name: Set Version Tags
         id: vars
         run: |
           if [ "${{ github.event_name }}" == "release" ]; then
-            echo "img_tags=${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }},${{ env.IMAGE_NAME }}:latest"
-            echo "compose_tag_v=${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }}-compose"
-            echo "compose_tag_latest=${{ env.IMAGE_NAME }}:latest-compose"
+            TAG="${{ github.event.release.tag_name }}"
             echo "is_release=true" >> $GITHUB_OUTPUT
-
+            echo "compose_tag_latest=${{ env.IMAGE_NAME }}:latest-compose" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-')
-            TIMESTAMP=$(date +'%Y%m%d%H%M')
+            # Ajuste: Hora de España y formato sin guion intermedio
+            TIME=$(TZ='Europe/Madrid' date +'%Y%m%d%H%M')
             SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-            TAG="${BRANCH}-${TIMESTAMP}-${SHA}"
-          
-            echo "img_tags=${{ env.IMAGE_NAME }}:${TAG}"
-            echo "compose_tag_v=${{ env.IMAGE_NAME }}:${TAG}-compose"
+            TAG="${BRANCH}-${TIME}-${SHA}"
             echo "is_release=false" >> $GITHUB_OUTPUT
-
           else
-            echo "img_tags=${{ env.IMAGE_NAME }}:dev"
-            echo "compose_tag_v=${{ env.IMAGE_NAME }}:dev-compose"
+            TAG="dev"
             echo "is_release=false" >> $GITHUB_OUTPUT
-          fi >> $GITHUB_OUTPUT
+          fi
+          
+          echo "IMAGE_TAG=${TAG}" >> $GITHUB_ENV
+          echo "artifact_tag=${{ env.IMAGE_NAME }}:${TAG}-compose" >> $GITHUB_OUTPUT
 
-      # --- 2. BUILD AND UPLOAD IMAGE ---
-      - name: Build and push Docker Image
+      # --- 2. BUILD IMAGE ---
+      - name: Build and push Image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/Dockerfile
           push: true
-          tags: ${{ steps.vars.outputs.img_tags }}
+          # Publish the Docker image with its specific tag and, if it is release, also with "latest" tag
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ steps.vars.outputs.is_release == 'true' && format('{0}:latest', env.IMAGE_NAME) || '' }}
 
-      # --- 3. PUBLISH COMPOSE (MAIN TAG) ---
+      # --- 3. COMPOSE FILE TAG NAME RENDERING ---
+      # To change the ${IMAGE_TAG:-0.1} part in Compose file with the release tag or the "dev" tag
+      - name: Compose file image tag rendering
+        run: |
+          sed -i "s|\${IMAGE_TAG:-0.1}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }}
+
+      # --- 4. PUBLISH SPECIFIC COMPOSE FILE (1.0, dev, or commit) ---
+      # Publishes the docker-compose.yml file with the name "<image-version>-compose"
       - name: Publish Compose Artifact
-        run: yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_v }}
+        run: |
+          yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.artifact_tag }}
 
-      # --- 4. PUBLISH COMPOSE (LATEST) - Release cases only ---
-      - name: Publish Compose Artifact (Latest)
+      # --- 5. PUBLISH LATEST COMPOSE FILE (releases only) ---
+      # Also renders the ${IMAGE_TAG:-0.1} part again in Compose file with the tag "latest", instead of the release tag
+      - name: Publish Latest Compose Artifact (Re-rendered)
         if: steps.vars.outputs.is_release == 'true'
-        run: yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_latest }}
+        run: |
+          sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" ${{ env.COMPOSE_FILE }}
+          yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_latest }}
