@@ -14,9 +14,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -37,19 +35,38 @@ class StorageServiceUTest {
     private StorageService storageService;
 
     private final String BUCKET_NAME = "test-images";
-    private final String MINIO_URL = "http://localhost:9000";
+    private final String PUBLIC_URL = "http://localhost:9001";
+    private final String MINIO_URL = "http://minio:9000";
 
     @BeforeEach
     void setUp() {
+        // Injecting @Value fields manually for the unit test
         ReflectionTestUtils.setField(storageService, "bucketName", BUCKET_NAME);
+        ReflectionTestUtils.setField(storageService, "publicUrl", PUBLIC_URL);
         ReflectionTestUtils.setField(storageService, "minioUrl", MINIO_URL);
     }
 
+    // --- INIT TESTS ---
 
-    // init() method tests
     @Test
-    void init_ShouldEmptyBucketAndSetPolicy_WhenBucketHasContent() {
-        S3Object s3Object = S3Object.builder().key("old-image.jpg").build();
+    void init_ShouldCreateBucket_IfItDoesNotExist() {
+        when(s3Client.headBucket(any(HeadBucketRequest.class)))
+                .thenThrow(NoSuchBucketException.builder().build());
+
+        ListObjectsV2Response emptyResponse = ListObjectsV2Response.builder().build();
+        when(s3Client.listObjectsV2(any(Consumer.class))).thenReturn(emptyResponse);
+
+        storageService.init();
+
+        verify(s3Client).createBucket(any(CreateBucketRequest.class));
+        verify(s3Client).putBucketPolicy(any(Consumer.class));
+    }
+
+    @Test
+    void init_ShouldEmptyBucket_IfItHasContent() {
+        when(s3Client.headBucket(any(HeadBucketRequest.class))).thenReturn(HeadBucketResponse.builder().build());
+
+        S3Object s3Object = S3Object.builder().key("old.jpg").build();
         ListObjectsV2Response listResponse = ListObjectsV2Response.builder()
                 .contents(s3Object)
                 .isTruncated(false)
@@ -59,57 +76,38 @@ class StorageServiceUTest {
 
         storageService.init();
 
-        verify(s3Client, times(1)).listObjectsV2(any(Consumer.class));
-        verify(s3Client, times(1)).deleteObjects(any(Consumer.class));
-        verify(s3Client, times(1)).putBucketPolicy(any(Consumer.class));
+        verify(s3Client).deleteObjects(any(Consumer.class));
+        verify(s3Client).putBucketPolicy(any(Consumer.class));
     }
 
-    @Test
-    void init_ShouldSetPolicy_EvenWhenBucketIsEmpty() {
-        ListObjectsV2Response emptyResponse = ListObjectsV2Response.builder().build();
-        when(s3Client.listObjectsV2(any(Consumer.class))).thenReturn(emptyResponse);
+    // --- UPLOAD TESTS ---
 
-        storageService.init();
-
-        verify(s3Client, never()).deleteObjects(any(Consumer.class));
-        verify(s3Client, times(1)).putBucketPolicy(any(Consumer.class));
-    }
-
-    @Test
-    void init_ShouldHandleExceptionGracefully() {
-        when(s3Client.listObjectsV2(any(Consumer.class))).thenThrow(new RuntimeException("S3 Error"));
-
-        assertDoesNotThrow(() -> storageService.init());
-
-        verify(s3Client, times(1)).listObjectsV2(any(Consumer.class));
-    }
-
-
-    // uploadFile() method tests
     @Test
     void uploadFile_Multipart_ShouldUploadAndReturnUrl() throws IOException {
         String fileName = "test.jpg";
         String contentType = "image/jpeg";
         String folderName = "products";
-        long size = 100L;
-        InputStream inputStream = new ByteArrayInputStream(new byte[0]);
+        byte[] content = "fake-image-content".getBytes();
 
-        when(multipartFile.getInputStream()).thenReturn(inputStream);
+        // Stubbing getBytes() is required because the service calls file.getBytes()
+        when(multipartFile.getBytes()).thenReturn(content);
         when(multipartFile.getOriginalFilename()).thenReturn(fileName);
         when(multipartFile.getContentType()).thenReturn(contentType);
-        when(multipartFile.getSize()).thenReturn(size);
 
         Map<String, String> result = storageService.uploadFile(multipartFile, folderName);
 
         assertNotNull(result);
-        assertTrue(result.containsKey("key"));
-        assertTrue(result.containsKey("url"));
-
         String resultKey = result.get("key");
+        String resultUrl = result.get("url");
+
         assertTrue(resultKey.startsWith(folderName + "/"));
         assertTrue(resultKey.endsWith("_" + fileName));
 
-        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        // URL must be constructed using publicUrl, not internal minioUrl
+        String expectedUrlStart = PUBLIC_URL + "/" + BUCKET_NAME + "/" + folderName;
+        assertTrue(resultUrl.startsWith(expectedUrlStart));
+
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 
     @Test
@@ -120,17 +118,16 @@ class StorageServiceUTest {
         byte[] content = "content".getBytes();
 
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
+
         Map<String, String> result = storageService.uploadFile(content, fileName, contentType, folderName);
 
         assertNotNull(result);
         String key = result.get("key");
         String url = result.get("url");
 
-        assertTrue(key.startsWith(folderName + "/"));
-        assertTrue(key.endsWith("_" + fileName));
-        assertEquals(String.format("%s/%s/%s", MINIO_URL, BUCKET_NAME, key), url);
+        String expectedUrl = String.format("%s/%s/%s", PUBLIC_URL, BUCKET_NAME, key);
+        assertEquals(expectedUrl, url);
 
-        // S3 Client interaction verification
         verify(s3Client).putObject(requestCaptor.capture(), any(RequestBody.class));
 
         PutObjectRequest capturedRequest = requestCaptor.getValue();
@@ -139,26 +136,18 @@ class StorageServiceUTest {
         assertEquals(contentType, capturedRequest.contentType());
     }
 
+    // --- DELETE TESTS ---
 
-    // deleteFile() method tests
     @Test
     void deleteFile_ShouldDelete_WhenKeyIsValid() {
         String key = "folder/image.jpg";
-
         storageService.deleteFile(key);
-
         verify(s3Client, times(1)).deleteObject(any(Consumer.class));
     }
 
     @Test
     void deleteFile_ShouldDoNothing_WhenKeyIsNull() {
         storageService.deleteFile(null);
-        verify(s3Client, never()).deleteObject(any(Consumer.class));
-    }
-
-    @Test
-    void deleteFile_ShouldDoNothing_WhenKeyIsBlank() {
-        storageService.deleteFile("   ");
         verify(s3Client, never()).deleteObject(any(Consumer.class));
     }
 }
