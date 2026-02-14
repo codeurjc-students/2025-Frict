@@ -20,9 +20,7 @@
         <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
           <i class="pi pi-sitemap text-slate-500"></i> Jerarquía de categorías
         </h3>
-        <span class="text-xs text-slate-400 bg-white px-2 py-1 rounded border border-slate-200">
-                <i class="pi pi-arrows-h"></i> Scroll Horizontal Disponible
-            </span>
+        <p-tag icon="pi pi-arrows-h" severity="secondary" value="Scroll horizontal disponible" />
       </div>
 
       <div class="flex-grow overflow-auto bg-slate-50/30 p-8 custom-scrollbar relative">
@@ -83,10 +81,20 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
           <div>
             <p class="text-xs font-bold text-slate-400 uppercase">Profundidad Máxima {{ listModeSelected ? '' : ' (página actual)'}}</p>
-            <p class="text-3xl font-extrabold text-slate-800">3 <span class="text-sm font-normal text-slate-400">niveles</span></p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ maxDepth() }} <span class="text-sm font-normal text-slate-400">niveles</span></p>
           </div>
           <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
             <i class="pi pi-align-left text-xl"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Porcentaje de uso {{ listModeSelected ? '' : ' (página actual)'}}</p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ usagePercentage() }} <span class="text-sm font-normal text-slate-400">%</span></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
+            <i class="pi pi-chart-line text-xl"></i>
           </div>
         </div>
 
@@ -98,7 +106,7 @@
           <div>
             <h3 class="font-bold text-slate-800">Análisis de Catálogo</h3>
             <p class="text-xs text-slate-400">
-              @if(productsViewSelected) { Peso por categoría raíz }
+              @if(productsViewSelected) { Número de productos por categoría raíz }
               @else { Categorías con mayor inventario }
             </p>
           </div>
@@ -130,28 +138,29 @@
       <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
         <h3 class="text-xl font-bold text-slate-800">{{ listModeSelected ? 'Todas las categorías' : 'Página actual' }}</h3>
         <div class="flex gap-2 w-full sm:w-auto">
-          <p-button label="Añadir" icon="pi pi-plus" size="small"></p-button>
+          <p-button label="Añadir" icon="pi pi-plus" size="small" class="w-full sm:w-auto"></p-button>
         </div>
       </div>
 
       <p-treeTable
         [value]="treeTableNodes()"
+        [scrollable]="true"
+        [tableStyle]="{'min-width': '60rem'}"
         styleClass="p-treetable-sm">
-
         <ng-template pTemplate="header">
           <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
-            <th [width]="'30%'" class="pl-6 font-semibold">Categoría</th>
-            <th [width]="'30%'" class="font-semibold">Descripción</th>
-            <th [width]="'15%'" class="text-center font-semibold">Productos</th>
-            <th [width]="'10%'" class="text-center font-semibold">Estado</th>
-            <th [width]="'15%'" class="text-right pr-6 font-semibold">Acciones</th>
+            <th style="width: 25%" class="pl-6 font-semibold">Categoría</th>
+            <th style="width: 25%" class="font-semibold">Descripción</th>
+            <th style="width: 15%" class="text-center font-semibold">Productos</th>
+            <th style="width: 15%" class="text-center font-semibold">Estado</th>
+            <th style="width: 20%" class="text-center font-semibold">Acciones</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
           <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 group">
 
-            <td class="pl-6">
+            <td style="width: 25%" class="pl-6">
               <div class="flex items-center">
                 <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
                 <div class="flex items-center gap-2 ml-1">
@@ -161,27 +170,29 @@
               </div>
             </td>
 
-            <td class="text-slate-500 truncate max-w-[200px]" [title]="rowData.description">
-              {{ rowData.description }}
+            <td style="width: 25%" class="text-slate-500">
+              <div class="truncate max-w-[150px] md:max-w-[250px]" [title]="rowData.description">
+                {{ rowData.description }}
+              </div>
             </td>
 
-            <td class="text-center">
+            <td style="width: 15%" class="text-center">
               <p-tag [value]="rowData.count" severity="secondary" [rounded]="true"></p-tag>
             </td>
 
-            <td class="text-center">
-              @if(rowData.active) {
-                <i class="pi pi-check-circle text-green-500 text-sm"></i>
+            <td style="width: 15%" class="text-center">
+              @if(rowData.count > 0) {
+                <p-tag icon="pi pi-check-circle" severity="success" value="En uso" />
               } @else {
-                <i class="pi pi-times-circle text-red-400 text-sm"></i>
+                <p-tag icon="pi pi-times-circle" severity="danger" value="Sin usar" />
               }
             </td>
 
-            <td>
-              <div class="flex gap-2 justify-start">
-                <p-button [routerLink]="['/category']" icon="pi pi-plus" [text]="true" [rounded]="true" severity="info" pTooltip="Añadir subcategoría"></p-button>
-                <p-button [routerLink]="['/admin/products/edit']" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar categoría"></p-button>
-                <p-button (click)="deleteCategory(1)" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar categoría"></p-button>
+            <td style="width: 20%">
+              <div class="flex gap-1 justify-start">
+                <p-button [routerLink]="['/category']" icon="pi pi-plus" [text]="true" [rounded]="true" severity="info" pTooltip="Añadir subcategoría" tooltipPosition="top"></p-button>
+                <p-button [routerLink]="['/admin/products/edit']" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar categoría" tooltipPosition="top"></p-button>
+                <p-button (click)="deleteCategory(1)" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar categoría" tooltipPosition="top"></p-button>
               </div>
             </td>
           </tr>
@@ -189,15 +200,15 @@
       </p-treeTable>
 
       <p-paginator *ngIf="!listModeSelected"
-        (onPageChange)="onCategoryPageChange($event)"
-        [first]="first"
-        [rows]="rows"
-        [totalRecords]="categoriesPage.totalItems"
-        [rowsPerPageOptions]="[5, 10, 15]"
-        [showCurrentPageReport]="true"
-        [dropdownAppendTo]="'body'"
-        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} categorías raíz"
-        styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl">
+                   (onPageChange)="onCategoryPageChange($event)"
+                   [first]="first"
+                   [rows]="rows"
+                   [totalRecords]="categoriesPage.totalItems"
+                   [rowsPerPageOptions]="[5, 10, 15]"
+                   [showCurrentPageReport]="true"
+                   [dropdownAppendTo]="'body'"
+                   currentPageReportTemplate="{first}-{last} de {totalRecords}"
+                   styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl">
       </p-paginator>
     </div>
 

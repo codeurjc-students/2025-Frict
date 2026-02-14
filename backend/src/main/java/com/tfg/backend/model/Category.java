@@ -66,4 +66,23 @@ public class Category {
         children.remove(child);
         child.setParent(null);
     }
+
+    //Count products (sum of products linked with this category or its children)
+    public int getProductsCount() {
+        return collectUniqueProducts(new HashSet<>()).size();
+    }
+
+    private Set<Product> collectUniqueProducts(Set<Product> allProducts) {
+        if (this.products != null) {
+            allProducts.addAll(this.products);
+        }
+
+        if (this.children != null) {
+            for (Category child : children) {
+                child.collectUniqueProducts(allProducts);
+            }
+        }
+
+        return allProducts;
+    }
 }

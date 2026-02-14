@@ -259,11 +259,11 @@ public class DatabaseInitializer {
 
         Product p18 = new Product("Portátil Gaming Beast 17\"", "RTX 4090 y i9 de última gen", 3200.00);
         p18.setPreviousPrice(3500.00);
-        assignCategories(p18, catMap, "Portátiles", "Top Ventas", "Ordenadores");
+        assignCategories(p18, catMap, "Portátiles", "Top Ventas");
         products.add(p18);
 
         Product p19 = new Product("All-in-One Oficina Pro", "Pantalla 27\" y diseño limpio", 899.99);
-        assignCategories(p19, catMap, "Sobremesa y Mini PC", "Ordenadores");
+        assignCategories(p19, catMap, "Sobremesa y Mini PC");
         products.add(p19);
 
         // --- MOBILITY ---
@@ -294,15 +294,15 @@ public class DatabaseInitializer {
         products.add(p7);
 
         Product p21 = new Product("Procesador Intel Core i9", "24 núcleos de potencia pura", 589.90);
-        assignCategories(p21, catMap, "Componentes", "Recomendado");
+        assignCategories(p21, catMap, "Recomendado");
         products.add(p21);
 
         Product p22 = new Product("Kit RAM DDR5 32GB", "6000MHz RGB", 145.00);
-        assignCategories(p22, catMap, "Componentes", "Destacado");
+        assignCategories(p22, catMap, "Destacado");
         products.add(p22);
 
         Product p23 = new Product("Fuente Alimentación 850W", "Certificación Gold Modular", 119.99);
-        assignCategories(p23, catMap, "Componentes", "Herramientas y Montaje");
+        assignCategories(p23, catMap, "Herramientas y Montaje");
         products.add(p23);
 
         // --- PERIPHERALS ---
@@ -324,11 +324,11 @@ public class DatabaseInitializer {
         products.add(p24);
 
         Product p25 = new Product("Webcam StreamCam 1080p", "60fps para creadores", 115.50);
-        assignCategories(p25, catMap, "Periféricos", "Foto y Video");
+        assignCategories(p25, catMap, "Foto y Video");
         products.add(p25);
 
         Product p26 = new Product("Micrófono USB Condensador", "Calidad de estudio podcast", 129.99);
-        assignCategories(p26, catMap, "Audio y Sonido", "Periféricos");
+        assignCategories(p26, catMap, "Audio y Sonido");
         products.add(p26);
 
         Product p27 = new Product("Ratón Vertical Ergonómico", "Reduce la fatiga de muñeca", 45.00);
@@ -362,7 +362,7 @@ public class DatabaseInitializer {
         products.add(p14);
 
         Product p15 = new Product("Dron Plegable GPS", "Tomas aéreas", 345.80);
-        assignCategories(p15, catMap, "Foto y Video", "Hogar y Conectividad");
+        assignCategories(p15, catMap, "Foto y Video");
         products.add(p15);
 
         Product p16 = new Product("Gafas Realidad Mixta", "El futuro hoy", 2400.00);
@@ -370,12 +370,12 @@ public class DatabaseInitializer {
         products.add(p16);
 
         Product p17 = new Product("Impresora 3D Resina", "Crea prototipos", 425.99);
-        assignCategories(p17, catMap, "Herramientas y Montaje", "Periféricos");
+        assignCategories(p17, catMap, "Herramientas y Montaje");
         products.add(p17);
 
         Product p30 = new Product("Barra de Sonido Atmos", "Cine en casa compacto", 350.00);
         p30.setPreviousPrice(450.00);
-        assignCategories(p30, catMap, "Audio y Sonido", "Hogar y Conectividad");
+        assignCategories(p30, catMap, "Audio y Sonido");
         products.add(p30);
 
         for (Product p : products) {
@@ -458,9 +458,9 @@ public class DatabaseInitializer {
         // Cart products
         if (products.size() >= 29) {
             List<OrderItem> cartItems = new ArrayList<>();
-            cartItems.add(new OrderItem(products.get(0), user1, 12));
-            cartItems.add(new OrderItem(products.get(2), user1, 3));
-            cartItems.add(new OrderItem(products.get(3), user1, 1));
+            cartItems.add(new OrderItem(products.get(0), user1, 1));
+            cartItems.add(new OrderItem(products.get(2), user1, 2));
+            cartItems.add(new OrderItem(products.get(3), user1, 3));
             cartItems.add(new OrderItem(products.get(8), user1, 4));
             cartItems.add(new OrderItem(products.get(12), user1, 2));
             cartItems.add(new OrderItem(products.get(15), user1, 3));

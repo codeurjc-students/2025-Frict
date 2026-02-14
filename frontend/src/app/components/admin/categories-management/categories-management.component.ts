@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import {Component, OnInit, signal, effect, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -31,13 +31,15 @@ export class CategoriesManagementComponent implements OnInit {
   displayMode: any[] = [{ label: 'Página', value: false }, { label: 'Todas', value: true }];
   listModeSelected: boolean = false;
 
-  chartMode: any[] = [{ label: 'Productos', value: true }, { label: 'Stock', value: false }];
+  chartMode: any[] = [{ label: 'Relevancia', value: true }, { label: 'Uso', value: false }];
   productsViewSelected: boolean = true;
 
   // Datos separados para evitar conflictos de estado (expansión/selección)
   orgChartNodes = signal<TreeNode[]>([]);
   treeTableNodes = signal<TreeNode[]>([]);
   totalCategories = signal<number>(0);
+  maxDepth = signal<number>(0);
+  usagePercentage = signal<number>(0);
 
   loading: boolean = true;
   error: boolean = false;
@@ -74,86 +76,116 @@ export class CategoriesManagementComponent implements OnInit {
     this.loadCategories();
   }
 
+  private calculateNodeDepth(node: TreeNode): number {
+    if (!node.children || node.children.length === 0) {
+      return 1;
+    }
+
+    const childrenDepths = node.children.map(child => this.calculateNodeDepth(child));
+    return 1 + Math.max(...childrenDepths);
+  }
+
   loadCategories() {
+
+    // 1. Definimos la lógica común de procesamiento (DRY)
+    const processResponse = (items: Category[], isFullList: boolean) => {
+      // Mapeo a estructura visual
+      const mappedChildren = items.map(c => this.mapToOrgChart(c));
+
+      // Creación del Nodo Raíz Virtual
+      const rootNode: TreeNode = {
+        expanded: true,
+        type: 'category', // Tipo específico para estilizar diferente si quieres
+        styleClass: 'bg-transparent',
+        data: {
+          id: -1,
+          name: isFullList ? 'Catálogo Completo' : 'Vista Paginada',
+          icon: 'pi pi-server',
+          count: items.length // Solo conteo directo del primer nivel para el label
+        },
+        children: mappedChildren
+      };
+
+      // 2. CÁLCULO DE MÉTRICAS (Usando la función auxiliar única)
+      // Pasamos el rootNode para que analice todo el árbol descendiente
+      const stats = this.calculateMetrics([rootNode]);
+
+      // 3. Actualización de Signals
+      this.totalCategories.set(stats.totalNodes);
+      this.maxDepth.set(stats.maxDepth);
+
+      // Cálculo seguro del porcentaje (evitar división por cero)
+      const percentage = stats.totalNodes > 0
+        ? (stats.activeNodes / stats.totalNodes) * 100
+        : 0;
+      this.usagePercentage.set(parseFloat(percentage.toFixed(2)));
+
+      // 4. Actualización de datos visuales
+      this.orgChartNodes.set([rootNode]);
+      this.treeTableNodes.set(items.map(c => this.mapToTreeTable(c)));
+
+      this.loading = false;
+    };
+
+    // 5. Ejecución condicional según el modo
     if (this.listModeSelected) {
       this.categoryService.getAllCategories().subscribe({
-        next: (list) => {
-          const rawData: Category[] = list;
-          const totalCount = this.countTotalNodes(rawData);
-          this.totalCategories.set(totalCount);
-          const mappedChildren = rawData.map(c => this.mapToOrgChart(c));
-
-          // Create root node
-          const rootNode: TreeNode = {
-            expanded: true,
-            type: 'category',
-            styleClass: 'bg-transparent',
-            data: {
-              id: -1,
-              name: 'Catálogo Completo',
-              icon: 'pi pi-sitemap',
-              count: totalCount,
-              active: true
-            },
-            children: mappedChildren
-          };
-
-          this.orgChartNodes.set([rootNode]);
-          this.treeTableNodes.set(rawData.map(c => this.mapToTreeTable(c)));
-
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('Error cargando categorías', err);
-          this.loading = false;
-        }
+        next: (list) => processResponse(list, true),
+        error: (err) => { console.error(err); this.loading = false; }
       });
-    }
-    else {
-      this.categoryService.getAllCategoriesPage(this.first / this.rows, this.rows).subscribe({
+    } else {
+      // Asumiendo que usas PrimeNG table lazy load event (first/rows)
+      const pageIndex = this.first / this.rows;
+      this.categoryService.getAllCategoriesPage(pageIndex, this.rows).subscribe({
         next: (page) => {
           this.categoriesPage = page;
-          const totalCount = this.countTotalNodes(this.categoriesPage.items);
-          this.totalCategories.set(totalCount);
-          const mappedChildren = this.categoriesPage.items.map(c => this.mapToOrgChart(c));
-
-          // Create root node
-          const rootNode: TreeNode = {
-            expanded: true,
-            type: 'category',
-            styleClass: 'bg-transparent',
-            data: {
-              id: -1,
-              name: 'Página actual',
-              icon: 'pi pi-sitemap',
-              count: totalCount,
-              active: true
-            },
-            children: mappedChildren
-          };
-
-          this.orgChartNodes.set([rootNode]);
-          this.treeTableNodes.set(this.categoriesPage.items.map(c => this.mapToTreeTable(c)));
-
-          this.loading = false;
+          processResponse(page.items, false)
         },
-        error: (err) => {
-          console.error('Error cargando categorías', err);
-          this.loading = false;
-        }
+        error: (err) => { console.error(err); this.loading = false; }
       });
     }
   }
 
-  countTotalNodes(categories: Category[]): number {
-    let count = 0;
-    for (const cat of categories) {
-      count++;
-      if (cat.children && cat.children.length > 0) {
-        count += this.countTotalNodes(cat.children);
+  /**
+   * Recorre el árbol recursivamente para extraer métricas.
+   * Ignora el nodo raíz virtual (id: -1) para los conteos.
+   */
+  private calculateMetrics(nodes: TreeNode[], currentDepth: number = 0): { totalNodes: number, activeNodes: number, maxDepth: number } {
+    let stats = { totalNodes: 0, activeNodes: 0, maxDepth: currentDepth };
+
+    for (const node of nodes) {
+      // CASO A: Nodo Virtual (Raíz visual) -> No cuenta, pero sus hijos sí
+      if (node.data?.id === -1) {
+        // Reiniciamos la profundidad a 0 para los hijos de la raíz virtual
+        const childStats = this.calculateMetrics(node.children || [], 0);
+        return childStats;
+      }
+
+      // CASO B: Nodo Categoría Real
+      stats.totalNodes++; // Contamos este nodo
+
+      // Verificamos si tiene productos (usage)
+      if ((node.data?.count || 0) > 0) {
+        stats.activeNodes++;
+      }
+
+      // Recursión hacia los hijos
+      if (node.children && node.children.length > 0) {
+        const childStats = this.calculateMetrics(node.children, currentDepth + 1);
+
+        // Sumamos los resultados de los hijos
+        stats.totalNodes += childStats.totalNodes;
+        stats.activeNodes += childStats.activeNodes;
+
+        // La profundidad es la mayor entre la actual y la que venga de abajo
+        stats.maxDepth = Math.max(stats.maxDepth, childStats.maxDepth);
+      } else {
+        // Si es hoja, la profundidad es el nivel actual (empezando en 1)
+        stats.maxDepth = Math.max(stats.maxDepth, currentDepth + 1);
       }
     }
-    return count;
+    console.log(stats);
+    return stats;
   }
 
   mapToOrgChart(cat: Category): TreeNode {
@@ -165,8 +197,7 @@ export class CategoriesManagementComponent implements OnInit {
         id: cat.id,
         name: cat.name,
         icon: cat.icon && cat.icon.trim() !== '' ? cat.icon : 'pi pi-folder',
-        count: cat.productsCount || 0,
-        active: true
+        count: cat.productsCount || 0
       },
       children: cat.children ? cat.children.map(c => this.mapToOrgChart(c)) : []
     };
@@ -185,10 +216,6 @@ export class CategoriesManagementComponent implements OnInit {
       children: cat.children ? cat.children.map(c => this.mapToTreeTable(c)) : [],
       expanded: false
     };
-  }
-
-  onNodeSelect(event: any) {
-    this.messageService.add({ severity: 'info', summary: 'Nodo Seleccionado', detail: event.node.data.name });
   }
 
   addCategory(parentId?: number) {

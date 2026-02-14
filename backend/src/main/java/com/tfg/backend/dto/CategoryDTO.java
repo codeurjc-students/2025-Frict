@@ -37,7 +37,7 @@ public class CategoryDTO {
             this.imageInfo = c.getCategoryImage();
         }
 
-        this.productsCount = c.getProducts().size();
+        this.productsCount = c.getProductsCount();
 
         if(c.getParent() != null){
             this.parentId = c.getParent().getId();
