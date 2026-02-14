@@ -2,16 +2,22 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.ListResponse;
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.ProductDTO;
 import com.tfg.backend.model.Category;
 import com.tfg.backend.model.ImageInfo;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +40,15 @@ public class CategoryRestController {
     @Autowired
     private StorageService storageService;
 
+    @Operation(summary = "(All) Get all categories (paged)")
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<CategoryDTO>> showAllCategoriesPage(Pageable pageable) {
+        Page<Category> categories = categoryService.getCategoriesPage(pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(categories, CategoryDTO::new));
+    }
 
     @Operation(summary = "(All) Get all categories (listed)")
-    @GetMapping("/")
+    @GetMapping("/list")
     public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
         List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
         return ResponseEntity.ok(new ListResponse<>(dtos));

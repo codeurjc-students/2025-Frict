@@ -1,8 +1,10 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {map, Observable, tap} from 'rxjs';
 import {Category} from '../models/category.model';
 import {ListResponse} from '../models/listResponse.model';
+import {PageResponse} from '../models/pageResponse.model';
+import {Product} from '../models/product.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +16,15 @@ export class CategoryService {
 
   private apiUrl = '/api/v1/categories';
 
+  public getAllCategoriesPage(page: number, size: number): Observable<PageResponse<Category>> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<Category>>(this.apiUrl + `/`, { params });
+  }
+
   public getAllCategories(): Observable<Category[]> {
-    return this.http.get<ListResponse<Category>>(this.apiUrl + `/`).pipe(map(response => response.items));
+    return this.http.get<ListResponse<Category>>(this.apiUrl + `/list`).pipe(map(response => response.items));
   }
 
   public getCategoryById(id: string): Observable<Category> {

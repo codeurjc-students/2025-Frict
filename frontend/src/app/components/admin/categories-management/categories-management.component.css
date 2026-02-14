@@ -1,0 +1,20 @@
+.category-chart-wrapper .p-organizationchart {
+  height: 100%;
+}
+
+/* ELIMINAR BORDE DOBLE: Hacemos transparente el contenedor nativo */
+.category-chart-wrapper .p-organizationchart .p-organizationchart-node-content {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Quitar el outline azul al hacer click */
+.category-chart-wrapper .p-organizationchart .p-organizationchart-node-content:focus {
+  box-shadow: none !important;
+}
+
+/* Líneas más sutiles */
+.category-chart-wrapper .p-organizationchart .p-organizationchart-line-down { background-color: #cbd5e1 !important; }
+.category-chart-wrapper .p-organizationchart .p-organizationchart-line-left { border-color: #cbd5e1 !important; }
+.category-chart-wrapper .p-organizationchart .p-organizationchart-line-top { border-color: #cbd5e1 !important; }

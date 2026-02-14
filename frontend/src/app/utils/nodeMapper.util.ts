@@ -29,7 +29,8 @@ export function mapToCategories(nodes: TreeNode[], parentId: string = ''): Categ
     bannerText: '',
     shortDescription: '',
     longDescription: '',
-    imageInfo: { id: 0, imageUrl: '', s3Key: '', fileName: '' } as any
+    imageInfo: { id: 0, imageUrl: '', s3Key: '', fileName: '' } as any,
+    productsCount: 0
   }));
   console.log(result);
   return result;
