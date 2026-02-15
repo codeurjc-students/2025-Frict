@@ -34,7 +34,6 @@ export class CategoriesManagementComponent implements OnInit {
   chartMode: any[] = [{ label: 'Relevancia', value: true }, { label: 'Uso', value: false }];
   productsViewSelected: boolean = true;
 
-  // Datos separados para evitar conflictos de estado (expansión/selección)
   orgChartNodes = signal<TreeNode[]>([]);
   treeTableNodes = signal<TreeNode[]>([]);
   totalCategories = signal<number>(0);
@@ -56,7 +55,7 @@ export class CategoriesManagementComponent implements OnInit {
   constructor(private messageService: MessageService,
               private categoryService: CategoryService) {
 
-    // REACCIÓN AUTOMÁTICA: Actualiza las gráficas cuando treeTableNodes cambia
+    // Update charts when treeTableNodes changes
     effect(() => {
       const nodes = this.treeTableNodes();
       if (nodes && nodes.length > 0) {
@@ -66,7 +65,7 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.initCharts(); // Inicializamos las opciones de visualización
+    this.initCharts();
     this.loadCategories();
   }
 
@@ -76,65 +75,47 @@ export class CategoriesManagementComponent implements OnInit {
     this.loadCategories();
   }
 
-  private calculateNodeDepth(node: TreeNode): number {
-    if (!node.children || node.children.length === 0) {
-      return 1;
-    }
-
-    const childrenDepths = node.children.map(child => this.calculateNodeDepth(child));
-    return 1 + Math.max(...childrenDepths);
-  }
-
   loadCategories() {
-
-    // 1. Definimos la lógica común de procesamiento (DRY)
     const processResponse = (items: Category[], isFullList: boolean) => {
-      // Mapeo a estructura visual
       const mappedChildren = items.map(c => this.mapToOrgChart(c));
 
-      // Creación del Nodo Raíz Virtual
       const rootNode: TreeNode = {
         expanded: true,
-        type: 'category', // Tipo específico para estilizar diferente si quieres
+        type: 'category',
         styleClass: 'bg-transparent',
         data: {
           id: -1,
           name: isFullList ? 'Catálogo Completo' : 'Vista Paginada',
           icon: 'pi pi-server',
-          count: items.length // Solo conteo directo del primer nivel para el label
+          count: items.length // First level children count only
         },
         children: mappedChildren
       };
 
-      // 2. CÁLCULO DE MÉTRICAS (Usando la función auxiliar única)
-      // Pasamos el rootNode para que analice todo el árbol descendiente
+      // Metrics calculation
       const stats = this.calculateMetrics([rootNode]);
 
-      // 3. Actualización de Signals
       this.totalCategories.set(stats.totalNodes);
       this.maxDepth.set(stats.maxDepth);
 
-      // Cálculo seguro del porcentaje (evitar división por cero)
       const percentage = stats.totalNodes > 0
         ? (stats.activeNodes / stats.totalNodes) * 100
         : 0;
       this.usagePercentage.set(parseFloat(percentage.toFixed(2)));
 
-      // 4. Actualización de datos visuales
       this.orgChartNodes.set([rootNode]);
       this.treeTableNodes.set(items.map(c => this.mapToTreeTable(c)));
 
       this.loading = false;
     };
 
-    // 5. Ejecución condicional según el modo
+    // Conditional execution depending on the mode selected
     if (this.listModeSelected) {
       this.categoryService.getAllCategories().subscribe({
         next: (list) => processResponse(list, true),
         error: (err) => { console.error(err); this.loading = false; }
       });
     } else {
-      // Asumiendo que usas PrimeNG table lazy load event (first/rows)
       const pageIndex = this.first / this.rows;
       this.categoryService.getAllCategoriesPage(pageIndex, this.rows).subscribe({
         next: (page) => {
@@ -146,41 +127,32 @@ export class CategoriesManagementComponent implements OnInit {
     }
   }
 
-  /**
-   * Recorre el árbol recursivamente para extraer métricas.
-   * Ignora el nodo raíz virtual (id: -1) para los conteos.
-   */
   private calculateMetrics(nodes: TreeNode[], currentDepth: number = 0): { totalNodes: number, activeNodes: number, maxDepth: number } {
     let stats = { totalNodes: 0, activeNodes: 0, maxDepth: currentDepth };
 
     for (const node of nodes) {
-      // CASO A: Nodo Virtual (Raíz visual) -> No cuenta, pero sus hijos sí
+      // The added root node does not count, but its children do
       if (node.data?.id === -1) {
-        // Reiniciamos la profundidad a 0 para los hijos de la raíz virtual
+        // Reset the depth for the root children
         const childStats = this.calculateMetrics(node.children || [], 0);
         return childStats;
       }
 
-      // CASO B: Nodo Categoría Real
-      stats.totalNodes++; // Contamos este nodo
-
-      // Verificamos si tiene productos (usage)
+      // Real category node
+      stats.totalNodes++;
       if ((node.data?.count || 0) > 0) {
         stats.activeNodes++;
       }
 
-      // Recursión hacia los hijos
       if (node.children && node.children.length > 0) {
         const childStats = this.calculateMetrics(node.children, currentDepth + 1);
 
-        // Sumamos los resultados de los hijos
+        // Sum of children results (recursive)
         stats.totalNodes += childStats.totalNodes;
         stats.activeNodes += childStats.activeNodes;
-
-        // La profundidad es la mayor entre la actual y la que venga de abajo
         stats.maxDepth = Math.max(stats.maxDepth, childStats.maxDepth);
       } else {
-        // Si es hoja, la profundidad es el nivel actual (empezando en 1)
+        // If leaf node, the depth is the current level (starting by 1)
         stats.maxDepth = Math.max(stats.maxDepth, currentDepth + 1);
       }
     }
@@ -204,16 +176,18 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
   mapToTreeTable(cat: Category): TreeNode {
+    const childrenMapped = cat.children ? cat.children.map(c => this.mapToTreeTable(c)) : [];
     return {
       data: {
         id: cat.id,
         name: cat.name,
         icon: cat.icon && cat.icon.trim() !== '' ? cat.icon : 'pi pi-folder',
-        description: cat.shortDescription,
+        description: cat.bannerText,
         count: cat.productsCount || 0,
+        childrenCount: childrenMapped.length,
         active: true
       },
-      children: cat.children ? cat.children.map(c => this.mapToTreeTable(c)) : [],
+      children: childrenMapped,
       expanded: false
     };
   }
@@ -226,10 +200,8 @@ export class CategoriesManagementComponent implements OnInit {
     this.messageService.add({ severity: 'warn', summary: 'Eliminar', detail: `Categoría ${id} eliminada` });
   }
 
-  // --- CONFIGURACIÓN GRÁFICAS ---
 
   private initCharts() {
-    // Configuración de Estructura y Estilos
     this.chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -257,7 +229,7 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
   private updateChartsData(nodes: TreeNode[]) {
-    // 1. Pie Chart: Cantidad de productos de las categorías en la vista actual
+    // 1. Pie Chart: Number of products that use the current category (NOT the sum of the children data)
     this.chartData = {
       labels: nodes.map(n => n.data.name),
       datasets: [{
@@ -266,7 +238,7 @@ export class CategoriesManagementComponent implements OnInit {
       }]
     };
 
-    // 2. Bar Chart: Conteo de categorías con 0 productos vs 1 o más
+    // Bar chart: noStock = Unused, withStock = In use
     const noStockCount = nodes.filter(n => (n.data.count || 0) === 0).length;
     const withStockCount = nodes.filter(n => (n.data.count || 0) > 0).length;
 
@@ -275,7 +247,7 @@ export class CategoriesManagementComponent implements OnInit {
       datasets: [{
         label: 'Categorías',
         data: [noStockCount, withStockCount],
-        backgroundColor: ['#fb2c36', '#00c951'], // red-300 y green-300
+        backgroundColor: ['#fb2c36', '#00c951'], // red-300, green-300
         borderRadius: 6,
         barPercentage: 0.5
       }]

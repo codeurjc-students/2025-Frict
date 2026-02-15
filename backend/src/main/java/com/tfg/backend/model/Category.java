@@ -69,20 +69,21 @@ public class Category {
 
     //Count products (sum of products linked with this category or its children)
     public int getProductsCount() {
-        return collectUniqueProducts(new HashSet<>()).size();
+        Set<Product> allProducts = new HashSet<>();
+        fillProductSet(allProducts);
+        return allProducts.size();
     }
 
-    private Set<Product> collectUniqueProducts(Set<Product> allProducts) {
-        if (this.products != null) {
-            allProducts.addAll(this.products);
-        }
-
-        if (this.children != null) {
-            for (Category child : children) {
-                child.collectUniqueProducts(allProducts);
+    private void fillProductSet(Set<Product> allProducts) {
+        // If if has children, then only ask the children (it must not have products linked)
+        if (this.children != null && !this.children.isEmpty()) {
+            for (Category child : this.children) {
+                child.fillProductSet(allProducts);
             }
         }
-
-        return allProducts;
+        // If it does not have children, then it is a leaf -> Count the products linked to it
+        else if (this.products != null) {
+            allProducts.addAll(this.products);
+        }
     }
 }
