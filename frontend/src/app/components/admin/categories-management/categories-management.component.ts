@@ -1,4 +1,4 @@
-import {Component, OnInit, signal, effect, computed} from '@angular/core';
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -36,9 +36,12 @@ export class CategoriesManagementComponent implements OnInit {
 
   orgChartNodes = signal<TreeNode[]>([]);
   treeTableNodes = signal<TreeNode[]>([]);
+
+  // Métricas
   totalCategories = signal<number>(0);
   maxDepth = signal<number>(0);
   usagePercentage = signal<number>(0);
+  totalVolume = signal<number>(0); // Opcional: Para mostrar el total de usos globalmente si quisieras
 
   loading: boolean = true;
   error: boolean = false;
@@ -77,8 +80,12 @@ export class CategoriesManagementComponent implements OnInit {
 
   loadCategories() {
     const processResponse = (items: Category[], isFullList: boolean) => {
+      // Total usages count: sum of children usages
+      const totalUsages = items.reduce((acc, curr) => acc + (curr.timesUsed || 0), 0);
+
       const mappedChildren = items.map(c => this.mapToOrgChart(c));
 
+      // VIRTUAL ROOT NODE CREATION
       const rootNode: TreeNode = {
         expanded: true,
         type: 'category',
@@ -87,17 +94,19 @@ export class CategoriesManagementComponent implements OnInit {
           id: -1,
           name: isFullList ? 'Catálogo Completo' : 'Vista Paginada',
           icon: 'pi pi-server',
-          count: items.length // First level children count only
+          timesUsed: totalUsages // <--- AQUÍ ESTÁ LA CORRECCIÓN (Antes era items.length)
         },
         children: mappedChildren
       };
 
-      // Metrics calculation
+      // METRICS CALCULATION
       const stats = this.calculateMetrics([rootNode]);
 
       this.totalCategories.set(stats.totalNodes);
       this.maxDepth.set(stats.maxDepth);
+      this.totalVolume.set(totalUsages);
 
+      // Secure percentage calculation
       const percentage = stats.totalNodes > 0
         ? (stats.activeNodes / stats.totalNodes) * 100
         : 0;
@@ -127,36 +136,43 @@ export class CategoriesManagementComponent implements OnInit {
     }
   }
 
-  private calculateMetrics(nodes: TreeNode[], currentDepth: number = 0): { totalNodes: number, activeNodes: number, maxDepth: number } {
-    let stats = { totalNodes: 0, activeNodes: 0, maxDepth: currentDepth };
+
+  private calculateMetrics(nodes: TreeNode[], currentDepth: number = 0): { totalNodes: number, activeNodes: number, maxDepth: number, totalVolume: number } {
+    let stats = { totalNodes: 0, activeNodes: 0, maxDepth: currentDepth, totalVolume: 0 };
 
     for (const node of nodes) {
-      // The added root node does not count, but its children do
+      // Ignore virtual root node and descend to its children
       if (node.data?.id === -1) {
-        // Reset the depth for the root children
         const childStats = this.calculateMetrics(node.children || [], 0);
         return childStats;
       }
 
-      // Real category node
       stats.totalNodes++;
-      if ((node.data?.count || 0) > 0) {
+
+      const nodeCount = node.data?.timesUsed || 0;
+
+      if (nodeCount > 0) {
         stats.activeNodes++;
       }
 
+      if (!node.children || node.children.length === 0) {
+        stats.totalVolume += nodeCount;
+      }
+
+      // Recursive
       if (node.children && node.children.length > 0) {
         const childStats = this.calculateMetrics(node.children, currentDepth + 1);
 
-        // Sum of children results (recursive)
         stats.totalNodes += childStats.totalNodes;
         stats.activeNodes += childStats.activeNodes;
+        stats.totalVolume += childStats.totalVolume;
         stats.maxDepth = Math.max(stats.maxDepth, childStats.maxDepth);
       } else {
-        // If leaf node, the depth is the current level (starting by 1)
+        // If leaf node, update depth
         stats.maxDepth = Math.max(stats.maxDepth, currentDepth + 1);
       }
     }
-    console.log(stats);
+
     return stats;
   }
 
@@ -169,25 +185,24 @@ export class CategoriesManagementComponent implements OnInit {
         id: cat.id,
         name: cat.name,
         icon: cat.icon && cat.icon.trim() !== '' ? cat.icon : 'pi pi-folder',
-        count: cat.productsCount || 0
+        timesUsed: cat.timesUsed || 0
       },
       children: cat.children ? cat.children.map(c => this.mapToOrgChart(c)) : []
     };
   }
 
   mapToTreeTable(cat: Category): TreeNode {
-    const childrenMapped = cat.children ? cat.children.map(c => this.mapToTreeTable(c)) : [];
     return {
       data: {
         id: cat.id,
         name: cat.name,
         icon: cat.icon && cat.icon.trim() !== '' ? cat.icon : 'pi pi-folder',
         description: cat.bannerText,
-        count: cat.productsCount || 0,
-        childrenCount: childrenMapped.length,
+        timesUsed: cat.timesUsed || 0,
+        count: cat.timesUsed || 0,
         active: true
       },
-      children: childrenMapped,
+      children: cat.children ? cat.children.map(c => this.mapToTreeTable(c)) : [],
       expanded: false
     };
   }
@@ -229,27 +244,45 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
   private updateChartsData(nodes: TreeNode[]) {
-    // 1. Pie Chart: Number of products that use the current category (NOT the sum of the children data)
+    // Pie Chart (root categories only)
     this.chartData = {
       labels: nodes.map(n => n.data.name),
       datasets: [{
-        data: nodes.map(n => n.data.count || 0),
+        data: nodes.map(n => n.data.timesUsed || 0),
         backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#14b8a6', '#94a3b8']
       }]
     };
 
-    // Bar chart: noStock = Unused, withStock = In use
-    const noStockCount = nodes.filter(n => (n.data.count || 0) === 0).length;
-    const withStockCount = nodes.filter(n => (n.data.count || 0) > 0).length;
+    // Bar Chart
+    let totalActive = 0;
+    let totalInactive = 0;
+
+    const traverseAndCount = (nodeList: TreeNode[]) => {
+      for (const node of nodeList) {
+        if ((node.data.timesUsed || 0) > 0) {
+          totalActive++;
+        } else {
+          totalInactive++;
+        }
+
+        // If there are children, descend recursively
+        if (node.children && node.children.length > 0) {
+          traverseAndCount(node.children);
+        }
+      }
+    };
+
+    // Start the count with the root nodes
+    traverseAndCount(nodes);
 
     this.barData = {
-      labels: ['Sin productos', 'Con productos'],
+      labels: ['Sin uso', 'En uso'],
       datasets: [{
-        label: 'Categorías',
-        data: [noStockCount, withStockCount],
-        backgroundColor: ['#fb2c36', '#00c951'], // red-300, green-300
+        label: 'Total de Categorías',
+        data: [totalInactive, totalActive],
+        backgroundColor: ['#ef4444', '#22c55e'], // red-500, green-500
         borderRadius: 6,
-        barPercentage: 0.5
+        barPercentage: 0.6
       }]
     };
   }

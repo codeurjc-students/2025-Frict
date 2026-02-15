@@ -33,7 +33,7 @@
             <ng-template let-node pTemplate="category">
               <div class="group">
                 <div class="absolute top-0 left-0 w-full h-1 rounded-t-xl"
-                     [ngClass]="node.data.count > 0 ? 'bg-green-300' : 'bg-red-300'">
+                     [ngClass]="node.data.timesUsed > 0 ? 'bg-green-300' : 'bg-red-300'">
                 </div>
 
                 <div class="absolute -top-4 left-1/2 -translate-x-1/2
@@ -52,7 +52,7 @@
                   <div class="text-center">
                     <span class="font-bold text-slate-700 block text-sm">{{ node.data.name }}</span>
                     <span class="text-[10px] text-slate-400 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 inline-block">
-                            {{ node.data.count }} {{ node.data.count == 1 ? 'producto' : 'productos' }}
+                            {{ node.data.timesUsed }} {{ node.data.timesUsed == 1 ? 'uso' : 'usos' }}
                         </span>
                   </div>
                 </div>
@@ -90,7 +90,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
           <div>
             <p class="text-xs font-bold text-slate-400 uppercase">Porcentaje de uso {{ listModeSelected ? '' : ' (página actual)'}}</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ usagePercentage() }} <span class="text-sm font-normal text-slate-400">%</span></p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ usagePercentage() }} <span class="text-sm font-normal text-slate-400">% ({{ totalVolume() }} usos)</span></p>
           </div>
           <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
             <i class="pi pi-chart-line text-xl"></i>
@@ -105,7 +105,7 @@
           <div>
             <h3 class="font-bold text-slate-800">Análisis de Catálogo</h3>
             <p class="text-xs text-slate-400">
-              @if(productsViewSelected) { Número de productos por categoría raíz }
+              @if(productsViewSelected) { Número de usos por categoría raíz }
               @else { Categorías con mayor inventario }
             </p>
           </div>
@@ -150,7 +150,7 @@
           <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
             <th style="width: 25%" class="pl-6 font-semibold">Categoría</th>
             <th style="width: 25%" class="font-semibold">Banner</th>
-            <th style="width: 15%" class="text-center font-semibold">Productos</th>
+            <th style="width: 15%" class="text-center font-semibold">Usos</th>
             <th style="width: 15%" class="text-center font-semibold">Estado</th>
             <th style="width: 20%" class="text-center font-semibold">Acciones</th>
           </tr>
@@ -176,11 +176,11 @@
             </td>
 
             <td style="width: 15%" class="text-center">
-              <p-tag [value]="rowData.count" severity="secondary" [rounded]="true"></p-tag>
+              <p-tag [value]="rowData.timesUsed" severity="secondary" [rounded]="true"></p-tag>
             </td>
 
             <td style="width: 15%" class="text-center">
-              @if(rowData.count > 0) {
+              @if(rowData.timesUsed > 0) {
                 <p-tag icon="pi pi-check-circle" severity="success" value="En uso" />
               } @else {
                 <p-tag icon="pi pi-times-circle" severity="danger" value="Sin usar" />

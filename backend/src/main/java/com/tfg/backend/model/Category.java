@@ -67,23 +67,19 @@ public class Category {
         child.setParent(null);
     }
 
-    //Count products (sum of products linked with this category or its children)
-    public int getProductsCount() {
-        Set<Product> allProducts = new HashSet<>();
-        fillProductSet(allProducts);
-        return allProducts.size();
-    }
+    //Count usage (times this category is present in a product or its children)
+    public int getTimesUsed() {
+        // Leaf node? Then return the sum of the children usages
+        if (this.children == null || this.children.isEmpty()) {
+            return (this.products != null) ? this.products.size() : 0;
+        }
 
-    private void fillProductSet(Set<Product> allProducts) {
-        // If if has children, then only ask the children (it must not have products linked)
-        if (this.children != null && !this.children.isEmpty()) {
-            for (Category child : this.children) {
-                child.fillProductSet(allProducts);
-            }
+        // Not a leaf node? Sum the usages of all its children
+        int totalUsage = 0;
+        for (Category child : this.children) {
+            totalUsage += child.getTimesUsed();
         }
-        // If it does not have children, then it is a leaf -> Count the products linked to it
-        else if (this.products != null) {
-            allProducts.addAll(this.products);
-        }
+
+        return totalUsage;
     }
 }

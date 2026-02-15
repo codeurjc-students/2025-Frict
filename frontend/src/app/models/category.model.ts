@@ -8,7 +8,7 @@ export interface Category {
   shortDescription: string;
   longDescription: string;
   imageInfo: ImageInfo;
-  productsCount: number;
+  timesUsed: number;
   parentId: string;
   children: Category[];
 }
