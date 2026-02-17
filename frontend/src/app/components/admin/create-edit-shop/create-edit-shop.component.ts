@@ -49,7 +49,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       referenceCode: [{ value: '', disabled: true }],
       latitude: [0, [Validators.required]],
       longitude: [0, [Validators.required]],
-      // Agrupamos la dirección
+      // Group address
       address: this.fb.group({
         alias: ['', []],
         street: ['', Validators.required],

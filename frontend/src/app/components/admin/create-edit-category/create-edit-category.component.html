@@ -1,0 +1,211 @@
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+
+    <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">
+          {{ categoryId() ? 'Editar Categoría' : 'Nueva Categoría' }}
+        </h1>
+        <p class="text-slate-500">Gestiona la jerarquía y contenido de la categoría.</p>
+      </div>
+      <div class="flex gap-3">
+        <p-button label="Cancelar" icon="pi pi-times" [outlined]="true" severity="secondary" routerLink="/admin/categories"></p-button>
+        <p-button label="Guardar" icon="pi pi-check" severity="success" (onClick)="onSubmit()"></p-button>
+      </div>
+    </div>
+
+    <div class="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm overflow-x-auto">
+      <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Jerarquía Visual</h2>
+
+      <div class="flex justify-center min-w-[600px]">
+        <p-organizationChart
+          [value]="orgChartNodes()"
+          styleClass="w-full">
+
+          <ng-template let-node pTemplate="category">
+            <div class="group">
+              <div class="absolute top-0 left-0 w-full h-1 rounded-t-xl"
+                   [ngClass]="node.data.timesUsed > 0 ? 'bg-green-300' : 'bg-red-300'">
+              </div>
+
+              <div class="flex flex-col items-center gap-2">
+                <div class="text-slate-500 text-2xl">
+                  <i [class]="node.data.icon"></i>
+                </div>
+
+                <div class="text-center">
+                  <span class="font-bold text-slate-700 block text-sm">{{ node.data.name }}</span>
+                  <span class="text-[10px] text-slate-400 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 inline-block">
+                            {{ node.data.timesUsed }} {{ node.data.timesUsed == 1 ? 'uso' : 'usos' }}
+                        </span>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+
+        </p-organizationChart>
+      </div>
+
+      <p class="text-center text-xs text-slate-400 mt-4" *ngIf="!orgChartNodes() || orgChartNodes().length === 0">
+        Selecciona una categoría padre para visualizar la jerarquía.
+      </p>
+    </div>
+
+    <form [formGroup]="categoryForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+
+          <div class="grid grid-cols-1 gap-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div class="flex flex-col gap-2">
+                <label for="parentId" class="text-sm font-semibold text-slate-600">Categoría Padre</label>
+                <p-select
+                  formControlName="parentId"
+                  [options]="flatCategoriesList()"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Seleccionar Padre (Opcional)"
+                  showClear="true"
+                  [filter]="true"
+                  filterBy="name"
+                  styleClass="w-full" />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label for="name" class="text-sm font-semibold text-slate-600">Nombre de la Categoría</label>
+                <input pInputText id="name" formControlName="name" placeholder="Ej: Electrónica" class="w-full" />
+                <small class="text-red-500" *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+                  El nombre es obligatorio.
+                </small>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div class="flex flex-col gap-2">
+                <label for="icon" class="text-sm font-semibold text-slate-600">Icono</label>
+                <p-select
+                  id="icon"
+                  [options]="availableIcons()"
+                  formControlName="icon"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Selecciona un icono"
+                  [filter]="true"
+                  filterBy="label"
+                  styleClass="w-full">
+
+                  <ng-template pTemplate="selectedItem" let-selectedOption>
+                    <div class="flex items-center gap-2" *ngIf="selectedOption">
+                      <i [class]="selectedOption.value" class="text-lg"></i>
+                      <span>{{ selectedOption.label }}</span>
+                    </div>
+                  </ng-template>
+
+                  <ng-template pTemplate="item" let-option>
+                    <div class="flex items-center gap-2">
+                      <i [class]="option.value" class="text-lg text-slate-600"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label for="shortBanner" class="text-sm font-semibold text-slate-600">Texto Banner (Corto)</label>
+                <input pInputText id="shortBanner" formControlName="bannerText" placeholder="Ej: -20% en Verano" class="w-full" />
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="shortDescription" class="text-sm font-semibold text-slate-600">Descripción Corta</label>
+              <textarea
+                pTextarea
+                id="shortDescription"
+                formControlName="shortDescription"
+                rows="3"
+                placeholder="Breve resumen..."
+                class="w-full resize-none">
+              </textarea>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label for="longDescription" class="text-sm font-semibold text-slate-600">Descripción Detallada</label>
+              <p-editor
+                formControlName="longDescription"
+                [style]="{ height: '320px' }"
+                placeholder="Escribe aquí...">
+              </p-editor>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm sticky top-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-4">
+            <h2 class="text-lg font-bold text-slate-800 m-0">Imagen de Categoría</h2>
+            <p-button label="Restaurar" (click)="restoreImage()" icon="pi pi-undo" [text]="true" severity="info" />
+          </div>
+
+          <div class="mb-4">
+            <div *ngIf="existingImage()" class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-video">
+              <img [src]="existingImage()" class="w-full h-full object-cover" alt="Existing image">
+              <span class="absolute top-2 left-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Actual</span>
+              <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="newImage() as img" class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-video">
+              <img [src]="img.previewUrl" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Nueva</span>
+              <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="!existingImage() && !newImage()" class="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400">
+              <i class="pi pi-image text-4xl mb-2"></i>
+              <span class="text-sm">Sin imagen asignada</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-slate-600">Cambiar Foto</label>
+            <p-fileupload
+              #fileUploader
+              mode="advanced"
+              [multiple]="false"
+              accept="image/*"
+              [maxFileSize]="MAX_SIZE"
+              [showUploadButton]="false"
+              [showCancelButton]="false"
+              invalidFileSizeMessageSummary="{0}: Tamaño inválido."
+              chooseLabel="Seleccionar Foto"
+              chooseIcon="pi pi-camera"
+              (onSelect)="onFileSelect($event)"
+              (onRemove)="onFileRemove($event)"
+              styleClass="w-full"
+              [auto]="false">
+            </p-fileupload>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>

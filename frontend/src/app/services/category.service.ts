@@ -5,6 +5,7 @@ import {Category} from '../models/category.model';
 import {ListResponse} from '../models/listResponse.model';
 import {PageResponse} from '../models/pageResponse.model';
 import {Product} from '../models/product.model';
+import {Shop} from '../models/shop.model';
 
 @Injectable({
   providedIn: 'root'
@@ -42,5 +43,23 @@ export class CategoryService {
         return category;
       })
     );
+  }
+
+  public createCategory(categoryData: Category): Observable<Category> {
+    return this.http.post<Category>(this.apiUrl, categoryData);
+  }
+
+  public updateCategory(id: string, categoryData: Category): Observable<Category> {
+    return this.http.put<Category>(this.apiUrl + `/${id}`, categoryData);
+  }
+
+  public deleteCategory(id: string): Observable<Category> {
+    return this.http.delete<Category>(this.apiUrl + `/${id}`);
+  }
+
+  public updateCategoryImage(categoryId: string, selectedImage: File): Observable<Category> {
+    const formData = new FormData();
+    formData.append('image', selectedImage);
+    return this.http.post<Category>(this.apiUrl + `/image/${categoryId}`, formData);
   }
 }

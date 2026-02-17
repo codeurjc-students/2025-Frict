@@ -189,8 +189,8 @@
 
             <td style="width: 20%">
               <div class="flex gap-1 justify-start">
-                <p-button [routerLink]="['/category']" icon="pi pi-plus" [text]="true" [rounded]="true" severity="info" pTooltip="Añadir subcategoría" tooltipPosition="top"></p-button>
-                <p-button [routerLink]="['/admin/products/edit']" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar categoría" tooltipPosition="top"></p-button>
+                <p-button [routerLink]="['/admin/categories/new']" [queryParams]="{ parentId: rowData.id }" icon="pi pi-plus" [text]="true" [rounded]="true" severity="info" pTooltip="Añadir subcategoría" tooltipPosition="top"></p-button>
+                <p-button [routerLink]="['/admin/categories/edit', rowData.id]" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar categoría" tooltipPosition="top"></p-button>
                 <p-button (click)="deleteCategory(1)" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar categoría" tooltipPosition="top"></p-button>
               </div>
             </td>

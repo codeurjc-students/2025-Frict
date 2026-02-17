@@ -91,17 +91,18 @@ public class UserRestController {
         }
 
         // Upload
-        Map<String, String> res = storageService.uploadFile(image, "users");
-
-        // Create ImageInfo object (not an entity)
-        ImageInfo userImageInfo = new ImageInfo(
-                res.get("url"),
-                res.get("key"),
-                image.getOriginalFilename()
-        );
-
-        // Add to user
-        loggedUser.setUserImage(userImageInfo);
+        if (image.isEmpty()){
+            Map<String, String> res = storageService.uploadFile(image, "users");
+            ImageInfo userImageInfo = new ImageInfo(
+                    res.get("url"),
+                    res.get("key"),
+                    image.getOriginalFilename()
+            );
+            loggedUser.setUserImage(userImageInfo);
+        }
+        else {
+            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
+        }
 
         return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
     }

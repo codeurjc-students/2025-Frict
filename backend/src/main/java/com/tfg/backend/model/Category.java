@@ -40,7 +40,7 @@ public class Category {
     @JsonIgnore // Avoids recursive calls while building the DTO objects
     private Category parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Category> children = new ArrayList<>();
 
     @ManyToMany(mappedBy = "categories")
