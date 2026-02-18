@@ -1,21 +1,21 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {Component, effect, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 
-import { MessageService, TreeNode } from 'primeng/api';
-import { Tag } from 'primeng/tag';
-import { TreeTableModule } from 'primeng/treetable';
-import { UIChart } from 'primeng/chart';
-import { OrganizationChart } from 'primeng/organizationchart';
-import { Category } from '../../../models/category.model';
-import { CategoryService } from '../../../services/category.service';
-import { SelectButton } from 'primeng/selectbutton';
-import { Tooltip } from 'primeng/tooltip';
-import { Button } from 'primeng/button';
-import { RouterLink } from '@angular/router';
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { Paginator, PaginatorState } from 'primeng/paginator';
-import { PageResponse } from '../../../models/pageResponse.model';
+import {TreeNode} from 'primeng/api';
+import {Tag} from 'primeng/tag';
+import {TreeTableModule} from 'primeng/treetable';
+import {UIChart} from 'primeng/chart';
+import {OrganizationChart} from 'primeng/organizationchart';
+import {Category} from '../../../models/category.model';
+import {CategoryService} from '../../../services/category.service';
+import {SelectButton} from 'primeng/selectbutton';
+import {Tooltip} from 'primeng/tooltip';
+import {Button} from 'primeng/button';
+import {RouterLink} from '@angular/router';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {Paginator, PaginatorState} from 'primeng/paginator';
+import {PageResponse} from '../../../models/pageResponse.model';
 
 @Component({
   selector: 'app-categories-management',
@@ -41,7 +41,7 @@ export class CategoriesManagementComponent implements OnInit {
   totalCategories = signal<number>(0);
   maxDepth = signal<number>(0);
   usagePercentage = signal<number>(0);
-  totalVolume = signal<number>(0); // Opcional: Para mostrar el total de usos globalmente si quisieras
+  totalVolume = signal<number>(0);
 
   loading: boolean = true;
   error: boolean = false;
@@ -55,8 +55,7 @@ export class CategoriesManagementComponent implements OnInit {
   first = 0;
   rows = 5;
 
-  constructor(private messageService: MessageService,
-              private categoryService: CategoryService) {
+  constructor(private categoryService: CategoryService) {
 
     // Update charts when treeTableNodes changes
     effect(() => {
@@ -94,7 +93,7 @@ export class CategoriesManagementComponent implements OnInit {
           id: -1,
           name: isFullList ? 'Catálogo Completo' : 'Vista Paginada',
           icon: 'pi pi-server',
-          timesUsed: totalUsages // <--- AQUÍ ESTÁ LA CORRECCIÓN (Antes era items.length)
+          timesUsed: totalUsages
         },
         children: mappedChildren
       };
@@ -143,8 +142,7 @@ export class CategoriesManagementComponent implements OnInit {
     for (const node of nodes) {
       // Ignore virtual root node and descend to its children
       if (node.data?.id === -1) {
-        const childStats = this.calculateMetrics(node.children || [], 0);
-        return childStats;
+        return this.calculateMetrics(node.children || [], 0);
       }
 
       stats.totalNodes++;
@@ -207,14 +205,6 @@ export class CategoriesManagementComponent implements OnInit {
     };
   }
 
-  addCategory(parentId?: number) {
-    console.log("Crear categoría bajo ID:", parentId || 'Raíz');
-  }
-
-  deleteCategory(id: number) {
-    this.messageService.add({ severity: 'warn', summary: 'Eliminar', detail: `Categoría ${id} eliminada` });
-  }
-
 
   private initCharts() {
     this.chartOptions = {
@@ -241,6 +231,14 @@ export class CategoriesManagementComponent implements OnInit {
         x: { grid: { display: false } }
       }
     };
+  }
+
+  deleteCategory(id: string){
+    this.categoryService.deleteCategory(id).subscribe({
+      next: () => {
+        this.loadCategories();
+      }
+    })
   }
 
   private updateChartsData(nodes: TreeNode[]) {

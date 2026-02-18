@@ -221,6 +221,7 @@ public class DatabaseInitializer {
         roots.add(new Category("Recomendado", "", "Nuestra selección", "Calidad precio", "Elegidos por expertos."));
         roots.add(new Category("Destacado", "", "Tendencias", "Lo más nuevo", "Lo que está de moda."));
         roots.add(new Category("Top Ventas", "", "Los más vendidos", "Favoritos de la comunidad", "Éxito garantizado."));
+        roots.add(new Category("Otros", "", "No clasificados o pendientes", "", ""));
 
         for (Category root : roots) {
             assignCategoryImage(root);

@@ -4,27 +4,21 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-// RxJS
 import { forkJoin, of } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
-
-// PrimeNG
 import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 import { FileUpload } from 'primeng/fileupload';
 import {MessageService, PrimeTemplate, TreeNode} from 'primeng/api';
 import { OrganizationChart } from 'primeng/organizationchart';
-import { Select } from 'primeng/select'; // Para p-select nuevo
+import { Select } from 'primeng/select';
 import { Editor } from 'primeng/editor';
 import { Textarea } from 'primeng/textarea';
-
-// Custom
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import { LocalImage } from '../../../models/localImage.model';
 import { CategoryService } from '../../../services/category.service';
 import { Category } from '../../../models/category.model';
-import {UiService} from '../../../utils/ui.service';
+import { UiService } from '../../../utils/ui.service';
 
 @Component({
   selector: 'app-create-edit-category',
@@ -53,10 +47,10 @@ export class CreateEditCategoryComponent implements OnInit {
   orgChartNodes = signal<TreeNode[]>([]);
   categoryId = signal<string | null>(null);
 
-  // Lista plana para el dropdown (con indentación visual)
+  // Dropdown category list
   flatCategoriesList = signal<Category[]>([]);
 
-  // Imágenes
+  // Images
   oldImage = signal<string | null>(null);
   existingImage = signal<string | null>(null);
   newImage = signal<LocalImage | null>(null);
@@ -66,21 +60,20 @@ export class CreateEditCategoryComponent implements OnInit {
   error: boolean = false;
   protected readonly MAX_SIZE = 5000000;
 
-  // Iconos estáticos
-  availableIconsList= this.uiService.AVAILABLE_ICONS;
+  // Static icons list
+  availableIconsList = this.uiService.AVAILABLE_ICONS;
 
   constructor() {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       icon: ['pi pi-folder', []],
-      parentId: [null, []], // null para raíz
+      parentId: [null, []],
       bannerText: ['', []],
       shortDescription: ['', []],
       longDescription: ['', []]
     });
 
-    // --- ESCUCHA AUTOMÁTICA DEL CAMBIO DE PADRE ---
-    // Se dispara al seleccionar en el HTML o al hacer patchValue en el TS
+    // Detect parent selection changes
     this.categoryForm.get('parentId')?.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((selectedParentId) => {
@@ -90,7 +83,7 @@ export class CreateEditCategoryComponent implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
-    const parentIdParam = this.route.snapshot.paramMap.get('parentId');
+    const parentIdParam = this.route.snapshot.queryParamMap.get('parentId');
     this.categoryId.set(id);
     this.loadData(id, parentIdParam);
   }
@@ -110,20 +103,16 @@ export class CreateEditCategoryComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const { allCategoriesTree, currentCategory } = response;
-          // 1. Aplanamos la lista completa para el dropdown
           let flattened = this.flattenCategories(allCategoriesTree);
 
-          // 2. FILTRADO INTELIGENTE (Excluir rama completa)
+          // Exclude itself and children from being the parent
           if (currentId && currentCategory) {
-            // Obtenemos el ID de la categoría actual y todos sus hijos/nietos
             const forbiddenIds = this.getForbiddenIds(currentCategory);
-
-            // Filtramos la lista plana: eliminamos cualquier categoría que esté en la "lista negra"
             flattened = flattened.filter(c => !forbiddenIds.includes(String(c.id)));
           }
           this.flatCategoriesList.set(flattened);
 
-          // 3. MODO EDICIÓN
+          // Edit mode
           if (currentCategory) {
             this.oldImage.set(currentCategory.imageInfo?.imageUrl || null);
             this.existingImage.set(currentCategory.imageInfo?.imageUrl || null);
@@ -136,11 +125,11 @@ export class CreateEditCategoryComponent implements OnInit {
               longDescription: currentCategory.longDescription
             });
           }
-          // 4. MODO CREACIÓN (con parámetro en URL)
+          // Create mode
           else if (urlParentId) {
             const parentExists = this.flatCategoriesList().some(c => c.id == urlParentId);
             if (parentExists) {
-              this.categoryForm.patchValue({ parentId: urlParentId });
+              this.categoryForm.patchValue({ parentId: Number(urlParentId) });
             }
           }
         },
@@ -178,17 +167,15 @@ export class CreateEditCategoryComponent implements OnInit {
   }
 
   updateOrgChart(parentId: number | string | null) {
-    // Si no hay lista o no hay ID, limpiar gráfico
+    // If no ID or not list, clean the chart
     if (!parentId || this.flatCategoriesList().length === 0) {
       this.orgChartNodes.set([]);
       return;
     }
 
-    // Usamos '==' para comparar loose (string "1" vs number 1)
     const parentCategory = this.flatCategoriesList().find(c => c.id == parentId);
 
     if (parentCategory) {
-      // Limpiamos el nombre de los guiones para que se vea bonito en el Gráfico
       const cleanCategory = {
         ...parentCategory,
         name: parentCategory.name
@@ -203,7 +190,7 @@ export class CreateEditCategoryComponent implements OnInit {
   mapToOrgChart(cat: Category): TreeNode {
     return {
       expanded: true,
-      type: 'category', // Coincide con el HTML pTemplate="category"
+      type: 'category',
       styleClass: 'bg-transparent',
       data: {
         id: cat.id,
@@ -215,10 +202,8 @@ export class CreateEditCategoryComponent implements OnInit {
     };
   }
 
-  // --- GETTERS UI ---
   protected availableIcons() { return this.availableIconsList; }
 
-  // --- LÓGICA DE IMAGEN Y SUBMIT (Sin cambios funcionales mayores) ---
   onFileSelect(event: any) {
     const file = event.files[0];
     if (file && file.size <= this.MAX_SIZE) {

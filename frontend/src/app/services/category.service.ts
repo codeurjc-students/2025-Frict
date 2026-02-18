@@ -60,6 +60,6 @@ export class CategoryService {
   public updateCategoryImage(categoryId: string, selectedImage: File): Observable<Category> {
     const formData = new FormData();
     formData.append('image', selectedImage);
-    return this.http.post<Category>(this.apiUrl + `/image/${categoryId}`, formData);
+    return this.http.post<Category>(this.apiUrl + `/${categoryId}/image`, formData);
   }
 }

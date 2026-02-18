@@ -158,15 +158,24 @@ public class ProductRestController {
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
 
-        List<Category> categories = new ArrayList<>();
-        for (CategoryDTO c : productDTO.getCategories()) {
-            Optional<Category> categoryOptional = categoryService.findById(c.getId());
+        if (productDTO.getCategories().isEmpty()){
+            Optional<Category> categoryOptional = categoryService.findByName("Otros");
             if(categoryOptional.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
             }
-            categories.add(categoryOptional.get());
+            product.setCategories(List.of(categoryOptional.get()));
         }
-        product.setCategories(categories);
+        else {
+            List<Category> categories = new ArrayList<>();
+            for (CategoryDTO c : productDTO.getCategories()) {
+                Optional<Category> categoryOptional = categoryService.findById(c.getId());
+                if(categoryOptional.isEmpty()){
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
+                }
+                categories.add(categoryOptional.get());
+            }
+            product.setCategories(categories);
+        }
 
         Product savedProduct = productService.save(product);
 
@@ -189,15 +198,24 @@ public class ProductRestController {
         product.setCurrentPrice(productDTO.getCurrentPrice());
         product.setActive(productDTO.isActive());
 
-        List<Category> categories = new ArrayList<>();
-        for (CategoryDTO c : productDTO.getCategories()) {
-            Optional<Category> categoryOptional = categoryService.findById(c.getId());
+        if (productDTO.getCategories().isEmpty()){
+            Optional<Category> categoryOptional = categoryService.findByName("Otros");
             if(categoryOptional.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
             }
-            categories.add(categoryOptional.get());
+            product.setCategories(List.of(categoryOptional.get()));
         }
-        product.setCategories(categories);
+        else{
+            List<Category> categories = new ArrayList<>();
+            for (CategoryDTO c : productDTO.getCategories()) {
+                Optional<Category> categoryOptional = categoryService.findById(c.getId());
+                if(categoryOptional.isEmpty()){
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
+                }
+                categories.add(categoryOptional.get());
+            }
+            product.setCategories(categories);
+        }
 
         Product updatedProduct = productService.update(product);
         return ResponseEntity.accepted().body(new ProductDTO(updatedProduct));

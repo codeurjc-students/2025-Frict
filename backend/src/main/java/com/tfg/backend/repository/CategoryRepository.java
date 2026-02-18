@@ -12,6 +12,9 @@ import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
+    @Query("SELECT c FROM Category c LEFT JOIN FETCH c.children WHERE c.name = :name")
+    Optional<Category> findByNameWithChildren(@Param("name") String name);
+
     @Query("SELECT c FROM Category c LEFT JOIN FETCH c.children WHERE c.id = :id")
     Optional<Category> findByIdWithChildren(@Param("id") Long id);
 

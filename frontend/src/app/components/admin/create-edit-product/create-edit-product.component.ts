@@ -14,7 +14,7 @@ import {ProductService} from '../../../services/product.service';
 import {CategoryService} from '../../../services/category.service';
 import {fixKeys, mapToCategories, mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {TreeSelect} from 'primeng/treeselect';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {DomSanitizer} from '@angular/platform-browser';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {Product} from '../../../models/product.model';
 import {ImageInfo} from '../../../models/imageInfo.model';
@@ -56,7 +56,7 @@ export class CreateEditProductComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       currentPrice: [0, [Validators.required, Validators.min(0.01)]],
       description: ['', [Validators.required]],
-      selectedCategories: ['', [Validators.required]],
+      selectedCategories: ['', []],
       active: [true],
       referenceCode: [{ value: '', disabled: true }]
     });

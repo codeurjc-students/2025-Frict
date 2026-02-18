@@ -9,6 +9,7 @@ import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,6 +58,13 @@ public class CategoryRestController {
     @Operation(summary = "(Admin) Create category")
     @PostMapping
     public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
+        Category othersCategory = categoryService.findByName("Otros")
+                .orElseThrow(() -> new EntityNotFoundException("Category with name \"Otros\" does not exist."));
+
+        if (othersCategory.getId().equals(categoryDTO.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot create a subcategory for \"Otros\" category");
+        }
+
         Category newCategory = new Category(categoryDTO.getName(), categoryDTO.getIcon(), categoryDTO.getBannerText(), categoryDTO.getShortDescription(), categoryDTO.getLongDescription());
 
         Long parentId = categoryDTO.getParentId();
@@ -76,6 +84,13 @@ public class CategoryRestController {
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
         Category category = findCategoryHelper(id);
 
+        Category othersCategory = categoryService.findByName("Otros")
+                .orElseThrow(() -> new EntityNotFoundException("Category with name \"Otros\" does not exist."));
+
+        if (othersCategory.getId().equals(categoryDTO.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot update \"Otros\" category");
+        }
+
         category.setName(categoryDTO.getName());
         category.setIcon(categoryDTO.getIcon());
         category.setBannerText(categoryDTO.getBannerText());
@@ -86,25 +101,39 @@ public class CategoryRestController {
         Category currentParent = category.getParent();
 
         if (newParentId == null) {
-            // Case: Move to root
+            // Move to root
             if (currentParent != null) {
                 currentParent.removeChild(category);
             }
         } else {
-            // Case: Assign new parent
+            // Assign new parent
             boolean isSameParent = currentParent != null && currentParent.getId().equals(newParentId);
 
             if (!isSameParent) {
+                // Retrieve the new parent
                 Category newParent = findCategoryHelper(newParentId);
                 validateCircularReference(category, newParent);
 
-                // If newParent has products, remove them (as no-root categories must not have any products)
                 if (newParent.getProducts() != null && !newParent.getProducts().isEmpty()) {
+
+                    // Search for "Others" category
+                    Category otrosCategory = categoryService.findByName("Otros")
+                            .orElseThrow(() -> new EntityNotFoundException("Category with name \"Otros\" does not exist."));
+
                     List<Product> productsToClean = new ArrayList<>(newParent.getProducts());
+
                     for (Product product : productsToClean) {
+                        // Remove parent
                         product.getCategories().remove(newParent);
+
+                        // And if after removing the parent the product is unclassified (no categories), then assign "Others" category
+                        if (product.getCategories().isEmpty()) {
+                            product.getCategories().add(otrosCategory);
+                        }
                         productService.update(product);
                     }
+
+                    // Clean the list from memory
                     newParent.getProducts().clear();
                 }
 
@@ -120,29 +149,29 @@ public class CategoryRestController {
     }
 
 
-    @Operation(summary = "(Admin) Delete category by ID")
+    @Operation(summary = "(Admin) Delete category by ID (Recursive)")
     @DeleteMapping("/{id}")
     public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long id) {
-        Category category = findCategoryHelper(id);
+        Category categoryToDelete = findCategoryHelper(id);
 
-        // Unlink products
-        if (category.getProducts() != null && !category.getProducts().isEmpty()) {
-            List<Product> productsToUpdate = new ArrayList<>(category.getProducts());
+        Category othersCategory = categoryService.findByName("Otros")
+                .orElseThrow(() -> new EntityNotFoundException("Category 'Otros' not found"));
 
-            for (Product product : productsToUpdate) {
-                product.getCategories().remove(category);
-                productService.update(product);
-            }
+        if (othersCategory.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete 'Otros' category");
         }
 
-        // Unlink from parent
-        if (category.getParent() != null) {
-            category.getParent().removeChild(category);
+        // Delete its children first
+        categoryService.processCategoryForDeletion(categoryToDelete, othersCategory);
+
+        // Unlink from parent (if any)
+        if (categoryToDelete.getParent() != null) {
+            categoryToDelete.getParent().removeChild(categoryToDelete);
         }
 
         // Final deletion
-        categoryService.delete(category);
-        return ResponseEntity.ok(new CategoryDTO(category));
+        categoryService.delete(categoryToDelete);
+        return ResponseEntity.ok(new CategoryDTO(categoryToDelete));
     }
 
 
@@ -158,7 +187,7 @@ public class CategoryRestController {
     @PostMapping(value = "/{id}/image")
     public ResponseEntity<Category> uploadCategoryImage(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("image") MultipartFile file) throws IOException {
 
         Category category = findCategoryHelper(id);
 
@@ -167,7 +196,7 @@ public class CategoryRestController {
             storageService.deleteFile(category.getCategoryImage().getS3Key());
         }
 
-        if (file.isEmpty()){
+        if (!file.isEmpty()){
             Map<String, String> res = storageService.uploadFile(file, "categories");
             ImageInfo imageInfo = new ImageInfo(
                     res.get("url"),

@@ -230,7 +230,7 @@ public class ShopRestController {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
 
-        if (image.isEmpty()){
+        if (!image.isEmpty()){
             Map<String, String> res = storageService.uploadFile(image, "shops");
             ImageInfo shopImageInfo = new ImageInfo(
                     res.get("url"),
