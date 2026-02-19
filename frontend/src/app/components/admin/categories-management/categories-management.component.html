@@ -36,7 +36,7 @@
                      [ngClass]="node.data.timesUsed > 0 ? 'bg-green-300' : 'bg-red-300'">
                 </div>
 
-                <div *ngIf="node.data.name !== 'Otros'" class="absolute -top-4 left-1/2 -translate-x-1/2
+                <div *ngIf="node.data.name !== 'Otros' && node.data.name !== 'Vista Paginada' && node.data.name !== 'Catálogo Completo'" class="absolute -top-4 left-1/2 -translate-x-1/2
                                         hidden group-hover:flex gap-1
                                         bg-slate-800 text-white rounded-full px-2 py-1 z-20 shadow-xl">
                   <button [routerLink]="['/admin/categories/new']" [queryParams]="{ parentId: node.data.id }" class="hover:text-green-300 px-1" pTooltip="Añadir subcategoría" tooltipPosition="top"><i class="pi pi-plus"></i></button>

@@ -157,14 +157,18 @@ public class ProductRestController {
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
-
-        if (productDTO.getCategories().isEmpty()){
-            Optional<Category> categoryOptional = categoryService.findByName("Otros");
-            if(categoryOptional.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
-            }
-            product.setCategories(List.of(categoryOptional.get()));
+        Optional<Category> othersCategoryOptional = categoryService.findByName("Otros");
+        if(othersCategoryOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
         }
+        Category othersCategory = othersCategoryOptional.get();
+
+        //If there are no categories selected, then add "Others" category
+        if (productDTO.getCategories().isEmpty()){
+            product.getCategories().clear();
+            product.getCategories().add(othersCategory);
+        }
+        //And if "Others" category is in a list with another categories, do not include it
         else {
             List<Category> categories = new ArrayList<>();
             for (CategoryDTO c : productDTO.getCategories()) {
@@ -172,7 +176,11 @@ public class ProductRestController {
                 if(categoryOptional.isEmpty()){
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
                 }
-                categories.add(categoryOptional.get());
+                //If category is a leaf node and it is not "Others" category, then add to the product
+                Category category = categoryOptional.get();
+                if (category.getChildren().isEmpty() && !Objects.equals(category.getId(), othersCategory.getId())){
+                    categories.add(category);
+                }
             }
             product.setCategories(categories);
         }
@@ -192,6 +200,11 @@ public class ProductRestController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
         Product product = findProductHelper(id);
+        Optional<Category> othersCategoryOptional = categoryService.findByName("Otros");
+        if(othersCategoryOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
+        }
+        Category othersCategory = othersCategoryOptional.get();
         
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
@@ -199,11 +212,8 @@ public class ProductRestController {
         product.setActive(productDTO.isActive());
 
         if (productDTO.getCategories().isEmpty()){
-            Optional<Category> categoryOptional = categoryService.findByName("Otros");
-            if(categoryOptional.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
-            }
-            product.setCategories(List.of(categoryOptional.get()));
+            product.getCategories().clear();
+            product.getCategories().add(othersCategory);
         }
         else{
             List<Category> categories = new ArrayList<>();
@@ -212,7 +222,11 @@ public class ProductRestController {
                 if(categoryOptional.isEmpty()){
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
                 }
-                categories.add(categoryOptional.get());
+                //If category is a leaf node and it is not "Others" category, then add to the product
+                Category category = categoryOptional.get();
+                if (category.getChildren().isEmpty() && !Objects.equals(category.getId(), othersCategory.getId())){
+                    categories.add(category);
+                }
             }
             product.setCategories(categories);
         }
