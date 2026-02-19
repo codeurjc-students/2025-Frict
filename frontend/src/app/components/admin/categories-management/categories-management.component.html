@@ -1,0 +1,217 @@
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8 flex flex-col gap-8">
+
+    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-yellow-600">Gestor de Categorías</h1>
+        <p class="text-slate-500">Gestiona las categorías asociadas a los productos a la venta.</p>
+      </div>
+
+      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" (onChange)="loadCategories()" optionLabel="label" optionValue="value" aria-labelledby="basic" />
+    </div>
+
+    <div class="category-chart-wrapper bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[600px]">
+      <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
+        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <i class="pi pi-sitemap text-slate-500"></i> Jerarquía de categorías
+        </h3>
+        <p-tag icon="pi pi-arrows-h" severity="secondary" value="Scroll horizontal disponible" />
+      </div>
+
+      <div class="flex-grow overflow-auto bg-slate-50/30 p-8 custom-scrollbar relative">
+
+        <div class="min-w-max mx-auto">
+          <p-organization-chart
+            [value]="orgChartNodes()"
+            [collapsible]="true"
+            styleClass="w-full">
+
+            <ng-template let-node pTemplate="category">
+              <div class="group">
+                <div class="absolute top-0 left-0 w-full h-1 rounded-t-xl"
+                     [ngClass]="node.data.timesUsed > 0 ? 'bg-green-300' : 'bg-red-300'">
+                </div>
+
+                <div *ngIf="node.data.name !== 'Otros' && node.data.name !== 'Vista Paginada' && node.data.name !== 'Catálogo Completo'" class="absolute -top-4 left-1/2 -translate-x-1/2
+                                        hidden group-hover:flex gap-1
+                                        bg-slate-800 text-white rounded-full px-2 py-1 z-20 shadow-xl">
+                  <button [routerLink]="['/admin/categories/new']" [queryParams]="{ parentId: node.data.id }" class="hover:text-green-300 px-1" pTooltip="Añadir subcategoría" tooltipPosition="top"><i class="pi pi-plus"></i></button>
+                  <button [routerLink]="['/admin/categories/edit', node.data.id]" class="hover:text-blue-300 px-1" pTooltip="Editar categoría" tooltipPosition="top"><i class="pi pi-pencil"></i></button>
+                  <button (click)="deleteCategory(node.data.id)" class="hover:text-red-300 px-1" pTooltip="Borrar categoría" tooltipPosition="top"><i class="pi pi-trash"></i></button>
+                </div>
+
+                <div class="flex flex-col items-center gap-2">
+                  <div class="text-slate-500 text-2xl">
+                    <i [class]="node.data.icon"></i>
+                  </div>
+
+                  <div class="text-center">
+                    <span class="font-bold text-slate-700 block text-sm">{{ node.data.name }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 inline-block">
+                            {{ node.data.timesUsed }} {{ node.data.timesUsed == 1 ? 'uso' : 'usos' }}
+                        </span>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </p-organization-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <div class="flex flex-col gap-6">
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Categorías Totales {{ listModeSelected ? '' : ' (página actual)'}}</p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ totalCategories() }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+            <i class="pi pi-tags text-xl"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Profundidad Máxima {{ listModeSelected ? '' : ' (página actual)'}}</p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ maxDepth() }} <span class="text-sm font-normal text-slate-400">niveles</span></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+            <i class="pi pi-align-left text-xl"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Porcentaje de uso {{ listModeSelected ? '' : ' (página actual)'}}</p>
+            <p class="text-3xl font-extrabold text-slate-800">{{ usagePercentage() }} <span class="text-sm font-normal text-slate-400">% ({{ totalVolume() }} usos)</span></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
+            <i class="pi pi-chart-line text-xl"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col">
+
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800">Análisis de Catálogo</h3>
+            <p class="text-xs text-slate-400">
+              @if(productsViewSelected) { Número de usos por categoría raíz }
+              @else { Categorías con mayor inventario }
+            </p>
+          </div>
+
+          <div class="bg-slate-100 p-1 rounded-lg flex text-xs font-bold">
+            <p-selectButton [options]="chartMode" [(ngModel)]="productsViewSelected" optionLabel="label" optionValue="value" aria-labelledby="basic" />
+          </div>
+        </div>
+
+        <div class="flex-grow flex items-center justify-center relative">
+
+          <div [hidden]="!productsViewSelected" class="flex items-center gap-6 w-full justify-center animate-fade-in">
+            <div class="w-full relative shrink-0">
+              <p-chart type="doughnut" [data]="chartData" [options]="chartOptions"></p-chart>
+            </div>
+          </div>
+
+          <div [hidden]="productsViewSelected"  class="w-full h-[280px]">
+            <p-chart type="bar" [data]="barData" [options]="barOptions" height="100%" width="100%"></p-chart>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+
+      <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h3 class="text-xl font-bold text-slate-800">{{ listModeSelected ? 'Todas las categorías' : 'Página actual' }}</h3>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <p-button [routerLink]="['/admin/categories/new']" label="Añadir" icon="pi pi-plus" size="small" class="w-full sm:w-auto"></p-button>
+        </div>
+      </div>
+
+      <p-treeTable
+        [value]="treeTableNodes()"
+        [scrollable]="true"
+        [tableStyle]="{'min-width': '60rem'}"
+        styleClass="p-treetable-sm">
+        <ng-template pTemplate="header">
+          <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
+            <th style="width: 25%" class="pl-6 font-semibold">Categoría</th>
+            <th style="width: 25%" class="font-semibold">Banner</th>
+            <th style="width: 15%" class="text-center font-semibold">Usos</th>
+            <th style="width: 15%" class="text-center font-semibold">Estado</th>
+            <th style="width: 20%" class="text-center font-semibold">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 group">
+
+            <td style="width: 25%" class="pl-6">
+              <div class="flex items-center">
+                <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                <div class="flex items-center gap-2 ml-1">
+                  <i [class]="rowData.icon + ' text-slate-400'"></i>
+                  <span class="font-bold text-slate-700">{{ rowData.name }}</span>
+                </div>
+              </div>
+            </td>
+
+            <td style="width: 25%" class="text-slate-500">
+              <div class="truncate max-w-[150px] md:max-w-[250px]" [title]="rowData.description">
+                {{ rowData.description }}
+              </div>
+            </td>
+
+            <td style="width: 15%" class="text-center">
+              <p-tag [value]="rowData.timesUsed" severity="secondary" [rounded]="true"></p-tag>
+            </td>
+
+            <td style="width: 15%" class="text-center">
+              @if(rowData.timesUsed > 0) {
+                <p-tag icon="pi pi-check-circle" severity="success" value="En uso" />
+              } @else {
+                <p-tag icon="pi pi-times-circle" severity="danger" value="Sin usar" />
+              }
+            </td>
+
+            <td>
+              <div class="flex gap-1 justify-start h-10">
+                @if(rowData.name !== 'Otros') {
+                  <p-button [routerLink]="['/admin/categories/new']" [queryParams]="{ parentId: rowData.id }" icon="pi pi-plus" [text]="true" [rounded]="true" severity="info" pTooltip="Añadir subcategoría" tooltipPosition="top"></p-button>
+                  <p-button [routerLink]="['/admin/categories/edit', rowData.id]" icon="pi pi-pencil" [text]="true" [rounded]="true" severity="warn" pTooltip="Editar categoría" tooltipPosition="top"></p-button>
+                  <p-button (click)="deleteCategory(rowData.id)" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" pTooltip="Borrar categoría" tooltipPosition="top"></p-button>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-treeTable>
+
+      <p-paginator *ngIf="!listModeSelected"
+                   (onPageChange)="onCategoryPageChange($event)"
+                   [first]="first"
+                   [rows]="rows"
+                   [totalRecords]="categoriesPage.totalItems"
+                   [rowsPerPageOptions]="[5, 10, 15]"
+                   [showCurrentPageReport]="true"
+                   [dropdownAppendTo]="'body'"
+                   currentPageReportTemplate="{first}-{last} de {totalRecords}"
+                   styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl">
+      </p-paginator>
+    </div>
+
+  </div>
+</div>

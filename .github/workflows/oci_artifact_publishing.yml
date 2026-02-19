@@ -35,7 +35,7 @@ jobs:
           elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-')
             # Ajuste: Hora de España y formato sin guion intermedio
-            TIME=$(TZ='Europe/Madrid' date +'%Y%m%d%H%M')
+            TIME=$(date +'%Y%m%d%H%M')
             SHA=$(echo "${{ github.sha }}" | cut -c1-7)
             TAG="${BRANCH}-${TIME}-${SHA}"
             echo "is_release=false" >> $GITHUB_OUTPUT

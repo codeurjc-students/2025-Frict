@@ -114,10 +114,10 @@ export class ProductsManagementComponent implements OnInit {
 
     this.productService.toggleGlobalActivation(product.id, newValue).subscribe({
       next: () => {
-        console.log('Estado actualizado correctamente');
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Estado actualizado correctamente.' });
       },
       error: () => {
-        console.error('Error al actualizar, revirtiendo cambios...');
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar, revirtiendo cambios...' });
         product.active = originalValue;
       }
     });

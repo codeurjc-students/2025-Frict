@@ -220,7 +220,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     this.productService.getEligibleProducts(this.shop.id).subscribe({
       next: (list) => {
         this.eligibleProducts = list;
-        console.log(this.eligibleProducts);
         this.visibleAddProductStockDialog = true;
       },
       error: () => {
@@ -384,10 +383,10 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
     this.shopService.toggleLocalActivation(stock.id, newValue).subscribe({
       next: () => {
-        console.log('Estado actualizado correctamente');
+        this.messageService.add({severity: 'success', summary: 'Éxito', detail: 'Estado actualizado correctamente.'});
       },
       error: () => {
-        console.error('Error al actualizar, revirtiendo cambios...');
+        this.messageService.add({severity: 'error', summary: 'Error', detail: 'Error al actualizar, revirtiendo cambios...'});
         stock.active = originalValue;
       }
     });

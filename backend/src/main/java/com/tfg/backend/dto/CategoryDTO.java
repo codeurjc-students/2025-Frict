@@ -18,6 +18,7 @@ public class CategoryDTO {
     private String shortDescription;
     private String longDescription;
     private ImageInfo imageInfo;
+    private int timesUsed;
     private Long parentId;
     private List<CategoryDTO> children = new ArrayList<>();
 
@@ -35,6 +36,8 @@ public class CategoryDTO {
         if (c.getCategoryImage() != null) {
             this.imageInfo = c.getCategoryImage();
         }
+
+        this.timesUsed = c.getTimesUsed();
 
         if(c.getParent() != null){
             this.parentId = c.getParent().getId();

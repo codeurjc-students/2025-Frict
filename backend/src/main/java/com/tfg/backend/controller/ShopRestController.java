@@ -230,18 +230,18 @@ public class ShopRestController {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
 
-        // Upload
-        Map<String, String> res = storageService.uploadFile(image, "shops");
-
-        // Create ImageInfo object (not an entity)
-        ImageInfo userImageInfo = new ImageInfo(
-                res.get("url"),
-                res.get("key"),
-                image.getOriginalFilename()
-        );
-
-        // Add to user
-        shop.setImage(userImageInfo);
+        if (!image.isEmpty()){
+            Map<String, String> res = storageService.uploadFile(image, "shops");
+            ImageInfo shopImageInfo = new ImageInfo(
+                    res.get("url"),
+                    res.get("key"),
+                    image.getOriginalFilename()
+            );
+            shop.setImage(shopImageInfo);
+        }
+        else {
+            shop.setImage(GlobalDefaults.SHOP_IMAGE);
+        }
 
         return ResponseEntity.ok(new ShopDTO(shopService.save(shop)));
     }

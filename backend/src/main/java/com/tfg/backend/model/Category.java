@@ -40,7 +40,7 @@ public class Category {
     @JsonIgnore // Avoids recursive calls while building the DTO objects
     private Category parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Category> children = new ArrayList<>();
 
     @ManyToMany(mappedBy = "categories")
@@ -65,5 +65,21 @@ public class Category {
     public void removeChild(Category child) {
         children.remove(child);
         child.setParent(null);
+    }
+
+    //Count usage (times this category is present in a product or its children)
+    public int getTimesUsed() {
+        // Leaf node? Then return the sum of the children usages
+        if (this.children == null || this.children.isEmpty()) {
+            return (this.products != null) ? this.products.size() : 0;
+        }
+
+        // Not a leaf node? Sum the usages of all its children
+        int totalUsage = 0;
+        for (Category child : this.children) {
+            totalUsage += child.getTimesUsed();
+        }
+
+        return totalUsage;
     }
 }
