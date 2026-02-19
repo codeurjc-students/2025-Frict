@@ -7,35 +7,35 @@ import { ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {Category} from '../../../models/category.model';
-import {ImageInfo} from '../../../models/imageInfo.model';
-import {PageResponse} from '../../../models/pageResponse.model';
-import {Product} from '../../../models/product.model';
+import { Category } from '../../../models/category.model';
+import { ImageInfo } from '../../../models/imageInfo.model';
+import { PageResponse } from '../../../models/pageResponse.model';
+import { Product } from '../../../models/product.model';
 
 describe('ClientHomeComponent', () => {
   let component: ClientHomeComponent;
   let fixture: ComponentFixture<ClientHomeComponent>;
 
-  // Spies para los servicios
+  // Spies for services
   let productServiceSpy: jasmine.SpyObj<ProductService>;
   let categoryServiceSpy: jasmine.SpyObj<CategoryService>;
 
   beforeEach(async () => {
-    // 1. Crear los Mocks
+    // 1. Create Mocks
     productServiceSpy = jasmine.createSpyObj('ProductService', ['getProductsByCategoryName']);
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getAllCategories']);
 
     await TestBed.configureTestingModule({
       imports: [
         ClientHomeComponent,
-        BrowserAnimationsModule // Necesario porque usas PrimeNG/Carousel
+        BrowserAnimationsModule // Required for PrimeNG/Carousel usage
       ],
       providers: [
         { provide: ProductService, useValue: productServiceSpy },
         { provide: CategoryService, useValue: categoryServiceSpy },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => null } } } // Mock básico de ruta
+          useValue: { snapshot: { paramMap: { get: () => null } } } // Basic route mock
         },
         provideHttpClient(),
         provideHttpClientTesting()
@@ -45,17 +45,17 @@ describe('ClientHomeComponent', () => {
     fixture = TestBed.createComponent(ClientHomeComponent);
     component = fixture.componentInstance;
 
-    // IMPORTANTE: Configuración base por defecto para que no se bloquee la cadena
+    // IMPORTANT: Base default configuration to prevent stream blocking
     const mockImageInfo: ImageInfo = { id: '1', imageUrl: '', s3Key: '', fileName: ''};
     categoryServiceSpy.getAllCategories.and.returnValue(of([
-      { id: '1', name: 'Ordenadores', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] },
-      { id: '2', name: 'Periféricos', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] }
+      { id: '1', name: 'Ordenadores', imageInfo: mockImageInfo, icon: '', timesUsed: 0, bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] },
+      { id: '2', name: 'Periféricos', imageInfo: mockImageInfo, icon: '', timesUsed: 0, bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] }
     ]));
   });
 
-  it('debe mostrar los productos cuando el servicio devuelve datos', () => {
+  it('should display products when service returns data', () => {
     const mockImageInfo: ImageInfo = { id: '1', imageUrl: '', s3Key: '', fileName: ''};
-    const mockCategory: Category = { id: '1', name: 'Cat1', imageInfo: mockImageInfo, icon: '', bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] };
+    const mockCategory: Category = { id: '1', name: 'Cat1', imageInfo: mockImageInfo, icon: '', timesUsed: 0, bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] };
     const mockProducts : PageResponse<Product> = {
       items: [
         { id: '1', referenceCode: 'A', name: 'Producto A', description: 'Desc', currentPrice: 100, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 5, totalReviews: 1},
@@ -78,7 +78,7 @@ describe('ClientHomeComponent', () => {
     expect(component.featuredLoading).toBeFalse();
   });
 
-  it('debe mostrar mensaje cuando no hay productos (array vacío)', () => {
+  it('should show message when there are no products (empty array)', () => {
     const emptyProducts = { items: [] };
     productServiceSpy.getProductsByCategoryName.and.returnValue(of(emptyProducts as any));
 
@@ -89,15 +89,15 @@ describe('ClientHomeComponent', () => {
     expect(compiled.textContent).toContain('No hay productos destacados disponibles');
   });
 
-  it('debe manejar error en el servicio', () => {
-    // Arrange: Simulamos error en el servicio de productos
-    productServiceSpy.getProductsByCategoryName.and.returnValue(throwError(() => new Error('Error de servidor')));
+  it('should handle service errors', () => {
+    // Arrange: Simulate error in product service
+    productServiceSpy.getProductsByCategoryName.and.returnValue(throwError(() => new Error('Server Error')));
 
     // Act
     fixture.detectChanges();
 
     // Assert
-    expect(component.featuredLoading).toBeFalse(); // El loading debe apagarse incluso en error
-    expect(component.featuredError).toBeTrue();    // El flag de error debe activarse
+    expect(component.featuredLoading).toBeFalse(); // Loading must be turned off even on error
+    expect(component.featuredError).toBeTrue();    // Error flag must be activated
   });
 });

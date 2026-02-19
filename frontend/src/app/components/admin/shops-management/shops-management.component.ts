@@ -161,7 +161,6 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     request$.subscribe({
       next: (shops) => {
         this.shopsPage = shops;
-        console.log(this.shopsPage);
         this.loading = false;
 
         // SOLUCIÓN: Usar setTimeout para esperar un ciclo de renderizado

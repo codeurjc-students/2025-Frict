@@ -32,7 +32,6 @@ export function mapToCategories(nodes: TreeNode[], parentId: string = ''): Categ
     imageInfo: { id: 0, imageUrl: '', s3Key: '', fileName: '' } as any,
     timesUsed: 0
   }));
-  console.log(result);
   return result;
 }
 

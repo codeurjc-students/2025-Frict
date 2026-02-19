@@ -99,7 +99,6 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     if (shopId) {
       this.shopService.getShopById(shopId).subscribe({
         next: (shop) => {
-          console.log(shop);
           this.shop.set(shop);
           this.existingImage.set(shop.imageInfo.imageUrl);
           this.shopForm.patchValue({

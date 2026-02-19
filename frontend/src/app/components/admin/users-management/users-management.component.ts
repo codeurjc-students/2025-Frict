@@ -123,7 +123,6 @@ export class UsersManagementComponent implements OnInit {
   }
 
   onChangePasswordSubmit(id: string){
-    console.log('Lo que voy a enviar al backend:', JSON.stringify(this.changePasswordForm.getRawValue(), null, 2));
     this.authService.changeInternalUserPassword(id, this.changePasswordForm.value).subscribe({
       next: () => {
         this.cancelChangePassword();
@@ -186,7 +185,6 @@ export class UsersManagementComponent implements OnInit {
     this.userService.getAllUsers(this.first/this.rows, this.rows).subscribe({
       next: (users) => {
         this.usersPage = users;
-        console.log(this.usersPage);
         this.loading = false;
       },
       error: () => {
@@ -200,7 +198,6 @@ export class UsersManagementComponent implements OnInit {
     this.userService.getUsersStats().subscribe({
       next: (stats: StatData[]) => {
         this.rawStats.set(stats);
-        console.log(this.rawStats());
       },
       error: (err) => console.error('Error loading stats: ', err)
     });
@@ -241,7 +238,6 @@ export class UsersManagementComponent implements OnInit {
   }
 
   handleGlobalAction(action: string) {
-    console.log("Ejecutando acción grobal: " + action);
     switch (action) {
       case 'Desbanear Todos':
       case 'Banear Todos': {

@@ -67,9 +67,6 @@ export class SearchComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
-  printCategories(){
-    console.log(this.categories);
-  }
 
   ngOnInit(): void {
     this.categoryService.getAllCategories().subscribe({

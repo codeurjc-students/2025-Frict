@@ -81,7 +81,6 @@ export class CategoryInfoComponent {
       this.categoryService.getCategoryById(this.mainCategory.parentId).subscribe({
         next: (category) => {
           this.similarCategories = category.children.filter(c => c.id !== this.mainCategory.id);
-          console.log(this.similarCategories);
         }
       })
     }
