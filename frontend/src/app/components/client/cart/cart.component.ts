@@ -13,11 +13,12 @@ import {Button} from 'primeng/button';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
+import {Tooltip} from 'primeng/tooltip';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })

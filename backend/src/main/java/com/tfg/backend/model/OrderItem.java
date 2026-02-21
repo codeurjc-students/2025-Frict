@@ -20,6 +20,7 @@ public class OrderItem {
     private Order order = null; //Initially, this orderItem will belong to a user's cart
 
     //Necessary, as it is required by Cart Component to show the current product information
+    //Always null when the item is part of an order
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;

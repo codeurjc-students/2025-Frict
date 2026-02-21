@@ -4,7 +4,7 @@ export interface OrderItem {
   id: string;
   orderId: string;
 
-  product: Product;
+  product: Product; //Always null when the item is part of an order
 
   productName: string;
   productImageUrl: string;

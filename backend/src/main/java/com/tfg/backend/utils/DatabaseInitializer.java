@@ -447,6 +447,10 @@ public class DatabaseInitializer {
             orderItems2.add(new OrderItem(products.get(3), user2, 2));
             orderItems2.add(new OrderItem(products.get(7), user2, 1));
 
+            //As all items are all placed orders items, their product reference will be always null
+            for (OrderItem i : orderItems1) { i.setProduct(null); }
+            for (OrderItem i : orderItems2) { i.setProduct(null); }
+
             Order order1 = new Order(user1, orderItems1, user1.getAddresses().getFirst(), user1.getCards().getFirst());
             Order order2 = new Order(user2, orderItems2, user2.getAddresses().getFirst(), user2.getCards().getFirst());
             order1.addStatusUpdate("El pedido ha quedado registrado correctamente en la tienda asignada");

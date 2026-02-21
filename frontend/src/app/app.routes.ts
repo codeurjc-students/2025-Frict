@@ -89,9 +89,14 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'], title: 'Gestor de Usuarios', icon: 'admin', breadcrumb: 'Gestor de Usuarios' }
       },
       {
+        path: 'orders',
+        loadComponent: () => import('./components/admin/orders-management/orders-management.component').then(m => m.OrdersManagementComponent),
+        data: { roles: ['ADMIN', 'MANAGER'], title: 'Gestor de Pedidos', icon: 'admin', breadcrumb: 'Gestor de Pedidos' }
+      },
+      {
         path: 'categories',
         loadComponent: () => import('./components/admin/categories-management/categories-management.component').then(m => m.CategoriesManagementComponent),
-        data: { roles: ['ADMIN', 'MANAGER'], title: 'Gestor de Categorías', icon: 'admin', breadcrumb: 'Gestor de Categorías' }
+        data: { roles: ['ADMIN'], title: 'Gestor de Categorías', icon: 'admin', breadcrumb: 'Gestor de Categorías' }
       },
       {
         path: 'categories/new',
