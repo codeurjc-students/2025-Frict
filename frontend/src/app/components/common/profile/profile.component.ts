@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 
@@ -17,7 +17,7 @@ import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
 import {Address} from '../../../models/address.model';
 import {PaymentCard} from '../../../models/paymentCard.model';
-import {ConfirmationService, MessageService} from 'primeng/api';
+import {ConfirmationService, MessageService, SharedModule} from 'primeng/api';
 import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
 import {AuthService} from '../../../services/auth.service';
@@ -25,6 +25,8 @@ import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Review} from '../../../models/review.model';
 import {formatPrice} from '../../../utils/textFormat.util';
+import {Select} from 'primeng/select';
+import {ThemeColor, UiService} from '../../../utils/ui.service';
 
 @Component({
   selector: 'app-profile',
@@ -41,12 +43,24 @@ import {formatPrice} from '../../../utils/textFormat.util';
     Paginator,
     Dialog,
     InputText,
-    InputMask
+    InputMask,
+    Select,
+    SharedModule
   ],
   templateUrl: './profile.component.html',
   styles: []
 })
 export class ProfileComponent implements OnInit {
+
+  protected uiService = inject(UiService);
+
+  constructor(private authService: AuthService,
+              private userService: UserService,
+              private orderService: OrderService,
+              private reviewService: ReviewService,
+              private messageService: MessageService,
+              private confirmationService: ConfirmationService,
+              protected router: Router) {}
 
   user!: User;
 
@@ -74,15 +88,20 @@ export class ProfileComponent implements OnInit {
   isDragging = false;
   previewUrl: string | ArrayBuffer | null = null;
 
+  //Customization
+  stores = signal([
+    { name: 'Madrid Centro', id: 1 },
+    { name: 'Barcelona Sants', id: 2 },
+    { name: 'Valencia Norte', id: 3 }
+  ]);
+  selectedStore = signal<{name: string, id: number} | null>(null);
 
-  constructor(private authService: AuthService,
-              private userService: UserService,
-              private orderService: OrderService,
-              private reviewService: ReviewService,
-              private messageService: MessageService,
-              private confirmationService: ConfirmationService,
-              protected router: Router) {}
-
+  // Call uiService to change the theme color
+  onColorChange(color: ThemeColor) {
+    if (color) {
+      this.uiService.changeThemeColor(color);
+    }
+  }
 
   //Delete account confirmation
   confirm(event: Event) {

@@ -1,8 +1,9 @@
-import {Injectable} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {Title} from '@angular/platform-browser';
 import {AuthService} from '../services/auth.service';
+import {updatePrimaryPalette} from '@primeng/themes';
 
-export type IconType = 'client' | 'admin';
+export interface ThemeColor { name: string; value: string; }
 
 @Injectable({
   providedIn: 'root'
@@ -10,13 +11,38 @@ export type IconType = 'client' | 'admin';
 export class UiService {
   constructor(private titleService: Title,
               private authService: AuthService) {
+    this.initTheme();
   }
-
 
   public readonly CLIENT_APP_NAME = 'MiTienda';
   public readonly ADMIN_APP_NAME = 'Frict';
   public readonly APP_USER_LOGO = '/shopLogo.png';
   public readonly APP_ADMIN_LOGO = '/frictLogo.png';
+  public readonly THEME_COLORS = [
+    { name: 'Amarillo (Por defecto)', value: 'yellow' },
+    { name: 'Pizarra', value: 'slate' },
+    { name: 'Gris', value: 'gray' },
+    { name: 'Zinc', value: 'zinc' },
+    { name: 'Neutral', value: 'neutral' },
+    { name: 'Piedra', value: 'stone' },
+    { name: 'Rojo', value: 'red' },
+    { name: 'Naranja', value: 'orange' },
+    { name: 'Ámbar', value: 'amber' },
+    { name: 'Lima', value: 'lime' },
+    { name: 'Verde', value: 'green' },
+    { name: 'Esmeralda', value: 'emerald' },
+    { name: 'Turquesa', value: 'teal' },
+    { name: 'Cian', value: 'cyan' },
+    { name: 'Cielo', value: 'sky' },
+    { name: 'Azul', value: 'blue' },
+    { name: 'Índigo', value: 'indigo' },
+    { name: 'Violeta', value: 'violet' },
+    { name: 'Púrpura', value: 'purple' },
+    { name: 'Fucsia', value: 'fuchsia' },
+    { name: 'Rosa', value: 'pink' },
+    { name: 'Rosa Rojizo', value: 'rose' }
+  ];
+
   private readonly PREDEFINED_ICONS: Record<string, string> = {
     client: '/shopLogo.png',
     admin: '/frictLogo.png',
@@ -338,6 +364,35 @@ export class UiService {
     { label: 'Llave inglesa', value: 'pi pi-wrench' },
     { label: 'Youtube', value: 'pi pi-youtube' }
   ];
+
+  //Theme Customization
+  selectedColor = signal<ThemeColor>(this.THEME_COLORS[0]);
+
+  changeThemeColor(color: ThemeColor) {
+    this.selectedColor.set(color);
+    localStorage.setItem('app-primary-color', JSON.stringify(color));
+    updatePrimaryPalette({
+      50: `{${color.value}.50}`,
+      100: `{${color.value}.100}`,
+      200: `{${color.value}.200}`,
+      300: `{${color.value}.300}`,
+      400: `{${color.value}.400}`,
+      500: `{${color.value}.500}`,
+      600: `{${color.value}.600}`,
+      700: `{${color.value}.700}`,
+      800: `{${color.value}.800}`,
+      900: `{${color.value}.900}`,
+      950: `{${color.value}.950}`
+    });
+  }
+
+  private initTheme() {
+    const saved = localStorage.getItem('app-primary-color');
+    if (saved) {
+      const parsedColor: ThemeColor = JSON.parse(saved);
+      this.changeThemeColor(parsedColor);
+    }
+  }
 
 
   // Update tab name
