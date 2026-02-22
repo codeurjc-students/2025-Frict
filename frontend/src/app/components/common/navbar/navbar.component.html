@@ -39,6 +39,43 @@
 
     <div class="flex items-center order-4 h-full gap-2">
       <div *ngIf="authService.isLogged()" class="flex items-center gap-2">
+
+        <div *ngIf="authService.isUser()" class="hidden lg:flex shrink-0">
+          <p-select
+            [options]="scopeOptions()"
+            [ngModel]="productService.searchScope()"
+            (ngModelChange)="onScopeChange($event)"
+            optionLabel="label"
+            optionValue="value"
+            optionDisabled="disabled"
+            styleClass="!bg-surface-800 !border-surface-600 !rounded-lg !h-11 !flex !items-center hover:!border-primary-500 transition-colors"
+            panelStyleClass="!bg-surface-800 !border !border-surface-700 !shadow-xl !rounded-lg mt-1 [&_.p-select-option]:!p-0 [&_.p-select-option]:!bg-transparent [&_.p-select-item]:!p-0 [&_.p-select-item]:!bg-transparent"
+            class="w-33 shrink-0">
+
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div class="flex items-center gap-2 text-surface-200 font-medium">
+                <i class="pi text-primary-400" [ngClass]="selectedOption.value === 'GLOBAL' ? 'pi-globe' : 'pi-map-marker'"></i>
+                <span>{{ selectedOption.label }}</span>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="item" let-option>
+              <div class="flex items-center gap-3 w-full p-3 transition-colors duration-150"
+                   [ngClass]="{
+           'opacity-50 cursor-not-allowed text-surface-500': option.disabled,
+           'bg-surface-700 text-white': productService.searchScope() === option.value && !option.disabled,
+           'text-surface-200 hover:bg-surface-700 hover:text-white': productService.searchScope() !== option.value && !option.disabled
+         }">
+
+                <i class="pi" [ngClass]="option.value === 'GLOBAL' ? 'pi-globe' : 'pi-map-marker'"></i>
+                <span class="font-medium">{{ option.label }}</span>
+
+                <i *ngIf="option.disabled" class="pi pi-lock ml-auto text-xs"></i>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
         <p-button (click)="menu.toggle($event)" iconPos="left" styleClass="h-11 !text-white !bg-transparent !border-none hover:!bg-white/20">
           <ng-template pTemplate="content">
             <i class="pi pi-bell text-xl"></i>
@@ -96,6 +133,36 @@
 
       <div class="overflow-y-auto w-full">
         <ul class="list-none px-4 pb-4 m-0">
+
+          <li class="lg:hidden mt-2 mb-2 px-4">
+            <span class="font-medium uppercase tracking-wider text-surface-200 text-sm">Ámbito de búsqueda</span>
+          </li>
+
+          <li class="lg:hidden">
+            <a class="flex items-center p-4 rounded-border transition-colors duration-150"
+               [ngClass]="productService.searchScope() === 'GLOBAL'
+       ? 'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default'
+       : 'text-surface-100 hover:bg-surface-700 cursor-pointer'"
+               (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null">
+              <i class="pi pi-globe mr-3 text-lg"></i>
+              <span class="font-medium">Catálogo Global</span>
+            </a>
+          </li>
+
+          <li class="lg:hidden mb-4">
+            <a class="flex items-center p-4 rounded-border transition-colors duration-150"
+               [ngClass]="{
+       'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default': productService.searchScope() === 'LOCAL',
+       'text-surface-100 hover:bg-surface-700 cursor-pointer': productService.searchScope() !== 'LOCAL' && authService.hasShopSelected(),
+       'text-surface-500 opacity-50 cursor-not-allowed': !authService.hasShopSelected()
+     }"
+               (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null">
+              <i class="pi pi-map-marker mr-3 text-lg"></i>
+              <span class="font-medium">Mi Tienda</span>
+              <i *ngIf="!authService.hasShopSelected()" class="pi pi-lock ml-auto text-sm text-surface-500"></i>
+            </a>
+            <hr class="mx-4 mt-2 border-t border-0 border-surface-600" />
+          </li>
 
           <li>
             <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"

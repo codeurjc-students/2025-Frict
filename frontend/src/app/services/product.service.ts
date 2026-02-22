@@ -1,5 +1,5 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {catchError, map, Observable, switchMap, tap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {Product} from '../models/product.model';
@@ -8,6 +8,8 @@ import {ShopStock} from '../models/shopStock.model';
 import {ListResponse} from '../models/listResponse.model';
 import {ImageInfo} from '../models/imageInfo.model';
 import {LoginInfo} from '../models/loginInfo.model';
+
+export type SearchScope = 'GLOBAL' | 'LOCAL';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +20,14 @@ export class ProductService {
               private categoryService: CategoryService) {}
 
   private apiUrl = '/api/v1/products';
+
+  private scopeSignal = signal<SearchScope>('GLOBAL');
+  public readonly searchScope = this.scopeSignal.asReadonly();
+
+  public setSearchScope(scope: SearchScope): void {
+    this.scopeSignal.set(scope);
+    localStorage.setItem('search_scope', scope);
+  }
 
   public getAllProducts(page: number, size: number): Observable<PageResponse<Product>> {
     let params = new HttpParams();

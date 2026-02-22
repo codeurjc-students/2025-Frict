@@ -10,12 +10,7 @@ import {ProductService} from '../../../services/product.service';
 import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
-
-interface CategoryHomeUI {
-  icon?: string;
-  label?: string;
-  description?: string;
-}
+import {FormsModule} from '@angular/forms';
 
 interface ServiceUI {
   icon: string;
@@ -32,7 +27,8 @@ interface ServiceUI {
     RouterLink,
     Carousel,
     ProductCardComponent,
-    LoadingSectionComponent
+    LoadingSectionComponent,
+    FormsModule
   ],
   templateUrl: './client-home.component.html',
   styleUrls: ['./client-home.component.css']
@@ -41,37 +37,12 @@ export class ClientHomeComponent implements OnInit {
 
   protected readonly responsiveOptions = carouselResponsiveOptions;
 
-  // --- CONFIGURACIÓN VISUAL (NUEVO) ---
-
-  // 1. Configuración de Servicios (Envío, Garantía, etc.)
   public services: ServiceUI[] = [
     { icon: 'pi pi-truck',      title: 'Envío Gratis',    subtitle: 'En pedidos +50€' },
     { icon: 'pi pi-shield',     title: 'Garantía 3 años', subtitle: '100% oficial' },
     { icon: 'pi pi-undo',       title: 'Devoluciones',    subtitle: '30 días gratis' },
     { icon: 'pi pi-headphones', title: 'Soporte 24/7',    subtitle: 'Ayuda experta' }
   ];
-
-  // Diccionario de configuración visual para las categorías
-  // noinspection JSNonASCIINames
-  private readonly categoryConfig: Record<string, CategoryHomeUI> = {
-    'Hogar Inteligente': { icon: 'pi pi-home' /*, label: 'Gaming' */ }, //Prints the category with both custom icon and label
-    'Fotografía y Video': { icon: 'pi pi-camera' },
-    'Televisión e Imagen': { icon: 'pi pi-desktop' },
-    'Periféricos': { icon: 'pi pi-headphones' },
-    'Herramientas y Accesorios': { icon: 'pi pi-wrench' }, // Prints the category with the custom icon and the category name
-    //'Audio y Sonido': {} //Prints the category, but use the default icon and the category name
-  };
-
-  public getCategoryUI(categoryName: string): CategoryHomeUI | undefined {
-    const config = this.categoryConfig[categoryName];
-
-    if (!config) {
-      return { icon: 'pi pi-tag', label: categoryName ?? 'Categoría', description: ''};
-    }
-    else {
-      return { icon: config.icon ?? 'pi pi-tag', label: config.label ?? categoryName ?? 'Categoría', description: config.description ?? ''};
-    }
-  }
 
   categories: Category[] = [];
   featuredCategoryId: string = '0';

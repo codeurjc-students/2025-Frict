@@ -1,6 +1,6 @@
-import {Component, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
+import {Component, computed, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
 import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
-import {NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
+import {NgClass, NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {Button} from 'primeng/button';
 import {Drawer} from 'primeng/drawer';
 import {MenuItem, PrimeTemplate} from 'primeng/api';
@@ -14,6 +14,8 @@ import {CategoryService} from '../../../services/category.service';
 import {Avatar} from 'primeng/avatar';
 import {InputGroup} from 'primeng/inputgroup';
 import {InputText} from 'primeng/inputtext';
+import {ProductService, SearchScope} from '../../../services/product.service';
+import {Select} from 'primeng/select';
 
 @Component({
   selector: 'app-navbar',
@@ -31,7 +33,9 @@ import {InputText} from 'primeng/inputtext';
     Avatar,
     InputGroup,
     InputText,
-    NgTemplateOutlet
+    NgTemplateOutlet,
+    NgClass,
+    Select
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
@@ -42,6 +46,7 @@ export class NavbarComponent implements OnInit {
     protected authService: AuthService,
     protected orderService: OrderService,
     private categoryService: CategoryService,
+    protected productService: ProductService,
     private router: Router
   ) {}
 
@@ -53,9 +58,29 @@ export class NavbarComponent implements OnInit {
   items: MenuItem[] | undefined;
   loggedUserInfo!: LoginInfo;
 
+  //Shop mode (global to show all products, local to show only selected shop products)
+  private baseScopeOptions = [
+    { label: 'Todas', value: 'GLOBAL' },
+    { label: 'Tienda', value: 'LOCAL' }
+  ];
+
+  public scopeOptions = computed(() => {
+    const hasShop = this.authService.hasShopSelected(); // Usamos la señal de tu authService
+    return this.baseScopeOptions.map(opt => ({
+      ...opt,
+      disabled: opt.value === 'LOCAL' && !hasShop
+    }));
+  });
+
   isCategoriesExpanded: WritableSignal<boolean> = signal(true);
   isAccountExpanded: WritableSignal<boolean> = signal(true);
   manualToggleState = signal<Map<number, boolean>>(new Map());
+
+  public onScopeChange(newValue: SearchScope | null) {
+    if (newValue) {
+      this.productService.setSearchScope(newValue);
+    }
+  }
 
   shouldExpand(categoryId: number, isRouteActive: boolean): boolean {
     const manualState = this.manualToggleState().get(categoryId);

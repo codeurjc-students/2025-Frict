@@ -130,6 +130,7 @@ export class ProfileComponent implements OnInit {
           next: () => {
             this.authService.setSelectedShopId(this.selectedShop()?.id ?? null);
             this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Se ha cambiado correctamente la tienda seleccionada.` });
+            this.orderService.itemsCount.set(0);
           },
           error: () => {
             this.selectedShop.set(this.authService.selectedShopId());
@@ -206,17 +207,20 @@ export class ProfileComponent implements OnInit {
   }
 
   loadSelectedShop() {
-    this.shopService.getShopById(this.user.id).subscribe({
-      next: (shop) => {
-        this.selectedShop.set(shop);
-        this.shops.set([shop]);
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.error = true;
-      }
-    });
+    const selectedShopId = this.user.selectedShopId;
+    if (selectedShopId){
+      this.shopService.getShopById(selectedShopId).subscribe({
+        next: (shop) => {
+          this.selectedShop.set(shop);
+          this.shops.set([shop]);
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.error = true;
+        }
+      });
+    }
   }
 
   onDropdownOpen() {

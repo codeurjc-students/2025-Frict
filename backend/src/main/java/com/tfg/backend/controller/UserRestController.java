@@ -69,6 +69,13 @@ public class UserRestController {
             Shop shop = shopOptional.get();
             loggedUser.setSelectedShop(shop);
         }
+
+        //Clear user cart to avoid products without stock in selected shop to be purchased
+        List<OrderItem> itemsToRemove = loggedUser.getItemsInCart();
+        if (!itemsToRemove.isEmpty()) {
+            loggedUser.getAllOrderItems().removeAll(itemsToRemove);
+        }
+
         userService.save(loggedUser);
         return ResponseEntity.ok(true);
     }
