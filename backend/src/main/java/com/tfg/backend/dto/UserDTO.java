@@ -36,6 +36,8 @@ public class UserDTO {
     @JsonFormat(pattern = "dd/MM/yy HH:mm")
     private LocalDateTime lastConnection;
 
+    private Long selectedShopId;
+
     public UserDTO() {
     }
 
@@ -49,6 +51,9 @@ public class UserDTO {
         this.deleted = user.isDeleted();
         this.logged = user.isLogged();
         this.lastConnection = user.getLastConnection();
+        if (user.getSelectedShop() != null){
+            this.selectedShopId = user.getSelectedShop().getId();
+        }
         this.roles = user.getRoles();
         this.id = user.getId();
         this.imageInfo = user.getUserImage();

@@ -61,6 +61,18 @@ public class ShopRestController {
     }
 
 
+    @Operation(summary = "(User) Get all available shops to be selected")
+    @GetMapping("/list")
+    public ResponseEntity<List<ShopDTO>> getAllShopsList() {
+        List<Shop> allShops = shopService.findAll();
+        List<ShopDTO> dtos = new ArrayList<>();
+        for (Shop s : allShops) {
+            dtos.add(new ShopDTO(s));
+        }
+        return ResponseEntity.ok(dtos);
+    }
+
+
     @Operation(summary = "(Manager) Get shop information by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ShopDTO> getShopById(@PathVariable Long id) {

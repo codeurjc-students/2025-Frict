@@ -42,8 +42,13 @@ public class Shop {
     @OneToMany(mappedBy = "assignedShop")
     private List<Truck> assignedTrucks = new ArrayList<>();
 
+    // MANAGER role users only
     @ManyToOne
     private User assignedManager;
+
+    // USER role users only
+    @OneToMany(mappedBy = "selectedShop")
+    private List<User> customers = new ArrayList<>();
 
     public Shop() {
     }

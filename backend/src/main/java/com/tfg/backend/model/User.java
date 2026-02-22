@@ -76,9 +76,16 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> publishedReviews = new HashSet<>();
 
+    //For MANAGER role users: Allows them to manage this shops
     @OneToMany(mappedBy = "assignedManager")
     private List<Shop> assignedShops;
 
+    //For USER role users: Allows them to choose the shop in which to place their orders
+    @ManyToOne
+    @JoinColumn(name = "selected_shop_id")
+    private Shop selectedShop;
+
+    //For DRIVER role users: Allows them to manage this truck assigned orders
     @OneToOne(mappedBy = "assignedDriver")
     private Truck assignedTruck;
 

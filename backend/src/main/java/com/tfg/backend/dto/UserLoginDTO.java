@@ -15,6 +15,7 @@ public class UserLoginDTO {
     private String name;
     private String username;
     private Set<String> roles;
+    private Long selectedShopId;
 
     public UserLoginDTO(User u){
         this.id = u.getId();
@@ -24,5 +25,8 @@ public class UserLoginDTO {
         this.name = u.getName();
         this.username = u.getUsername();
         this.roles = u.getRoles();
+        if(u.getSelectedShop() != null){
+            this.selectedShopId = u.getSelectedShop().getId();
+        }
     }
 }

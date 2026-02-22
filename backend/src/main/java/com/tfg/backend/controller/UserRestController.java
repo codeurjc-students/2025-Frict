@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
+import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
@@ -33,6 +34,9 @@ public class UserRestController {
 	private UserService userService;
 
     @Autowired
+    private ShopService shopService;
+
+    @Autowired
     private StorageService storageService;
 
 
@@ -45,6 +49,29 @@ public class UserRestController {
 		}
         return ResponseEntity.ok(loginInfoOptional.get());
 	}
+
+
+    @Operation(summary = "(Users) Set selected shop")
+    @PostMapping("/shop")
+    public ResponseEntity<Boolean> setSelectedShop(HttpServletRequest request, @RequestBody Map<String, Long> body) {
+
+        User loggedUser = findLoggedUserHelper(request);
+        Long shopId = body.get("shopId");
+
+        if (shopId == null){
+            loggedUser.setSelectedShop(null);
+        }
+        else {
+            Optional<Shop> shopOptional = shopService.findById(shopId);
+            if(shopOptional.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + shopId + " does not exist.");
+            }
+            Shop shop = shopOptional.get();
+            loggedUser.setSelectedShop(shop);
+        }
+        userService.save(loggedUser);
+        return ResponseEntity.ok(true);
+    }
 
 
     @Operation(summary = "(All) Get logged user information")

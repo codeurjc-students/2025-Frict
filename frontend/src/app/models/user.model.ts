@@ -16,6 +16,7 @@ export interface User {
   deleted: boolean;
   logged: boolean;
   lastConnection: string;
+  selectedShopId: number | null;
 
   ordersCount: number;
   favouriteProductsCount: number;

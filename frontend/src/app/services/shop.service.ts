@@ -30,6 +30,11 @@ export class ShopService {
     return this.http.get<PageResponse<Shop>>(this.apiUrl, { params });
   }
 
+  //User: Retrieve all available shops to be selected
+  public getAllShopsList(): Observable<Shop[]> {
+    return this.http.get<Shop[]>(this.apiUrl + `/list`);
+  }
+
   //Admin: Retrieve all organization shops
   public getAllShopsPage(page: number, size: number): Observable<PageResponse<Shop>> {
     let params = new HttpParams();

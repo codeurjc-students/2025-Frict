@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 
@@ -27,6 +27,8 @@ import {Review} from '../../../models/review.model';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {Select} from 'primeng/select';
 import {ThemeColor, UiService} from '../../../utils/ui.service';
+import {Shop} from '../../../models/shop.model';
+import {ShopService} from '../../../services/shop.service';
 
 @Component({
   selector: 'app-profile',
@@ -60,6 +62,7 @@ export class ProfileComponent implements OnInit {
               private reviewService: ReviewService,
               private messageService: MessageService,
               private confirmationService: ConfirmationService,
+              private shopService: ShopService,
               protected router: Router) {}
 
   user!: User;
@@ -89,18 +92,32 @@ export class ProfileComponent implements OnInit {
   previewUrl: string | ArrayBuffer | null = null;
 
   //Customization
-  stores = signal([
-    { name: 'Madrid Centro', id: 1 },
-    { name: 'Barcelona Sants', id: 2 },
-    { name: 'Valencia Norte', id: 3 }
-  ]);
-  selectedStore = signal<{name: string, id: number} | null>(null);
+  shops = signal<Shop[]>([]);
+  selectedShop = signal<any>(null);
+  isListLoaded = false;
+  isButtonDisabled = computed(() => {
+    const shop = this.selectedShop();
+    const currentSavedId = this.authService.selectedShopId();
+    const selectedId = shop ? shop.id : null;
+    return selectedId === currentSavedId;
+  });
 
   // Call uiService to change the theme color
   onColorChange(color: ThemeColor) {
     if (color) {
       this.uiService.changeThemeColor(color);
     }
+  }
+
+  onSaveStore() {
+    this.userService.setSelectedShopId(this.selectedShop()?.id ?? null).subscribe({
+      next: () => {
+        this.authService.setSelectedShopId(this.selectedShop()?.id ?? null);
+      },
+      error: () => {
+        this.selectedShop.set(this.authService.selectedShopId());
+      }
+    })
   }
 
   //Delete account confirmation
@@ -157,6 +174,7 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
+        this.loadSelectedShop();
         this.loadUserOrders();
         this.loadUserReviews();
       },
@@ -165,6 +183,30 @@ export class ProfileComponent implements OnInit {
         this.error = true;
       }
     })
+  }
+
+  loadSelectedShop() {
+    this.shopService.getShopById(this.user.id).subscribe({
+      next: (shop) => {
+        this.selectedShop.set(shop);
+        this.shops.set([shop]);
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    });
+  }
+
+  onDropdownOpen() {
+    if (this.isListLoaded) return;
+    this.shopService.getAllShopsList().subscribe({
+      next: (allShops) => {
+        this.shops.set(allShops);
+        this.isListLoaded = true;
+      }
+    });
   }
 
   onUserOrdersPageChange(event: PaginatorState) {

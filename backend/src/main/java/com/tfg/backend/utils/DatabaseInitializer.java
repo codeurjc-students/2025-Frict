@@ -406,11 +406,20 @@ public class DatabaseInitializer {
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
+        //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
         if(manager.isPresent()){
             shop1.setAssignedManager(manager.get());
         }
         shopRepository.save(shop1);
+
+        //Selected shop assignment
+        Optional<User> userOptional = userRepository.findByUsername("user");
+        if(userOptional.isPresent()){
+            User user = userOptional.get();
+            user.setSelectedShop(shop1);
+            userRepository.save(user);
+        }
 
         Address address2 = new Address("Alicante", "Calle Por Defecto", "43", "", "03002", "Alicante", "España");
         Shop shop2 = new Shop("Alicante", address2, -0.485225, 38.348045);
