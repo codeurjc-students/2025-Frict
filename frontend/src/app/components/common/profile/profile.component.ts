@@ -110,21 +110,41 @@ export class ProfileComponent implements OnInit {
   }
 
   onSaveStore() {
-    this.userService.setSelectedShopId(this.selectedShop()?.id ?? null).subscribe({
-      next: () => {
-        this.authService.setSelectedShopId(this.selectedShop()?.id ?? null);
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de querer cambiar de tienda seleccionada? Se eliminarán todos los productos actualmente en el carrito.',
+      header: 'Cambiar tienda seleccionada',
+      icon: 'pi pi-info-circle',
+      rejectLabel: 'Cancel',
+      rejectButtonProps: {
+        label: 'Cancelar',
+        severity: 'secondary',
+        outlined: true,
       },
-      error: () => {
-        this.selectedShop.set(this.authService.selectedShopId());
+      acceptButtonProps: {
+        label: 'Aceptar',
+        severity: 'warn',
+      },
+
+      accept: () => {
+        this.userService.setSelectedShopId(this.selectedShop()?.id ?? null).subscribe({
+          next: () => {
+            this.authService.setSelectedShopId(this.selectedShop()?.id ?? null);
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Se ha cambiado correctamente la tienda seleccionada.` });
+          },
+          error: () => {
+            this.selectedShop.set(this.authService.selectedShopId());
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error cambiando la tienda seleccionada. Operación cancelada.' });
+          }
+        })
       }
-    })
+    });
   }
 
   //Delete account confirmation
   confirm(event: Event) {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
-      message: '¿Estás seguro de querer eliminar tu cuenta? Se eliminará tu toda tu información de envío y facturación, y no podrás acceder a ella de nuevo.',
+      message: '¿Estás seguro de querer eliminar tu cuenta? Se eliminará toda tu información de envío y facturación, y no podrás acceder a ella de nuevo.',
       header: 'Eliminar cuenta',
       icon: 'pi pi-info-circle',
       rejectLabel: 'Cancel',

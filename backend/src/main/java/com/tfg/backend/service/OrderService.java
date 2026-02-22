@@ -19,6 +19,8 @@ public class OrderService {
 
     public Optional<Order> findById(Long id){ return this.repository.findById(id); }
 
+    public Page<Order> findAll(Pageable pageable) { return repository.findAll(pageable); }
+
     public List<Order> findAll() { return repository.findAll(); }
 
     public Page<Order> findAllByUser(User u, Pageable pageInfo){

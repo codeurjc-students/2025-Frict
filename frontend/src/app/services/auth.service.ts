@@ -8,7 +8,6 @@ import {catchError, map, Observable, of, tap} from 'rxjs';
 })
 export class AuthService {
 
-  // Añadimos selectedShopId: null al estado por defecto
   private defaultLoginInfo: LoginInfo = {
     isLogged: false,
     imageUrl: '',
@@ -21,12 +20,10 @@ export class AuthService {
 
   private loginInfoSignal: WritableSignal<LoginInfo> = signal(this.defaultLoginInfo);
 
-  // --- SEÑALES PARA LA TIENDA (Estrictamente en memoria) ---
   private selectedShopIdSignal: WritableSignal<string | null> = signal(null);
 
   public selectedShopId = computed(() => this.selectedShopIdSignal());
   public hasShopSelected = computed(() => this.selectedShopIdSignal() !== null);
-  // ---------------------------------------------------------
 
   public userRoles = computed(() => this.loginInfoSignal().roles);
   public isLogged = computed(() => this.loginInfoSignal().isLogged);
@@ -46,7 +43,6 @@ export class AuthService {
 
   private apiUrl = '/api/v1';
 
-  // Métodos para cambiar la tienda manualmente desde la interfaz de usuario
   public setSelectedShopId(id: string | null): void {
     this.selectedShopIdSignal.set(id);
   }
@@ -81,9 +77,6 @@ export class AuthService {
       catchError(() => of(this.defaultLoginInfo)),
       tap(info => {
         this.loginInfoSignal.set(info);
-
-        // ¡Aquí ocurre la magia! Sincronizamos la señal de la tienda con lo que diga el backend.
-        // Usamos ?? null para asegurar que si viene undefined, se ponga a null explícitamente.
         this.selectedShopIdSignal.set(info.selectedShopId ?? null);
       })
     );
@@ -93,11 +86,11 @@ export class AuthService {
     return this.http.post(this.apiUrl + "/auth/logout", { withCredentials: true }).pipe(
       tap(() => {
         this.loginInfoSignal.set(this.defaultLoginInfo);
-        this.selectedShopIdSignal.set(null); // Vaciamos la tienda elegida al salir
+        this.selectedShopIdSignal.set(null);
       }),
       catchError(err => {
         this.loginInfoSignal.set(this.defaultLoginInfo);
-        this.selectedShopIdSignal.set(null); // Vaciamos también si el logout da error
+        this.selectedShopIdSignal.set(null);
         return of(null);
       })
     );

@@ -47,6 +47,14 @@ public class OrderRestController {
     private EmailService emailService;
 
 
+    @Operation(summary = "(Admin) Get all orders (paged)")
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<OrderDTO>> getAllOrders(Pageable pageable){
+        Page<Order> userOrders = orderService.findAll(pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
+    }
+
+
     @Operation(summary = "(User) Get logged user orders (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(HttpServletRequest request, Pageable pageable){
