@@ -32,6 +32,8 @@ import {Image} from 'primeng/image';
 import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
 import {Tag} from 'primeng/tag';
 import {getStockTagInfo} from '../../../utils/tagManager.util';
+import {Shop} from '../../../models/shop.model';
+import {ShopService} from '../../../services/shop.service';
 
 
 @Component({
@@ -84,7 +86,16 @@ export class ProductInfoComponent implements OnInit {
   protected product!: Product;
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
-  stockStatus = computed(() => getStockTagInfo(this.product.totalUnits));
+
+  //Tag stock calculation management
+  localMode = computed(() => this.productService.searchScope() === 'LOCAL');
+  stockStatus = computed(() => {
+    const units = this.localMode() ? this.product.availableUnits : this.product.totalUnits;
+    if (units > 10) {
+      return null;
+    }
+    return getStockTagInfo(units, this.localMode());
+  });
 
   protected visibleShippingDialog: boolean = false;
   protected visibleAvailabilityDialog: boolean = false;
@@ -97,6 +108,7 @@ export class ProductInfoComponent implements OnInit {
   protected userReviewed: boolean = false;
   protected newReview: Partial<Review> = { rating: 5, recommended: true };
 
+  protected selectedShop: Shop | null = null;
   protected stocks: ShopStock[] = []
 
   protected loggedUserInfo!: LoginInfo;
@@ -105,6 +117,7 @@ export class ProductInfoComponent implements OnInit {
               private categoryService: CategoryService,
               private reviewService: ReviewService,
               private orderService: OrderService,
+              private shopService: ShopService,
               protected authService: AuthService,
               private route: ActivatedRoute,
               private router: Router,
@@ -178,6 +191,10 @@ export class ProductInfoComponent implements OnInit {
             window.scrollTo({ top: 0, behavior: 'instant' });
           }
 
+          if(this.authService.selectedShopId()){
+            this.loadSelectedShop();
+          }
+
           this.loadProductCategory();
           this.checkInFavourites();
           this.loadShopStocks();
@@ -188,6 +205,17 @@ export class ProductInfoComponent implements OnInit {
           this.error = true;
         }
       });
+    }
+  }
+
+  protected loadSelectedShop(){
+    const selectedShopId = this.authService.selectedShopId();
+    if(selectedShopId){
+      this.shopService.getShopById(selectedShopId).subscribe({
+        next: (shop) => {
+          this.selectedShop = shop;
+        }
+      })
     }
   }
 
@@ -292,7 +320,7 @@ export class ProductInfoComponent implements OnInit {
       this.orderService.addItemToCart(this.product.id, this.quantity).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
-          this.product.totalUnits -= this.quantity;
+          this.product.availableUnits -= this.quantity;
           this.orderService.incrementItemsCount(this.quantity);
         },
         error: (error: HttpErrorResponse) => {

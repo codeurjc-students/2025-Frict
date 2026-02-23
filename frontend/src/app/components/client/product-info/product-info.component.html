@@ -19,8 +19,13 @@
         <div class="flex items-center gap-4 text-sm">
           <span class="text-surface-500 font-medium">Ref: {{ product.referenceCode }}</span>
           <div class="h-4 w-px bg-surface-300"></div>
-          <div *ngIf="product.totalUnits <= 10">
-            <p-tag [value]="stockStatus().message" [severity]="stockStatus().severity" [icon]="stockStatus().icon" rounded="true"></p-tag>
+          <div *ngIf="stockStatus() as status">
+            <p-tag
+              [value]="status.message"
+              [severity]="status.severity"
+              [icon]="status.icon"
+              rounded="true">
+            </p-tag>
           </div>
         </div>
       </div>
@@ -206,11 +211,43 @@
           </div>
         </div>
 
-        <div class="space-y-4 mb-8">
-          <div class="bg-surface-50 p-3 rounded-xl border border-surface-200">
+        <div class="space-y-3 mb-6">
+
+          <div class="flex items-center gap-2 px-1">
+            <div class="relative flex h-2.5 w-2.5">
+              <span *ngIf="product.totalUnits > 0" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5" [ngClass]="product.totalUnits > 0 ? 'bg-green-500' : 'bg-red-500'"></span>
+            </div>
+            <p class="text-sm font-medium text-surface-600">
+              Stock web global: <span class="font-bold" [ngClass]="product.totalUnits > 0 ? 'text-surface-900' : 'text-red-600'">{{ product.totalUnits }} uds.</span>
+            </p>
+          </div>
+
+          <div *ngIf="authService.selectedShopId()" class="bg-blue-50/50 border border-blue-100 p-3.5 rounded-xl transition-all">
+            <div class="flex items-center gap-2 text-blue-900 text-sm font-bold mb-1.5">
+              <i class="pi pi-store text-blue-600"></i>
+              <span>Tienda seleccionada: {{ selectedShop?.name }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs font-medium pl-6" [ngClass]="product.availableUnits > 0 ? 'text-green-700' : 'text-red-600'">
+              <i [class]="product.availableUnits > 0 ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+              <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : 'Agotado en esta tienda' }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="!authService.selectedShopId()" class="bg-surface-50 border border-surface-200 p-3.5 rounded-xl flex items-start gap-2.5 text-surface-600">
+            <i class="pi pi-info-circle mt-0.5 text-surface-400 text-lg"></i>
+            <p class="text-xs font-medium leading-relaxed">Selecciona una tienda cercana para comprobar la disponibilidad local y añadir el artículo a la cesta.</p>
+          </div>
+
+        </div>
+
+        <div class="space-y-4 mb-6">
+          <div class="bg-surface-50 p-3 rounded-xl border border-surface-200 transition-opacity"
+               [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits">
             <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
             <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
-                           [min]="1" [max]="product.totalUnits"
+                           [min]="1" [max]="product.availableUnits || 1"
+                           [disabled]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits"
                            class="w-full input-number-modern"
                            [inputStyle]="{'width': '100%', 'background': 'transparent', 'border': 'none', 'text-align': 'center', 'font-weight': 'bold' }">
               <ng-template pTemplate="incrementbuttonicon"><span class="pi pi-plus"></span></ng-template>
@@ -220,11 +257,27 @@
         </div>
 
         <div class="space-y-3">
-          <button (click)="addItemToCart()" [disabled]="!product.totalUnits || quantity == 0"
+
+          <button (click)="addItemToCart()"
+                  [disabled]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits || quantity == 0"
                   class="w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                  [class]="product.totalUnits ? 'bg-primary-500 hover:bg-primary-600 text-white' : 'bg-surface-200 text-surface-400 cursor-not-allowed'">
-            <i [class]="product.totalUnits ? 'pi pi-shopping-cart' : 'pi pi-times'"></i>
-            {{ product.totalUnits ? 'Añadir a la cesta' : 'Agotado' }}
+                  [class]="(authService.isUser() && authService.selectedShopId() && product.availableUnits) ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-surface-200 text-surface-500 cursor-not-allowed'">
+
+            <ng-container *ngIf="!authService.isUser()">
+              <i class="pi pi-lock"></i>
+              Bloqueado
+            </ng-container>
+
+            <ng-container *ngIf="authService.isUser() && !authService.selectedShopId()">
+              <i class="pi pi-map-marker"></i>
+              Sin tienda seleccionada
+            </ng-container>
+
+            <ng-container *ngIf="authService.isUser() && authService.selectedShopId()">
+              <i [class]="product.availableUnits ? 'pi pi-shopping-cart' : 'pi pi-times'"></i>
+              {{ product.availableUnits ? 'Añadir a la cesta' : 'Agotado' }}
+            </ng-container>
+
           </button>
 
           <button (click)="toggleInFavourites()"

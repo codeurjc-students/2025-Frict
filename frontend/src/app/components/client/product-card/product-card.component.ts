@@ -5,6 +5,8 @@ import {NgIf} from '@angular/common';
 import {formatPrice, formatRating} from '../../../utils/textFormat.util';
 import {Tag} from 'primeng/tag';
 import {getStockTagInfo} from '../../../utils/tagManager.util';
+import {AuthService} from '../../../services/auth.service';
+import {ProductService} from '../../../services/product.service';
 
 @Component({
   selector: 'app-product-card',
@@ -23,7 +25,18 @@ export class ProductCardComponent {
 
   @Input() elementId: string = 'product';
 
-  stockStatus = computed(() => getStockTagInfo(this.product.totalUnits));
+  constructor(private productService: ProductService) {
+  }
+
+
+  localMode = computed(() => this.productService.searchScope() === 'LOCAL');
+  stockStatus = computed(() => {
+    const units = this.localMode() ? this.product.availableUnits : this.product.totalUnits;
+    if (units > 10) {
+      return null;
+    }
+    return getStockTagInfo(units, this.localMode());
+  });
 
   protected readonly formatPrice = formatPrice;
   protected readonly formatRating = formatRating;

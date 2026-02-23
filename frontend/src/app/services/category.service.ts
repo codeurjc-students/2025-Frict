@@ -24,6 +24,7 @@ export class CategoryService {
     return this.http.get<PageResponse<Category>>(this.apiUrl + `/`, { params });
   }
 
+
   public getAllCategories(): Observable<Category[]> {
     return this.http.get<ListResponse<Category>>(this.apiUrl + `/list`).pipe(map(response => response.items));
   }
@@ -39,7 +40,6 @@ export class CategoryService {
         if (!category) {
           throw new Error(`Category '${name}' not found`);
         }
-
         return category;
       })
     );

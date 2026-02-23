@@ -40,7 +40,10 @@
     <div class="flex items-center order-4 h-full gap-2">
       <div *ngIf="authService.isLogged()" class="flex items-center gap-2">
 
-        <div *ngIf="authService.isUser()" class="hidden lg:flex shrink-0">
+        <div *ngIf="authService.isUser()" class="hidden lg:flex items-center gap-2 shrink-0">
+
+          <span class="text-surface-300 font-medium text-sm">Stock:</span>
+
           <p-select
             [options]="scopeOptions()"
             [ngModel]="productService.searchScope()"
@@ -62,10 +65,10 @@
             <ng-template pTemplate="item" let-option>
               <div class="flex items-center gap-3 w-full p-3 transition-colors duration-150"
                    [ngClass]="{
-           'opacity-50 cursor-not-allowed text-surface-500': option.disabled,
-           'bg-surface-700 text-white': productService.searchScope() === option.value && !option.disabled,
-           'text-surface-200 hover:bg-surface-700 hover:text-white': productService.searchScope() !== option.value && !option.disabled
-         }">
+       'opacity-50 cursor-not-allowed text-surface-500': option.disabled,
+       'bg-surface-700 text-white': productService.searchScope() === option.value && !option.disabled,
+       'text-surface-200 hover:bg-surface-700 hover:text-white': productService.searchScope() !== option.value && !option.disabled
+     }">
 
                 <i class="pi" [ngClass]="option.value === 'GLOBAL' ? 'pi-globe' : 'pi-map-marker'"></i>
                 <span class="font-medium">{{ option.label }}</span>
@@ -135,7 +138,7 @@
         <ul class="list-none px-4 pb-4 m-0">
 
           <li class="lg:hidden mt-2 mb-2 px-4">
-            <span class="font-medium uppercase tracking-wider text-surface-200 text-sm">Ámbito de búsqueda</span>
+            <span class="font-medium uppercase tracking-wider text-surface-200 text-sm">Stock</span>
           </li>
 
           <li class="lg:hidden">
@@ -145,7 +148,7 @@
        : 'text-surface-100 hover:bg-surface-700 cursor-pointer'"
                (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null">
               <i class="pi pi-globe mr-3 text-lg"></i>
-              <span class="font-medium">Catálogo Global</span>
+              <span class="font-medium">Global</span>
             </a>
           </li>
 
@@ -158,7 +161,7 @@
      }"
                (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null">
               <i class="pi pi-map-marker mr-3 text-lg"></i>
-              <span class="font-medium">Mi Tienda</span>
+              <span class="font-medium">Tienda seleccionada</span>
               <i *ngIf="!authService.hasShopSelected()" class="pi pi-lock ml-auto text-sm text-surface-500"></i>
             </a>
             <hr class="mx-4 mt-2 border-t border-0 border-surface-600" />

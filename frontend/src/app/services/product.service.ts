@@ -29,6 +29,11 @@ export class ProductService {
     localStorage.setItem('search_scope', scope);
   }
 
+  public resetSearchScope(): void {
+    this.scopeSignal.set('GLOBAL');
+    localStorage.removeItem('search_scope');
+  }
+
   public getAllProducts(page: number, size: number): Observable<PageResponse<Product>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());

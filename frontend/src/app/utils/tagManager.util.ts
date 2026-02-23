@@ -1,5 +1,3 @@
-import {Truck} from '../models/truck.model';
-import {User} from '../models/user.model';
 
 export interface TagInformation {
   message: string;
@@ -67,25 +65,52 @@ export function getUserStatusTagInfo(logged: boolean, banned: boolean, deleted: 
 
 
 //STOCK TAGS
-export function getStockTagInfo(units: number): TagInformation {
+export function getStockTagInfo(units: number, localMode: boolean): TagInformation {
   if (units > 5 && units <= 10) {
-    return {
-      message: `Quedan ${units}`,
-      icon: 'pi pi-info-circle',
-      severity: 'info'
-    };
+    if (localMode){
+      return {
+        message: `Local: ${units} uds.`,
+        icon: 'pi pi-info-circle',
+        severity: 'info'
+      };
+    }
+    else {
+      return {
+        message: `Global: ${units} uds.`,
+        icon: 'pi pi-info-circle',
+        severity: 'info'
+      };
+    }
   } else if (units > 0 && units <= 5) {
-    return {
-      message: `¡Quedan ${units}!`,
-      icon: 'pi pi-exclamation-triangle',
-      severity: 'warn'
-    };
+    if (localMode) {
+      return {
+        message: `Local: ${units} uds.`,
+        icon: 'pi pi-exclamation-triangle',
+        severity: 'warn'
+      };
+    }
+    else {
+      return {
+        message: `Global: ${units} uds.`,
+        icon: 'pi pi-exclamation-triangle',
+        severity: 'warn'
+      };
+    }
   } else {
-    return {
-      message: 'Agotado',
-      icon: 'pi pi-times',
-      severity: 'danger'
-    };
+    if (localMode){
+      return {
+        message: 'Local: Agotado',
+        icon: 'pi pi-times',
+        severity: 'danger'
+      };
+    }
+    else {
+      return {
+        message: 'Global: Agotado',
+        icon: 'pi pi-times',
+        severity: 'danger'
+      };
+    }
   }
 }
 

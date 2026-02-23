@@ -2,6 +2,7 @@ import {computed, effect, Injectable, signal, WritableSignal} from '@angular/cor
 import {HttpClient} from '@angular/common/http';
 import {LoginInfo} from '../models/loginInfo.model';
 import {catchError, map, Observable, of, tap} from 'rxjs';
+import {ProductService} from './product.service';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +33,8 @@ export class AuthService {
   public isDriver = computed(() => this.loginInfoSignal().isLogged && this.loginInfoSignal().roles.includes('DRIVER'));
   public isAdmin = computed(() => this.loginInfoSignal().isLogged && this.loginInfoSignal().roles.includes('ADMIN'));
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient,
+              private productService: ProductService) {
     effect(() => {
       console.log('--- ESTADO DE AUTENTICACIÓN ---');
       console.log('LoginInfo:', this.loginInfoSignal());
@@ -45,6 +47,9 @@ export class AuthService {
 
   public setSelectedShopId(id: string | null): void {
     this.selectedShopIdSignal.set(id);
+    if (!id){
+      this.productService.setSearchScope('GLOBAL');
+    }
   }
 
   public clearSelectedShopId(): void {
@@ -87,6 +92,7 @@ export class AuthService {
       tap(() => {
         this.loginInfoSignal.set(this.defaultLoginInfo);
         this.selectedShopIdSignal.set(null);
+        this.productService.resetSearchScope();
       }),
       catchError(err => {
         this.loginInfoSignal.set(this.defaultLoginInfo);

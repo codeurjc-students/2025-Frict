@@ -60,8 +60,8 @@ export class NavbarComponent implements OnInit {
 
   //Shop mode (global to show all products, local to show only selected shop products)
   private baseScopeOptions = [
-    { label: 'Todas', value: 'GLOBAL' },
-    { label: 'Tienda', value: 'LOCAL' }
+    { label: 'Global', value: 'GLOBAL' },
+    { label: 'Tienda seleccionada', value: 'LOCAL' }
   ];
 
   public scopeOptions = computed(() => {
