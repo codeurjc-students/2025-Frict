@@ -141,7 +141,7 @@ public class AuthRestController {
     @Operation(summary = "(All) Recover user account")
     @PostMapping("/recovery")
     public ResponseEntity<Void> recoverPassword(@RequestBody Map<String, String> payload) {
-        User user = findUserHelper(payload.get("username"));
+        User user = userService.findUserHelper(payload.get("username"));
 
         SecureRandom secureRandom = new SecureRandom();
         String newOtp = String.format("%06d", secureRandom.nextInt(1000000)); //6-digit OTP
@@ -157,7 +157,7 @@ public class AuthRestController {
     @Operation(summary = "(All) Verify user OTP")
     @PostMapping("/verification")
     public ResponseEntity<Boolean> verifyOtp(@RequestBody Map<String, String> payload) {
-        User user = findUserHelper(payload.get("username"));
+        User user = userService.findUserHelper(payload.get("username"));
 
         if (!user.isOtpValid(payload.get("otpCode"))){
             return ResponseEntity.ok(false);
@@ -171,7 +171,7 @@ public class AuthRestController {
     @Operation(summary = "(All) Reset user password")
     @PostMapping("/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody Map<String, String> payload) {
-        User user = findUserHelper(payload.get("username"));
+        User user = userService.findUserHelper(payload.get("username"));
 
         if (!user.isOtpValid(payload.get("otpCode"))){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "OTP code does not match or is expired.");
@@ -211,10 +211,5 @@ public class AuthRestController {
         user.setEncodedPassword(passwordEncoder.encode(password));
         userService.save(user);
         return ResponseEntity.ok().build();
-    }
-
-    private User findUserHelper(String username) {
-        return this.userService.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user '" + username + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)
     }
 }

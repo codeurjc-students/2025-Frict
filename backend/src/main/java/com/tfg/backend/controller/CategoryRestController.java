@@ -69,7 +69,7 @@ public class CategoryRestController {
 
         Long parentId = categoryDTO.getParentId();
         if (parentId != null) {
-            Category parentCategory = findCategoryHelper(parentId);
+            Category parentCategory = categoryService.findCategoryHelper(parentId);
             parentCategory.addChild(newCategory);
         }
 
@@ -82,7 +82,7 @@ public class CategoryRestController {
     @Operation(summary = "(Admin) Update category by ID")
     @PutMapping("/{id}")
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
-        Category category = findCategoryHelper(id);
+        Category category = categoryService.findCategoryHelper(id);
 
         Category othersCategory = categoryService.findByName("Otros")
                 .orElseThrow(() -> new EntityNotFoundException("Category with name \"Otros\" does not exist."));
@@ -111,7 +111,7 @@ public class CategoryRestController {
 
             if (!isSameParent) {
                 // Retrieve the new parent
-                Category newParent = findCategoryHelper(newParentId);
+                Category newParent = categoryService.findCategoryHelper(newParentId);
                 validateCircularReference(category, newParent);
 
                 if (newParent.getProducts() != null && !newParent.getProducts().isEmpty()) {
@@ -152,7 +152,7 @@ public class CategoryRestController {
     @Operation(summary = "(Admin) Delete category by ID (Recursive)")
     @DeleteMapping("/{id}")
     public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long id) {
-        Category categoryToDelete = findCategoryHelper(id);
+        Category categoryToDelete = categoryService.findCategoryHelper(id);
 
         Category othersCategory = categoryService.findByName("Otros")
                 .orElseThrow(() -> new EntityNotFoundException("Category 'Otros' not found"));
@@ -178,7 +178,7 @@ public class CategoryRestController {
     @Operation(summary = "(All) Get category by ID")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        Category category = findCategoryHelper(id);
+        Category category = categoryService.findCategoryHelper(id);
         return ResponseEntity.ok(new CategoryDTO(category));
     }
 
@@ -189,7 +189,7 @@ public class CategoryRestController {
             @PathVariable Long id,
             @RequestParam("image") MultipartFile file) throws IOException {
 
-        Category category = findCategoryHelper(id);
+        Category category = categoryService.findCategoryHelper(id);
 
         // Delete the previous image from MinIO if it is not the default photo
         if (category.getCategoryImage() != null && !category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
@@ -217,7 +217,7 @@ public class CategoryRestController {
     @Operation(summary = "(Admin) Delete remote category image")
     @DeleteMapping("/{id}/image")
     public ResponseEntity<Category> deleteCategoryImage(@PathVariable Long id) {
-        Category category = findCategoryHelper(id);
+        Category category = categoryService.findCategoryHelper(id);
 
         if (!category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
             storageService.deleteFile(category.getCategoryImage().getS3Key());
@@ -229,10 +229,6 @@ public class CategoryRestController {
         return ResponseEntity.ok(category);
     }
 
-    private Category findCategoryHelper(Long id) {
-        return this.categoryService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " does not exist."));
-    }
 
     private void validateCircularReference(Category categoryToMove, Category newParentCandidate) {
         // Avoid recursive parent relations

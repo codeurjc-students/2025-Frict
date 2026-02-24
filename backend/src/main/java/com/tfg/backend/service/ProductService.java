@@ -1,22 +1,32 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.Product;
+import com.tfg.backend.model.ShopStock;
+import com.tfg.backend.model.User;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.repository.ProductRepository;
+import com.tfg.backend.repository.ShopStockRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ShopStockRepository shopStockRepository;
 
 
     public List<Product> findAll() {
@@ -80,5 +90,46 @@ public class ProductService {
 
     public List<Product> findProductsNotAssignedToShop(Long shopId) {
         return productRepository.findProductsNotAssignedToShop(shopId);
+    }
+
+
+    public List<Integer> getLocalStocks(Page<Product> page, Long shopId) {
+        return getLocalStocks(page.getContent(), shopId);
+    }
+
+
+    public List<Integer> getLocalStocks(List<Product> products, Long shopId) {
+        if (shopId == null || products.isEmpty()) {
+            return products.stream().map(p -> (Integer) null).toList();
+        }
+
+        List<Long> productIds = products.stream().map(Product::getId).toList();
+
+        // Only query to DB
+        List<ShopStock> stocks = shopStockRepository.findStockForProductsInShop(shopId, productIds);
+
+        Map<Long, Integer> stockMap = stocks.stream()
+                .collect(Collectors.toMap(
+                        s -> s.getProduct().getId(),
+                        ShopStock::getUnits
+                ));
+
+        // Same order as original list
+        return products.stream()
+                .map(p -> stockMap.getOrDefault(p.getId(), 0)) // 0 if no stock in that shop
+                .toList();
+    }
+
+
+    public Integer getLocalStock(Product product, Long shopId) {
+        if (shopId == null || product == null) {
+            return null;
+        }
+        return shopStockRepository.findUnitsByProductIdAndShopId(product.getId(), shopId).orElse(0);
+    }
+
+    public Product findProductHelper(Long id) {
+        return this.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
     }
 }

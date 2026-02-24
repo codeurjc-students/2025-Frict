@@ -468,22 +468,6 @@ public class DatabaseInitializer {
             orderRepository.save(order1);
             orderRepository.save(order2);
         }
-
-        // Cart products
-        if (products.size() >= 29) {
-            List<OrderItem> cartItems = new ArrayList<>();
-            cartItems.add(new OrderItem(products.get(0), user1, 1));
-            cartItems.add(new OrderItem(products.get(2), user1, 2));
-            cartItems.add(new OrderItem(products.get(3), user1, 3));
-            cartItems.add(new OrderItem(products.get(8), user1, 4));
-            cartItems.add(new OrderItem(products.get(12), user1, 2));
-            cartItems.add(new OrderItem(products.get(15), user1, 3));
-            cartItems.add(new OrderItem(products.get(18), user1, 6));
-            cartItems.add(new OrderItem(products.get(22), user1, 20));
-            cartItems.add(new OrderItem(products.get(23), user1, 15));
-            cartItems.add(new OrderItem(products.get(28), user1, 14));
-            orderItemRepository.saveAll(cartItems);
-        }
     }
 
     private void initStock() {

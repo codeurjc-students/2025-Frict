@@ -10,9 +10,11 @@ import org.hamcrest.Condition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.*;
@@ -162,4 +164,19 @@ public class UserService {
     public Long countByRole(String role){ return this.userRepository.countByRolesContaining(role); }
     public Long countByIsBannedTrue(){ return this.userRepository.countByIsBannedTrue();}
     public Long countByIsDeletedTrue(){ return this.userRepository.countByIsDeletedTrue();}
+
+    public User findUserHelper(Long id) {
+        return this.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user with ID'" + id + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)
+    }
+
+    public User findUserHelper(String username) {
+        return this.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user '" + username + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)
+    }
+
+    public User findLoggedUserHelper(HttpServletRequest request) {
+        return this.getLoggedUser(request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
+    }
 }

@@ -47,7 +47,7 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Get assigned shops information (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<ShopDTO>> getAssignedShopsPage(HttpServletRequest request, Pageable pageable) {
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
         Page<Shop> assignedShops = shopService.findAllByAssignedManagerId(loggedUser.getId(), pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(assignedShops, ShopDTO::new));
     }
@@ -76,7 +76,7 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Get shop information by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ShopDTO> getShopById(@PathVariable Long id) {
-        Shop shop = findShopHelper(id);
+        Shop shop = shopService.findShopHelper(id);
         return ResponseEntity.ok(new ShopDTO(shop));
     }
 
@@ -103,7 +103,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Update shop by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ShopDTO> updateShop(@PathVariable Long id, @RequestBody ShopDTO shopDTO) {
-        Shop shop = findShopHelper(id);
+        Shop shop = shopService.findShopHelper(id);
 
         shop.setName(shopDTO.getName());
         AddressDTO dto = shopDTO.getAddress();
@@ -119,7 +119,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Delete shop by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ShopDTO> deleteShop(@PathVariable Long id) {
-        Shop shop = findShopHelper(id);
+        Shop shop = shopService.findShopHelper(id);
 
         //Unlink trucks
         List<Truck> assignedTrucks = shop.getAssignedTrucks();
@@ -141,7 +141,7 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Toggle stock local activation by ID")
     @PostMapping("/active/{id}")
     public ResponseEntity<ShopStockDTO> toggleLocalActivation(@PathVariable Long id, @RequestParam boolean state) {
-        ShopStock stock = findShopStockHelper(id);
+        ShopStock stock = shopStockService.findShopStockHelper(id);
         stock.setActive(state);
         ShopStock savedStock = shopStockService.save(stock);
         return ResponseEntity.ok(new ShopStockDTO(savedStock));
@@ -163,7 +163,7 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Add n units to a shop's product stock (if exists)")
     @PostMapping("/restock/{stockId}")
     public ResponseEntity<ShopStockDTO> restockProduct(@PathVariable Long stockId, @RequestParam int units) {
-        ShopStock targetStock = findShopStockHelper(stockId);
+        ShopStock targetStock = shopStockService.findShopStockHelper(stockId);
         if (units > 0){
             targetStock.setUnits(targetStock.getUnits() + units);
             ShopStock savedStock = shopStockService.save(targetStock);
@@ -176,17 +176,17 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Set stock assignment to a shop")
     @PostMapping("/{shopId}/assign/stock/{stockId}")
     public ResponseEntity<ShopStockDTO> setAssignedStock(@PathVariable Long shopId, @PathVariable Long stockId, @RequestParam boolean state) {
-        Shop shop = findShopHelper(shopId);
+        Shop shop = shopService.findShopHelper(shopId);
         ShopStock targetStock;
 
         //Add a stock: stockId is the product identifier
         if (state) {
-            Product product = findProductHelper(stockId);
+            Product product = productService.findProductHelper(stockId);
             targetStock = this.shopStockService.save(new ShopStock(shop, product, 0));
         }
         //Remove a stock: stockId is the stock identifier
         else {
-            targetStock = findShopStockHelper(stockId);
+            targetStock = shopStockService.findShopStockHelper(stockId);
             this.shopStockService.deleteById(stockId);
         }
         return ResponseEntity.ok(new ShopStockDTO(targetStock));
@@ -196,8 +196,8 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Set truck assignment to a shop")
     @PostMapping("/{shopId}/assign/truck/{truckId}")
     public ResponseEntity<TruckDTO> setAssignedTruck(@PathVariable Long shopId, @PathVariable Long truckId, @RequestParam boolean state) {
-        Shop shop = findShopHelper(shopId);
-        Truck truck = findTruckHelper(truckId);
+        Shop shop = shopService.findShopHelper(shopId);
+        Truck truck = truckService.findTruckHelper(truckId);
 
         if (state) {
             truck.setAssignedShop(shop);
@@ -214,10 +214,10 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Set manager assignment to a shop")
     @PostMapping("/{shopId}/assign/manager/{userId}")
     public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long shopId, @PathVariable Long userId, @RequestParam boolean state) {
-        Shop shop = findShopHelper(shopId);
+        Shop shop = shopService.findShopHelper(shopId);
 
         if (state) {
-            User newManager = findUserHelper(userId);
+            User newManager = userService.findUserHelper(userId);
             shop.setAssignedManager(newManager);
         }
         else {
@@ -235,7 +235,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Update remote shop image")
     @PostMapping("/image/{id}")
     public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
-        Shop shop = findShopHelper(id);
+        Shop shop = shopService.findShopHelper(id);
 
         // Clean previous image (if exists and it is not the default user image)
         if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
@@ -262,7 +262,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Delete remote shop image")
     @DeleteMapping("/image/{id}")
     public ResponseEntity<ShopDTO> deleteShopImage(@PathVariable Long id) {
-        Shop shop = findShopHelper(id);
+        Shop shop = shopService.findShopHelper(id);
 
         // Clean previous image (if exists and it is not the default user image)
         if (!shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
@@ -272,37 +272,5 @@ public class ShopRestController {
         }
 
         return ResponseEntity.ok(new ShopDTO(shop));
-    }
-
-
-    private User findLoggedUserHelper(HttpServletRequest request) {
-        return this.userService.getLoggedUser(request)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
-    }
-
-    private Product findProductHelper(Long id) {
-        return this.productService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
-    }
-
-
-    private User findUserHelper(Long id) {
-        return this.userService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist."));
-    }
-
-    private Shop findShopHelper(Long id) {
-        return this.shopService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
-    }
-
-    private ShopStock findShopStockHelper(Long id) {
-        return this.shopStockService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock with ID " + id + " does not exist."));
-    }
-
-    private Truck findTruckHelper(Long id) {
-        return this.truckService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
     }
 }

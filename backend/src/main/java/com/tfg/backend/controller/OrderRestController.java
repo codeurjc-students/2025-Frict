@@ -59,7 +59,7 @@ public class OrderRestController {
     @GetMapping
     public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
@@ -87,7 +87,7 @@ public class OrderRestController {
                                                 @RequestParam Long cardId){
 
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         //Find address info and card info
         Optional<Address> addressOptional = loggedUser.getAddresses().stream()
@@ -164,7 +164,7 @@ public class OrderRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(HttpServletRequest request, @PathVariable Long id){
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         //Check if the order belongs to that user or if the logged user is a delivery driver
         if(!loggedUser.getRoles().contains("DRIVER") && !orderService.existsByIdAndUser(id, loggedUser)){
@@ -195,7 +195,7 @@ public class OrderRestController {
     @GetMapping("/cart/summary")
     public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
 
@@ -244,7 +244,7 @@ public class OrderRestController {
     @GetMapping("/cart")
     public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         Page<OrderItem> cartItems = orderItemService.findUserCartItemsPage(loggedUser.getId(), pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(cartItems, OrderItemDTO::new));
@@ -255,7 +255,7 @@ public class OrderRestController {
     @DeleteMapping("/cart")
     public ResponseEntity<CartSummaryDTO> clearCartItems(HttpServletRequest request) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         List<OrderItem> itemsToRemove = loggedUser.getItemsInCart();
 
@@ -273,7 +273,7 @@ public class OrderRestController {
                                                       @PathVariable Long id,
                                                       @RequestParam int quantity) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         //Check the product exists
         Optional<Product> productOptional = productService.findById(id);
@@ -326,7 +326,7 @@ public class OrderRestController {
                                                            @PathVariable Long id,
                                                            @RequestParam int quantity) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         // 2. Get the cart item (needed to know how many items of this product does the user already have)
         Optional<OrderItem> itemInCartOptional = loggedUser.getItemsInCart().stream()
@@ -366,7 +366,7 @@ public class OrderRestController {
     @DeleteMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         List<OrderItem> orderItems = loggedUser.getAllOrderItems();
         boolean removed = orderItems.removeIf(i ->
@@ -383,11 +383,5 @@ public class OrderRestController {
             userService.save(loggedUser);
         }
         return this.getCartSummary(request);
-    }
-
-
-    private User findLoggedUserHelper(HttpServletRequest request) {
-        return this.userService.getLoggedUser(request)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
     }
 }

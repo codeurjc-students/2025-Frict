@@ -43,7 +43,7 @@ public class ReviewRestController {
     @GetMapping
     public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(HttpServletRequest request, Pageable pageable){
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
@@ -54,7 +54,7 @@ public class ReviewRestController {
     @Operation(summary = "(All) Get all reviews by product ID")
     @GetMapping("/")
     public ResponseEntity<ListResponse<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
-        Product product = findProductHelper(productId);
+        Product product = productService.findProductHelper(productId);
         List<ReviewDTO> dtos = new ArrayList<>();
         for (Review r : product.getReviews()) {
             dtos.add(new ReviewDTO(r));
@@ -67,14 +67,14 @@ public class ReviewRestController {
     @PostMapping
     public ResponseEntity<ReviewDTO> createReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
         }
 
         //Check that the product exists
-        Product product = findProductHelper(reviewDTO.getProductId());
+        Product product = productService.findProductHelper(reviewDTO.getProductId());
 
         Review review = new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
         reviewService.save(review);
@@ -86,14 +86,14 @@ public class ReviewRestController {
     @PutMapping
     public ResponseEntity<ReviewDTO> updateReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
         }
 
         //Check that the review exists
-        Review review = findReviewHelper(reviewDTO.getId());
+        Review review = reviewService.findReviewHelper(reviewDTO.getId());
 
         review.setText(reviewDTO.getText());
         review.setRating(reviewDTO.getRating());
@@ -107,10 +107,10 @@ public class ReviewRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ReviewDTO> deleteReview(HttpServletRequest request, @PathVariable Long id) {
         //Check that the review exists
-        Review review = findReviewHelper(id);
+        Review review = reviewService.findReviewHelper(id);
 
         //Check that the logged user and the review creator match
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper(request);
 
         if (!loggedUser.getId().equals(review.getUser().getId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + review.getUser().getId() + " and logged user ID " + loggedUser.getId() + " do not match.");
@@ -118,23 +118,5 @@ public class ReviewRestController {
 
         reviewService.deleteById(id);
         return ResponseEntity.ok().body(new ReviewDTO(review));
-    }
-
-
-    private User findLoggedUserHelper(HttpServletRequest request) {
-        return this.userService.getLoggedUser(request)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
-    }
-
-
-    private Product findProductHelper(Long id) {
-        return this.productService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
-    }
-
-
-    private Review findReviewHelper(Long id) {
-        return this.reviewService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review with ID " + id + " does not exist."));
     }
 }
