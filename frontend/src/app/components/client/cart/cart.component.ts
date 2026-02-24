@@ -18,11 +18,13 @@ import {getStockTagInfo} from '../../../utils/tagManager.util';
 import {AuthService} from '../../../services/auth.service';
 import {ShopService} from '../../../services/shop.service';
 import {Shop} from '../../../models/shop.model';
+import {Tag} from 'primeng/tag';
+import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip, StockTagComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })

@@ -1,4 +1,4 @@
-import {Component, computed, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -20,7 +20,8 @@ import {Avatar} from 'primeng/avatar';
 import {Rating} from 'primeng/rating';
 import {MeterGroupModule} from 'primeng/metergroup';
 import {ReviewService} from '../../../services/review.service';
-import {Review} from '../../../models/review.model';import {AuthService} from '../../../services/auth.service';
+import {Review} from '../../../models/review.model';
+import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Textarea} from 'primeng/textarea';
@@ -30,10 +31,9 @@ import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
 import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
-import {Tag} from 'primeng/tag';
-import {getStockTagInfo} from '../../../utils/tagManager.util';
 import {Shop} from '../../../models/shop.model';
 import {ShopService} from '../../../services/shop.service';
+import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 
 @Component({
@@ -61,7 +61,7 @@ import {ShopService} from '../../../services/shop.service';
     TableModule,
     Image,
     BreadcrumbComponent,
-    Tag
+    StockTagComponent
   ],
   templateUrl: './product-info.component.html'
 })
@@ -86,16 +86,6 @@ export class ProductInfoComponent implements OnInit {
   protected product!: Product;
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
-
-  //Tag stock calculation management
-  localMode = computed(() => this.productService.searchScope() === 'LOCAL');
-  stockStatus = computed(() => {
-    const units = this.localMode() ? this.product.availableUnits : this.product.totalUnits;
-    if (units > 10) {
-      return null;
-    }
-    return getStockTagInfo(units, this.localMode());
-  });
 
   protected visibleShippingDialog: boolean = false;
   protected visibleAvailabilityDialog: boolean = false;

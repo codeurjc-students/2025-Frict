@@ -62,12 +62,7 @@
                       {{ item.product.name }}
                     </h3>
                     <div class="flex items-center gap-2 mt-1">
-                      <div *ngIf="item.product.totalUnits > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-                        <i class="pi pi-check-circle text-[10px]"></i> Disponible
-                      </div>
-                      <div *ngIf="!(item.product.totalUnits > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
-                        <i class="pi pi-times-circle text-[10px]"></i> Agotado
-                      </div>
+                      <app-stock-tag [product]="item.product"></app-stock-tag>
                     </div>
                   </div>
 

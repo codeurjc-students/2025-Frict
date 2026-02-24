@@ -19,14 +19,7 @@
         <div class="flex items-center gap-4 text-sm">
           <span class="text-surface-500 font-medium">Ref: {{ product.referenceCode }}</span>
           <div class="h-4 w-px bg-surface-300"></div>
-          <div *ngIf="stockStatus() as status">
-            <p-tag
-              [value]="status.message"
-              [severity]="status.severity"
-              [icon]="status.icon"
-              rounded="true">
-            </p-tag>
-          </div>
+          <app-stock-tag [product]="product"></app-stock-tag>
         </div>
       </div>
 

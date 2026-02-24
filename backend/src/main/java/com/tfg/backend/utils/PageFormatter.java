@@ -24,4 +24,14 @@ public class PageFormatter {
                 page.getSize()
         );
     }
+
+    public static <T> PageResponse<T> toPageResponse(Page<T> page) {
+        return new PageResponse<>(
+                page.getContent(),
+                page.getTotalElements(),
+                page.getNumber(),
+                page.getTotalPages() - 1,
+                page.getSize()
+        );
+    }
 }

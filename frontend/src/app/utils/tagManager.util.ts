@@ -64,53 +64,32 @@ export function getUserStatusTagInfo(logged: boolean, banned: boolean, deleted: 
 }
 
 
-//STOCK TAGS
-export function getStockTagInfo(units: number, localMode: boolean): TagInformation {
+export function getStockTagInfo(units: number | null | undefined, localMode: boolean): TagInformation | null {
+  if (units === null || units === undefined || units > 10) {
+    return null;
+  }
+
+  const prefix = localMode ? 'Local' : 'Global';
+
   if (units > 5 && units <= 10) {
-    if (localMode){
-      return {
-        message: `Local: ${units} uds.`,
-        icon: 'pi pi-info-circle',
-        severity: 'info'
-      };
-    }
-    else {
-      return {
-        message: `Global: ${units} uds.`,
-        icon: 'pi pi-info-circle',
-        severity: 'info'
-      };
-    }
+    return {
+      message: `${prefix}: ${units} uds.`,
+      icon: 'pi pi-info-circle',
+      severity: 'info'
+    };
   } else if (units > 0 && units <= 5) {
-    if (localMode) {
-      return {
-        message: `Local: ${units} uds.`,
-        icon: 'pi pi-exclamation-triangle',
-        severity: 'warn'
-      };
-    }
-    else {
-      return {
-        message: `Global: ${units} uds.`,
-        icon: 'pi pi-exclamation-triangle',
-        severity: 'warn'
-      };
-    }
+    return {
+      message: `${prefix}: ${units} uds.`,
+      icon: 'pi pi-exclamation-triangle',
+      severity: 'warn'
+    };
   } else {
-    if (localMode){
-      return {
-        message: 'Local: Agotado',
-        icon: 'pi pi-times',
-        severity: 'danger'
-      };
-    }
-    else {
-      return {
-        message: 'Global: Agotado',
-        icon: 'pi pi-times',
-        severity: 'danger'
-      };
-    }
+    // Si units es 0 o menor
+    return {
+      message: `${prefix}: Agotado`,
+      icon: 'pi pi-times',
+      severity: 'danger'
+    };
   }
 }
 
