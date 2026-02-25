@@ -41,9 +41,9 @@ public class ReviewRestController {
 
     @Operation(summary = "(All) Get logged user reviews (paged)")
     @GetMapping
-    public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(Pageable pageable){
         //Get logged user info if any (User class)
-        User loggedUser = userService.findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
@@ -65,9 +65,9 @@ public class ReviewRestController {
 
     @Operation(summary = "(User) Create review")
     @PostMapping
-    public ResponseEntity<ReviewDTO> createReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
+    public ResponseEntity<ReviewDTO> createReview(@RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
-        User loggedUser = userService.findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
@@ -84,9 +84,9 @@ public class ReviewRestController {
 
     @Operation(summary = "(User) Update review")
     @PutMapping
-    public ResponseEntity<ReviewDTO> updateReview(HttpServletRequest request, @RequestBody ReviewDTO reviewDTO) {
+    public ResponseEntity<ReviewDTO> updateReview(@RequestBody ReviewDTO reviewDTO) {
         //Check that the logged user and the review creator match
-        User loggedUser = userService.findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
@@ -105,12 +105,12 @@ public class ReviewRestController {
 
     @Operation(summary = "(Admin, User) Delete review by ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ReviewDTO> deleteReview(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<ReviewDTO> deleteReview(@PathVariable Long id) {
         //Check that the review exists
         Review review = reviewService.findReviewHelper(id);
 
         //Check that the logged user and the review creator match
-        User loggedUser = userService.findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         if (!loggedUser.getId().equals(review.getUser().getId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + review.getUser().getId() + " and logged user ID " + loggedUser.getId() + " do not match.");

@@ -58,7 +58,12 @@ public class ProductDTO {
             totalUnits += s.getUnits();
         }
         this.totalUnits = totalUnits;
-        this.availableUnits = 0; //Set lately in selected necessary endpoints (depends on user's selected shop)
+
+        if(p.getAvailableUnits() != null){
+            this.availableUnits = p.getAvailableUnits(); // Depends on user's selected shop and whether the logged user has "USER" role
+        }
+        else this.availableUnits = 0;
+
         this.shopsWithStock = p.getShopsStock().size();
 
         //Total reviews and average rating

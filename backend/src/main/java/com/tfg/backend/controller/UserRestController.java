@@ -42,8 +42,8 @@ public class UserRestController {
 
     @Operation(summary = "(All) Get current session information")
 	@GetMapping("/session")
-	public ResponseEntity<UserLoginDTO> getSessionInfo(HttpServletRequest request) {
-        Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo(request);
+	public ResponseEntity<UserLoginDTO> getSessionInfo() {
+        Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo();
 		if(loginInfoOptional.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No user logged in this session.");
 		}
@@ -53,9 +53,9 @@ public class UserRestController {
 
     @Operation(summary = "(Users) Set selected shop")
     @PostMapping("/shop")
-    public ResponseEntity<Boolean> setSelectedShop(HttpServletRequest request, @RequestBody Map<String, Long> body) {
+    public ResponseEntity<Boolean> setSelectedShop(@RequestBody Map<String, Long> body) {
 
-        User loggedUser = userService.findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
         Long shopId = body.get("shopId");
 
         if (shopId == null){
@@ -83,8 +83,8 @@ public class UserRestController {
 
     @Operation(summary = "(All) Get logged user information")
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> getLoggedUser() {
+        User loggedUser = userService.findLoggedUserHelper();
         return ResponseEntity.ok(new UserDTO(loggedUser));
     }
 
@@ -146,8 +146,8 @@ public class UserRestController {
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
     @Operation(summary = "(User) Anonymize logged user account")
     @DeleteMapping
-    public ResponseEntity<UserDTO> anonymizeLoggedUser(HttpServletRequest request) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> anonymizeLoggedUser() {
+        User loggedUser = userService.findLoggedUserHelper();
         User savedUser = userService.save(userService.anonymizeUser(loggedUser));
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
@@ -155,8 +155,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Delete logged user image")
     @DeleteMapping("/image")
-    public ResponseEntity<UserDTO> deleteUserImage(HttpServletRequest request) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> deleteUserImage() {
+        User loggedUser = userService.findLoggedUserHelper();
 
         // Check if there is something to delete
         if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
@@ -170,8 +170,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Update logged user data")
     @PutMapping("/data")
-    public ResponseEntity<UserDTO> updateLoggedUserData(HttpServletRequest request, @RequestBody UserDTO userDTO){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> updateLoggedUserData(@RequestBody UserDTO userDTO){
+        User loggedUser = userService.findLoggedUserHelper();
 
         //Check if the username exists if it is not the same (lazy check)
         if(!userDTO.getUsername().equals(loggedUser.getUsername()) && userService.existsByUsername(userDTO.getUsername())){
@@ -191,8 +191,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Create logged user address")
     @PostMapping("/addresses")
-    public ResponseEntity<UserDTO> createAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> createAddress(@RequestBody AddressDTO addressDTO){
+        User loggedUser = userService.findLoggedUserHelper();
 
         Address address = new Address(addressDTO.getAlias(), addressDTO.getStreet(), addressDTO.getNumber(), addressDTO.getFloor(), addressDTO.getPostalCode(), addressDTO.getCity(), addressDTO.getCountry());
         loggedUser.getAddresses().add(address);
@@ -204,8 +204,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Edit logged user address")
     @PutMapping("/addresses")
-    public ResponseEntity<UserDTO> editAddress(HttpServletRequest request, @RequestBody AddressDTO addressDTO){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> editAddress(@RequestBody AddressDTO addressDTO){
+        User loggedUser = userService.findLoggedUserHelper();
 
         Optional<Address> addressOptional = loggedUser.getAddresses().stream().filter(address -> address.getId().equals(addressDTO.getId())).findFirst();
         if(addressOptional.isEmpty()){
@@ -228,8 +228,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Delete logged user address by ID")
     @DeleteMapping("/addresses/{id}")
-    public ResponseEntity<UserDTO> deleteAddress(HttpServletRequest request, @PathVariable Long id){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> deleteAddress(@PathVariable Long id){
+        User loggedUser = userService.findLoggedUserHelper();
 
         boolean removed = loggedUser.getAddresses().removeIf(address -> address.getId().equals(id));
         if(!removed){
@@ -243,8 +243,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Create logged user card")
     @PostMapping("/cards")
-    public ResponseEntity<UserDTO> createPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO cardDTO){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> createPaymentCard(@RequestBody PaymentCardDTO cardDTO){
+        User loggedUser = userService.findLoggedUserHelper();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
         PaymentCard card = new PaymentCard(cardDTO.getAlias(), cardDTO.getCardOwnerName(), cardDTO.getNumber(), cardDTO.getCvv(), YearMonth.parse(cardDTO.getDueDate(), formatter));
@@ -257,8 +257,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Update logged user card")
     @PutMapping("/cards")
-    public ResponseEntity<UserDTO> editPaymentCard(HttpServletRequest request, @RequestBody PaymentCardDTO paymentCardDTO){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> editPaymentCard(@RequestBody PaymentCardDTO paymentCardDTO){
+        User loggedUser = userService.findLoggedUserHelper();
 
         Optional<PaymentCard> cardOptional = loggedUser.getCards().stream().filter(card -> card.getId().equals(paymentCardDTO.getId())).findFirst();
         if(cardOptional.isEmpty()){
@@ -278,8 +278,8 @@ public class UserRestController {
 
     @Operation(summary = "(User) Delete logged user card by ID")
     @DeleteMapping("/cards/{id}")
-    public ResponseEntity<UserDTO> deletePaymentCard(HttpServletRequest request, @PathVariable Long id){
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<UserDTO> deletePaymentCard(@PathVariable Long id){
+        User loggedUser = userService.findLoggedUserHelper();
 
         boolean removed = loggedUser.getCards().removeIf(card -> card.getId().equals(id));
         if(!removed){

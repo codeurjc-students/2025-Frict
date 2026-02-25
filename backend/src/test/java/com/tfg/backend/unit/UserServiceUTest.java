@@ -5,15 +5,17 @@ import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -31,14 +33,21 @@ class UserServiceUTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    // Sustituimos Principal y Request por los componentes de Spring Security
     @Mock
-    private HttpServletRequest request;
+    private SecurityContext securityContext;
 
     @Mock
-    private Principal principal;
+    private Authentication authentication;
 
     @InjectMocks
     private UserService userService;
+
+    // Limpiamos el contexto después de cada test para no afectar a los siguientes
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void findAll_ShouldReturnList() {
@@ -105,29 +114,36 @@ class UserServiceUTest {
         verify(userRepository).findByEmail(email);
     }
 
-    @Test
-    void getLoginInfo_ShouldReturnEmpty_WhenPrincipalIsNull() {
-        when(request.getUserPrincipal()).thenReturn(null);
+    // --- TESTS MODIFICADOS PARA USAR SECURITYCONTEXTHOLDER ---
 
-        Optional<UserLoginDTO> result = userService.getLoginInfo(request);
+    @Test
+    void getLoginInfo_ShouldReturnEmpty_WhenNotAuthenticated() {
+        // Configuramos el contexto para devolver null en la autenticación
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(null);
+
+        Optional<UserLoginDTO> result = userService.getLoginInfo();
 
         assertTrue(result.isEmpty());
         verify(userRepository, never()).findByUsername(any());
     }
 
     @Test
-    void getLoginInfo_ShouldReturnDTO_WhenPrincipalExists() {
+    void getLoginInfo_ShouldReturnDTO_WhenAuthenticated() {
         String username = "testuser";
         User user = new User();
         user.setId(1L);
         user.setUsername(username);
         user.setRoles(Set.of("USER"));
 
-        when(request.getUserPrincipal()).thenReturn(principal);
-        when(principal.getName()).thenReturn(username);
+        // Configuramos el mock de autenticación en el contexto estático
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn(username);
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
 
-        Optional<UserLoginDTO> result = userService.getLoginInfo(request);
+        Optional<UserLoginDTO> result = userService.getLoginInfo();
 
         assertTrue(result.isPresent());
         assertEquals(username, result.get().getUsername());
@@ -141,12 +157,14 @@ class UserServiceUTest {
         user.setUsername(username);
         user.setRoles(Set.of("USER"));
 
-        when(request.getUserPrincipal()).thenReturn(principal);
-        when(principal.getName()).thenReturn(username);
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        // Configuramos el mock de autenticación
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn(username);
 
-        Optional<User> result = userService.getLoggedUser(request);
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        Optional<User> result = userService.getLoggedUser();
 
         assertTrue(result.isPresent());
         assertEquals(user, result.get());
@@ -154,12 +172,16 @@ class UserServiceUTest {
 
     @Test
     void getLoggedUser_ShouldReturnEmpty_WhenNotAuthenticated() {
-        when(request.getUserPrincipal()).thenReturn(null);
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(null);
 
-        Optional<User> result = userService.getLoggedUser(request);
+        Optional<User> result = userService.getLoggedUser();
 
         assertTrue(result.isEmpty());
+        verify(userRepository, never()).findByUsername(any());
     }
+
+    // --- FIN TESTS MODIFICADOS ---
 
     @Test
     void registerUser_ShouldEncodePasswordAndSave() {

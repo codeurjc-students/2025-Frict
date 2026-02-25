@@ -46,8 +46,8 @@ public class ShopRestController {
 
     @Operation(summary = "(Manager) Get assigned shops information (paged)")
     @GetMapping
-    public ResponseEntity<PageResponse<ShopDTO>> getAssignedShopsPage(HttpServletRequest request, Pageable pageable) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<PageResponse<ShopDTO>> getAssignedShopsPage(Pageable pageable) {
+        User loggedUser = userService.findLoggedUserHelper();
         Page<Shop> assignedShops = shopService.findAllByAssignedManagerId(loggedUser.getId(), pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(assignedShops, ShopDTO::new));
     }

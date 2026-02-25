@@ -34,14 +34,7 @@ export class AuthService {
   public isAdmin = computed(() => this.loginInfoSignal().isLogged && this.loginInfoSignal().roles.includes('ADMIN'));
 
   constructor(private http: HttpClient,
-              private productService: ProductService) {
-    effect(() => {
-      console.log('--- ESTADO DE AUTENTICACIÓN ---');
-      console.log('LoginInfo:', this.loginInfoSignal());
-      console.log('Tienda ID seleccionada:', this.selectedShopId());
-      console.log('¿Hay tienda elegida?:', this.hasShopSelected());
-    });
-  }
+              private productService: ProductService) {}
 
   private apiUrl = '/api/v1';
 

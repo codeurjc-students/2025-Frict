@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -60,95 +58,46 @@ public class ProductRestController {
 
     @Operation(summary = "(All) Get products with applied filters (paged)")
     @GetMapping("/filter")
-    public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(HttpServletRequest request,
-                                                                        Pageable pageable,
+    public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(Pageable pageable,
                                                                         @RequestParam(value = "query", required = false) String searchTerm,
                                                                         @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
-
         Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
-        Page<ProductDTO> dtoPage = products.map(ProductDTO::new);
-
-        // If there is an user logged and has an assigned shop, then get available units
-        Long shopId = getAuthenticatedUserShopId(request);
-        if (shopId != null) {
-            List<Integer> stocks = productService.getLocalStocks(products.getContent(), shopId);
-            List<ProductDTO> dtoList = dtoPage.getContent();
-            IntStream.range(0, dtoList.size()).forEach(i -> dtoList.get(i).setAvailableUnits(stocks.get(i)));
-        }
-
-        return ResponseEntity.ok(PageFormatter.toPageResponse(dtoPage));
-    }
-
-
-    private Long getAuthenticatedUserShopId(HttpServletRequest request) {
-        Optional<User> loggedUser = userService.getLoggedUser(request);
-        Long shopId = null;
-        if (loggedUser.isPresent()){
-            User user = loggedUser.get();
-            if (user.getSelectedShop() != null){
-                shopId = user.getSelectedShop().getId();
-            }
-        }
-        return shopId;
-    }
-
-
-    @Operation(summary = "(All) Get product by ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> getProductById(HttpServletRequest request, @PathVariable Long id) {
-
-        Product product = productService.findProductHelper(id);
-        ProductDTO productDTO = new ProductDTO(product);
-
-        // If there is an user logged and has an assigned shop, then get available units
-        Long shopId = getAuthenticatedUserShopId(request);
-        if (shopId != null) {
-            Integer stock = productService.getLocalStock(product, shopId);
-            productDTO.setAvailableUnits(stock);
-        }
-
-        return ResponseEntity.ok(productDTO);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
 
 
     @Operation(summary = "(User) Get logged user favourite products (paged)")
     @GetMapping("/favourites")
-    public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(Pageable pageable) {
+        //Get logged user info if any (User class)
+        User loggedUser = userService.findLoggedUserHelper();
+
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
-        Page<ProductDTO> dtoPage = favouriteProducts.map(ProductDTO::new);
-
-        // If there is an user logged and has an assigned shop, then get available units
-        if (loggedUser.getSelectedShop() != null) {
-            Long shopId = loggedUser.getSelectedShop().getId();
-            List<Integer> stocks = productService.getLocalStocks(favouriteProducts.getContent(), shopId);
-            List<ProductDTO> dtoList = dtoPage.getContent();
-            IntStream.range(0, dtoList.size()).forEach(i -> dtoList.get(i).setAvailableUnits(stocks.get(i)));
-        }
-
-        return ResponseEntity.ok(PageFormatter.toPageResponse(dtoPage));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(favouriteProducts, ProductDTO::new));
     }
 
 
     @Operation(summary = "(User) Check a product in logged user favourites")
     @GetMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> checkProductInFavourites(HttpServletRequest request, @PathVariable Long id) {
-        User loggedUser = userService.findLoggedUserHelper(request);
-        Product product = productService.findProductHelper(id);
+    public ResponseEntity<ProductDTO> checkProductInFavourites(@PathVariable Long id) {
+        //Get logged user info if any (User class)
+        User loggedUser = userService.findLoggedUserHelper();
 
+        Product product = productService.findProductHelper(id);
         boolean inFavourites = loggedUser.getFavouriteProducts().contains(product);
+
         if (!inFavourites){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product with ID " + id + " is not in favourites.");
         }
+        return ResponseEntity.ok(new ProductDTO(product));
+    }
 
-        // If there is an user logged and has an assigned shop, then get available units
-        ProductDTO productDTO = new ProductDTO(product);
-        if (loggedUser.getSelectedShop() != null) {
-            Long shopId = loggedUser.getSelectedShop().getId();
-            Integer stock = productService.getLocalStock(product, shopId);
-            productDTO.setAvailableUnits(stock);
-        }
-        return ResponseEntity.ok(productDTO);
+
+    @Operation(summary = "(All) Get product by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        Product product = productService.findProductHelper(id);
+        return ResponseEntity.ok(new ProductDTO(product));
     }
 
 
@@ -175,43 +124,32 @@ public class ProductRestController {
 
     @Operation(summary = "(User) Add product to logged user favourites")
     @PostMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<ProductDTO> addProductToFavourites(@PathVariable Long id) {
+        //Get logged user info if any (User class)
+        User loggedUser = userService.findLoggedUserHelper();
+
+        //Find the product and, if exists, add it to user cart
         Product product = productService.findProductHelper(id);
 
         loggedUser.getFavouriteProducts().add(product);
         userService.save(loggedUser);
 
-        // If there is an user logged and has an assigned shop, then get available units
-        ProductDTO productDTO = new ProductDTO(product);
-        if (loggedUser.getSelectedShop() != null) {
-            Long shopId = loggedUser.getSelectedShop().getId();
-            Integer stock = productService.getLocalStock(product, shopId);
-            productDTO.setAvailableUnits(stock);
-        }
-
-        return ResponseEntity.ok(productDTO);
+        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
     }
 
 
     @Operation(summary = "(User) Delete product from logged user favourites")
     @DeleteMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> deleteProductFromFavourites(HttpServletRequest request, @PathVariable Long id) {
-        User loggedUser = userService.findLoggedUserHelper(request);
+    public ResponseEntity<ProductDTO> deleteProductFromFavourites(@PathVariable Long id) {
+        //Get logged user info if any (User class)
+        User loggedUser = userService.findLoggedUserHelper();
+
         Product product = productService.findProductHelper(id);
 
         Set<Product> favouriteProducts = loggedUser.getFavouriteProducts();
         favouriteProducts.remove(product);
         userService.save(loggedUser);
-
-        // If there is an user logged and has an assigned shop, then get available units
-        ProductDTO productDTO = new ProductDTO(product);
-        if (loggedUser.getSelectedShop() != null) {
-            Long shopId = loggedUser.getSelectedShop().getId();
-            Integer stock = productService.getLocalStock(product, shopId);
-            productDTO.setAvailableUnits(stock);
-        }
-        return ResponseEntity.ok(productDTO);
+        return ResponseEntity.ok().build();
     }
 
 
@@ -267,7 +205,7 @@ public class ProductRestController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
         }
         Category othersCategory = othersCategoryOptional.get();
-        
+
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setCurrentPrice(productDTO.getCurrentPrice());
@@ -312,6 +250,13 @@ public class ProductRestController {
             item.setProduct(null); //Unlink order items from the deleting product to be able to delete it. In case of cart items (null order), they will be deleted on cascade.
         }
         orderItemService.saveAll(items);
+
+        //Delete all images from MinIO
+        for (ProductImageInfo i : product.getImages()) {
+            if (!i.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+                storageService.deleteFile(i.getS3Key());
+            }
+        }
 
         productService.deleteById(id);
         return ResponseEntity.ok(new ProductDTO(product));
@@ -371,13 +316,19 @@ public class ProductRestController {
         Product product = productService.findProductHelper(id);
         List<ProductImageInfo> currentImages = product.getImages();
 
-        // Delete images not present in existingImages
-        Set<Long> keepIds = existingImages.stream().map(ProductImageInfo::getId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<String> keepS3Keys = (existingImages != null)
+                ? existingImages.stream()
+                .map(ProductImageInfo::getS3Key)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet())
+                : Collections.emptySet();
+
+        // 2. Iterar sobre las imágenes actuales del producto en BD
         Iterator<ProductImageInfo> iterator = currentImages.iterator();
         while (iterator.hasNext()) {
             ProductImageInfo currentImg = iterator.next();
-            if (!keepIds.contains(currentImg.getId())) {
-                if(!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())){
+            if (currentImg.getS3Key() != null && !keepS3Keys.contains(currentImg.getS3Key())) {
+                if (!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
                     storageService.deleteFile(currentImg.getS3Key());
                 }
                 iterator.remove();
