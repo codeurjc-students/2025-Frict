@@ -36,6 +36,10 @@ export class OrderService {
     return this.http.get<Order>(this.apiUrl + `/${id}`);
   }
 
+  public getCartItemByProductId(id: string): Observable<OrderItem> {
+    return this.http.get<OrderItem>(this.apiUrl + `/cart/item/${id}`);
+  }
+
   public getLoggedUserOrders(page: number, size: number): Observable<PageResponse<Order>>{
     let params = new HttpParams();
     params = params.append('page', page.toString());

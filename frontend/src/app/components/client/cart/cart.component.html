@@ -79,7 +79,7 @@
                         <i class="pi pi-minus text-xs"></i>
                       </button>
                       <span class="w-8 text-center font-bold text-surface-900 text-sm">{{ item.quantity }}</span>
-                      <button (click)="updateItemQuantity(item, item.quantity + 1)" [disabled]="item.quantity >= item.product.totalUnits" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-white rounded-md transition-all disabled:opacity-30">
+                      <button (click)="updateItemQuantity(item, item.quantity + 1)" [disabled]="item.quantity >= item.product.availableUnits" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-white rounded-md transition-all disabled:opacity-30">
                         <i class="pi pi-plus text-xs"></i>
                       </button>
                     </div>
@@ -146,7 +146,7 @@
               </div>
 
               <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-50">
-                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.totalUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
+                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.availableUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
                   <i class="pi pi-cart-plus"></i> Mover al carro
                 </button>
                 <button (click)="removeFavorite(product.id)" class="text-surface-400 hover:text-red-500 transition-colors p-1" pTooltip="Eliminar" tooltipPosition="top">

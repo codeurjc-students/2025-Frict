@@ -255,6 +255,20 @@ public class OrderRestController {
     }
 
 
+    @Operation(summary = "(User) Get logged user cart item by product ID")
+    @GetMapping("/cart/item/{id}")
+    public ResponseEntity<OrderItemDTO> getCartItemByProductId(@PathVariable Long id) {
+        // Check the item is in logged users cart
+        User loggedUser = userService.findLoggedUserHelper();
+        Optional<OrderItem> itemOptional = orderItemService.findUserCartItemByProductId(id, loggedUser.getId());
+        if (itemOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The logged user cart does not contain an item of product " + id + ".");
+        }
+        OrderItem item = itemOptional.get();
+        productService.enrichWithStock(item.getProduct());
+        return ResponseEntity.ok(new OrderItemDTO(item));
+    }
+
     @Operation(summary = "(User) Clear logged user cart products")
     @DeleteMapping("/cart")
     public ResponseEntity<CartSummaryDTO> clearCartItems() {

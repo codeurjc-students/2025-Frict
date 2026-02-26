@@ -84,6 +84,7 @@ export class ProductInfoComponent implements OnInit {
   protected relatedProducts: Product[] = []; //Products related to products first category
 
   protected product!: Product;
+  protected inCartUnits: number = 0; //Provided by getOrderItemById, helps detecting how much units the user can add to the cart without exceeding the local stock limit
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
 
@@ -185,6 +186,7 @@ export class ProductInfoComponent implements OnInit {
             this.loadSelectedShop();
           }
 
+          this.loadCartItemUnits();
           this.loadProductCategory();
           this.checkInFavourites();
           this.loadShopStocks();
@@ -196,6 +198,14 @@ export class ProductInfoComponent implements OnInit {
         }
       });
     }
+  }
+
+  protected loadCartItemUnits(){
+    this.orderService.getCartItemByProductId(this.product.id).subscribe({
+      next: (item) => {
+        this.inCartUnits = item.quantity;
+      }
+    })
   }
 
   protected loadSelectedShop(){
@@ -310,8 +320,11 @@ export class ProductInfoComponent implements OnInit {
       this.orderService.addItemToCart(this.product.id, this.quantity).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
-          this.product.availableUnits -= this.quantity;
           this.orderService.incrementItemsCount(this.quantity);
+          if (this.product.availableUnits - this.inCartUnits == 0){
+            this.quantity = 0;
+          }
+          this.loadCartItemUnits();
         },
         error: (error: HttpErrorResponse) => {
           if (error.status === 405){
