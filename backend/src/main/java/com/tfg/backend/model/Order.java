@@ -62,7 +62,7 @@ public class Order {
         this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
     }
 
-    public Order(User user, List<OrderItem> items, Address address, PaymentCard card) {
+    public Order(User user, List<OrderItem> items, Shop assignedShop, Address address, PaymentCard card) {
         this.referenceCode = ReferenceNumberGenerator.generateOrderReferenceNumber();
 
         this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
@@ -72,6 +72,8 @@ public class Order {
             item.setOrder(this);
             this.items.add(item);
         }
+
+        this.assignedShop = assignedShop;
         this.cardNumberEnding = card.getNumber().substring(card.getNumber().length() - 4);
         this.fullSendingAddress = address.toString();
         this.updateSummaryFields();

@@ -7,7 +7,8 @@ export interface Order {
   history: StatusLog[];
   userName: string;
   orderItems: OrderItem[];
-  assignedTruckId: string;
+  assignedShopId?: string | null;
+  assignedTruckId?: string | null;
   estimatedCompletionTime: number;
 
   totalItems: number;

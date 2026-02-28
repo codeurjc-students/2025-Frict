@@ -50,21 +50,31 @@
               @for (order of col.data(); track order.id) {
 
                 <div cdkDrag (click)="openOrderDetails(order)" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
+
                   <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <div class="flex items-center gap-2 min-w-0 mr-2">
                       <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getStatusColor(getCurrentStatus(order))"></i>
                       <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                     </div>
-                    <p-avatar [label]="getUserLabel(order.userName)" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs shrink-0"></p-avatar>
+
+                    <div class="flex flex-col items-end shrink-0">
+                      <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                        {{ order.createdAt }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">Usuario: {{ order.userName }}</div>
+
+                  <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.userName }}</div>
+
                   <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
                     <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.fullSendingAddress }}
                   </div>
+
                   <div class="flex flex-wrap gap-2 items-center pointer-events-none">
                     <p-tag severity="info" styleClass="tag-standard">
                       <i class="pi pi-box"></i>
-                      <span>{{ order.totalItems }}</span> </p-tag>
+                      <span>{{ order.totalItems }}</span>
+                    </p-tag>
 
                     @if(order.assignedTruckId) {
                       <p-tag severity="success" styleClass="tag-standard">
@@ -77,17 +87,30 @@
                         <i class="pi pi-times"></i>
                       </p-tag>
                     }
+
+                    @if(order.assignedShopId) {
+                      <p-tag severity="success" styleClass="tag-standard">
+                        <i class="pi pi-shop"></i>
+                        <i class="pi pi-check"></i>
+                      </p-tag>
+                    } @else {
+                      <p-tag severity="danger" styleClass="tag-standard">
+                        <i class="pi pi-shop"></i>
+                        <i class="pi pi-times"></i>
+                      </p-tag>
+                    }
+
                     <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200 ml-auto shrink-0">
                       {{ formatPrice(order.totalCost) }}
                     </span>
                   </div>
+
                   <div *cdkDragPlaceholder class="bg-slate-200/50 border-2 border-dashed border-slate-400 rounded-xl min-h-[140px] w-full opacity-60"></div>
                   <div *cdkDragPreview class="bg-white border-2 border-blue-400 rounded-xl p-4 shadow-2xl w-[280px] opacity-95 rotate-2 cursor-grabbing">
                     <span class="text-xs font-mono text-slate-500">{{ order.referenceCode }}</span>
                     <div class="font-bold text-slate-800 text-sm truncate mt-1">Usuario: {{ order.userName }}</div>
                   </div>
                 </div>
-
               }
             </div>
           </div>
@@ -104,7 +127,7 @@
           @for (order of cancelledOrders(); track order.id) {
             <div cdkDrag (click)="openOrderDetails(order)" class="w-full sm:w-[280px] md:w-[300px] shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-red-400 transition-colors min-w-0">
               <div class="flex items-center gap-2 mb-2"><i class="pi pi-stop-circle text-sm text-red-500"></i><span class="text-xs font-mono text-slate-500">{{ order.referenceCode }}</span></div>
-              <div class="font-bold text-slate-800 text-sm mb-1 truncate">Usuario: {{ order.userName }}</div>
+              <div class="font-bold text-slate-800 text-sm mb-1 truncate">{{ order.userName }}</div>
               <div class="flex flex-wrap gap-2 items-center mt-4">
                 <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200">{{ formatPrice(order.totalCost) }}</span>
               </div>
@@ -159,9 +182,11 @@
   [modal]="true"
   [baseZIndex]="10000"
   [breakpoints]="{'1199px': '85vw', '991px': '95vw', '575px': '100vw'}"
-  [style]="{width: '1100px', 'max-height': '85vh', 'margin-top': '5rem'}"
+  [style]="{width: '1100px', height: '90vh'}"
   [draggable]="false"
-  [resizable]="false">
+  [resizable]="false"
+  [contentStyle]="{'border-radius': '0 0 1rem 1rem'}"
+  styleClass="order-details-dialog custom-dialog-scroll">
 
   <ng-template pTemplate="header">
     @if (selectedOrder) {
@@ -187,7 +212,7 @@
   @if (selectedOrder) {
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
       <div class="flex flex-col">
-        <span class="text-xs font-bold text-slate-500 uppercase">Productos totales</span>
+        <span class="text-xs font-bold text-slate-500 uppercase">Productos distintos</span>
         <span class="text-xl font-bold text-slate-800">{{ selectedOrder.orderItems.length || 0 }}</span>
       </div>
       <div class="flex flex-col">
@@ -208,15 +233,16 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2 pb-2">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2 pb-2 h-full">
 
-      <div class="lg:col-span-2 flex flex-col">
+      <div class="lg:col-span-2 flex flex-col h-full">
         <p-tabs value="0">
           <p-tablist>
-            <p-tab value="0">Detalles</p-tab>
-            <p-tab value="1">Seguimiento</p-tab>
-            <p-tab value="2">Localización</p-tab>
+            <p-tab value="0"><i class="pi pi-list mr-2"></i> Detalles</p-tab>
+            <p-tab value="1"><i class="pi pi-comments mr-2"></i> Actividad y seguimiento</p-tab>
+            <p-tab value="2"><i class="pi pi-map mr-2"></i> Localización</p-tab>
           </p-tablist>
+
           <p-tabpanels>
             <p-tabpanel value="0">
               <p-table [value]="selectedOrder.orderItems" [paginator]="true" [rows]="5" styleClass="p-datatable-sm mt-4 border border-slate-200 rounded-lg overflow-hidden">
@@ -230,14 +256,14 @@
                 </ng-template>
                 <ng-template pTemplate="body" let-item>
                   <tr class="border-t border-slate-100 hover:bg-slate-50">
-                    <td class="p-3 text-sm font-medium text-slate-700">{{ item.productName }}</td>
+                    <td class="p-3 text-sm font-medium text-slate-700">{{ getItemName(item) }}</td>
                     <td class="p-3 text-center"><span class="bg-slate-100 px-2.5 py-1 rounded text-xs text-slate-700 font-bold">{{ item.quantity }}</span></td>
                     <td class="p-3 text-right text-sm text-slate-600">{{ formatPrice(item.productPrice) }}</td>
-                    <td class="p-3 text-right text-sm font-bold text-slate-800">{{ formatPrice(item.itemsCost) }}</td>
+                    <td class="p-3 text-right text-sm font-bold text-slate-800">{{ formatPrice(item.productPrice * item.quantity) }}</td>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
-                  <tr><td colspan="4" class="text-center py-4 text-slate-500">No hay artículos.</td></tr>
+                  <tr><td colspan="4" class="text-center py-4 text-slate-500">No hay artículos en este pedido.</td></tr>
                 </ng-template>
               </p-table>
             </p-tabpanel>
@@ -251,7 +277,7 @@
                 </div>
               </div>
 
-              <div class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-8">
+              <div class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-8 pb-4">
                 @for (log of selectedOrder.history; track log.id || $index) {
                   <div class="relative">
                     <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
@@ -299,43 +325,83 @@
         </p-tabs>
       </div>
 
-      <div class="lg:col-span-1 flex flex-col gap-6 pt-12"> <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-id-card"></i> Camión Asignado</h4>
-        @if(selectedOrder.assignedTruckId && getMockDriver(selectedOrder.assignedTruckId)) {
-          <div class="flex items-center gap-3">
-            <img [src]="getMockDriver(selectedOrder.assignedTruckId)?.photo" class="w-10 h-10 rounded-full border-2 border-slate-100 object-cover" alt="Avatar conductor">
-            <div>
-              <p class="text-sm font-bold text-slate-800">{{ getMockDriver(selectedOrder.assignedTruckId)?.name }}</p>
-              <p class="text-xs font-mono text-slate-500">{{ getMockDriver(selectedOrder.assignedTruckId)?.username }}</p>
-            </div>
-          </div>
-          <div class="mt-3 text-xs flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1.5 rounded-md font-medium">
-            <i class="pi pi-truck"></i> Camión ID: {{ selectedOrder.assignedTruckId }}
-          </div>
-        } @else {
-          <div class="text-sm text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-            <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin camión asignado
-          </div>
-        }
-      </div>
+      <div class="lg:col-span-1 flex flex-col gap-6 pt-12">
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-shop"></i> Tienda de Origen</h4>
-          <div class="flex items-start gap-3">
-            <img [src]="getMockStore().image" class="w-12 h-12 rounded-lg border border-slate-200 object-cover shrink-0" alt="Foto Tienda">
-            <div class="flex flex-col">
-              <p class="text-sm font-bold text-slate-800">{{ getMockStore().name }}</p>
-              <p class="text-xs text-slate-500 mt-1 leading-tight"><i class="pi pi-map-marker mr-0.5"></i>{{ getMockStore().address }}</p>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <i class="pi pi-truck"></i> Camión Asignado
+          </h4>
+
+          @if(selectedTruck) {
+            <div class="flex items-center gap-2 text-sm text-slate-700 font-bold mb-3 pb-3 border-b border-slate-100">
+              <i class="pi pi-id-card text-slate-400"></i> Ref: {{ selectedTruck.referenceCode }}
             </div>
-          </div>
+
+            @if(selectedTruck.assignedDriver) {
+              <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <img [src]="selectedTruck.assignedDriver.imageInfo.imageUrl || 'assets/default-user.png'" class="w-10 h-10 rounded-full border border-slate-200 object-cover" alt="Conductor">
+                <div class="flex flex-col">
+                  <p class="text-sm font-bold text-slate-800 leading-tight">{{ selectedTruck.assignedDriver.name }}</p>
+                  <p class="text-xs font-mono text-slate-500 mt-0.5">{{ selectedTruck.assignedDriver.username }}</p>
+                </div>
+              </div>
+            } @else {
+              <div class="text-xs text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin conductor asignado al camión
+              </div>
+            }
+          } @else {
+            <div class="text-sm text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+              <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin camión asignado
+            </div>
+          }
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-user"></i> Destinatario</h4>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <i class="pi pi-shop"></i> Tienda Asignada
+          </h4>
 
-          <div class="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
-            <p-avatar [label]="getUserLabel(selectedOrder.userName)" shape="circle" size="normal" styleClass="w-7 h-7 bg-blue-100 text-blue-700 font-bold text-xs shrink-0"></p-avatar>
-            <p class="text-sm font-bold text-slate-800">{{ selectedOrder.userName }}</p>
+          @if(selectedShop) {
+            <div class="flex items-start gap-3 mb-4 pb-3 border-b border-slate-100">
+              <img [src]="selectedShop.imageInfo.imageUrl || 'assets/default-shop.png'" class="w-12 h-12 rounded-lg border border-slate-200 object-cover shrink-0" alt="Tienda">
+              <div class="flex flex-col">
+                <p class="text-sm font-bold text-slate-800">{{ selectedShop.name }}</p>
+                <p class="text-[11px] text-slate-500 mt-1 leading-tight">
+                  <i class="pi pi-map-marker text-[9px] mr-0.5"></i>{{ selectedShop.address.street }} {{ selectedShop.address.number }}, {{ selectedShop.address.city }}
+                </p>
+              </div>
+            </div>
+
+            @if(selectedShop.assignedManager) {
+              <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <img [src]="selectedShop.assignedManager.imageInfo.imageUrl || 'assets/default-user.png'" class="w-8 h-8 rounded-full border border-slate-200 object-cover" alt="Manager">
+                <div class="flex flex-col">
+                  <p class="text-[10px] font-bold text-slate-500 uppercase leading-none mb-1">Manager asignado</p>
+                  <p class="text-xs font-bold text-slate-800">{{ selectedShop.assignedManager.name }}</p>
+                  <p class="text-[10px] font-mono text-slate-500">{{ selectedShop.assignedManager.username }}</p>
+                </div>
+              </div>
+            } @else {
+              <div class="text-xs text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin manager asignado a la tienda
+              </div>
+            }
+          } @else {
+            <div class="text-sm text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+              <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin tienda asignada
+            </div>
+          }
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <i class="pi pi-user"></i> Destinatario
+          </h4>
+
+          <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-100">
+            <p-avatar [label]="getUserLabel(selectedOrder.userName)" shape="circle" size="normal" styleClass="w-9 h-9 bg-blue-100 text-blue-700 font-bold text-sm shrink-0"></p-avatar>
+            <p class="text-base font-bold text-slate-800">{{ selectedOrder.userName }}</p>
           </div>
 
           <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-700 flex items-start gap-2">

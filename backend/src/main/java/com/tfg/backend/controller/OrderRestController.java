@@ -37,6 +37,9 @@ public class OrderRestController {
     private OrderItemService orderItemService;
 
     @Autowired
+    private ShopService shopService;
+
+    @Autowired
     private ShopStockService shopStockService;
 
     @Autowired
@@ -84,8 +87,17 @@ public class OrderRestController {
     public ResponseEntity<OrderDTO> createOrder(@RequestParam Long addressId,
                                                 @RequestParam Long cardId){
 
-        //Get logged user info if any (User class)
+        //Get logged user info if any (User class), and check if user has a selected shop
         User loggedUser = userService.findLoggedUserHelper();
+        if (loggedUser.getSelectedShop() == null){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User must have an assigned shop to complete an order");
+        }
+
+        Optional<Shop> shopOptional = shopService.findById(loggedUser.getSelectedShop().getId());
+        if (shopOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + loggedUser.getSelectedShop().getId() + " does not exist.");
+        }
+        Shop selectedShop = shopOptional.get();
 
         //Find address info and card info
         Optional<Address> addressOptional = loggedUser.getAddresses().stream()
@@ -138,7 +150,7 @@ public class OrderRestController {
         }
         List<OrderItem> savedItems = orderItemService.saveAll(cartItems);
 
-        Order newOrder = new Order(loggedUser, savedItems, addressOptional.get(), cardOptional.get());
+        Order newOrder = new Order(loggedUser, savedItems, selectedShop, addressOptional.get(), cardOptional.get());
 
         newOrder.setFullSendingAddress(addressOptional.get().toString());
         PaymentCard card = cardOptional.get();

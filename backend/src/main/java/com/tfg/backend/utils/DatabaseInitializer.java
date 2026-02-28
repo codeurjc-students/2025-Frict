@@ -460,8 +460,14 @@ public class DatabaseInitializer {
             for (OrderItem i : orderItems1) { i.setProduct(null); }
             for (OrderItem i : orderItems2) { i.setProduct(null); }
 
-            Order order1 = new Order(user1, orderItems1, user1.getAddresses().getFirst(), user1.getCards().getFirst());
-            Order order2 = new Order(user2, orderItems2, user2.getAddresses().getFirst(), user2.getCards().getFirst());
+            List<Shop> allShops = shopRepository.findAll();
+            Order order1 = new Order(user1, orderItems1, allShops.getFirst(), user1.getAddresses().getFirst(), user1.getCards().getFirst());
+            Order order2 = new Order(user2, orderItems2, allShops.getLast(), user2.getAddresses().getFirst(), user2.getCards().getFirst());
+
+            List<Truck> allTrucks = truckRepository.findAll();
+            order1.setAssignedTruck(allTrucks.getFirst());
+            order2.setAssignedTruck(allTrucks.getLast());
+
             order1.addStatusUpdate("El pedido ha quedado registrado correctamente en la tienda asignada");
             order1.changeOrderStatus(OrderStatus.SENT, "El pedido se está procesando");
 
