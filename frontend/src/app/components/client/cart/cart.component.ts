@@ -108,8 +108,8 @@ export class CartComponent implements OnInit, OnDestroy {
 
     if (newQuantity < 1) {
       finalQuantity = 1;
-    } else if (newQuantity > item.product.totalUnits) {
-      finalQuantity = item.product.totalUnits;
+    } else if (newQuantity > item.product.availableUnits) {
+      finalQuantity = item.product.availableUnits;
     }
 
     if (finalQuantity !== newQuantity) {

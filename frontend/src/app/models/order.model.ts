@@ -5,7 +5,7 @@ export interface Order {
   id: string;
   referenceCode: string;
   history: StatusLog[];
-  userId: string;
+  userName: string;
   orderItems: OrderItem[];
   assignedTruckId: string;
   estimatedCompletionTime: number;

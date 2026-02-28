@@ -10,7 +10,7 @@ import com.tfg.backend.utils.EmailService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -159,15 +158,41 @@ public class OrderRestController {
     }
 
 
+    @Operation(summary = "(Admin, Manager) Comment and/or update order status by ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderDTO> commentAndOrUpdateOrderStatus(@PathVariable Long id,
+                                                                  @RequestParam OrderStatus orderStatus,
+                                                                  @RequestParam(required = false) String comment){
+        //Check if the order exists
+        Optional<Order> orderOptional = orderService.findById(id);
+        if (orderOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order with ID " + id + " does not exist.");
+        }
+        Order order = orderOptional.get();
+
+        //Difference between commenting only or changing status and commenting
+        //If status has not changed, then it is commenting only
+        if (orderStatus == order.getHistory().getLast().getStatus()) {
+            order.getHistory().getLast().getUpdates().add(new LogEntry(comment));
+        }
+        else { //Change status and save the comment as the first of the updates list for that status
+            order.getHistory().add(new StatusLog(orderStatus, comment));
+        }
+
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
+
+
     @Operation(summary = "(User) Cancel logged user order by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id){
         //Get logged user info if any (User class)
         User loggedUser = userService.findLoggedUserHelper();
 
-        //Check if the order belongs to that user or if the logged user is a delivery driver
-        if(!loggedUser.getRoles().contains("DRIVER") && !orderService.existsByIdAndUser(id, loggedUser)){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order with ID " + id + " does not belong to this user or logged user has not delivery driver permissions.");
+        //Check if the order belongs to that user
+        if(!orderService.existsByIdAndUser(id, loggedUser)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order with ID " + id + " does not belong to this user.");
         }
 
         //Check if the order exists
@@ -305,12 +330,7 @@ public class OrderRestController {
                 .mapToInt(OrderItem::getQuantity)
                 .sum();
 
-        int inStockUnits = 0;
-        for (ShopStock s : product.getShopsStock()) {
-            inStockUnits += s.getUnits();
-        }
-
-        if(inCartUnits + quantity > inStockUnits){
+        if(inCartUnits + quantity > product.getAvailableUnits()){
             //Code linked in frontend
             throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product with ID" + id + " is not enough to perform this operation.");
         }

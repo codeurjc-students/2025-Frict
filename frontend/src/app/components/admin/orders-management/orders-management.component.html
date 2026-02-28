@@ -1,4 +1,8 @@
-<div class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -7,10 +11,29 @@
         <p class="text-slate-500">Gestiona los pedidos realizados online de la organización.</p>
       </div>
 
-      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" optionLabel="label" optionValue="value" aria-labelledby="basic" />
+      <p-paginator
+        (onPageChange)="onOrdersPageChange($event)"
+        [first]="first"
+        [rows]="rows"
+        [totalRecords]="ordersPage.totalItems"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        [showCurrentPageReport]="true"
+        [dropdownAppendTo]="'body'"
+        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} pedidos"
+        styleClass="!bg-primary-50 text-sm rounded-b-2xl">
+      </p-paginator>
+
+      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" optionLabel="label" optionValue="value" aria-labelledby="basic">
+        <ng-template let-item pTemplate>
+          <div class="flex items-center gap-2 px-2">
+            <i [class]="item.value ? 'pi pi-list' : 'pi pi-objects-column'"></i>
+            <span>{{item.label}}</span>
+          </div>
+        </ng-template>
+      </p-selectButton>
     </div>
 
-    <div cdkDropListGroup class="flex flex-col gap-8">
+    <div *ngIf="!listModeSelected" cdkDropListGroup class="flex flex-col gap-8">
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
         @for (col of kanbanColumns; track col.id) {
@@ -26,40 +49,42 @@
 
               @for (order of col.data(); track order.id) {
 
-                <div cdkDrag (click)="openOrderDetails(order)" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
+                <div cdkDrag (click)="openOrderDetails(order)" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
                   <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <div class="flex items-center gap-2 min-w-0 mr-2">
-                      <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getStatusColor(order.status)"></i>
+                      <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getStatusColor(getCurrentStatus(order))"></i>
                       <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                     </div>
-                    <p-avatar [label]="order.user.name.charAt(0)" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs shrink-0"></p-avatar>
+                    <p-avatar [label]="getUserLabel(order.userName)" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs shrink-0"></p-avatar>
                   </div>
-                  <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.user.name }}</div>
+                  <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">Usuario: {{ order.userName }}</div>
                   <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
-                    <i class="pi pi-map-marker text-[10px] mr-1 shrink-0"></i>{{ order.address }}
+                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.fullSendingAddress }}
                   </div>
                   <div class="flex flex-wrap gap-2 items-center pointer-events-none">
-                    <span class="px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200 flex items-center gap-1 shrink-0">
-                      <i class="pi pi-box text-[9px]"></i> {{ order.totalItems }}
-                    </span>
-                    @if(order.assignedTruck) {
-                      <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200 flex items-center gap-1 shrink-0 truncate max-w-full">
-                        <span class="w-3 h-3 rounded-full bg-blue-600 text-white flex items-center justify-center text-[7px] font-black shrink-0">M</span>
-                        <span class="truncate">{{ order.assignedTruck.reference }}</span>
-                      </span>
+                    <p-tag severity="info" styleClass="tag-standard">
+                      <i class="pi pi-box"></i>
+                      <span>{{ order.totalItems }}</span> </p-tag>
+
+                    @if(order.assignedTruckId) {
+                      <p-tag severity="success" styleClass="tag-standard">
+                        <i class="pi pi-truck"></i>
+                        <i class="pi pi-check"></i>
+                      </p-tag>
                     } @else {
-                      <span class="px-2.5 py-1 rounded-full bg-slate-50 text-slate-500 text-[10px] font-bold border border-slate-200 flex items-center gap-1 shrink-0">
-                        <i class="pi pi-exclamation-triangle text-[9px]"></i> Sin Camión
-                      </span>
+                      <p-tag severity="danger" styleClass="tag-standard">
+                        <i class="pi pi-truck"></i>
+                        <i class="pi pi-times"></i>
+                      </p-tag>
                     }
-                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200 ml-auto shrink-0">
-                      {{ order.totalCost | currency:'EUR' }}
+                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200 ml-auto shrink-0">
+                      {{ formatPrice(order.totalCost) }}
                     </span>
                   </div>
                   <div *cdkDragPlaceholder class="bg-slate-200/50 border-2 border-dashed border-slate-400 rounded-xl min-h-[140px] w-full opacity-60"></div>
                   <div *cdkDragPreview class="bg-white border-2 border-blue-400 rounded-xl p-4 shadow-2xl w-[280px] opacity-95 rotate-2 cursor-grabbing">
                     <span class="text-xs font-mono text-slate-500">{{ order.referenceCode }}</span>
-                    <div class="font-bold text-slate-800 text-sm truncate mt-1">{{ order.user.name }}</div>
+                    <div class="font-bold text-slate-800 text-sm truncate mt-1">Usuario: {{ order.userName }}</div>
                   </div>
                 </div>
 
@@ -75,13 +100,13 @@
           <h3 class="font-bold text-red-900">Cancelados</h3>
           <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ cancelledOrders().length }}</span>
         </div>
-        <div cdkDropList [cdkDropListData]="cancelledOrders()" (cdkDropListDropped)="drop($event, 'CANCELLED')" class="flex flex-wrap gap-4 min-h-[100px] p-2 bg-white/50 rounded-xl border border-red-50/50 border-dashed">
+        <div cdkDropList [cdkDropListData]="cancelledOrders()" (cdkDropListDropped)="drop($event, 'Cancelado')" class="flex flex-wrap gap-4 min-h-[100px] p-2 bg-white/50 rounded-xl border border-red-50/50 border-dashed">
           @for (order of cancelledOrders(); track order.id) {
-            <div cdkDrag (click)="openOrderDetails(order)" class="w-full sm:w-[280px] md:w-[300px] shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-grab active:cursor-grabbing hover:border-red-400 transition-colors min-w-0">
+            <div cdkDrag (click)="openOrderDetails(order)" class="w-full sm:w-[280px] md:w-[300px] shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-red-400 transition-colors min-w-0">
               <div class="flex items-center gap-2 mb-2"><i class="pi pi-stop-circle text-sm text-red-500"></i><span class="text-xs font-mono text-slate-500">{{ order.referenceCode }}</span></div>
-              <div class="font-bold text-slate-800 text-sm mb-1 truncate">{{ order.user.name }}</div>
+              <div class="font-bold text-slate-800 text-sm mb-1 truncate">Usuario: {{ order.userName }}</div>
               <div class="flex flex-wrap gap-2 items-center mt-4">
-                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200">{{ order.totalCost | currency:'EUR' }}</span>
+                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200">{{ formatPrice(order.totalCost) }}</span>
               </div>
               <div *cdkDragPlaceholder class="bg-red-100/50 border-2 border-dashed border-red-300 rounded-xl min-h-[140px] w-full sm:w-[280px] opacity-60"></div>
             </div>
@@ -90,18 +115,53 @@
       </div>
 
     </div>
+
+    <div *ngIf="listModeSelected" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <p-table [value]="ordersPage.items" styleClass="p-datatable-sm" [tableStyle]="{'min-width': '50rem'}">
+        <ng-template pTemplate="header">
+          <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+            <th class="py-3 px-4 font-bold">Referencia</th>
+            <th class="py-3 px-4 font-bold">Usuario</th>
+            <th class="py-3 px-4 font-bold">Estado</th>
+            <th class="py-3 px-4 font-bold">Dirección</th>
+            <th class="py-3 px-4 font-bold text-center">Artículos</th>
+            <th class="py-3 px-4 font-bold text-right">Total</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-order>
+          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-100" (click)="openOrderDetails(order)">
+            <td class="py-3 px-4 font-mono text-sm font-medium text-slate-600">{{ order.referenceCode }}</td>
+            <td class="py-3 px-4 text-sm text-slate-800 font-bold flex items-center gap-2">
+              <p-avatar [label]="getUserLabel(order.userName)" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
+              {{ order.userName }}
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center w-fit gap-1.5" [ngClass]="getStatusBgColor(getCurrentStatus(order))">
+                 <i class="pi pi-circle-fill text-xs"></i>{{ getCurrentStatus(order) }}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="order.fullSendingAddress"><i class="pi pi-map-marker mr-1"></i>{{ order.fullSendingAddress }}</td>
+            <td class="py-3 px-4 text-center text-sm font-bold text-slate-600"><span class="bg-slate-100 px-2 py-1 rounded-md">{{ order.totalItems }}</span></td>
+            <td class="py-3 px-4 text-right text-sm font-bold text-slate-800">{{ formatPrice(order.totalCost) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center py-8 text-slate-500">No hay pedidos registrados en esta página.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+
   </div>
 </div>
-
 
 <p-dialog
   [(visible)]="displayOrderDialog"
   [modal]="true"
-  [breakpoints]="{'1199px': '75vw', '991px': '90vw', '575px': '100vw'}"
-  [style]="{width: '1000px', 'max-height': '95vh'}"
+  [baseZIndex]="10000"
+  [breakpoints]="{'1199px': '85vw', '991px': '95vw', '575px': '100vw'}"
+  [style]="{width: '1100px', 'max-height': '85vh', 'margin-top': '5rem'}"
   [draggable]="false"
-  [resizable]="false"
-  styleClass="order-details-dialog custom-dialog-scroll">
+  [resizable]="false">
 
   <ng-template pTemplate="header">
     @if (selectedOrder) {
@@ -111,133 +171,176 @@
           <span class="text-lg font-normal text-slate-400">#{{ selectedOrder.id }}</span>
         </div>
         <div class="flex items-center gap-3 mt-1">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5"
-                          [ngClass]="getStatusBgColor(selectedOrder.status)">
-                        <i class="pi pi-circle-fill text-[8px]"></i>
-                      {{ getStatusLabel(selectedOrder.status) }}
-                    </span>
+          <span class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5"
+                [ngClass]="getStatusBgColor(getCurrentStatus(selectedOrder))">
+              <i class="pi pi-circle-fill text-xs"></i>
+            {{ getCurrentStatus(selectedOrder) }}
+          </span>
           <span class="text-xs text-slate-500">
-                        Creado el {{ selectedOrder.date | date:'mediumDate' }} por <span class="font-bold text-slate-700">{{ selectedOrder.user.name }}</span>
-                    </span>
+             Creado el {{ selectedOrder.createdAt }} por <span class="font-bold text-slate-700">{{ selectedOrder.userName }}</span>
+          </span>
         </div>
       </div>
     }
   </ng-template>
 
   @if (selectedOrder) {
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4 pb-2">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
+      <div class="flex flex-col">
+        <span class="text-xs font-bold text-slate-500 uppercase">Productos totales</span>
+        <span class="text-xl font-bold text-slate-800">{{ selectedOrder.orderItems.length || 0 }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-xs font-bold text-slate-500 uppercase">Artículos totales</span>
+        <span class="text-xl font-bold text-slate-800">{{ selectedOrder.totalItems }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-xs font-bold text-slate-500 uppercase">Subtotal</span>
+        <span class="text-xl font-bold text-slate-800">{{ formatPrice(selectedOrder.subtotalCost) }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-xs font-bold text-slate-500 uppercase">Descuento</span>
+        <span class="text-xl font-bold text-red-600">-{{ formatPrice(selectedOrder.totalDiscount) }}</span>
+      </div>
+      <div class="flex flex-col md:border-l md:border-slate-200 md:pl-4">
+        <span class="text-xs font-bold text-slate-500 uppercase">Total Pedido</span>
+        <span class="text-2xl font-black text-slate-900">{{ formatPrice(selectedOrder.totalCost) }}</span>
+      </div>
+    </div>
 
-      <div class="lg:col-span-2 flex flex-col gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2 pb-2">
 
-        <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
-          <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-slate-700 text-sm">Artículos del Pedido ({{ selectedOrder.totalItems }})</h3>
-          </div>
-          <div class="p-0">
-            <table class="w-full text-sm text-left">
-              <thead class="bg-slate-50/50 text-slate-500 text-xs border-b border-slate-100">
-              <tr>
-                <th class="px-4 py-2 font-medium">Producto</th>
-                <th class="px-4 py-2 font-medium text-center">Cant.</th>
-                <th class="px-4 py-2 font-medium text-right">Precio</th>
-              </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                @for (prod of selectedOrder.products; track prod.name) {
-                  <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-3 font-medium text-slate-700">{{ prod.name }}</td>
-                    <td class="px-4 py-3 text-center"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs text-slate-600">{{ prod.quantity }}</span></td>
-                    <td class="px-4 py-3 text-right text-slate-600">{{ prod.price | currency:'EUR' }}</td>
+      <div class="lg:col-span-2 flex flex-col">
+        <p-tabs value="0">
+          <p-tablist>
+            <p-tab value="0">Detalles</p-tab>
+            <p-tab value="1">Seguimiento</p-tab>
+            <p-tab value="2">Localización</p-tab>
+          </p-tablist>
+          <p-tabpanels>
+            <p-tabpanel value="0">
+              <p-table [value]="selectedOrder.orderItems" [paginator]="true" [rows]="5" styleClass="p-datatable-sm mt-4 border border-slate-200 rounded-lg overflow-hidden">
+                <ng-template pTemplate="header">
+                  <tr class="bg-slate-50 text-slate-500 text-xs">
+                    <th class="font-medium p-3">Producto</th>
+                    <th class="font-medium p-3 text-center w-24">Cant.</th>
+                    <th class="font-medium p-3 text-right w-32">Precio Und.</th>
+                    <th class="font-medium p-3 text-right w-32">Subtotal</th>
                   </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </ng-template>
+                <ng-template pTemplate="body" let-item>
+                  <tr class="border-t border-slate-100 hover:bg-slate-50">
+                    <td class="p-3 text-sm font-medium text-slate-700">{{ item.productName }}</td>
+                    <td class="p-3 text-center"><span class="bg-slate-100 px-2.5 py-1 rounded text-xs text-slate-700 font-bold">{{ item.quantity }}</span></td>
+                    <td class="p-3 text-right text-sm text-slate-600">{{ formatPrice(item.productPrice) }}</td>
+                    <td class="p-3 text-right text-sm font-bold text-slate-800">{{ formatPrice(item.itemsCost) }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="4" class="text-center py-4 text-slate-500">No hay artículos.</td></tr>
+                </ng-template>
+              </p-table>
+            </p-tabpanel>
 
-        <div>
-          <h3 class="font-bold text-slate-800 text-sm mb-4 border-b border-slate-200 pb-2">Actividad y Comentarios</h3>
-
-          <div class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-6">
-            @for (log of selectedOrder.history; track log.date) {
-
-              <div class="relative">
-                <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center"
-                     [ngClass]="log.isDriverComment ? 'border-yellow-400 text-yellow-500' : 'border-slate-300 text-slate-400'">
-                  <i class="text-[10px]" [ngClass]="log.isDriverComment ? 'pi pi-comment' : 'pi pi-check'"></i>
-                </div>
-
-                <div class="bg-white border rounded-xl p-3 shadow-sm"
-                     [ngClass]="log.isDriverComment ? 'border-yellow-200 bg-yellow-50/30' : 'border-slate-200'">
-                  <div class="flex justify-between items-start mb-1">
-                                        <span class="text-xs font-bold" [ngClass]="log.isDriverComment ? 'text-yellow-800' : 'text-slate-700'">
-                                            {{ log.isDriverComment ? 'Nota del Conductor' : getStatusLabel(log.status) }}
-                                        </span>
-                    <span class="text-[10px] text-slate-400">{{ log.date | date:'short' }}</span>
-                  </div>
-                  <p class="text-sm text-slate-600 leading-relaxed">{{ log.description }}</p>
+            <p-tabpanel value="1">
+              <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-4">
+                <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</label>
+                <textarea pInputTextarea [(ngModel)]="newComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario o nota..."></textarea>
+                <div class="flex justify-end mt-2">
+                  <p-button label="Publicar comentario" icon="pi pi-send" size="small" (click)="addComment()" [disabled]="!newComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button>
                 </div>
               </div>
 
-            }
-          </div>
-        </div>
+              <div class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-8">
+                @for (log of selectedOrder.history; track log.id || $index) {
+                  <div class="relative">
+                    <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
+                      <i class="text-xs" [ngClass]="log.icon || getIconForStatus(log.status)"></i>
+                    </div>
+
+                    <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-200">
+                      <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+                        <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">{{ log.status }}</span>
+                        <span class="text-xs text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded">
+                          {{ (log.updates && log.updates.length > 0) ? log.updates[0].date : 'Sin fecha' }}
+                      </span>
+                      </div>
+
+                      <div class="flex flex-col gap-3">
+                        @for (update of log.updates; track $index) {
+                          <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                            <div class="flex items-center gap-1.5 mb-1.5">
+                              <i class="pi pi-clock text-xs text-slate-400"></i>
+                              <span class="text-xs font-bold text-slate-500">{{ update.date }}</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed">{{ update.description }}</p>
+                          </div>
+                        }
+                        @if (!log.updates || log.updates.length === 0) {
+                          <p class="text-xs text-slate-400 italic">No hay actualizaciones registradas para este estado.</p>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </p-tabpanel>
+
+            <p-tabpanel value="2">
+              <div class="bg-slate-100 mt-4 rounded-xl border border-slate-200 h-[400px] flex items-center justify-center relative overflow-hidden">
+                <div class="z-10 text-center flex flex-col items-center p-4">
+                  <i class="pi pi-map-marker text-4xl text-slate-400 mb-3"></i>
+                  <h3 class="font-bold text-slate-600">Área de Mapa</h3>
+                  <p class="text-xs text-slate-500 mt-1 max-w-[250px]">Componente reservado para integración con mapas mostrando Tienda, Camión y Destino.</p>
+                </div>
+              </div>
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
       </div>
 
-      <div class="lg:col-span-1 flex flex-col gap-6">
-
-        <div>
-          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Cliente Asignado</h4>
+      <div class="lg:col-span-1 flex flex-col gap-6 pt-12"> <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-id-card"></i> Camión Asignado</h4>
+        @if(selectedOrder.assignedTruckId && getMockDriver(selectedOrder.assignedTruckId)) {
           <div class="flex items-center gap-3">
-            <p-avatar [label]="selectedOrder.user.name.charAt(0)" shape="circle" size="large" styleClass="bg-blue-100 text-blue-700 font-bold"></p-avatar>
+            <img [src]="getMockDriver(selectedOrder.assignedTruckId)?.photo" class="w-10 h-10 rounded-full border-2 border-slate-100 object-cover" alt="Avatar conductor">
             <div>
-              <p class="text-sm font-bold text-slate-800">{{ selectedOrder.user.name }}</p>
-              <p class="text-xs text-slate-500">{{ selectedOrder.user.email }}</p>
+              <p class="text-sm font-bold text-slate-800">{{ getMockDriver(selectedOrder.assignedTruckId)?.name }}</p>
+              <p class="text-xs font-mono text-slate-500">{{ getMockDriver(selectedOrder.assignedTruckId)?.username }}</p>
+            </div>
+          </div>
+          <div class="mt-3 text-xs flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1.5 rounded-md font-medium">
+            <i class="pi pi-truck"></i> Camión ID: {{ selectedOrder.assignedTruckId }}
+          </div>
+        } @else {
+          <div class="text-sm text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+            <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin camión asignado
+          </div>
+        }
+      </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-shop"></i> Tienda de Origen</h4>
+          <div class="flex items-start gap-3">
+            <img [src]="getMockStore().image" class="w-12 h-12 rounded-lg border border-slate-200 object-cover shrink-0" alt="Foto Tienda">
+            <div class="flex flex-col">
+              <p class="text-sm font-bold text-slate-800">{{ getMockStore().name }}</p>
+              <p class="text-xs text-slate-500 mt-1 leading-tight"><i class="pi pi-map-marker mr-0.5"></i>{{ getMockStore().address }}</p>
             </div>
           </div>
         </div>
 
-        <hr class="border-slate-200">
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-user"></i> Destinatario</h4>
 
-        <div>
-          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Logística</h4>
-          @if(selectedOrder.assignedTruck) {
-            <div class="flex items-center justify-between group cursor-pointer">
-              <div class="flex items-center gap-2 text-sm text-slate-700 font-medium">
-                <i class="pi pi-truck text-slate-400"></i> {{ selectedOrder.assignedTruck.reference }}
-              </div>
-              <i class="pi pi-cog text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"></i>
-            </div>
-            <p class="text-xs text-slate-400 mt-1 ml-6 pl-1">Matrícula: {{ selectedOrder.assignedTruck.plate }}</p>
-          } @else {
-            <div class="text-sm text-slate-500 flex items-center gap-2">
-              <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin asignar
-            </div>
-          }
-        </div>
-
-        <hr class="border-slate-200">
-
-        <div>
-          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Resumen Económico</h4>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between text-slate-600">
-              <span>Artículos ({{ selectedOrder.totalItems }})</span>
-            </div>
-            <div class="flex justify-between font-bold text-slate-800 text-lg pt-2 border-t border-slate-100 mt-2">
-              <span>Total</span>
-              <span>{{ selectedOrder.totalCost | currency:'EUR' }}</span>
-            </div>
+          <div class="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
+            <p-avatar [label]="getUserLabel(selectedOrder.userName)" shape="circle" size="normal" styleClass="w-7 h-7 bg-blue-100 text-blue-700 font-bold text-xs shrink-0"></p-avatar>
+            <p class="text-sm font-bold text-slate-800">{{ selectedOrder.userName }}</p>
           </div>
-        </div>
 
-        <hr class="border-slate-200">
-
-        <div>
-          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Dirección de Entrega</h4>
-          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm text-slate-700 flex items-start gap-2">
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-700 flex items-start gap-2">
             <i class="pi pi-map-marker mt-0.5 text-slate-400"></i>
-            <span>{{ selectedOrder.address }}</span>
+            <span class="leading-relaxed text-xs">{{ selectedOrder.fullSendingAddress }}</span>
           </div>
         </div>
 

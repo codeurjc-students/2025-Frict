@@ -17,7 +17,7 @@ public class OrderDTO {
     private Long id;
     private String referenceCode;
     private List<StatusLogDTO> history = new ArrayList<>();
-    private Long userId;
+    private String userName;
     private List<OrderItemDTO> orderItems = new ArrayList<>();
     private Long assignedTruckId;
     private int estimatedCompletionTime;
@@ -43,7 +43,7 @@ public class OrderDTO {
         for (StatusLog l : o.getHistory()) {
             this.history.add(new StatusLogDTO(l));
         }
-        this.userId = o.getUser().getId();
+        this.userName = o.getUser().getName();
         for (OrderItem item : o.getItems()) {
             orderItems.add(new OrderItemDTO(item));
         }

@@ -23,9 +23,7 @@ public class StatusLogDTO {
 
     public StatusLogDTO(StatusLog l){
         this.id = l.getId();
-        this.status = l.getStatus().toString();
-        for (LogEntry u : l.getUpdates()) {
-            this.updates.add(new LogEntryDTO(u));
-        }
+        this.status = l.getStatus().getDescription();
+        this.updates = l.getUpdates().stream().map(LogEntryDTO::new).toList();
     }
 }

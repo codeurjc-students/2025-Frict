@@ -12,176 +12,268 @@ import {
 } from '@angular/cdk/drag-drop';
 
 import {Avatar} from 'primeng/avatar';
-import {MessageService} from 'primeng/api';
+import {MessageService, PrimeTemplate} from 'primeng/api';
 import {Dialog} from 'primeng/dialog';
 import {SelectButton} from 'primeng/selectbutton';
+import {Paginator, PaginatorState} from 'primeng/paginator';
 
-export interface OrderDTO {
-  id: number;
-  referenceCode: string;
-  totalItems: number;
-  totalCost: number;
-  user: { name: string; email: string; avatarUrl: string };
-  assignedTruck: { plate: string; reference: string } | null;
-  status: 'ORDER_MADE' | 'SHIPPED' | 'IN_DELIVERY' | 'COMPLETED' | 'CANCELLED';
-  address: string;
-  date: Date;
-  products: { name: string; quantity: number; price: number }[];
-  history: { status: string; description: string; date: Date; isDriverComment?: boolean }[];
-}
+// Nuevos módulos de PrimeNG para la tabla, pestañas y formulario
+import {TableModule} from 'primeng/table';
+import {Button} from 'primeng/button';
+
+import {Order} from '../../../models/order.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {StatusLog} from '../../../models/statusLog.model';
+import {OrderService} from '../../../services/order.service';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {Textarea} from 'primeng/textarea';
+import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
+import {formatPrice} from '../../../utils/textFormat.util';
+import {Tag} from 'primeng/tag';
 
 @Component({
   selector: 'app-orders-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, CdkDropListGroup, CdkDropList, CdkDrag, Avatar, CdkDragPlaceholder, CdkDragPreview, Dialog, SelectButton
+    CommonModule, FormsModule, CdkDropListGroup, CdkDropList, CdkDrag, Avatar, CdkDragPlaceholder, CdkDragPreview,
+    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag
   ],
   templateUrl: './orders-management.component.html',
   styleUrl: './orders-management.component.css'
 })
 export class OrdersManagementComponent implements OnInit {
 
-  displayMode: any[] = [{ label: 'Tablero', value: false }, { label: 'Lista', value: true }];
+  ordersPage: PageResponse<Order> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
+
+  // Pagination
+  first = 0;
+  rows = 10;
+
+  loading: boolean = true;
+  error: boolean = false;
+
+  displayMode: any[] = [
+    { label: 'Tablero', value: false },
+    { label: 'Lista', value: true }
+  ];
   listModeSelected: boolean = false;
 
-  ordersMade = signal<OrderDTO[]>([]);
-  shippedOrders = signal<OrderDTO[]>([]);
-  inDeliveryOrders = signal<OrderDTO[]>([]);
-  completedOrders = signal<OrderDTO[]>([]);
-  cancelledOrders = signal<OrderDTO[]>([]);
+  ordersMade = signal<Order[]>([]);
+  shippedOrders = signal<Order[]>([]);
+  inDeliveryOrders = signal<Order[]>([]);
+  completedOrders = signal<Order[]>([]);
+  cancelledOrders = signal<Order[]>([]);
 
   kanbanColumns = [
-    { id: 'ORDER_MADE', title: 'Pedido Realizado', data: this.ordersMade },
-    { id: 'SHIPPED', title: 'Enviado', data: this.shippedOrders },
-    { id: 'IN_DELIVERY', title: 'En Reparto', data: this.inDeliveryOrders },
-    { id: 'COMPLETED', title: 'Completado', data: this.completedOrders }
+    { id: 'Pedido Realizado', title: 'Pedido Realizado', data: this.ordersMade },
+    { id: 'Enviado', title: 'Enviado', data: this.shippedOrders },
+    { id: 'En Reparto', title: 'En Reparto', data: this.inDeliveryOrders },
+    { id: 'Completado', title: 'Completado', data: this.completedOrders }
   ];
 
   // Estado del Diálogo
   displayOrderDialog = false;
-  selectedOrder: OrderDTO | null = null;
+  selectedOrder: Order | null = null;
+  newComment: string = '';
 
-  constructor(private messageService: MessageService) {}
+  constructor(private messageService: MessageService,
+              private orderService: OrderService) {}
 
   ngOnInit() {
-    this.loadMockData();
+    this.loadOrdersPage();
   }
 
-  openOrderDetails(order: OrderDTO) {
+  // --- OBTENCIÓN DE ESTADO ACTUAL ---
+  getCurrentStatus(order: Order): string {
+    return order.history[order.history.length - 1].status;
+  }
+
+  openOrderDetails(order: Order) {
     this.selectedOrder = order;
+    this.newComment = '';
     this.displayOrderDialog = true;
   }
 
-  drop(event: CdkDragDrop<any[]>, newStatus: string) {
-    const draggedOrder = event.previousContainer.data[event.previousIndex];
-    this.processOrderDrop(draggedOrder, newStatus);
-
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex,
-      );
-
-      const movedOrder = event.container.data[event.currentIndex];
-      movedOrder.status = newStatus as OrderDTO['status'];
-
-      movedOrder.history.push({
-        status: newStatus,
-        description: `El estado ha sido actualizado a ${this.getStatusLabel(newStatus)} manualmente desde el panel.`,
-        date: new Date()
-      });
-    }
-
-    this.ordersMade.set([...this.ordersMade()]);
-    this.shippedOrders.set([...this.shippedOrders()]);
-    this.inDeliveryOrders.set([...this.inDeliveryOrders()]);
-    this.completedOrders.set([...this.completedOrders()]);
-    this.cancelledOrders.set([...this.cancelledOrders()]);
+  // --- MOCK DATA PARA CONDUCTOR Y TIENDA ---
+  getMockDriver(truckId: string) {
+    if (!truckId) return null;
+    return { name: 'Carlos Rodríguez', username: '@carlos.driver', photo: 'https://i.pravatar.cc/150?u=' + truckId };
   }
 
-  processOrderDrop(order: OrderDTO, newStatus: string) {
-    if (order.status === newStatus) return;
+  getMockStore() {
+    return { name: 'Tienda Central Madrid', address: 'Av. Gran Vía 45, 28013, Madrid', image: 'https://images.unsplash.com/photo-1534452203293-494d7ddbf7e0?q=80&w=200&auto=format&fit=crop' };
+  }
+
+  // Comment
+  addComment() {
+    if (!this.newComment.trim() || !this.selectedOrder) return;
+
+    // 1. Obtenemos el estado actual para la petición
+    const currentHistoryIndex = this.selectedOrder.history.length - 1;
+    const currentStatus = this.selectedOrder.history[currentHistoryIndex].status;
+
+    this.orderService.commentAndOrUpdateOrderStatus(
+      this.selectedOrder.id,
+      currentStatus,
+      this.newComment.trim()
+    ).subscribe({
+      next: (updatedOrder) => {
+        // A) LIMPIEZA: Eliminamos el pedido de TODAS las señales de estado.
+        // Esto garantiza que si el estado cambió, desaparezca de la "columna" antigua.
+        this.removeOrderFromAllSignals(updatedOrder.id);
+
+        // B) INSERCIÓN: Lo añadimos a la señal que le corresponde ahora.
+        this.addOrderToCorrectSignal(updatedOrder);
+
+        // C) ACTUALIZAR SELECCIONADO: Para que el modal/detalle se refresque
+        this.selectedOrder = updatedOrder;
+
+        // D) FEEDBACK Y LIMPIEZA
+        this.newComment = '';
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Actualización registrada.'
+        });
+      }
+    });
+  }
+
+  private removeOrderFromAllSignals(orderId: string) {
+    const signals = [
+      this.ordersMade, this.shippedOrders, this.inDeliveryOrders,
+      this.completedOrders, this.cancelledOrders
+    ];
+    signals.forEach(s => s.update(list => list.filter(o => o.id !== orderId)));
+  }
+
+  private addOrderToCorrectSignal(order: Order) {
+    switch (order.history[order.history.length - 1].status) {
+      case 'Pedido Realizado': this.ordersMade.update(l => [...l, order]); break;
+      case 'Enviado':          this.shippedOrders.update(l => [...l, order]); break;
+      case 'En Reparto':       this.inDeliveryOrders.update(l => [...l, order]); break;
+      case 'Completado':       this.completedOrders.update(l => [...l, order]); break;
+      case 'Cancelado':        this.cancelledOrders.update(l => [...l, order]); break;
+    }
+  }
+
+  drop(event: CdkDragDrop<Order[]>, newStatus: string) {
+    // 1. Si se suelta en la misma columna, solo reordenamos visualmente
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      return;
+    }
+
+    // 2. MOVIMIENTO OPTIMISTA: Lo movemos en el UI antes de que responda el servidor
+    const movedOrder = event.previousContainer.data[event.previousIndex];
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      event.previousIndex,
+      event.currentIndex
+    );
+
+    // 3. LLAMADA AL SERVICIO
+    this.orderService.commentAndOrUpdateOrderStatus(
+      movedOrder.id,
+      newStatus,
+      `Cambio de estado a "${newStatus}" desde el tablero.`
+    ).subscribe({
+      next: (updatedOrder) => {
+        // ÉXITO: Sincronizamos con el objeto real de la BDD (que ya trae el historial nuevo)
+        this.removeOrderFromAllSignals(updatedOrder.id);
+        this.addOrderToCorrectSignal(updatedOrder);
+
+        // Actualizamos el seleccionado si es el mismo
+        if (this.selectedOrder?.id === updatedOrder.id) {
+          this.selectedOrder = updatedOrder;
+        }
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Estado actualizado',
+          detail: `Pedido movido a ${newStatus}`
+        });
+      },
+      error: () => {
+        // ERROR: Revertimos el movimiento visual
+        transferArrayItem(
+          event.container.data,
+          event.previousContainer.data,
+          event.currentIndex,
+          event.previousIndex
+        );
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo actualizar el estado en el servidor.'
+        });
+      }
+    });
+  }
+
+  processOrderDrop(order: Order, newStatus: string) {
+    const currentStatus = this.getCurrentStatus(order);
+    if (currentStatus === newStatus) return;
     this.messageService.add({ severity: 'success', summary: 'Estado actualizado', detail: `Pedido ${order.referenceCode}` });
   }
 
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      'ORDER_MADE': 'Pedido Realizado', 'SHIPPED': 'Enviado',
-      'IN_DELIVERY': 'En Reparto', 'COMPLETED': 'Completado', 'CANCELLED': 'Cancelado'
+  // --- HELPERS VISUALES ---
+
+  getIconForStatus(status: string): string {
+    const icons: Record<string, string> = {
+      'Pedido Realizado': 'pi pi-shopping-cart', 'Enviado': 'pi pi-box',
+      'En Reparto': 'pi pi-truck', 'Completado': 'pi pi-check', 'Cancelado': 'pi pi-times'
     };
-    return labels[status] || status;
+    return icons[status] || 'pi pi-info-circle';
   }
 
   getStatusColor(status: string): string {
     const colors: Record<string, string> = {
-      'ORDER_MADE': 'text-blue-500', 'SHIPPED': 'text-purple-500',
-      'IN_DELIVERY': 'text-orange-500', 'COMPLETED': 'text-green-500', 'CANCELLED': 'text-red-500'
+      'Pedido Realizado': 'text-blue-500', 'Enviado': 'text-purple-500',
+      'En Reparto': 'text-orange-500', 'Completado': 'text-green-500', 'Cancelado': 'text-red-500'
     };
     return colors[status] || 'text-slate-400';
   }
 
   getStatusBgColor(status: string): string {
     const colors: Record<string, string> = {
-      'ORDER_MADE': 'bg-blue-100 text-blue-700', 'SHIPPED': 'bg-purple-100 text-purple-700',
-      'IN_DELIVERY': 'bg-orange-100 text-orange-700', 'COMPLETED': 'bg-green-100 text-green-700', 'CANCELLED': 'bg-red-100 text-red-700'
+      'Pedido Realizado': 'bg-blue-100 text-blue-700', 'Enviado': 'bg-purple-100 text-purple-700',
+      'En Reparto': 'bg-orange-100 text-orange-700', 'Completado': 'bg-green-100 text-green-700', 'Cancelado': 'bg-red-100 text-red-700'
     };
     return colors[status] || 'bg-slate-100 text-slate-700';
   }
 
-  // --- MOCK DATA ---
-  private loadMockData() {
-    const defaultHistory = [
-      { status: 'ORDER_MADE', description: 'Pedido recibido correctamente. Esperando preparación.', date: new Date(Date.now() - 86400000 * 2) },
-      { status: 'SHIPPED', description: 'El paquete ha salido de los almacenes centrales.', date: new Date(Date.now() - 86400000) }
-    ];
-
-    const allOrders: OrderDTO[] = [
-      {
-        id: 1, referenceCode: 'ORD-9921-A', totalItems: 3, totalCost: 145.50, date: new Date(),
-        user: { name: 'Ana García', email: 'ana.g@example.com', avatarUrl: '' }, assignedTruck: null, status: 'ORDER_MADE', address: 'Calle Mayor 12, Madrid',
-        products: [{ name: 'Ratón Inalámbrico', quantity: 2, price: 25.00 }, { name: 'Teclado Mecánico', quantity: 1, price: 95.50 }],
-        history: [{ status: 'ORDER_MADE', description: 'Pedido recibido. Pago confirmado con tarjeta terminada en 4022.', date: new Date() }]
-      },
-      {
-        id: 4, referenceCode: 'ORD-6654-D', totalItems: 2, totalCost: 120.00, date: new Date(Date.now() - 1000000),
-        user: { name: 'Jorge Gil', email: 'jorge.g@example.com', avatarUrl: '' }, assignedTruck: { plate: '9988-XYZ', reference: 'TRK-02' }, status: 'IN_DELIVERY', address: 'Plaza Sol 1, Sevilla',
-        products: [{ name: 'Monitor 24"', quantity: 1, price: 120.00 }],
-        history: [
-          ...defaultHistory,
-          { status: 'IN_DELIVERY', description: 'Paquete transferido a camión TRK-02.', date: new Date() },
-          { status: 'INFO', description: 'El cliente ha llamado pidiendo que se entregue por la tarde si es posible.', date: new Date(), isDriverComment: true }
-        ]
-      },
-      {
-        id: 5, referenceCode: 'ORD-5565-E', totalItems: 12, totalCost: 1540.20, date: new Date(Date.now() - 5000000),
-        user: { name: 'Empresa S.L.', email: 'admin@empresa.com', avatarUrl: '' }, assignedTruck: { plate: '9988-XYZ', reference: 'TRK-02' }, status: 'COMPLETED', address: 'Polígono Sur, Naves',
-        products: [{ name: 'Lote de Sillas Oficina', quantity: 10, price: 100.00 }, { name: 'Mesa Dirección', quantity: 2, price: 270.10 }],
-        history: [
-          ...defaultHistory,
-          { status: 'IN_DELIVERY', description: 'En reparto por zona industrial.', date: new Date() },
-          { status: 'COMPLETED', description: 'Entregado a recepcionista (Marta). Firma recogida.', date: new Date(), isDriverComment: true }
-        ]
-      },
-      {
-        id: 6, referenceCode: 'ORD-5565-E', totalItems: 12, totalCost: 1540.20, date: new Date(Date.now() - 5000000),
-        user: { name: 'Empresa S.L.', email: 'admin@empresa.com', avatarUrl: '' }, assignedTruck: { plate: '9988-XYZ', reference: 'TRK-02' }, status: 'COMPLETED', address: 'Polígono Sur, Naves',
-        products: [{ name: 'Lote de Sillas Oficina', quantity: 10, price: 100.00 }, { name: 'Mesa Dirección', quantity: 2, price: 270.10 }],
-        history: [
-          ...defaultHistory,
-          { status: 'IN_DELIVERY', description: 'En reparto por zona industrial.', date: new Date() },
-          { status: 'COMPLETED', description: 'Entregado a recepcionista (Marta). Firma recogida.', date: new Date(), isDriverComment: true }
-        ]
-      }
-    ];
-
-    this.ordersMade.set(allOrders.filter(o => o.status === 'ORDER_MADE'));
-    this.shippedOrders.set(allOrders.filter(o => o.status === 'SHIPPED'));
-    this.inDeliveryOrders.set(allOrders.filter(o => o.status === 'IN_DELIVERY'));
-    this.completedOrders.set(allOrders.filter(o => o.status === 'COMPLETED'));
-    this.cancelledOrders.set(allOrders.filter(o => o.status === 'CANCELLED'));
+  getUserLabel(userId: any): string {
+    const idStr = String(userId || '');
+    return (idStr.charAt(0) || 'U').toUpperCase();
   }
+
+  // --- CARGA DE DATOS ---
+  private loadOrdersPage() {
+    this.orderService.getAllOrdersPage(this.first/this.rows, this.rows).subscribe({
+      next: (page: PageResponse<Order>) => {
+        this.ordersPage = page;
+        this.ordersMade.set(page.items.filter(o => this.getCurrentStatus(o) === 'Pedido Realizado'));
+        this.shippedOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Enviado'));
+        this.inDeliveryOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'En Reparto'));
+        this.completedOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Completado'));
+        this.cancelledOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Cancelado'));
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
+      }
+    });
+  }
+
+  onOrdersPageChange(event: PaginatorState) {
+    this.first = event.first ?? 0;
+    this.rows = event.rows ?? 10;
+    this.loadOrdersPage();
+  }
+
+  protected readonly formatPrice = formatPrice;
 }

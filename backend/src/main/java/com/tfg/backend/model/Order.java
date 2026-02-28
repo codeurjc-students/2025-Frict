@@ -38,6 +38,9 @@ public class Order {
     @ManyToOne
     private Truck assignedTruck;
 
+    @ManyToOne
+    private Shop assignedShop;
+
     private int estimatedCompletionTime = 0;
 
     @CreationTimestamp
