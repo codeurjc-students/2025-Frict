@@ -203,7 +203,9 @@ export class ProductInfoComponent implements OnInit {
   protected loadCartItemUnits(){
     this.orderService.getCartItemByProductId(this.product.id).subscribe({
       next: (item) => {
-        this.inCartUnits = item.quantity;
+        if (item){
+          this.inCartUnits = item.quantity;
+        }
       }
     })
   }
@@ -340,11 +342,8 @@ export class ProductInfoComponent implements OnInit {
 
   protected checkInFavourites() {
     this.productService.checkInFavourites(this.product.id).subscribe({
-      next: () => {
-        this.inFavourites = true;
-      },
-      error: () => { //The only error that could be caught is 400 (bad request), as other errors will have stopped this method from running
-        this.inFavourites = false;
+      next: (state) => {
+        this.inFavourites = state;
       }
     })
   }

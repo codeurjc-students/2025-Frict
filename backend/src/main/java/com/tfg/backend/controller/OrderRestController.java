@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -47,6 +48,9 @@ public class OrderRestController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private TruckService truckService;
 
 
     @Operation(summary = "(Admin) Get all orders (paged)")
@@ -77,6 +81,28 @@ public class OrderRestController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order with ID " + id + " does not exist.");
         }
         return ResponseEntity.ok(new OrderDTO(orderOptional.get()));
+    }
+
+
+    @Operation(summary = "(Admin, Manager) Set assigned truck to an order")
+    @PostMapping("/{orderId}/assign/truck/{truckId}")
+    public ResponseEntity<OrderDTO> setAssignedTruck(@PathVariable Long orderId, @PathVariable Long truckId, @RequestParam boolean state) {
+        Order order = orderService.findOrderHelper(orderId);
+
+        if (state) {
+            Truck truck = truckService.findTruckHelper(truckId);
+            //Check if the found truck is assigned to the same shop as the order
+            if (!Objects.equals(order.getAssignedShop().getId(), truck.getAssignedShop().getId())){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This truck and this order do not belong to the same shop.");
+            }
+            order.setAssignedTruck(truck);
+        }
+        else {
+            order.setAssignedTruck(null);
+        }
+
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
     }
 
 
@@ -299,7 +325,7 @@ public class OrderRestController {
         User loggedUser = userService.findLoggedUserHelper();
         Optional<OrderItem> itemOptional = orderItemService.findUserCartItemByProductId(id, loggedUser.getId());
         if (itemOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The logged user cart does not contain an item of product " + id + ".");
+            return ResponseEntity.noContent().build();
         }
         OrderItem item = itemOptional.get();
         productService.enrichWithStock(item.getProduct());

@@ -3,8 +3,10 @@ package com.tfg.backend.controller;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.ShopStockDTO;
 import com.tfg.backend.dto.TruckDTO;
+import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.Truck;
+import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +31,9 @@ import java.util.Optional;
 public class TruckRestController {
 
     @Autowired
+    private ShopService shopService;
+
+    @Autowired
     private TruckService truckService;
 
     @Operation(summary = "(Admin, Manager) Get truck information by ID")
@@ -41,17 +46,28 @@ public class TruckRestController {
         return ResponseEntity.ok(new TruckDTO(truckOptional.get()));
     }
 
-    @Operation(summary = "(Admin, Manager) Get all unassigned trucks")
-    @GetMapping("/available/")
-    public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
-        List<TruckDTO> dtos = truckService.findAllByAssignedShopIsNull().stream().map(TruckDTO::new).toList();
+
+    @Operation(summary = "(Admin, Manager) Get trucks list by shop ID")
+    @GetMapping("/shop/{shopId}/list")
+    public ResponseEntity<List<TruckDTO>> getAllShopTrucks(@PathVariable Long shopId) {
+        Shop shop = shopService.findShopHelper(shopId);
+        List<TruckDTO> dtos = shop.getAssignedTrucks().stream().map(TruckDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
+
 
     @Operation(summary = "(All) Get trucks page by shop ID")
     @GetMapping("/shop/{shopId}")
     public ResponseEntity<PageResponse<TruckDTO>> getTrucksByShopId(@PathVariable Long shopId, Pageable pageable) {
         Page<Truck> trucks = truckService.findAllByAssignedShopId(shopId, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(trucks, TruckDTO::new));
+    }
+
+
+    @Operation(summary = "(Admin, Manager) Get all unassigned trucks")
+    @GetMapping("/available/")
+    public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
+        List<TruckDTO> dtos = truckService.findAllByAssignedShopIsNull().stream().map(TruckDTO::new).toList();
+        return ResponseEntity.ok(dtos);
     }
 }

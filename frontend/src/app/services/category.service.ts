@@ -2,10 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {map, Observable, tap} from 'rxjs';
 import {Category} from '../models/category.model';
-import {ListResponse} from '../models/listResponse.model';
 import {PageResponse} from '../models/pageResponse.model';
-import {Product} from '../models/product.model';
-import {Shop} from '../models/shop.model';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +23,7 @@ export class CategoryService {
 
 
   public getAllCategories(): Observable<Category[]> {
-    return this.http.get<ListResponse<Category>>(this.apiUrl + `/list`).pipe(map(response => response.items));
+    return this.http.get<Category[]>(this.apiUrl + `/list`);
   }
 
   public getCategoryById(id: string): Observable<Category> {
@@ -34,15 +31,7 @@ export class CategoryService {
   }
 
   public getCategoryByName(name: string): Observable<Category> {
-    return this.http.get<ListResponse<Category>>(this.apiUrl + `/`).pipe(
-      map((resp) => {
-        const category = resp.items.find(c => c.name === name);
-        if (!category) {
-          throw new Error(`Category '${name}' not found`);
-        }
-        return category;
-      })
-    );
+    return this.http.get<Category>(this.apiUrl + `/name/${name}`);
   }
 
   public createCategory(categoryData: Category): Observable<Category> {

@@ -49,9 +49,9 @@ public class CategoryRestController {
 
     @Operation(summary = "(All) Get all categories (listed)")
     @GetMapping("/list")
-    public ResponseEntity<ListResponse<CategoryDTO>> showAllCategories() {
+    public ResponseEntity<List<CategoryDTO>> showAllCategories() {
         List<CategoryDTO> dtos = categoryService.findAll().stream().map(CategoryDTO::new).toList();
-        return ResponseEntity.ok(new ListResponse<>(dtos));
+        return ResponseEntity.ok(dtos);
     }
 
 
@@ -180,6 +180,17 @@ public class CategoryRestController {
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.findCategoryHelper(id);
         return ResponseEntity.ok(new CategoryDTO(category));
+    }
+
+
+    @Operation(summary = "(All) Get category by name")
+    @GetMapping("/name/{name}")
+    public ResponseEntity<CategoryDTO> getCategoryByName(@PathVariable String name) {
+        Optional<Category> categoryOptional = categoryService.findByName(name);
+        if(categoryOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with name " + name + " does not exist.");
+        }
+        return ResponseEntity.ok(new CategoryDTO(categoryOptional.get()));
     }
 
 

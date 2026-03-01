@@ -77,19 +77,16 @@ public class ProductRestController {
     }
 
 
-    @Operation(summary = "(User) Check a product in logged user favourites")
+    @Operation(summary = "(User) Check if a product is in logged user favourites")
     @GetMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> checkProductInFavourites(@PathVariable Long id) {
-        //Get logged user info if any (User class)
-        User loggedUser = userService.findLoggedUserHelper();
+    public ResponseEntity<Boolean> checkProductInFavourites(@PathVariable Long id) {
 
+        User loggedUser = userService.findLoggedUserHelper();
         Product product = productService.findProductHelper(id);
+
         boolean inFavourites = loggedUser.getFavouriteProducts().contains(product);
 
-        if (!inFavourites){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product with ID " + id + " is not in favourites.");
-        }
-        return ResponseEntity.ok(new ProductDTO(product));
+        return ResponseEntity.ok(inFavourites);
     }
 
 
@@ -103,14 +100,14 @@ public class ProductRestController {
 
     @Operation(summary = "(All) Get product stock by ID")
     @GetMapping("/stock/{id}")
-    public ResponseEntity<ListResponse<ShopStockDTO>> getProductStock(@PathVariable Long id) {
+    public ResponseEntity<List<ShopStockDTO>> getProductStock(@PathVariable Long id) {
         Product product = productService.findProductHelper(id);
 
         List<ShopStockDTO> dtos = new ArrayList<>();
         for (ShopStock s : product.getShopsStock()) {
             dtos.add(new ShopStockDTO(s));
         }
-        return ResponseEntity.ok(new ListResponse<>(dtos));
+        return ResponseEntity.ok(dtos);
     }
 
 

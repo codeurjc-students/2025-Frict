@@ -1,6 +1,5 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.ListResponse;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.model.Product;
@@ -12,7 +11,6 @@ import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,13 +51,13 @@ public class ReviewRestController {
     //Get all the reviews of a product
     @Operation(summary = "(All) Get all reviews by product ID")
     @GetMapping("/")
-    public ResponseEntity<ListResponse<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
+    public ResponseEntity<List<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
         Product product = productService.findProductHelper(productId);
         List<ReviewDTO> dtos = new ArrayList<>();
         for (Review r : product.getReviews()) {
             dtos.add(new ReviewDTO(r));
         }
-        return ResponseEntity.ok(new ListResponse<>(dtos));
+        return ResponseEntity.ok(dtos);
     }
 
 

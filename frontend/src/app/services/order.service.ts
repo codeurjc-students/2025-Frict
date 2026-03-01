@@ -50,7 +50,13 @@ export class OrderService {
     return this.http.put<Order>(this.apiUrl + `/${id}`, null, { params });
   }
 
-  public getCartItemByProductId(id: string): Observable<OrderItem> {
+  public setAssignedTruck(orderId: string, truckId: string, state: boolean): Observable<Order>{
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.get<Order>(this.apiUrl + `/${orderId}/assign/truck/${truckId}`, { params });
+  }
+
+  public getCartItemByProductId(id: string): Observable<OrderItem | null> {
     return this.http.get<OrderItem>(this.apiUrl + `/cart/item/${id}`);
   }
 

@@ -3,7 +3,6 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
 import {Review} from '../models/review.model';
 import {PageResponse} from '../models/pageResponse.model';
-import {ListResponse} from '../models/listResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +24,7 @@ export class ReviewService {
   public getReviewsByProductId(id: string): Observable<Review[]> {
     let params = new HttpParams();
     params = params.append('productId', id);
-    return this.http.get<ListResponse<Review>>(this.apiUrl + `/`, { params }).pipe(map(response => response.items));
+    return this.http.get<Review[]>(this.apiUrl + `/`, { params });
   }
 
   //Creates and edits reviews

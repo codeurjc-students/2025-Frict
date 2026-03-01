@@ -334,7 +334,7 @@
 
           @if(selectedTruck) {
             <div class="flex items-center gap-2 text-sm text-slate-700 font-bold mb-3 pb-3 border-b border-slate-100">
-              <i class="pi pi-id-card text-slate-400"></i> Ref: {{ selectedTruck.referenceCode }}
+              <i class="pi pi-id-card text-slate-400"></i> Cód. referencia: {{ selectedTruck.referenceCode }}
             </div>
 
             @if(selectedTruck.assignedDriver) {
@@ -389,7 +389,7 @@
             }
           } @else {
             <div class="text-sm text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-              <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin tienda asignada
+              <i class="pi pi-exclamation-triangle text-amber-500"></i> La tienda asociada al pedido se ha eliminado
             </div>
           }
         </div>
