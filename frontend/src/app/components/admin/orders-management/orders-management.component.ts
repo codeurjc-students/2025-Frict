@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
 
 import {
   CdkDrag, CdkDragDrop,
@@ -22,24 +23,24 @@ import {Button} from 'primeng/button';
 import {Textarea} from 'primeng/textarea';
 import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
 import {Tag} from 'primeng/tag';
+import {Select} from 'primeng/select';
 
 import {Order} from '../../../models/order.model';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Shop} from '../../../models/shop.model';
 import {Truck} from '../../../models/truck.model';
 import {OrderService} from '../../../services/order.service';
-import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {formatPrice} from '../../../utils/textFormat.util';
 import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
-import {forkJoin, of} from 'rxjs';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {formatPrice} from '../../../utils/textFormat.util';
 
 @Component({
   selector: 'app-orders-management',
   standalone: true,
   imports: [
     CommonModule, FormsModule, CdkDropListGroup, CdkDropList, CdkDrag, Avatar, CdkDragPlaceholder, CdkDragPreview,
-    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag
+    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select
   ],
   templateUrl: './orders-management.component.html',
   styleUrl: './orders-management.component.css'
@@ -47,16 +48,12 @@ import {forkJoin, of} from 'rxjs';
 export class OrdersManagementComponent implements OnInit {
 
   ordersPage: PageResponse<Order> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
-
   first = 0;
   rows = 10;
   loading: boolean = true;
   error: boolean = false;
 
-  displayMode: any[] = [
-    { label: 'Tablero', value: false },
-    { label: 'Lista', value: true }
-  ];
+  displayMode: any[] = [{ label: 'Tablero', value: false }, { label: 'Lista', value: true }];
   listModeSelected: boolean = false;
 
   ordersMade = signal<Order[]>([]);
@@ -75,13 +72,20 @@ export class OrdersManagementComponent implements OnInit {
   displayOrderDialog = false;
   selectedOrder: Order | null = null;
   newComment: string = '';
+
   selectedShop: Shop | null = null;
   selectedTruck: Truck | null = null;
 
-  constructor(private messageService: MessageService,
-              private orderService: OrderService,
-              private truckService: TruckService,
-              private shopService: ShopService) {}
+  availableTrucks: Truck[] = [];
+  loadingTrucks: boolean = false;
+  trucksLoaded: boolean = false;
+
+  constructor(
+    private messageService: MessageService,
+    private orderService: OrderService,
+    private shopService: ShopService,
+    private truckService: TruckService
+  ) {}
 
   ngOnInit() {
     this.loadOrdersPage();
@@ -97,10 +101,9 @@ export class OrdersManagementComponent implements OnInit {
     this.newComment = '';
     this.selectedShop = null;
     this.selectedTruck = null;
+    this.availableTrucks = [];
+    this.trucksLoaded = false;
 
-    this.loading = true;
-
-    // Preparamos los observables manejando la opcionalidad con 'of(null)'
     const shopObs = order.assignedShopId ? this.shopService.getShopById(order.assignedShopId) : of(null);
     const truckObs = order.assignedTruckId ? this.truckService.getTruckById(order.assignedTruckId) : of(null);
 
@@ -111,24 +114,89 @@ export class OrdersManagementComponent implements OnInit {
       next: (results) => {
         this.selectedShop = results.shop;
         this.selectedTruck = results.truck;
-        this.loading = false;
+
+        if (this.selectedTruck) {
+          this.availableTrucks = [this.selectedTruck];
+        }
+
         this.displayOrderDialog = true;
       },
       error: () => {
         this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los datos logísticos del pedido.'
-        });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos logísticos.' });
+      }
+    });
+  }
+
+  loadAvailableTrucks() {
+    if (!this.selectedOrder?.assignedShopId) {
+      this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'El pedido no tiene tienda asignada.' });
+      return;
+    }
+
+    if (this.trucksLoaded) return;
+
+    this.loadingTrucks = true;
+    this.truckService.getAllShopTrucks(this.selectedOrder.assignedShopId).subscribe({
+      next: (trucks) => {
+        this.availableTrucks = trucks;
+        this.trucksLoaded = true;
+
+        if (this.selectedTruck) {
+          const match = this.availableTrucks.find(t => t.id === this.selectedTruck!.id);
+          if (match) {
+            this.selectedTruck = match;
+          } else {
+            this.availableTrucks = [this.selectedTruck, ...this.availableTrucks];
+          }
+        }
+
+        this.loadingTrucks = false;
+      },
+      error: () => {
+        this.loadingTrucks = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener los camiones disponibles.' });
+      }
+    });
+  }
+
+  confirmTruckAssignment() {
+    if (!this.selectedOrder || !this.selectedTruck) return;
+    if (this.selectedTruck.id === this.selectedOrder.assignedTruckId) return;
+
+    this.orderService.setAssignedTruck(this.selectedOrder.id, this.selectedTruck.id, true).subscribe({
+      next: (updatedOrder) => {
+        this.removeOrderFromAllSignals(updatedOrder.id);
+        this.addOrderToCorrectSignal(updatedOrder);
+        this.selectedOrder = updatedOrder;
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Camión asignado correctamente al pedido.' });
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo asignar el camión.' });
+      }
+    });
+  }
+
+  unassignTruck() {
+    if (!this.selectedOrder || !this.selectedOrder.assignedTruckId) return;
+
+    this.orderService.setAssignedTruck(this.selectedOrder.id, this.selectedOrder.assignedTruckId, false).subscribe({
+      next: (updatedOrder) => {
+        this.removeOrderFromAllSignals(updatedOrder.id);
+        this.addOrderToCorrectSignal(updatedOrder);
+        this.selectedOrder = updatedOrder;
+        this.selectedTruck = null;
+        this.messageService.add({ severity: 'success', summary: 'Desasignado', detail: 'Camión retirado correctamente.' });
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo desasignar el camión.' });
       }
     });
   }
 
   addComment() {
     if (!this.newComment.trim() || !this.selectedOrder) return;
-    const currentHistoryIndex = this.selectedOrder.history.length - 1;
-    const currentStatus = this.selectedOrder.history[currentHistoryIndex].status;
+    const currentStatus = this.getCurrentStatus(this.selectedOrder);
 
     this.orderService.commentAndOrUpdateOrderStatus(this.selectedOrder.id, currentStatus, this.newComment.trim()).subscribe({
       next: (updatedOrder) => {
@@ -147,7 +215,8 @@ export class OrdersManagementComponent implements OnInit {
   }
 
   private addOrderToCorrectSignal(order: Order) {
-    switch (order.history[order.history.length - 1].status) {
+    const status = this.getCurrentStatus(order);
+    switch (status) {
       case 'Pedido Realizado': this.ordersMade.update(l => [...l, order]); break;
       case 'Enviado':          this.shippedOrders.update(l => [...l, order]); break;
       case 'En Reparto':       this.inDeliveryOrders.update(l => [...l, order]); break;
@@ -161,7 +230,6 @@ export class OrdersManagementComponent implements OnInit {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       return;
     }
-
     const movedOrder = event.previousContainer.data[event.previousIndex];
     transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
 
@@ -174,7 +242,7 @@ export class OrdersManagementComponent implements OnInit {
       },
       error: () => {
         transferArrayItem(event.container.data, event.previousContainer.data, event.currentIndex, event.previousIndex);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado en el servidor.' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado.' });
       }
     });
   }
@@ -200,9 +268,7 @@ export class OrdersManagementComponent implements OnInit {
   }
 
   getItemName(item: any): string {
-    if (item?.productName) return item.productName;
-    if (item?.product?.name) return item.product.name;
-    return 'Producto ID: ' + (item?.productId || 'N/A');
+    return item.productName || item.product?.name || 'Producto ID: ' + (item.productId || 'N/A');
   }
 
   private loadOrdersPage() {

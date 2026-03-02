@@ -26,7 +26,7 @@ export class TruckService {
   }
 
   public getAllShopTrucks(shopId: string): Observable<Truck[]> {
-    return this.http.get<Truck[]>(this.apiUrl + `/shop/{shopId}/list`);
+    return this.http.get<Truck[]>(this.apiUrl + `/shop/${shopId}/list`);
   }
 
   public getTrucksPageByShopId(shopId: string, page: number, size: number): Observable<PageResponse<Truck>> {
