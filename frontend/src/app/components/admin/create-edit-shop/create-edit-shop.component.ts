@@ -1,8 +1,9 @@
-import {Component, OnInit, AfterViewInit, signal, Inject, PLATFORM_ID, ViewChild} from '@angular/core';
+import { Component, OnInit, AfterViewInit, signal, Inject, PLATFORM_ID, ViewChild, DestroyRef, inject } from '@angular/core';
 import { NgIf, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, switchMap, filter, catchError, of } from 'rxjs';
 
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
@@ -15,6 +16,7 @@ import { ShopService } from '../../../services/shop.service';
 import { Shop } from '../../../models/shop.model';
 import { LocalImage } from '../../../models/localImage.model';
 import * as L from 'leaflet';
+import { LocationService } from '../../../services/location.service';
 
 @Component({
   selector: 'app-create-edit-shop',
@@ -34,6 +36,7 @@ import * as L from 'leaflet';
   styleUrl: './create-edit-shop.component.css'
 })
 export class CreateEditShopComponent implements OnInit, AfterViewInit {
+  private destroyRef = inject(DestroyRef);
 
   constructor(private fb: FormBuilder,
               private router: Router,
@@ -41,7 +44,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
               private route: ActivatedRoute,
               private shopService: ShopService,
               private sanitizer: DomSanitizer,
-              private http: HttpClient,
+              private locationService: LocationService,
               @Inject(PLATFORM_ID) private platformId: Object) {
 
     this.shopForm = this.fb.group({
@@ -57,7 +60,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
         floor: ['', []],
         postalCode: ['', Validators.required],
         city: ['', Validators.required],
-        country: ['España', Validators.required]
+        country: ['', Validators.required]
       })
     });
   }
@@ -83,6 +86,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.shopId.set(this.route.snapshot.paramMap.get('id'));
+    this.setupAddressListener();
     this.loadData();
   }
 
@@ -94,6 +98,34 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private setupAddressListener() {
+    this.shopForm.get('address')?.valueChanges.pipe(
+      debounceTime(1000), // Waits a second after the last form change to start searching
+      filter(address => address.street && address.city), // At least street and city to start searching
+      switchMap(address =>
+        this.locationService.getCoordinatesFromAddress(address).pipe(
+          catchError(() => of(null)) // If Nominatim API fails, capture the error to avoid stopping the subscription
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef) // Automatic cleaning enablement
+    ).subscribe(coords => {
+      if (coords) {
+        this.updateFormCoordinates(coords.latitude, coords.longitude);
+        this.updateMarker(coords.latitude, coords.longitude);
+
+        if (this.map) {
+          this.map.setView([coords.latitude, coords.longitude], 16);
+        }
+
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Ubicación actualizada',
+          detail: 'Se ha movido el marcador según la dirección ingresada.'
+        });
+      }
+    });
+  }
+
   loadData() {
     const shopId = this.shopId();
     if (shopId) {
@@ -101,13 +133,15 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
         next: (shop) => {
           this.shop.set(shop);
           this.existingImage.set(shop.imageInfo.imageUrl);
+
+          // emitEvent false to avoid triggering the direct geocoding when loading the initial data
           this.shopForm.patchValue({
             name: shop.name,
             referenceCode: shop.referenceCode,
             latitude: shop.latitude,
             longitude: shop.longitude,
             address: shop.address
-          });
+          }, { emitEvent: false });
 
           this.loading = false;
           setTimeout(() => {
@@ -176,35 +210,34 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     this.shopForm.patchValue({ latitude: lat, longitude: lng });
   }
 
-  // --- REVERSE GEOCODING ---
   private getAddressFromCoordinates(lat: number, lng: number) {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
-
-    this.http.get<any>(url).subscribe({
-      next: (data) => {
-        if(data && data.address) {
-          const addr = data.address;
-
-          const road = addr.road || addr.pedestrian || addr.street || '';
-          const number = addr.house_number || '';
-
-          this.shopForm.get('address')?.patchValue({
-            street: road,
-            number: number,
-            city: addr.city || addr.town || addr.village || '',
-            postalCode: addr.postcode || '',
-            country: addr.country || ''
-          });
-
-          if (number) {
-            this.messageService.add({severity: 'info', summary: 'Dirección Exacta', detail: `Detectado nº ${number}`});
+    this.locationService.getAddressFromCoordinates(lat, lng).subscribe({
+      next: (addressData) => {
+        if (addressData) {
+          // emitEvent is false to avoid the address listener from searching in coordinates again
+          this.shopForm.get('address')?.patchValue(addressData, { emitEvent: false });
+          if (addressData.number) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Dirección Exacta',
+              detail: `Detectado nº ${addressData.number}`
+            });
           } else {
-            this.messageService.add({severity: 'info', summary: 'Zona detectada', detail: 'Ubicación aproximada (sin número exacto)'});
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Zona detectada',
+              detail: 'Ubicación aproximada (sin número exacto)'
+            });
           }
         }
       },
-      error: () => {
-        console.warn('No se pudo obtener la dirección');
+      error: (err) => {
+        console.error('Error en geocodificación inversa:', err);
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Aviso',
+          detail: 'No se pudo recuperar la dirección automática.'
+        });
       }
     });
   }

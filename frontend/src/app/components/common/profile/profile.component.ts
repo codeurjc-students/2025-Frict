@@ -347,6 +347,7 @@ export class ProfileComponent implements OnInit {
   }
 
   //Create/Edit operations
+
   protected submitAddress() {
     this.userService.submitAddress(this.newAddress).subscribe({
       next: (user) => {

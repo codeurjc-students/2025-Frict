@@ -19,7 +19,7 @@
         styleClass="!bg-surface-50 text-sm rounded-b-2xl">
       </p-paginator>
 
-      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" optionLabel="label" optionValue="value" aria-labelledby="basic">
+      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" [unselectable]="true" optionLabel="label" optionValue="value" aria-labelledby="basic">
         <ng-template let-item pTemplate>
           <div class="flex items-center gap-2 px-2">
             <i [class]="item.value ? 'pi pi-list' : 'pi pi-objects-column'"></i>
@@ -49,7 +49,7 @@
                       <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                     </div>
                     <div class="flex flex-col items-end shrink-0">
-                      <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{{ order.createdAt | date:'shortDate' }}</span>
+                      <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{{ order.createdAt }}</span>
                     </div>
                   </div>
 
