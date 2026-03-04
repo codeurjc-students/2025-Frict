@@ -8,4 +8,7 @@ export interface Address {
   postalCode: string;
   city: string;
   country: string;
+
+  latitude?: number;
+  longitude?: number;
 }

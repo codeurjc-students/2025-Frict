@@ -15,18 +15,16 @@ public class Address {
     private Long id;
 
     private String alias;
-
     private String street;
-
     private String number;
-
     private String floor;
-
     private String postalCode;
-
     private String city;
-
     private String country;
+
+    //Exact positioning
+    private double latitude;
+    private double longitude;
 
     public Address() {
     }

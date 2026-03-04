@@ -3,7 +3,7 @@ import { NgIf, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, switchMap, filter, catchError, of } from 'rxjs';
+import {debounceTime, switchMap, filter, catchError, of} from 'rxjs';
 
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
@@ -50,8 +50,6 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     this.shopForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       referenceCode: [{ value: '', disabled: true }],
-      latitude: [0, [Validators.required]],
-      longitude: [0, [Validators.required]],
       // Group address
       address: this.fb.group({
         alias: ['', []],
@@ -60,7 +58,9 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
         floor: ['', []],
         postalCode: ['', Validators.required],
         city: ['', Validators.required],
-        country: ['', Validators.required]
+        country: ['', Validators.required],
+        latitude: [0, [Validators.required]],
+        longitude: [0, [Validators.required]]
       })
     });
   }
@@ -70,7 +70,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   shopId = signal<string | null>(null);
   shop = signal<Shop | null>(null);
 
-  // Lógica para imagen única
+  // Unique image logic
   existingImage = signal<string | null>(null);
   newImage = signal<LocalImage | null>(null);
 
@@ -83,6 +83,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   // Leaflet
   private map: L.Map | undefined;
   private marker: L.Marker | undefined;
+  private lastAddressCheck: string = '';
+  private isGeocodingActive: boolean = false;
 
   ngOnInit() {
     this.shopId.set(this.route.snapshot.paramMap.get('id'));
@@ -100,23 +102,30 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
   private setupAddressListener() {
     this.shopForm.get('address')?.valueChanges.pipe(
-      debounceTime(1000), // Waits a second after the last form change to start searching
-      filter(address => address.street && address.city), // At least street and city to start searching
+      filter(() => this.isGeocodingActive),
+      debounceTime(1000),
+
+      // Detect changes in all fields but the alias or the number
+      filter(address => {
+        const currentCheck = `${address.street}|${address.number}|${address.city}|${address.postalCode}|${address.country}`;
+        if (this.lastAddressCheck === currentCheck) {
+          return false;
+        }
+        this.lastAddressCheck = currentCheck;
+        return !!(address.street && address.city);
+      }),
+
       switchMap(address =>
         this.locationService.getCoordinatesFromAddress(address).pipe(
-          catchError(() => of(null)) // If Nominatim API fails, capture the error to avoid stopping the subscription
+          catchError(() => of(null))
         )
       ),
-      takeUntilDestroyed(this.destroyRef) // Automatic cleaning enablement
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(coords => {
       if (coords) {
         this.updateFormCoordinates(coords.latitude, coords.longitude);
         this.updateMarker(coords.latitude, coords.longitude);
-
-        if (this.map) {
-          this.map.setView([coords.latitude, coords.longitude], 16);
-        }
-
+        if (this.map) this.map.setView([coords.latitude, coords.longitude], 16);
         this.messageService.add({
           severity: 'info',
           summary: 'Ubicación actualizada',
@@ -126,7 +135,11 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     });
   }
 
+
   loadData() {
+    // The geocoding lock starts inactive
+    this.isGeocodingActive = false;
+
     const shopId = this.shopId();
     if (shopId) {
       this.shopService.getShopById(shopId).subscribe({
@@ -134,17 +147,18 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           this.shop.set(shop);
           this.existingImage.set(shop.imageInfo.imageUrl);
 
-          // emitEvent false to avoid triggering the direct geocoding when loading the initial data
+          // EmitEvent false to avoid trigger geocoding while loading
           this.shopForm.patchValue({
             name: shop.name,
             referenceCode: shop.referenceCode,
-            latitude: shop.latitude,
-            longitude: shop.longitude,
             address: shop.address
           }, { emitEvent: false });
 
           this.loading = false;
+
           setTimeout(() => {
+            this.syncAddressMemory();
+            this.isGeocodingActive = true;
             this.initMap();
           }, 100);
         },
@@ -155,9 +169,18 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       });
     } else {
       this.loading = false;
-      // Wait for initMap in creation mode
-      setTimeout(() => this.initMap(), 100);
+      // Also wait for load finishing to start geocoding
+      setTimeout(() => {
+        this.syncAddressMemory();
+        this.isGeocodingActive = true;
+        this.initMap();
+      }, 100);
     }
+  }
+
+  private syncAddressMemory() {
+    const updated = this.shopForm.get('address')?.getRawValue();
+    this.lastAddressCheck = `${updated.street}|${updated.number}|${updated.city}|${updated.postalCode}|${updated.country}`;
   }
 
   // --- LEAFLET MAP LOGIC ---
@@ -167,8 +190,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     const container = document.getElementById('map');
     if (!container) return;
 
-    const lat = this.shopForm.get('latitude')?.value || 40.4168;
-    const lng = this.shopForm.get('longitude')?.value || -3.7038;
+    const lat = this.shopForm.get('address.latitude')?.value || 40.4168;
+    const lng = this.shopForm.get('address.longitude')?.value || -3.7038;
     const zoom = this.shopId() ? 15 : 6;
 
     this.map = L.map('map').setView([lat, lng], zoom);
@@ -207,15 +230,22 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   }
 
   private updateFormCoordinates(lat: number, lng: number) {
-    this.shopForm.patchValue({ latitude: lat, longitude: lng });
+    this.shopForm.patchValue({
+      address: {
+        latitude: lat,
+        longitude: lng
+      }
+    }, { emitEvent: false });
   }
 
   private getAddressFromCoordinates(lat: number, lng: number) {
+    this.isGeocodingActive = false;
     this.locationService.getAddressFromCoordinates(lat, lng).subscribe({
       next: (addressData) => {
         if (addressData) {
-          // emitEvent is false to avoid the address listener from searching in coordinates again
           this.shopForm.get('address')?.patchValue(addressData, { emitEvent: false });
+          this.syncAddressMemory();
+
           if (addressData.number) {
             this.messageService.add({
               severity: 'info',
@@ -229,10 +259,21 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
               detail: 'Ubicación aproximada (sin número exacto)'
             });
           }
+
+          // Open the lock giving a time for Angular to end loading the data
+          setTimeout(() => {
+            this.isGeocodingActive = true;
+          }, 50);
+        } else {
+          this.isGeocodingActive = true;
         }
       },
       error: (err) => {
         console.error('Error en geocodificación inversa:', err);
+
+        // If the API fails, then open the lock again
+        this.isGeocodingActive = true;
+
         this.messageService.add({
           severity: 'warn',
           summary: 'Aviso',
@@ -257,7 +298,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onFileRemove(event: any) {
+  onFileRemove() {
     this.newImage.set(null);
   }
 
@@ -291,13 +332,13 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
     const imageFile = this.newImage()?.file;
     const shopId = this.shopId();
+
     if(shopId){
       this.shopService.updateShop(shopId, shopData).subscribe({
         next: (shop) => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Tienda actualizada.' });
-          if (imageFile){
-            this.updateShopImage(shop.id, imageFile);
-          }
+          this.updateShopImage(shop.id, imageFile);
+
           this.router.navigate(['/admin/shops']);
         },
         error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al actualizar.' })
@@ -306,9 +347,10 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       this.shopService.createShop(shopData).subscribe({
         next: (shop) => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Tienda creada.' });
-          if (imageFile){
-            this.updateShopImage(shop.id, imageFile);
-          }
+
+          // Llamada incondicional
+          this.updateShopImage(shop.id, imageFile);
+
           this.router.navigate(['/admin/shops']);
         },
         error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al crear.' })
@@ -316,18 +358,15 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     }
   }
 
-  protected updateShopImage(id: string, image: File) {
-    const selectedImage = this.newImage();
-    if (selectedImage){
-      this.shopService.updateShopImage(id, image).subscribe({
-        next: (shop) => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Imagen de tienda ${shop.name} actualizada.` });
-        },
-        error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se ha podido actualizar la imagen de la tienda.' });
-        }
-      })
-    }
+  protected updateShopImage(id: string, image?: File) {
+    this.shopService.updateShopImage(id, image).subscribe({
+      next: (shop) => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Imagen de tienda ${shop.name} actualizada.` });
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se ha podido actualizar la imagen de la tienda.' });
+      }
+    })
   }
 
 }

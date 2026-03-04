@@ -94,8 +94,9 @@ public class ShopRestController {
     public ResponseEntity<ShopDTO> createShop(@RequestBody ShopDTO shopDTO) {
         AddressDTO dto = shopDTO.getAddress();
         Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
-
-        Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getLongitude(), shopDTO.getLatitude());
+        address.setLatitude(shopDTO.getAddress().getLatitude());
+        address.setLongitude(shopDTO.getAddress().getLongitude());
+        Shop shop = new Shop(shopDTO.getName(), address);
         Shop savedShop = shopService.save(shop);
         return ResponseEntity.accepted().body(new ShopDTO(savedShop));
     }
@@ -107,9 +108,10 @@ public class ShopRestController {
 
         shop.setName(shopDTO.getName());
         AddressDTO dto = shopDTO.getAddress();
-        shop.setAddress(new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry()));
-        shop.setLongitude(shopDTO.getLongitude());
-        shop.setLatitude(shopDTO.getLatitude());
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
+        shop.setAddress(address);
         Shop updatedShop = shopService.save(shop);
 
         return ResponseEntity.accepted().body(new ShopDTO(updatedShop));
@@ -234,7 +236,7 @@ public class ShopRestController {
 
     @Operation(summary = "(Admin) Update remote shop image")
     @PostMapping("/image/{id}")
-    public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
+    public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
         Shop shop = shopService.findShopHelper(id);
 
         // Clean previous image (if exists and it is not the default user image)
@@ -242,7 +244,7 @@ public class ShopRestController {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
 
-        if (!image.isEmpty()){
+        if (image != null && !image.isEmpty()){
             Map<String, String> res = storageService.uploadFile(image, "shops");
             ImageInfo shopImageInfo = new ImageInfo(
                     res.get("url"),

@@ -60,10 +60,12 @@ export class ShopService {
     return this.http.delete<Shop>(this.apiUrl + `/${id}`);
   }
 
-  public updateShopImage(shopId: string, selectedImage: File): Observable<Shop> {
+  public updateShopImage(shopId: string, selectedImage?: File): Observable<Shop> {
     const formData = new FormData();
-    formData.append('image', selectedImage);
-    return this.http.post<Shop>(this.apiUrl + `/image/${shopId}`, formData);
+    if (selectedImage) {
+      formData.append('image', selectedImage);
+    }
+    return this.http.post<Shop>(`${this.apiUrl}/image/${shopId}`, formData);
   }
 
   public toggleLocalActivation(id: string, state: boolean): Observable<Product> {

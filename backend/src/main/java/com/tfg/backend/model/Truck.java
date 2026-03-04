@@ -20,6 +20,11 @@ public class Truck {
     @Column(unique = true, nullable = false)
     private String referenceCode;
 
+    //Record the address and exact truck positioning
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "address_id")
+    private Address address;
+
     @OneToMany(mappedBy = "assignedTruck")
     private Set<Order> ordersToDeliver = new HashSet<>();
 
@@ -30,16 +35,11 @@ public class Truck {
     @JoinColumn(name = "driver_id")
     private User assignedDriver;
 
-    private double longitude;
-
-    private double latitude;
-
     public Truck() {
     }
 
-    public Truck(String referenceCode, double longitude, double latitude) {
+    public Truck(String referenceCode, Address address) {
         this.referenceCode = referenceCode;
-        this.longitude = longitude;
-        this.latitude = latitude;
+        this.address = address;
     }
 }

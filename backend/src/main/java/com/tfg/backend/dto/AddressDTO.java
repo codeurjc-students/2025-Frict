@@ -16,17 +16,10 @@ public class AddressDTO {
     private String city;
     private String country;
 
-    public AddressDTO() {
-    }
+    private double latitude;
+    private double longitude;
 
-    public AddressDTO(String alias, String street, String number, String floor, String postalCode, String city, String country) {
-        this.alias = alias;
-        this.street = street;
-        this.number = number;
-        this.floor = floor;
-        this.postalCode = postalCode;
-        this.city = city;
-        this.country = country;
+    public AddressDTO() {
     }
 
     public AddressDTO(Address address) {
@@ -38,6 +31,8 @@ public class AddressDTO {
         this.postalCode = address.getPostalCode();
         this.city = address.getCity();
         this.country = address.getCountry();
+        this.latitude = address.getLatitude();
+        this.longitude = address.getLongitude();
     }
 
     @Override

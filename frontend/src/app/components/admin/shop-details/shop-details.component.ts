@@ -27,6 +27,7 @@ import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {Message} from 'primeng/message';
+import {Address} from '../../../models/address.model';
 
 @Component({
   selector: 'app-shop-details',
@@ -313,19 +314,22 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.map = L.map('fleet-map', { zoomControl: false }).setView([this.shop.latitude, this.shop.longitude], 12);
+    this.map = L.map('fleet-map', { zoomControl: false });
+
+    if (this.shop.address.latitude && this.shop.address.longitude){
+      this.map.setView([this.shop.address.latitude, this.shop.address.longitude], 12);
+      const shopIcon = L.icon({
+        iconUrl: './shopIcon.png',
+        iconSize: [34, 34], iconAnchor: [18, 18]
+      });
+      L.marker([this.shop.address.latitude, this.shop.address.longitude], { icon: shopIcon }).addTo(this.map);
+    }
+
     L.control.zoom({ position: 'topright' }).addTo(this.map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap' }).addTo(this.map);
 
     // Crear LayerGroup para poder borrar marcadores luego
     this.markersLayer = L.layerGroup().addTo(this.map);
-
-    const shopIcon = L.icon({
-      iconUrl: './shopIcon.png', // Asegúrate que esta ruta es correcta en /public o /assets
-      iconSize: [34, 34], iconAnchor: [18, 18]
-    });
-
-    L.marker([this.shop.latitude, this.shop.longitude], { icon: shopIcon }).addTo(this.map);
 
     this.updateTruckMarkers();
   }
@@ -343,9 +347,11 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
     // 2. Añadimos los nuevos
     this.trucksPage.items.forEach(t => {
-      L.marker([t.latitude, t.longitude], { icon: truckIcon })
-        .addTo(this.markersLayer!)
-        .bindPopup(`<b>${t.referenceCode}</b><br>Estado: OK`); // Asumiendo que t.status existe
+      if (t.address.latitude && t.address.longitude){
+        L.marker([t.address.latitude, t.address.longitude], { icon: truckIcon })
+          .addTo(this.markersLayer!)
+          .bindPopup(`<b>${t.referenceCode}</b><br>Estado: OK`); // Asumiendo que t.status existe
+      }
     });
   }
 
@@ -416,7 +422,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   }
 
   focusTruckOnMap(truck: Truck) {
-    if(this.map) this.map.flyTo([truck.latitude, truck.longitude], 14);
+    if(this.map && truck.address.latitude && truck.address.longitude) this.map.flyTo([truck.address.latitude, truck.address.longitude], 14);
   }
 
   goBack() { this.router.navigate(['/admin/shops']); }

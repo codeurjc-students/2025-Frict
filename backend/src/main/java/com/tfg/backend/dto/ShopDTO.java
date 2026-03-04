@@ -15,8 +15,6 @@ public class ShopDTO {
     private ImageInfo imageInfo;
     private int totalAvailableProducts;
     private int totalAssignedTrucks;
-    private double longitude;
-    private double latitude;
     private UserDTO assignedManager;
 
     public ShopDTO() {
@@ -30,8 +28,6 @@ public class ShopDTO {
         this.imageInfo = s.getImage();
         this.totalAvailableProducts = s.getAvailableProducts().size();
         this.totalAssignedTrucks = s.getAssignedTrucks().size();
-        this.longitude = s.getLongitude();
-        this.latitude = s.getLatitude();
         if (s.getAssignedManager() != null){
             this.assignedManager = new UserDTO(s.getAssignedManager());
         }

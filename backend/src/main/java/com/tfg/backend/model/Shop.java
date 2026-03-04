@@ -32,10 +32,6 @@ public class Shop {
     @Embedded
     private ImageInfo image;
 
-    private double longitude;
-
-    private double latitude;
-
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ShopStock> availableProducts = new HashSet<>();
 
@@ -56,11 +52,9 @@ public class Shop {
     public Shop() {
     }
 
-    public Shop(String name, Address address, double longitude, double latitude) {
+    public Shop(String name, Address address) {
         this.referenceCode = ReferenceNumberGenerator.generateShopReferenceNumber();
         this.name = name;
         this.address = address;
-        this.longitude = longitude;
-        this.latitude = latitude;
     }
 }

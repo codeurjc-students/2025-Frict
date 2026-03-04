@@ -122,8 +122,12 @@ public class DatabaseInitializer {
         User user1 = new User("Usuario", "user", "laxari3928@1200b.com", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
         PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
-        Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
+        Address address = new Address("Casa","Av. de la Reina Sofía", "54", "", "28919", "Leganés", "España");
+        address.setLatitude(40.342509);
+        address.setLongitude(-3.742617);
         Address address2 = new Address("Trabajo","Dirección del trabajo", "8", "", "23456", "Ciudad de Ejemplo", "España");
+        address2.setLatitude(38.348045);
+        address2.setLongitude(-0.485225);
 
         user1.getCards().add(paymentCard);
         user1.getCards().add(paymentCard2);
@@ -404,7 +408,9 @@ public class DatabaseInitializer {
         log.info(">>> Initializing Shops and Trucks...");
 
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
-        Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
+        address1.setLatitude(40.4168);
+        address1.setLongitude(-3.7038);
+        Shop shop1 = new Shop("Madrid-Recoletos", address1);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
         //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
@@ -422,12 +428,23 @@ public class DatabaseInitializer {
         }
 
         Address address2 = new Address("Alicante", "Calle Por Defecto", "43", "", "03002", "Alicante", "España");
-        Shop shop2 = new Shop("Alicante", address2, -0.485225, 38.348045);
+        address2.setLatitude(38.348045);
+        address2.setLongitude(-0.485225);
+
+        Shop shop2 = new Shop("Alicante", address2);
         shop2.setImage(GlobalDefaults.SHOP_IMAGE);
         shopRepository.save(shop2);
 
-        Truck truck1 = truckRepository.save(new Truck("2C4RD", -3.6038, 40.6168));
-        Truck truck2 = truckRepository.save(new Truck("5U7TH", -3.9038, 40.5168));
+        Address address3 = new Address("Camión 1", "Avenida del Invierno", "", "", "28022", "Madrid", "España");
+        address2.setLatitude(40.443161);
+        address2.setLongitude(-3.575036);
+
+        Address address4 = new Address("Camión 2", "Avenida del Parque", "", "", "28760", "Madrid", "España");
+        address2.setLatitude(40.607013);
+        address2.setLongitude(-3.712612);
+
+        Truck truck1 = truckRepository.save(new Truck("2C4RD", address3));
+        Truck truck2 = truckRepository.save(new Truck("5U7TH", address4));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);
         truckRepository.save(truck1);
