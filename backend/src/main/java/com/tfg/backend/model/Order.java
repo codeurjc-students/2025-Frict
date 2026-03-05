@@ -56,7 +56,9 @@ public class Order {
     private double totalCost;
 
     private String cardNumberEnding; //Historic fields from Address and PaymentCard (prevent that, when the user deletes their addresses or cards, the order remains identifiable)
-    private String fullSendingAddress;
+
+    @OneToOne
+    private Address fullSendingAddress;
 
     public Order() {
         this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
@@ -75,7 +77,7 @@ public class Order {
 
         this.assignedShop = assignedShop;
         this.cardNumberEnding = card.getNumber().substring(card.getNumber().length() - 4);
-        this.fullSendingAddress = address.toString();
+        this.fullSendingAddress = address;
         this.updateSummaryFields();
     }
 

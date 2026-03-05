@@ -56,7 +56,7 @@
                   <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.userName }}</div>
 
                   <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
-                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.fullSendingAddress }}
+                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ formatAddress(order.sendingAddress) }}
                   </div>
 
                   <div class="flex flex-wrap gap-2 items-center pointer-events-none">
@@ -146,7 +146,7 @@
                 <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-times"></i></p-tag>
               }
             </td>
-            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="order.fullSendingAddress"><i class="pi pi-map-marker mr-1"></i>{{ order.fullSendingAddress }}</td>
+            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="formatAddress(order.sendingAddress)"><i class="pi pi-map-marker mr-1"></i> {{ formatAddress(order.sendingAddress) }}</td>
             <td class="py-3 px-4 text-center text-sm font-bold text-slate-600"><span class="bg-slate-100 px-2 py-1 rounded-md">{{ order.totalItems }}</span></td>
             <td class="py-3 px-4 text-right text-sm font-bold text-slate-800">{{ formatPrice(order.totalCost) }}</td>
           </tr>
@@ -168,7 +168,8 @@
   [draggable]="false"
   [resizable]="false"
   [contentStyle]="{'border-radius': '0 0 1rem 1rem'}"
-  styleClass="order-details-dialog custom-dialog-scroll">
+  styleClass="order-details-dialog custom-dialog-scroll"
+  (onHide)="onDialogHide()">
 
   <ng-template pTemplate="header">
     <div *ngIf="selectedOrder" class="flex flex-col gap-2 w-full pr-8">
@@ -183,7 +184,7 @@
           {{ getCurrentStatus(selectedOrder) }}
         </span>
         <span class="text-xs text-slate-500">
-           Creado el {{ selectedOrder.createdAt | date:'mediumDate' }} por <span class="font-bold text-slate-700">{{ selectedOrder.userName }}</span>
+           Creado el {{ selectedOrder.createdAt }} por <span class="font-bold text-slate-700">{{ selectedOrder.userName }}</span>
         </span>
       </div>
     </div>
@@ -201,7 +202,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2 pb-2 h-full">
 
       <div class="lg:col-span-2 flex flex-col h-full">
-        <p-tabs value="0">
+        <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)">
           <p-tablist>
             <p-tab value="0"><i class="pi pi-list mr-2"></i> Detalles</p-tab>
             <p-tab value="1"><i class="pi pi-comments mr-2"></i> Seguimiento</p-tab>
@@ -262,12 +263,8 @@
             </p-tabpanel>
 
             <p-tabpanel value="2">
-              <div class="bg-slate-100 mt-4 rounded-xl border border-slate-200 h-[400px] flex items-center justify-center relative overflow-hidden">
-                <div class="z-10 text-center flex flex-col items-center p-4">
-                  <i class="pi pi-map-marker text-4xl text-slate-400 mb-3"></i>
-                  <h3 class="font-bold text-slate-600">Área de Mapa</h3>
-                  <p class="text-xs text-slate-500 mt-1 max-w-[250px]">Componente reservado para integración con mapas mostrando Tienda, Camión y Destino.</p>
-                </div>
+              <div class="bg-slate-100 mt-4 rounded-xl border border-slate-200 h-[400px] relative overflow-hidden">
+                <div id="order-map" class="w-full h-full z-0"></div>
               </div>
             </p-tabpanel>
           </p-tabpanels>
@@ -381,7 +378,7 @@
           </div>
           <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-700 flex items-start gap-2">
             <i class="pi pi-map-marker text-slate-400"></i>
-            <span class="leading-relaxed text-xs text-slate-600">{{ selectedOrder.fullSendingAddress }}</span>
+            <span class="leading-relaxed text-xs text-slate-600">{{ formatAddress(selectedOrder.sendingAddress) }}</span>
           </div>
         </div>
 

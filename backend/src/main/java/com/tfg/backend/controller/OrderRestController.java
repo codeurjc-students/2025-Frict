@@ -178,7 +178,7 @@ public class OrderRestController {
 
         Order newOrder = new Order(loggedUser, savedItems, selectedShop, addressOptional.get(), cardOptional.get());
 
-        newOrder.setFullSendingAddress(addressOptional.get().toString());
+        newOrder.setFullSendingAddress(addressOptional.get());
         PaymentCard card = cardOptional.get();
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
         Order savedOrder = orderService.save(newOrder);

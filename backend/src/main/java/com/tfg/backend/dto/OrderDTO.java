@@ -30,7 +30,7 @@ public class OrderDTO {
     private double totalCost;
 
     private String cardNumberEnding;
-    private String fullSendingAddress;
+    private AddressDTO sendingAddress;
 
     @JsonFormat(pattern = "dd/MM/yy HH:mm")
     private LocalDateTime createdAt;
@@ -63,7 +63,7 @@ public class OrderDTO {
         this.totalCost = o.getTotalCost();
 
         this.cardNumberEnding = o.getCardNumberEnding();
-        this.fullSendingAddress = o.getFullSendingAddress();
+        this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
         this.createdAt = o.getCreatedAt();
     }
 }

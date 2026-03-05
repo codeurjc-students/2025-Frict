@@ -33,7 +33,10 @@ import {OrderService} from '../../../services/order.service';
 import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {formatPrice} from '../../../utils/textFormat.util';
+import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+
+// Importar leaflet
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-orders-management',
@@ -80,6 +83,11 @@ export class OrdersManagementComponent implements OnInit {
   loadingTrucks: boolean = false;
   trucksLoaded: boolean = false;
 
+  // Variables para gestionar el mapa y las pestañas
+  activeTab: string = '0';
+  private orderMap: L.Map | undefined;
+  private markersGroup: L.FeatureGroup | undefined;
+
   constructor(
     private messageService: MessageService,
     private orderService: OrderService,
@@ -103,6 +111,7 @@ export class OrdersManagementComponent implements OnInit {
     this.selectedTruck = null;
     this.availableTrucks = [];
     this.trucksLoaded = false;
+    this.activeTab = '0'; // Forzar reseteo de pestaña para que el mapa se inicie cuando se cambie intencionalmente a la 2
 
     const shopObs = order.assignedShopId ? this.shopService.getShopById(order.assignedShopId) : of(null);
     const truckObs = order.assignedTruckId ? this.truckService.getTruckById(order.assignedTruckId) : of(null);
@@ -114,6 +123,7 @@ export class OrdersManagementComponent implements OnInit {
       next: (results) => {
         this.selectedShop = results.shop;
         this.selectedTruck = results.truck;
+        console.log(this.selectedTruck?.address);
 
         if (this.selectedTruck) {
           this.availableTrucks = [this.selectedTruck];
@@ -126,6 +136,96 @@ export class OrdersManagementComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos logísticos.' });
       }
     });
+  }
+
+  // Se ejecuta cuando el dialog se cierra
+  onDialogHide() {
+    if (this.orderMap) {
+      this.orderMap.remove();
+      this.orderMap = undefined;
+    }
+  }
+
+  // Intercepta el cambio de pestañas para inicializar o redimensionar el mapa en la pestaña 2
+  onTabChange(tabValue: string | number) {
+    if (String(tabValue) === '2') {
+      setTimeout(() => {
+        if (!this.orderMap) {
+          this.initMap();
+        } else {
+          this.orderMap.invalidateSize();
+          if (this.markersGroup && this.markersGroup.getLayers().length > 0) {
+            this.orderMap.fitBounds(this.markersGroup.getBounds(), { padding: [40, 40], maxZoom: 16 });
+          }
+        }
+      }, 100);
+    }
+  }
+
+  private initMap() {
+    const container = document.getElementById('order-map');
+    if (!container) return;
+
+    // Destruye el mapa anterior si ya existiera para evitar el error "Map container is already initialized"
+    if (this.orderMap) {
+      this.orderMap.remove();
+    }
+
+    this.orderMap = L.map('order-map').setView([40.4168, -3.7038], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(this.orderMap);
+
+    const orderIcon = L.icon({
+      iconUrl: './location-pointer.png',
+      iconSize: [32, 32],      // Ajusta según el tamaño de tu imagen
+      iconAnchor: [16, 32],    // Punto de la imagen que se sitúa sobre la coordenada (centro-abajo)
+      popupAnchor: [0, -32]    // Punto desde donde se abre el popup respecto al anchor
+    });
+
+    const shopIcon = L.icon({
+      iconUrl: './shopIcon.png',
+      iconSize: [35, 35],
+      iconAnchor: [17, 35],
+      popupAnchor: [0, -35]
+    });
+
+    const truckIcon = L.icon({
+      iconUrl: './truckIcon.png',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],    // Si es un vehículo, a veces el anchor queda mejor en el centro [20, 20]
+      popupAnchor: [0, -20]
+    });
+
+    this.markersGroup = L.featureGroup().addTo(this.orderMap);
+
+    // Marcador del Pedido (Destino)
+    if (this.selectedOrder?.sendingAddress?.latitude && this.selectedOrder?.sendingAddress?.longitude) {
+      L.marker([this.selectedOrder.sendingAddress.latitude, this.selectedOrder.sendingAddress.longitude], { icon: orderIcon })
+        .bindPopup('<b>Destino</b><br>' + this.selectedOrder.userName)
+        .addTo(this.markersGroup);
+    }
+
+    // Marcador de la Tienda (Origen)
+    if (this.selectedShop?.address?.latitude && this.selectedShop?.address?.longitude) {
+      L.marker([this.selectedShop.address.latitude, this.selectedShop.address.longitude], { icon: shopIcon })
+        .bindPopup('<b>Tienda Origen</b><br>' + this.selectedShop.name)
+        .addTo(this.markersGroup);
+    }
+
+    // Marcador del Camión (Transporte)
+    if (this.selectedTruck?.address?.latitude && this.selectedTruck?.address?.longitude) {
+      L.marker([this.selectedTruck.address.latitude, this.selectedTruck.address.longitude], { icon: truckIcon })
+        .bindPopup('<b>Camión</b><br>' + this.selectedTruck?.referenceCode)
+        .addTo(this.markersGroup);
+    }
+
+    // Autocentrar el mapa conteniendo todos los marcadores añadidos
+    if (this.markersGroup.getLayers().length > 0) {
+      this.orderMap.fitBounds(this.markersGroup.getBounds(), { padding: [40, 40], maxZoom: 15 });
+    }
   }
 
   loadAvailableTrucks() {
@@ -293,4 +393,5 @@ export class OrdersManagementComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
+  protected readonly formatAddress = formatAddress;
 }

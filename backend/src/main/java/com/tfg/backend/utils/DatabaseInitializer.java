@@ -436,12 +436,12 @@ public class DatabaseInitializer {
         shopRepository.save(shop2);
 
         Address address3 = new Address("Camión 1", "Avenida del Invierno", "", "", "28022", "Madrid", "España");
-        address2.setLatitude(40.443161);
-        address2.setLongitude(-3.575036);
+        address3.setLatitude(40.443161);
+        address3.setLongitude(-3.575036);
 
         Address address4 = new Address("Camión 2", "Avenida del Parque", "", "", "28760", "Madrid", "España");
-        address2.setLatitude(40.607013);
-        address2.setLongitude(-3.712612);
+        address4.setLatitude(40.607013);
+        address4.setLongitude(-3.712612);
 
         Truck truck1 = truckRepository.save(new Truck("2C4RD", address3));
         Truck truck2 = truckRepository.save(new Truck("5U7TH", address4));
