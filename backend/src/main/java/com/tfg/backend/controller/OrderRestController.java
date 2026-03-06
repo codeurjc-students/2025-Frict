@@ -211,10 +211,16 @@ public class OrderRestController {
         //Difference between commenting only or changing status and commenting
         //If status has not changed, then it is commenting only
         if (orderStatus == order.getHistory().getLast().getStatus()) {
-            order.getHistory().getLast().getUpdates().add(new LogEntry(comment));
+            order.addStatusUpdate(comment);
         }
         else { //Change status and save the comment as the first of the updates list for that status
-            order.getHistory().add(new StatusLog(orderStatus, comment));
+
+            //If status is completed or canceled, it is not possible to change its status
+            if (order.getHistory().getLast().getStatus() == OrderStatus.CANCELLED || order.getHistory().getLast().getStatus() == OrderStatus.COMPLETED){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cancelled or completed orders cannot change status.");
+            }
+
+            order.changeOrderStatus(orderStatus, comment);
         }
 
         Order savedOrder = orderService.save(order);

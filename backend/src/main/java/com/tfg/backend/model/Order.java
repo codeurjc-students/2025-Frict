@@ -120,7 +120,7 @@ public class Order {
 
     //Adds an update to the current status. It does not change the current order status
     public void addStatusUpdate(String description) {
-        this.getHistory().getLast().getUpdates().addLast(new LogEntry(description));
+        this.getHistory().getLast().addUpdate(description);
     }
 
     //Changes the order status to a new one (it may be more than one status of the same type, admitting incidents and cancellations)

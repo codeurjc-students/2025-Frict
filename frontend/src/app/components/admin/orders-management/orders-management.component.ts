@@ -35,7 +35,6 @@ import {TruckService} from '../../../services/truck.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 
-// Importar leaflet
 import * as L from 'leaflet';
 
 @Component({
@@ -75,7 +74,6 @@ export class OrdersManagementComponent implements OnInit {
   displayOrderDialog = false;
   selectedOrder: Order | null = null;
   newComment: string = '';
-
   selectedShop: Shop | null = null;
   selectedTruck: Truck | null = null;
 
@@ -83,7 +81,18 @@ export class OrdersManagementComponent implements OnInit {
   loadingTrucks: boolean = false;
   trucksLoaded: boolean = false;
 
-  // Variables para gestionar el mapa y las pestañas
+  displayStatusDialog: boolean = false;
+  pendingStatusComment: string = '';
+  pendingDropData: {
+    order: Order;
+    newStatus: string;
+    previousContainer: CdkDropList<Order[]>;
+    container: CdkDropList<Order[]>;
+    previousIndex: number;
+    currentIndex: number;
+  } | null = null;
+
+  // Map and dialog tabs management
   activeTab: string = '0';
   private orderMap: L.Map | undefined;
   private markersGroup: L.FeatureGroup | undefined;
@@ -111,7 +120,7 @@ export class OrdersManagementComponent implements OnInit {
     this.selectedTruck = null;
     this.availableTrucks = [];
     this.trucksLoaded = false;
-    this.activeTab = '0'; // Forzar reseteo de pestaña para que el mapa se inicie cuando se cambie intencionalmente a la 2
+    this.activeTab = '0';
 
     const shopObs = order.assignedShopId ? this.shopService.getShopById(order.assignedShopId) : of(null);
     const truckObs = order.assignedTruckId ? this.truckService.getTruckById(order.assignedTruckId) : of(null);
@@ -138,7 +147,6 @@ export class OrdersManagementComponent implements OnInit {
     });
   }
 
-  // Se ejecuta cuando el dialog se cierra
   onDialogHide() {
     if (this.orderMap) {
       this.orderMap.remove();
@@ -146,7 +154,7 @@ export class OrdersManagementComponent implements OnInit {
     }
   }
 
-  // Intercepta el cambio de pestañas para inicializar o redimensionar el mapa en la pestaña 2
+  // Intercept the tabs change to manage map redimensioning
   onTabChange(tabValue: string | number) {
     if (String(tabValue) === '2') {
       setTimeout(() => {
@@ -166,7 +174,7 @@ export class OrdersManagementComponent implements OnInit {
     const container = document.getElementById('order-map');
     if (!container) return;
 
-    // Destruye el mapa anterior si ya existiera para evitar el error "Map container is already initialized"
+    // Destroy the previous map if there were already an initialized map
     if (this.orderMap) {
       this.orderMap.remove();
     }
@@ -180,9 +188,9 @@ export class OrdersManagementComponent implements OnInit {
 
     const orderIcon = L.icon({
       iconUrl: './location-pointer.png',
-      iconSize: [32, 32],      // Ajusta según el tamaño de tu imagen
-      iconAnchor: [16, 32],    // Punto de la imagen que se sitúa sobre la coordenada (centro-abajo)
-      popupAnchor: [0, -32]    // Punto desde donde se abre el popup respecto al anchor
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
     });
 
     const shopIcon = L.icon({
@@ -195,34 +203,34 @@ export class OrdersManagementComponent implements OnInit {
     const truckIcon = L.icon({
       iconUrl: './truckIcon.png',
       iconSize: [40, 40],
-      iconAnchor: [20, 20],    // Si es un vehículo, a veces el anchor queda mejor en el centro [20, 20]
+      iconAnchor: [20, 20],
       popupAnchor: [0, -20]
     });
 
     this.markersGroup = L.featureGroup().addTo(this.orderMap);
 
-    // Marcador del Pedido (Destino)
+    // Destinations pointer
     if (this.selectedOrder?.sendingAddress?.latitude && this.selectedOrder?.sendingAddress?.longitude) {
       L.marker([this.selectedOrder.sendingAddress.latitude, this.selectedOrder.sendingAddress.longitude], { icon: orderIcon })
         .bindPopup('<b>Destino</b><br>' + this.selectedOrder.userName)
         .addTo(this.markersGroup);
     }
 
-    // Marcador de la Tienda (Origen)
+    // Shops pointer
     if (this.selectedShop?.address?.latitude && this.selectedShop?.address?.longitude) {
       L.marker([this.selectedShop.address.latitude, this.selectedShop.address.longitude], { icon: shopIcon })
         .bindPopup('<b>Tienda Origen</b><br>' + this.selectedShop.name)
         .addTo(this.markersGroup);
     }
 
-    // Marcador del Camión (Transporte)
+    // Trucks pointer
     if (this.selectedTruck?.address?.latitude && this.selectedTruck?.address?.longitude) {
       L.marker([this.selectedTruck.address.latitude, this.selectedTruck.address.longitude], { icon: truckIcon })
         .bindPopup('<b>Camión</b><br>' + this.selectedTruck?.referenceCode)
         .addTo(this.markersGroup);
     }
 
-    // Autocentrar el mapa conteniendo todos los marcadores añadidos
+    // Autocenter the map containing all added pointers
     if (this.markersGroup.getLayers().length > 0) {
       this.orderMap.fitBounds(this.markersGroup.getBounds(), { padding: [40, 40], maxZoom: 15 });
     }
@@ -330,21 +338,76 @@ export class OrdersManagementComponent implements OnInit {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       return;
     }
-    const movedOrder = event.previousContainer.data[event.previousIndex];
+
     transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
 
-    this.orderService.commentAndOrUpdateOrderStatus(movedOrder.id, newStatus, `Cambio de estado a "${newStatus}" desde el tablero.`).subscribe({
+    // Save the data locally to use them when cancelling or accepting the change status operation
+    this.pendingDropData = {
+      order: event.container.data[event.currentIndex],
+      newStatus: newStatus,
+      previousContainer: event.previousContainer,
+      container: event.container,
+      previousIndex: event.previousIndex,
+      currentIndex: event.currentIndex
+    };
+
+    this.pendingStatusComment = '';
+    this.displayStatusDialog = true;
+  }
+
+  // Confirm change status
+  confirmStatusChange() {
+    if (!this.pendingDropData) return;
+
+    const { order, newStatus, previousContainer, container, previousIndex, currentIndex } = this.pendingDropData;
+    this.displayStatusDialog = false;
+
+    // Send the comment to backend (empty or not)
+    this.orderService.commentAndOrUpdateOrderStatus(order.id, newStatus, this.pendingStatusComment).subscribe({
       next: (updatedOrder) => {
-        this.removeOrderFromAllSignals(updatedOrder.id);
-        this.addOrderToCorrectSignal(updatedOrder);
-        if (this.selectedOrder?.id === updatedOrder.id) this.selectedOrder = updatedOrder;
+        this.syncOrderInListData(updatedOrder);
         this.messageService.add({ severity: 'success', summary: 'Estado actualizado', detail: `Pedido movido a ${newStatus}` });
+        this.pendingDropData = null;
       },
       error: () => {
-        transferArrayItem(event.container.data, event.previousContainer.data, event.currentIndex, event.previousIndex);
+        // Revert if backend fails
+        transferArrayItem(container.data, previousContainer.data, currentIndex, previousIndex);
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado.' });
+        this.pendingDropData = null;
       }
     });
+  }
+
+  //Cancel change status
+  cancelStatusChange() {
+    if (!this.pendingDropData) return;
+
+    const { previousContainer, container, previousIndex, currentIndex } = this.pendingDropData;
+
+    // Revert visual movement
+    transferArrayItem(container.data, previousContainer.data, currentIndex, previousIndex);
+
+    this.displayStatusDialog = false;
+    this.pendingDropData = null;
+  }
+
+  private syncOrderInListData(updatedOrder: Order) {
+    // Update order in list mode
+    if (this.ordersPage && this.ordersPage.items) {
+      const index = this.ordersPage.items.findIndex(o => o.id === updatedOrder.id);
+      if (index !== -1) {
+        this.ordersPage.items[index] = updatedOrder;
+      }
+    }
+
+    // Update order in Kanban
+    this.removeOrderFromAllSignals(updatedOrder.id);
+    this.addOrderToCorrectSignal(updatedOrder);
+
+    // Update selected order if dialog is open
+    if (this.selectedOrder?.id === updatedOrder.id) {
+      this.selectedOrder = updatedOrder;
+    }
   }
 
   getIconForStatus(status: string): string {
