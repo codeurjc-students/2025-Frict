@@ -26,6 +26,10 @@ public class OrderService {
 
     public List<Order> findAll() { return repository.findAll(); }
 
+    public Page<Order> findOrdersByManagerId(Long managerId, Pageable pageable) {
+        return repository.findByAssignedShop_AssignedManager_Id(managerId, pageable);
+    }
+
     public Page<Order> findAllByUser(User u, Pageable pageInfo){
         return repository.findAllByUser(u, pageInfo);
     }

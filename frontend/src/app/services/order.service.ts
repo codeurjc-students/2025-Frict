@@ -32,7 +32,7 @@ export class OrderService {
     this.itemsCount.set(n);
   }
 
-  public getAllOrdersPage(page: number, size: number): Observable<PageResponse<Order>> {
+  public getOrdersByRolePage(page: number, size: number): Observable<PageResponse<Order>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());

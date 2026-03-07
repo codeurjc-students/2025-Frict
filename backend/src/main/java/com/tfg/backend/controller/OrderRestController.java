@@ -10,7 +10,6 @@ import com.tfg.backend.utils.EmailService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,11 +52,19 @@ public class OrderRestController {
     private TruckService truckService;
 
 
-    @Operation(summary = "(Admin) Get all orders (paged)")
+    @Operation(summary = "(Admin, Manager) Get orders by role (paged)")
     @GetMapping("/")
-    public ResponseEntity<PageResponse<OrderDTO>> getAllOrders(Pageable pageable){
-        Page<Order> userOrders = orderService.findAll(pageable);
-        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
+    public ResponseEntity<PageResponse<OrderDTO>> getOrdersByRole(Pageable pageable){
+        User loggedUser = userService.findLoggedUserHelper();
+
+        if (loggedUser.getRoles().contains("ADMIN")){
+            Page<Order> userOrders = orderService.findAll(pageable);
+            return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
+        } else {
+            // Lógica para el Manager: delegamos la búsqueda al servicio
+            Page<Order> managerOrders = orderService.findOrdersByManagerId(loggedUser.getId(), pageable);
+            return ResponseEntity.ok(PageFormatter.toPageResponse(managerOrders, OrderDTO::new));
+        }
     }
 
 

@@ -433,7 +433,7 @@ export class OrdersManagementComponent implements OnInit {
   }
 
   private loadOrdersPage() {
-    this.orderService.getAllOrdersPage(this.first/this.rows, this.rows).subscribe({
+    this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows).subscribe({
       next: (page: PageResponse<Order>) => {
         this.ordersPage = page;
         this.ordersMade.set(page.items.filter(o => this.getCurrentStatus(o) === 'Pedido Realizado'));
