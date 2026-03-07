@@ -1,12 +1,10 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {map, Observable} from 'rxjs';
+import {Observable} from 'rxjs';
 import {PageResponse} from '../models/pageResponse.model';
 import {Shop} from '../models/shop.model';
 import {Product} from '../models/product.model';
-import {User} from '../models/user.model';
 import {ShopStock} from '../models/shopStock.model';
-import {ListResponse} from '../models/listResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +26,11 @@ export class ShopService {
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
     return this.http.get<PageResponse<Shop>>(this.apiUrl, { params });
+  }
+
+  //User: Retrieve all available shops to be selected
+  public getAllShopsList(): Observable<Shop[]> {
+    return this.http.get<Shop[]>(this.apiUrl + `/list`);
   }
 
   //Admin: Retrieve all organization shops
@@ -57,10 +60,12 @@ export class ShopService {
     return this.http.delete<Shop>(this.apiUrl + `/${id}`);
   }
 
-  public updateShopImage(shopId: string, selectedImage: File): Observable<Shop> {
+  public updateShopImage(shopId: string, selectedImage?: File): Observable<Shop> {
     const formData = new FormData();
-    formData.append('image', selectedImage);
-    return this.http.post<Shop>(this.apiUrl + `/image/${shopId}`, formData);
+    if (selectedImage) {
+      formData.append('image', selectedImage);
+    }
+    return this.http.post<Shop>(`${this.apiUrl}/image/${shopId}`, formData);
   }
 
   public toggleLocalActivation(id: string, state: boolean): Observable<Product> {

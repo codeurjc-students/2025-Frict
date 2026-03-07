@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, computed, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {OrderService} from '../../../services/order.service';
@@ -13,11 +13,18 @@ import {Button} from 'primeng/button';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
+import {Tooltip} from 'primeng/tooltip';
+import {getStockTagInfo} from '../../../utils/tagManager.util';
+import {AuthService} from '../../../services/auth.service';
+import {ShopService} from '../../../services/shop.service';
+import {Shop} from '../../../models/shop.model';
+import {Tag} from 'primeng/tag';
+import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip, StockTagComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
@@ -41,8 +48,13 @@ export class CartComponent implements OnInit, OnDestroy {
 
   private quantityUpdateSubject = new Subject<{item: OrderItem, quantity: number}>();
 
+  //Selected shop information
+  protected selectedShop: Shop | null = null;
+
   constructor(private orderService: OrderService,
-              private productService: ProductService) {}
+              private productService: ProductService,
+              private authService: AuthService,
+              private shopService: ShopService) {}
 
   ngOnInit(){
     this.quantityUpdateSubject.pipe(
@@ -66,6 +78,7 @@ export class CartComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.getSelectedShop();
     this.getUserCartItemsPage();
     this.getUserCartSummary();
     this.getUserFavouriteProducts();
@@ -73,6 +86,17 @@ export class CartComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.quantityUpdateSubject.complete();
+  }
+
+  getSelectedShop(){
+    const id = this.authService.selectedShopId();
+    if (id){
+      this.shopService.getShopById(id).subscribe({
+        next: (shop) => {
+          this.selectedShop = shop;
+        }
+      })
+    }
   }
 
   protected updateItemQuantity(item: OrderItem, newQuantity: number) {
@@ -84,8 +108,8 @@ export class CartComponent implements OnInit, OnDestroy {
 
     if (newQuantity < 1) {
       finalQuantity = 1;
-    } else if (newQuantity > item.product.totalUnits) {
-      finalQuantity = item.product.totalUnits;
+    } else if (newQuantity > item.product.availableUnits) {
+      finalQuantity = item.product.availableUnits;
     }
 
     if (finalQuantity !== newQuantity) {

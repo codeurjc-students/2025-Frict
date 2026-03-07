@@ -22,7 +22,11 @@ describe('ClientHomeComponent', () => {
 
   beforeEach(async () => {
     // 1. Create Mocks
-    productServiceSpy = jasmine.createSpyObj('ProductService', ['getProductsByCategoryName']);
+    productServiceSpy = jasmine.createSpyObj('ProductService', [
+      'getProductsByCategoryName',
+      'searchScope' // Add it here
+    ]);
+    productServiceSpy.searchScope.and.returnValue('GLOBAL');
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getAllCategories']);
 
     await TestBed.configureTestingModule({
@@ -58,8 +62,40 @@ describe('ClientHomeComponent', () => {
     const mockCategory: Category = { id: '1', name: 'Cat1', imageInfo: mockImageInfo, icon: '', timesUsed: 0, bannerText: '', shortDescription: '', longDescription: '', parentId: '', children: [] };
     const mockProducts : PageResponse<Product> = {
       items: [
-        { id: '1', referenceCode: 'A', name: 'Producto A', description: 'Desc', currentPrice: 100, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 5, totalReviews: 1},
-        { id: '2', referenceCode: 'B', name: 'Producto B', description: 'Desc', currentPrice: 200, imagesInfo: [mockImageInfo], previousPrice: 0, discount: "0%", categories: [mockCategory], active: true, totalUnits: 30, shopsWithStock: 3, averageRating: 4, totalReviews: 2}
+        {
+          id: '1',
+          referenceCode: 'A',
+          name: 'Producto A',
+          description: 'Desc',
+          currentPrice: 100,
+          imagesInfo: [mockImageInfo],
+          previousPrice: 0,
+          discount: "0%",
+          categories: [mockCategory],
+          active: true,
+          totalUnits: 30,
+          shopsWithStock: 3,
+          averageRating: 5,
+          totalReviews: 1,
+          availableUnits: 0
+        },
+        {
+          id: '2',
+          referenceCode: 'B',
+          name: 'Producto B',
+          description: 'Desc',
+          currentPrice: 200,
+          imagesInfo: [mockImageInfo],
+          previousPrice: 0,
+          discount: "0%",
+          categories: [mockCategory],
+          active: true,
+          totalUnits: 30,
+          shopsWithStock: 3,
+          averageRating: 4,
+          totalReviews: 2,
+          availableUnits: 0
+        }
       ],
       totalItems: 2,
       currentPage: 0,

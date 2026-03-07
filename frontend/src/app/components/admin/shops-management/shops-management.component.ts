@@ -134,9 +134,10 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     });
 
     this.shopsPage.items.forEach(shop => {
-      const marker = L.marker([shop.latitude, shop.longitude], { icon: shopIcon })
-        .addTo(this.map!)
-        .bindPopup(`
+      if (shop.address.latitude && shop.address.longitude){
+        const marker = L.marker([shop.address.latitude, shop.address.longitude], { icon: shopIcon })
+          .addTo(this.map!)
+          .bindPopup(`
             <div class="p-2 min-w-[140px] text-center">
                 <h4 class="font-bold text-slate-800 text-sm">Tienda ${shop.name}</h4>
                 <p class="text-xs text-slate-500 mb-2">${formatAddress(shop.address)}</p>
@@ -145,8 +146,8 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
                 </span>
             </div>
         `);
-
-      this.markers.push(marker);
+        this.markers.push(marker);
+      }
     });
   }
 
@@ -177,8 +178,8 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
 
   //Fly to selected shop in map
   locateShopOnMap(shop: Shop) {
-    if (this.map) {
-      this.map.flyTo([shop.latitude, shop.longitude], 14, {
+    if (this.map && shop.address.latitude && shop.address.longitude) {
+      this.map.flyTo([shop.address.latitude, shop.address.longitude], 14, {
         duration: 1.5 //Seconds
       });
     }

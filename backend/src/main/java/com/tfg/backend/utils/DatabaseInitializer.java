@@ -122,8 +122,12 @@ public class DatabaseInitializer {
         User user1 = new User("Usuario", "user", "laxari3928@1200b.com", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
         PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
-        Address address = new Address("Casa","Calle de Ejemplo", "1", "3ºC", "12345", "Ciudad de Ejemplo", "España");
+        Address address = new Address("Casa","Av. de la Reina Sofía", "54", "", "28919", "Leganés", "España");
+        address.setLatitude(40.342509);
+        address.setLongitude(-3.742617);
         Address address2 = new Address("Trabajo","Dirección del trabajo", "8", "", "23456", "Ciudad de Ejemplo", "España");
+        address2.setLatitude(38.348045);
+        address2.setLongitude(-0.485225);
 
         user1.getCards().add(paymentCard);
         user1.getCards().add(paymentCard2);
@@ -404,21 +408,43 @@ public class DatabaseInitializer {
         log.info(">>> Initializing Shops and Trucks...");
 
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
-        Shop shop1 = new Shop("Madrid-Recoletos", address1, -3.7038, 40.4168);
+        address1.setLatitude(40.4168);
+        address1.setLongitude(-3.7038);
+        Shop shop1 = new Shop("Madrid-Recoletos", address1);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
+        //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
         if(manager.isPresent()){
             shop1.setAssignedManager(manager.get());
         }
         shopRepository.save(shop1);
 
+        //Selected shop assignment
+        Optional<User> userOptional = userRepository.findByUsername("user");
+        if(userOptional.isPresent()){
+            User user = userOptional.get();
+            user.setSelectedShop(shop1);
+            userRepository.save(user);
+        }
+
         Address address2 = new Address("Alicante", "Calle Por Defecto", "43", "", "03002", "Alicante", "España");
-        Shop shop2 = new Shop("Alicante", address2, -0.485225, 38.348045);
+        address2.setLatitude(38.348045);
+        address2.setLongitude(-0.485225);
+
+        Shop shop2 = new Shop("Alicante", address2);
         shop2.setImage(GlobalDefaults.SHOP_IMAGE);
         shopRepository.save(shop2);
 
-        Truck truck1 = truckRepository.save(new Truck("2C4RD", -3.6038, 40.6168));
-        Truck truck2 = truckRepository.save(new Truck("5U7TH", -3.9038, 40.5168));
+        Address address3 = new Address("Camión 1", "Avenida del Invierno", "", "", "28022", "Madrid", "España");
+        address3.setLatitude(40.443161);
+        address3.setLongitude(-3.575036);
+
+        Address address4 = new Address("Camión 2", "Avenida del Parque", "", "", "28760", "Madrid", "España");
+        address4.setLatitude(40.607013);
+        address4.setLongitude(-3.712612);
+
+        Truck truck1 = truckRepository.save(new Truck("2C4RD", address3));
+        Truck truck2 = truckRepository.save(new Truck("5U7TH", address4));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);
         truckRepository.save(truck1);
@@ -447,29 +473,23 @@ public class DatabaseInitializer {
             orderItems2.add(new OrderItem(products.get(3), user2, 2));
             orderItems2.add(new OrderItem(products.get(7), user2, 1));
 
-            Order order1 = new Order(user1, orderItems1, user1.getAddresses().getFirst(), user1.getCards().getFirst());
-            Order order2 = new Order(user2, orderItems2, user2.getAddresses().getFirst(), user2.getCards().getFirst());
+            //As all items are all placed orders items, their product reference will be always null
+            for (OrderItem i : orderItems1) { i.setProduct(null); }
+            for (OrderItem i : orderItems2) { i.setProduct(null); }
+
+            List<Shop> allShops = shopRepository.findAll();
+            Order order1 = new Order(user1, orderItems1, allShops.getFirst(), user1.getAddresses().getFirst(), user1.getCards().getFirst());
+            Order order2 = new Order(user2, orderItems2, allShops.getLast(), user2.getAddresses().getFirst(), user2.getCards().getFirst());
+
+            List<Truck> allTrucks = truckRepository.findAll();
+            order1.setAssignedTruck(allTrucks.getFirst());
+            order2.setAssignedTruck(allTrucks.getLast());
+
             order1.addStatusUpdate("El pedido ha quedado registrado correctamente en la tienda asignada");
             order1.changeOrderStatus(OrderStatus.SENT, "El pedido se está procesando");
 
             orderRepository.save(order1);
             orderRepository.save(order2);
-        }
-
-        // Cart products
-        if (products.size() >= 29) {
-            List<OrderItem> cartItems = new ArrayList<>();
-            cartItems.add(new OrderItem(products.get(0), user1, 1));
-            cartItems.add(new OrderItem(products.get(2), user1, 2));
-            cartItems.add(new OrderItem(products.get(3), user1, 3));
-            cartItems.add(new OrderItem(products.get(8), user1, 4));
-            cartItems.add(new OrderItem(products.get(12), user1, 2));
-            cartItems.add(new OrderItem(products.get(15), user1, 3));
-            cartItems.add(new OrderItem(products.get(18), user1, 6));
-            cartItems.add(new OrderItem(products.get(22), user1, 20));
-            cartItems.add(new OrderItem(products.get(23), user1, 15));
-            cartItems.add(new OrderItem(products.get(28), user1, 14));
-            orderItemRepository.saveAll(cartItems);
         }
     }
 

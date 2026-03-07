@@ -32,27 +32,29 @@ public class Shop {
     @Embedded
     private ImageInfo image;
 
-    private double longitude;
-
-    private double latitude;
-
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ShopStock> availableProducts = new HashSet<>();
 
     @OneToMany(mappedBy = "assignedShop")
     private List<Truck> assignedTrucks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "assignedShop")
+    private List<Order> assignedOrders = new ArrayList<>();
+
+    // MANAGER role users only
     @ManyToOne
     private User assignedManager;
+
+    // USER role users only
+    @OneToMany(mappedBy = "selectedShop")
+    private List<User> customers = new ArrayList<>();
 
     public Shop() {
     }
 
-    public Shop(String name, Address address, double longitude, double latitude) {
+    public Shop(String name, Address address) {
         this.referenceCode = ReferenceNumberGenerator.generateShopReferenceNumber();
         this.name = name;
         this.address = address;
-        this.longitude = longitude;
-        this.latitude = latitude;
     }
 }

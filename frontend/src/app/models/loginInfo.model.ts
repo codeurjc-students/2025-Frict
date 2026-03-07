@@ -5,4 +5,5 @@ export interface LoginInfo {
   name: string;
   username: string;
   roles: string[];
+  selectedShopId: string | null;
 }

@@ -10,7 +10,5 @@ export interface Shop {
   imageInfo: ImageInfo;
   totalAvailableProducts: number;
   totalAssignedTrucks: number;
-  longitude: number;
-  latitude: number;
   assignedManager: User;
 }

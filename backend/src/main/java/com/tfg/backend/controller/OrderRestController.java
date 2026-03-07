@@ -10,7 +10,6 @@ import com.tfg.backend.utils.EmailService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -38,6 +37,9 @@ public class OrderRestController {
     private OrderItemService orderItemService;
 
     @Autowired
+    private ShopService shopService;
+
+    @Autowired
     private ShopStockService shopStockService;
 
     @Autowired
@@ -46,12 +48,31 @@ public class OrderRestController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private TruckService truckService;
+
+
+    @Operation(summary = "(Admin, Manager) Get orders by role (paged)")
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<OrderDTO>> getOrdersByRole(Pageable pageable){
+        User loggedUser = userService.findLoggedUserHelper();
+
+        if (loggedUser.getRoles().contains("ADMIN")){
+            Page<Order> userOrders = orderService.findAll(pageable);
+            return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
+        } else {
+            // Lógica para el Manager: delegamos la búsqueda al servicio
+            Page<Order> managerOrders = orderService.findOrdersByManagerId(loggedUser.getId(), pageable);
+            return ResponseEntity.ok(PageFormatter.toPageResponse(managerOrders, OrderDTO::new));
+        }
+    }
+
 
     @Operation(summary = "(User) Get logged user orders (paged)")
     @GetMapping
-    public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(Pageable pageable){
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
@@ -70,16 +91,46 @@ public class OrderRestController {
     }
 
 
+    @Operation(summary = "(Admin, Manager) Set assigned truck to an order")
+    @PostMapping("/{orderId}/assign/truck/{truckId}")
+    public ResponseEntity<OrderDTO> setAssignedTruck(@PathVariable Long orderId, @PathVariable Long truckId, @RequestParam boolean state) {
+        Order order = orderService.findOrderHelper(orderId);
+
+        if (state) {
+            Truck truck = truckService.findTruckHelper(truckId);
+            //Check if the found truck is assigned to the same shop as the order
+            if (!Objects.equals(order.getAssignedShop().getId(), truck.getAssignedShop().getId())){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This truck and this order do not belong to the same shop.");
+            }
+            order.setAssignedTruck(truck);
+        }
+        else {
+            order.setAssignedTruck(null);
+        }
+
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
+
+
     //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
     //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
     @Operation(summary = "(User) Create order for logged user")
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(HttpServletRequest request,
-                                                @RequestParam Long addressId,
+    public ResponseEntity<OrderDTO> createOrder(@RequestParam Long addressId,
                                                 @RequestParam Long cardId){
 
-        //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        //Get logged user info if any (User class), and check if user has a selected shop
+        User loggedUser = userService.findLoggedUserHelper();
+        if (loggedUser.getSelectedShop() == null){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User must have an assigned shop to complete an order");
+        }
+
+        Optional<Shop> shopOptional = shopService.findById(loggedUser.getSelectedShop().getId());
+        if (shopOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + loggedUser.getSelectedShop().getId() + " does not exist.");
+        }
+        Shop selectedShop = shopOptional.get();
 
         //Find address info and card info
         Optional<Address> addressOptional = loggedUser.getAddresses().stream()
@@ -132,9 +183,9 @@ public class OrderRestController {
         }
         List<OrderItem> savedItems = orderItemService.saveAll(cartItems);
 
-        Order newOrder = new Order(loggedUser, savedItems, addressOptional.get(), cardOptional.get());
+        Order newOrder = new Order(loggedUser, savedItems, selectedShop, addressOptional.get(), cardOptional.get());
 
-        newOrder.setFullSendingAddress(addressOptional.get().toString());
+        newOrder.setFullSendingAddress(addressOptional.get());
         PaymentCard card = cardOptional.get();
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
         Order savedOrder = orderService.save(newOrder);
@@ -152,15 +203,52 @@ public class OrderRestController {
     }
 
 
+    @Operation(summary = "(Admin, Manager) Comment and/or update order status by ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderDTO> commentAndOrUpdateOrderStatus(@PathVariable Long id,
+                                                                  @RequestParam OrderStatus orderStatus,
+                                                                  @RequestParam(required = false) String comment){
+        //Check if the order exists
+        Optional<Order> orderOptional = orderService.findById(id);
+        if (orderOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order with ID " + id + " does not exist.");
+        }
+        Order order = orderOptional.get();
+
+        //Difference between commenting only or changing status and commenting
+        //If status has not changed, then it is commenting only
+        if (orderStatus == order.getHistory().getLast().getStatus()) {
+            order.addStatusUpdate(comment);
+        }
+        else { //Change status and save the comment as the first of the updates list for that status
+
+            //If status is completed or canceled, it is not possible to change its status
+            if (order.getHistory().getLast().getStatus() == OrderStatus.CANCELLED || order.getHistory().getLast().getStatus() == OrderStatus.COMPLETED){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cancelled or completed orders cannot change status.");
+            }
+
+            //If the new status is ON_DELIVERY, then it must have a truck associated
+            if(orderStatus.equals(OrderStatus.ON_DELIVERY) && order.getAssignedTruck() == null){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "The order must have an associated delivery truck to be delivered.");
+            }
+
+            order.changeOrderStatus(orderStatus, comment);
+        }
+
+        Order savedOrder = orderService.save(order);
+        return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
+
+
     @Operation(summary = "(User) Cancel logged user order by ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<OrderDTO> cancelOrder(HttpServletRequest request, @PathVariable Long id){
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id){
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
-        //Check if the order belongs to that user or if the logged user is a delivery driver
-        if(!loggedUser.getRoles().contains("DRIVER") && !orderService.existsByIdAndUser(id, loggedUser)){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order with ID " + id + " does not belong to this user or logged user has not delivery driver permissions.");
+        //Check if the order belongs to that user
+        if(!orderService.existsByIdAndUser(id, loggedUser)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order with ID " + id + " does not belong to this user.");
         }
 
         //Check if the order exists
@@ -170,7 +258,7 @@ public class OrderRestController {
         }
         Order order = orderOptional.get();
 
-        //Mark the order as cancelled (update order status without deleting it from DB)
+        //Mark the order as canceled (update order status without deleting it from DB)
         if(loggedUser.getRoles().contains("DRIVER")){
             order.changeOrderStatus(OrderStatus.CANCELLED, "El pedido ha sido cancelado por el repartidor.");
         }
@@ -185,9 +273,9 @@ public class OrderRestController {
 
     @Operation(summary = "(User) Get logged user cart summary")
     @GetMapping("/cart/summary")
-    public ResponseEntity<CartSummaryDTO> getCartSummary(HttpServletRequest request) {
+    public ResponseEntity<CartSummaryDTO> getCartSummary() {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
 
@@ -234,20 +322,39 @@ public class OrderRestController {
     //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
     @Operation(summary = "(User) Get logged user cart products (paged)")
     @GetMapping("/cart")
-    public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(HttpServletRequest request, Pageable pageable) {
-        //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
-
+    public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(Pageable pageable) {
+        User loggedUser = userService.findLoggedUserHelper();
         Page<OrderItem> cartItems = orderItemService.findUserCartItemsPage(loggedUser.getId(), pageable);
+
+        List<Product> productsInCart = cartItems.getContent().stream()
+                .map(OrderItem::getProduct)
+                .filter(p -> p != null)
+                .toList();
+
+        productService.enrichWithStock(productsInCart);
         return ResponseEntity.ok(PageFormatter.toPageResponse(cartItems, OrderItemDTO::new));
     }
 
 
+    @Operation(summary = "(User) Get logged user cart item by product ID")
+    @GetMapping("/cart/item/{id}")
+    public ResponseEntity<OrderItemDTO> getCartItemByProductId(@PathVariable Long id) {
+        // Check the item is in logged users cart
+        User loggedUser = userService.findLoggedUserHelper();
+        Optional<OrderItem> itemOptional = orderItemService.findUserCartItemByProductId(id, loggedUser.getId());
+        if (itemOptional.isEmpty()){
+            return ResponseEntity.noContent().build();
+        }
+        OrderItem item = itemOptional.get();
+        productService.enrichWithStock(item.getProduct());
+        return ResponseEntity.ok(new OrderItemDTO(item));
+    }
+
     @Operation(summary = "(User) Clear logged user cart products")
     @DeleteMapping("/cart")
-    public ResponseEntity<CartSummaryDTO> clearCartItems(HttpServletRequest request) {
+    public ResponseEntity<CartSummaryDTO> clearCartItems() {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         List<OrderItem> itemsToRemove = loggedUser.getItemsInCart();
 
@@ -255,17 +362,16 @@ public class OrderRestController {
             loggedUser.getAllOrderItems().removeAll(itemsToRemove);
             userService.save(loggedUser);
         }
-        return this.getCartSummary(request);
+        return this.getCartSummary();
     }
 
 
     @Operation(summary = "(User) Add item to logged user cart")
     @PostMapping("/cart/{id}")
-    public ResponseEntity<OrderItemDTO> addItemToCart(HttpServletRequest request,
-                                                      @PathVariable Long id,
+    public ResponseEntity<OrderItemDTO> addItemToCart(@PathVariable Long id,
                                                       @RequestParam int quantity) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         //Check the product exists
         Optional<Product> productOptional = productService.findById(id);
@@ -280,12 +386,7 @@ public class OrderRestController {
                 .mapToInt(OrderItem::getQuantity)
                 .sum();
 
-        int inStockUnits = 0;
-        for (ShopStock s : product.getShopsStock()) {
-            inStockUnits += s.getUnits();
-        }
-
-        if(inCartUnits + quantity > inStockUnits){
+        if(inCartUnits + quantity > product.getAvailableUnits()){
             //Code linked in frontend
             throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product with ID" + id + " is not enough to perform this operation.");
         }
@@ -314,11 +415,10 @@ public class OrderRestController {
 
     @Operation(summary = "(User) Update logged user cart product quantity")
     @PutMapping("/cart/{id}")
-    public ResponseEntity<CartSummaryDTO> updateItemQuantity(HttpServletRequest request,
-                                                           @PathVariable Long id,
-                                                           @RequestParam int quantity) {
+    public ResponseEntity<CartSummaryDTO> updateItemQuantity(@PathVariable Long id,
+                                                             @RequestParam int quantity) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         // 2. Get the cart item (needed to know how many items of this product does the user already have)
         Optional<OrderItem> itemInCartOptional = loggedUser.getItemsInCart().stream()
@@ -350,15 +450,15 @@ public class OrderRestController {
         // 6. Directly update quantity
         itemToUpdate.setQuantity(quantity);
         userService.save(loggedUser);
-        return this.getCartSummary(request);
+        return this.getCartSummary();
     }
 
 
     @Operation(summary = "(User) Delete logged user cart item")
     @DeleteMapping("/cart/{id}")
-    public ResponseEntity<CartSummaryDTO> deleteCartItem(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<CartSummaryDTO> deleteCartItem(@PathVariable Long id) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         List<OrderItem> orderItems = loggedUser.getAllOrderItems();
         boolean removed = orderItems.removeIf(i ->
@@ -374,12 +474,6 @@ public class OrderRestController {
         else {
             userService.save(loggedUser);
         }
-        return this.getCartSummary(request);
-    }
-
-
-    private User findLoggedUserHelper(HttpServletRequest request) {
-        return this.userService.getLoggedUser(request)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
+        return this.getCartSummary();
     }
 }

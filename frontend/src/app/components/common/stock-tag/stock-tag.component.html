@@ -1,0 +1,8 @@
+@if (tagInfo(); as info) {
+  <p-tag
+    [value]="info.message"
+    [severity]="info.severity"
+    [icon]="info.icon"
+    [rounded]="true">
+  </p-tag>
+}

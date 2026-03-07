@@ -1,13 +1,12 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {catchError, map, Observable, switchMap, tap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {Product} from '../models/product.model';
 import {PageResponse} from '../models/pageResponse.model';
 import {ShopStock} from '../models/shopStock.model';
-import {ListResponse} from '../models/listResponse.model';
-import {ImageInfo} from '../models/imageInfo.model';
-import {LoginInfo} from '../models/loginInfo.model';
+
+export type SearchScope = 'GLOBAL' | 'LOCAL';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +17,19 @@ export class ProductService {
               private categoryService: CategoryService) {}
 
   private apiUrl = '/api/v1/products';
+
+  private scopeSignal = signal<SearchScope>('GLOBAL');
+  public readonly searchScope = this.scopeSignal.asReadonly();
+
+  public setSearchScope(scope: SearchScope): void {
+    this.scopeSignal.set(scope);
+    localStorage.setItem('search_scope', scope);
+  }
+
+  public resetSearchScope(): void {
+    this.scopeSignal.set('GLOBAL');
+    localStorage.removeItem('search_scope');
+  }
 
   public getAllProducts(page: number, size: number): Observable<PageResponse<Product>> {
     let params = new HttpParams();
@@ -38,7 +50,7 @@ export class ProductService {
   }
 
   public getStockByProductId(id: string): Observable<ShopStock[]> {
-    return this.http.get<ListResponse<ShopStock>>(this.apiUrl + `/stock/${id}`).pipe(map(response => response.items));
+    return this.http.get<ShopStock[]>(this.apiUrl + `/stock/${id}`);
   }
 
   //Shop details component: Search for the products that do not have a stock assigned in a shop
@@ -100,8 +112,8 @@ export class ProductService {
     );
   }
 
-  public checkInFavourites(id: string): Observable<Product> {
-    return this.http.get<Product>(this.apiUrl + `/favourites/${id}`, {});
+  public checkInFavourites(id: string): Observable<boolean> {
+    return this.http.get<boolean>(this.apiUrl + `/favourites/${id}`, {});
   }
 
   public addProductToFavourites(id: string): Observable<Product> {

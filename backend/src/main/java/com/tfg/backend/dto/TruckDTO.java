@@ -15,8 +15,7 @@ public class TruckDTO {
     private String referenceCode;
     private Long shopId;
     private UserDTO assignedDriver;
-    private double longitude;
-    private double latitude;
+    private AddressDTO address;
     private int activeOrdersToDeliver;
 
     public TruckDTO() {
@@ -31,8 +30,7 @@ public class TruckDTO {
         if (t.getAssignedDriver() != null){
             this.assignedDriver = new UserDTO(t.getAssignedDriver());
         }
-        this.longitude = t.getLongitude();
-        this.latitude = t.getLatitude();
+        this.address = new AddressDTO(t.getAddress());
         this.activeOrdersToDeliver = Math.toIntExact(t.getOrdersToDeliver().stream()
                 .filter(order -> {
                     List<StatusLog> logs = order.getHistory();

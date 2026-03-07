@@ -6,6 +6,7 @@ import {PaymentCard} from '../models/paymentCard.model';
 import {Address} from '../models/address.model';
 import {PageResponse} from '../models/pageResponse.model';
 import {StatData} from '../utils/statData.model';
+import {Shop} from '../models/shop.model';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,10 @@ export class UserService {
     const formData = new FormData();
     formData.append('image', selectedImage);
     return this.http.post<User>(this.apiUrl + `/image/${userId}`, formData);
+  }
+
+  public setSelectedShopId(shopId: number | null): Observable<Boolean> {
+    return this.http.post<Boolean>(this.apiUrl + `/shop`, { shopId: shopId });
   }
 
   public getLoggedUserInfo(): Observable<User>{

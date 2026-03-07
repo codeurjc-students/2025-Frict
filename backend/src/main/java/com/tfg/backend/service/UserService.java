@@ -10,9 +10,13 @@ import org.hamcrest.Condition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.*;
@@ -74,20 +78,32 @@ public class UserService {
 
     public boolean existsByEmail(String email) { return userRepository.existsByEmail(email); }
 
-	public Optional<UserLoginDTO> getLoginInfo(HttpServletRequest request) {
-        Principal principal = request.getUserPrincipal();
-        if(principal == null) {
-            return Optional.empty();
-        }
-        return Optional.of(new UserLoginDTO(userRepository.findByUsername(principal.getName()).orElseThrow()));
-	}
+    public Optional<UserLoginDTO> getLoginInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    public Optional<User> getLoggedUser(HttpServletRequest request) {
-        Optional<UserLoginDTO> loginInfo = this.getLoginInfo(request);
-        if(loginInfo.isEmpty()){
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             return Optional.empty();
         }
-        return userRepository.findById(loginInfo.get().getId());
+
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .map(UserLoginDTO::new);
+    }
+
+    public Optional<User> getLoggedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
+        }
+
+        Object principal = authentication.getPrincipal();
+        if ("anonymousUser".equals(principal)) {
+            return Optional.empty();
+        }
+
+        String username = authentication.getName();
+        return userRepository.findByUsername(username);
     }
 
     public User registerUser(UserSignupDTO dto) {
@@ -162,4 +178,19 @@ public class UserService {
     public Long countByRole(String role){ return this.userRepository.countByRolesContaining(role); }
     public Long countByIsBannedTrue(){ return this.userRepository.countByIsBannedTrue();}
     public Long countByIsDeletedTrue(){ return this.userRepository.countByIsDeletedTrue();}
+
+    public User findUserHelper(Long id) {
+        return this.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user with ID'" + id + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)
+    }
+
+    public User findUserHelper(String username) {
+        return this.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "The user '" + username + "' does not exist.")); //Captured by ResponseStatusExceptionResolver (Spring DispatcherServlet internal helper class)
+    }
+
+    public User findLoggedUserHelper() {
+        return this.getLoggedUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
+    }
 }

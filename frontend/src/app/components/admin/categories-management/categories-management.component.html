@@ -11,7 +11,7 @@
         <p class="text-slate-500">Gestiona las categorías asociadas a los productos a la venta.</p>
       </div>
 
-      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" (onChange)="loadCategories()" optionLabel="label" optionValue="value" aria-labelledby="basic" />
+      <p-selectButton [options]="displayMode" [(ngModel)]="listModeSelected" [unselectable]="true" (onChange)="loadCategories()" optionLabel="label" optionValue="value" aria-labelledby="basic" />
     </div>
 
     <div class="category-chart-wrapper bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[600px]">
@@ -111,7 +111,7 @@
           </div>
 
           <div class="bg-slate-100 p-1 rounded-lg flex text-xs font-bold">
-            <p-selectButton [options]="chartMode" [(ngModel)]="productsViewSelected" optionLabel="label" optionValue="value" aria-labelledby="basic" />
+            <p-selectButton [options]="chartMode" [(ngModel)]="productsViewSelected" [unselectable]="true" optionLabel="label" optionValue="value" aria-labelledby="basic" />
           </div>
         </div>
 

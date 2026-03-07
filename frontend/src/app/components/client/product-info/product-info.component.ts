@@ -1,4 +1,4 @@
-import {Component, computed, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -20,7 +20,8 @@ import {Avatar} from 'primeng/avatar';
 import {Rating} from 'primeng/rating';
 import {MeterGroupModule} from 'primeng/metergroup';
 import {ReviewService} from '../../../services/review.service';
-import {Review} from '../../../models/review.model';import {AuthService} from '../../../services/auth.service';
+import {Review} from '../../../models/review.model';
+import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Textarea} from 'primeng/textarea';
@@ -30,8 +31,9 @@ import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
 import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
-import {Tag} from 'primeng/tag';
-import {getStockTagInfo} from '../../../utils/tagManager.util';
+import {Shop} from '../../../models/shop.model';
+import {ShopService} from '../../../services/shop.service';
+import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 
 @Component({
@@ -59,7 +61,7 @@ import {getStockTagInfo} from '../../../utils/tagManager.util';
     TableModule,
     Image,
     BreadcrumbComponent,
-    Tag
+    StockTagComponent
   ],
   templateUrl: './product-info.component.html'
 })
@@ -82,9 +84,9 @@ export class ProductInfoComponent implements OnInit {
   protected relatedProducts: Product[] = []; //Products related to products first category
 
   protected product!: Product;
+  protected inCartUnits: number = 0; //Provided by getOrderItemById, helps detecting how much units the user can add to the cart without exceeding the local stock limit
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
-  stockStatus = computed(() => getStockTagInfo(this.product.totalUnits));
 
   protected visibleShippingDialog: boolean = false;
   protected visibleAvailabilityDialog: boolean = false;
@@ -97,6 +99,7 @@ export class ProductInfoComponent implements OnInit {
   protected userReviewed: boolean = false;
   protected newReview: Partial<Review> = { rating: 5, recommended: true };
 
+  protected selectedShop: Shop | null = null;
   protected stocks: ShopStock[] = []
 
   protected loggedUserInfo!: LoginInfo;
@@ -105,6 +108,7 @@ export class ProductInfoComponent implements OnInit {
               private categoryService: CategoryService,
               private reviewService: ReviewService,
               private orderService: OrderService,
+              private shopService: ShopService,
               protected authService: AuthService,
               private route: ActivatedRoute,
               private router: Router,
@@ -178,6 +182,11 @@ export class ProductInfoComponent implements OnInit {
             window.scrollTo({ top: 0, behavior: 'instant' });
           }
 
+          if(this.authService.selectedShopId()){
+            this.loadSelectedShop();
+          }
+
+          this.loadCartItemUnits();
           this.loadProductCategory();
           this.checkInFavourites();
           this.loadShopStocks();
@@ -188,6 +197,27 @@ export class ProductInfoComponent implements OnInit {
           this.error = true;
         }
       });
+    }
+  }
+
+  protected loadCartItemUnits(){
+    this.orderService.getCartItemByProductId(this.product.id).subscribe({
+      next: (item) => {
+        if (item){
+          this.inCartUnits = item.quantity;
+        }
+      }
+    })
+  }
+
+  protected loadSelectedShop(){
+    const selectedShopId = this.authService.selectedShopId();
+    if(selectedShopId){
+      this.shopService.getShopById(selectedShopId).subscribe({
+        next: (shop) => {
+          this.selectedShop = shop;
+        }
+      })
     }
   }
 
@@ -292,8 +322,11 @@ export class ProductInfoComponent implements OnInit {
       this.orderService.addItemToCart(this.product.id, this.quantity).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto añadido correctamente al carrito' });
-          this.product.totalUnits -= this.quantity;
           this.orderService.incrementItemsCount(this.quantity);
+          if (this.product.availableUnits - this.inCartUnits == 0){
+            this.quantity = 0;
+          }
+          this.loadCartItemUnits();
         },
         error: (error: HttpErrorResponse) => {
           if (error.status === 405){
@@ -309,11 +342,8 @@ export class ProductInfoComponent implements OnInit {
 
   protected checkInFavourites() {
     this.productService.checkInFavourites(this.product.id).subscribe({
-      next: () => {
-        this.inFavourites = true;
-      },
-      error: () => { //The only error that could be caught is 400 (bad request), as other errors will have stopped this method from running
-        this.inFavourites = false;
+      next: (state) => {
+        this.inFavourites = state;
       }
     })
   }

@@ -56,7 +56,7 @@ export class CreateEditProductComponent implements OnInit {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       currentPrice: [0, [Validators.required, Validators.min(0.01)]],
-      description: ['', [Validators.required]],
+      description: ['', []],
       selectedCategories: ['', []],
       active: [true],
       referenceCode: [{ value: '', disabled: true }]
@@ -193,18 +193,21 @@ export class CreateEditProductComponent implements OnInit {
       return;
     }
 
+    const formValue = this.productForm.getRawValue();
+    const { selectedCategories, ...cleanFormValue } = formValue;
+
     const productIdVal = this.productId();
 
     if (productIdVal) {
       // EDIT
       const editingProduct = this.product();
       if (editingProduct) {
-        const formValue = this.productForm.getRawValue();
         const productData: Product = {
-          ...formValue,
-          categories: mapToCategories(formValue.selectedCategories),
+          ...cleanFormValue,
+          categories: mapToCategories(selectedCategories),
           images: this.existingImages()
         };
+
         this.productService.updateProduct(editingProduct.id, productData).subscribe({
           next: (product) => {
             this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Producto ${editingProduct.name} actualizado correctamente.` });
@@ -217,12 +220,12 @@ export class CreateEditProductComponent implements OnInit {
       }
     } else {
       // CREATE
-      const formValue = this.productForm.getRawValue();
       const productData: Product = {
-        ...formValue,
-        categories: mapToCategories(formValue.selectedCategories),
+        ...cleanFormValue,
+        categories: mapToCategories(selectedCategories),
         images: this.existingImages()
       };
+
       this.productService.createProduct(productData).subscribe({
         next: (product) => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Producto creado correctamente.' });

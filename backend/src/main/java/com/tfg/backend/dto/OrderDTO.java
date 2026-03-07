@@ -17,8 +17,9 @@ public class OrderDTO {
     private Long id;
     private String referenceCode;
     private List<StatusLogDTO> history = new ArrayList<>();
-    private Long userId;
+    private String userName;
     private List<OrderItemDTO> orderItems = new ArrayList<>();
+    private Long assignedShopId;
     private Long assignedTruckId;
     private int estimatedCompletionTime;
 
@@ -29,7 +30,7 @@ public class OrderDTO {
     private double totalCost;
 
     private String cardNumberEnding;
-    private String fullSendingAddress;
+    private AddressDTO sendingAddress;
 
     @JsonFormat(pattern = "dd/MM/yy HH:mm")
     private LocalDateTime createdAt;
@@ -43,9 +44,12 @@ public class OrderDTO {
         for (StatusLog l : o.getHistory()) {
             this.history.add(new StatusLogDTO(l));
         }
-        this.userId = o.getUser().getId();
+        this.userName = o.getUser().getName();
         for (OrderItem item : o.getItems()) {
             orderItems.add(new OrderItemDTO(item));
+        }
+        if(o.getAssignedShop() != null){
+            this.assignedShopId = o.getAssignedShop().getId();
         }
         if(o.getAssignedTruck() != null){
             this.assignedTruckId = o.getAssignedTruck().getId();
@@ -59,7 +63,7 @@ public class OrderDTO {
         this.totalCost = o.getTotalCost();
 
         this.cardNumberEnding = o.getCardNumberEnding();
-        this.fullSendingAddress = o.getFullSendingAddress();
+        this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
         this.createdAt = o.getCreatedAt();
     }
 }

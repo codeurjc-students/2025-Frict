@@ -38,6 +38,9 @@ public class Order {
     @ManyToOne
     private Truck assignedTruck;
 
+    @ManyToOne
+    private Shop assignedShop;
+
     private int estimatedCompletionTime = 0;
 
     @CreationTimestamp
@@ -53,13 +56,15 @@ public class Order {
     private double totalCost;
 
     private String cardNumberEnding; //Historic fields from Address and PaymentCard (prevent that, when the user deletes their addresses or cards, the order remains identifiable)
-    private String fullSendingAddress;
+
+    @OneToOne
+    private Address fullSendingAddress;
 
     public Order() {
         this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
     }
 
-    public Order(User user, List<OrderItem> items, Address address, PaymentCard card) {
+    public Order(User user, List<OrderItem> items, Shop assignedShop, Address address, PaymentCard card) {
         this.referenceCode = ReferenceNumberGenerator.generateOrderReferenceNumber();
 
         this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
@@ -69,8 +74,10 @@ public class Order {
             item.setOrder(this);
             this.items.add(item);
         }
+
+        this.assignedShop = assignedShop;
         this.cardNumberEnding = card.getNumber().substring(card.getNumber().length() - 4);
-        this.fullSendingAddress = address.toString();
+        this.fullSendingAddress = address;
         this.updateSummaryFields();
     }
 
@@ -113,7 +120,7 @@ public class Order {
 
     //Adds an update to the current status. It does not change the current order status
     public void addStatusUpdate(String description) {
-        this.getHistory().getLast().getUpdates().addLast(new LogEntry(description));
+        this.getHistory().getLast().addUpdate(description);
     }
 
     //Changes the order status to a new one (it may be more than one status of the same type, admitting incidents and cancellations)

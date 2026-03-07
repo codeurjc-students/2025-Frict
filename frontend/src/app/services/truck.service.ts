@@ -21,6 +21,14 @@ export class TruckService {
     return this.http.get<Truck[]>(this.apiUrl + `/available/`);
   }
 
+  public getTruckById(id: string): Observable<Truck> {
+    return this.http.get<Truck>(this.apiUrl + `/${id}`);
+  }
+
+  public getAllShopTrucks(shopId: string): Observable<Truck[]> {
+    return this.http.get<Truck[]>(this.apiUrl + `/shop/${shopId}/list`);
+  }
+
   public getTrucksPageByShopId(shopId: string, page: number, size: number): Observable<PageResponse<Truck>> {
     let params = new HttpParams();
     params = params.append('page', page.toString());

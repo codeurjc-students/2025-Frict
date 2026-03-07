@@ -1,14 +1,19 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.model.Product;
 import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.repository.ShopStockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ShopStockService {
@@ -27,4 +32,44 @@ public class ShopStockService {
     public void saveAll(List<ShopStock> l){ this.shopStockRepository.saveAll(l); }
 
     public void deleteById(Long id){ this.shopStockRepository.deleteById(id); }
+
+    public ShopStock findShopStockHelper(Long id) {
+        return this.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock with ID " + id + " does not exist."));
+    }
+
+    public List<Integer> getLocalStocks(Page<Product> page, Long shopId) {
+        return getLocalStocks(page.getContent(), shopId);
+    }
+
+
+    public List<Integer> getLocalStocks(List<Product> products, Long shopId) {
+        if (shopId == null || products.isEmpty()) {
+            return products.stream().map(p -> (Integer) null).toList();
+        }
+
+        List<Long> productIds = products.stream().map(Product::getId).toList();
+
+        // Only query to DB
+        List<ShopStock> stocks = shopStockRepository.findStockForProductsInShop(shopId, productIds);
+
+        Map<Long, Integer> stockMap = stocks.stream()
+                .collect(Collectors.toMap(
+                        s -> s.getProduct().getId(),
+                        ShopStock::getUnits
+                ));
+
+        // Same order as original list
+        return products.stream()
+                .map(p -> stockMap.getOrDefault(p.getId(), 0)) // 0 if no stock in that shop
+                .toList();
+    }
+
+
+    public Integer getLocalStock(Product product, Long shopId) {
+        if (shopId == null || product == null) {
+            return null;
+        }
+        return shopStockRepository.findUnitsByProductIdAndShopId(product.getId(), shopId).orElse(0);
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderItemService {
@@ -16,14 +17,17 @@ public class OrderItemService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    public List<OrderItem> findByProductIdAndOrderIsNotNull(Long id){ return orderItemRepository.findByProductIdAndOrderIsNotNull(id); }
+    public Optional<OrderItem> findById(Long id) { return this.orderItemRepository.findById(id); }
 
+    public List<OrderItem> findByProductIdAndOrderIsNotNull(Long id){ return orderItemRepository.findByProductIdAndOrderIsNotNull(id); }
 
     public List<OrderItem> findUserCartItemsList(Long id) { return orderItemRepository.findByUserIdAndOrderIsNull(id); }
 
     public Page<OrderItem> findUserCartItemsPage(Long id, Pageable pageable) { return orderItemRepository.findByUserIdAndOrderIsNull(id, pageable); }
 
     public List<OrderItem> findProductUnitsInCart(Long id) { return orderItemRepository.findByProductIdAndOrderIsNull(id); }
+
+    public Optional<OrderItem> findUserCartItemByProductId(Long productId, Long userId){ return this.orderItemRepository.findByProductIdAndUserIdAndOrderIsNull(productId, userId); }
 
     public void save(OrderItem item) { this.orderItemRepository.save(item); }
 

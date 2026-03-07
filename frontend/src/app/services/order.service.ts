@@ -32,8 +32,32 @@ export class OrderService {
     this.itemsCount.set(n);
   }
 
+  public getOrdersByRolePage(page: number, size: number): Observable<PageResponse<Order>> {
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<Order>>(this.apiUrl + `/`, { params });
+  }
+
   public getOrderById(id: string): Observable<Order> {
     return this.http.get<Order>(this.apiUrl + `/${id}`);
+  }
+
+  public commentAndOrUpdateOrderStatus(id: string, orderStatus: string, comment: string): Observable<Order> {
+    let params = new HttpParams();
+    params = params.append('orderStatus', orderStatus);
+    params = params.append('comment', comment);
+    return this.http.put<Order>(this.apiUrl + `/${id}`, null, { params });
+  }
+
+  public setAssignedTruck(orderId: string, truckId: string, state: boolean): Observable<Order> {
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Order>(this.apiUrl + `/${orderId}/assign/truck/${truckId}`,null,  { params });
+  }
+
+  public getCartItemByProductId(id: string): Observable<OrderItem | null> {
+    return this.http.get<OrderItem>(this.apiUrl + `/cart/item/${id}`);
   }
 
   public getLoggedUserOrders(page: number, size: number): Observable<PageResponse<Order>>{

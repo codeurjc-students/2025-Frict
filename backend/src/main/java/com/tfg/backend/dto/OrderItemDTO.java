@@ -10,7 +10,7 @@ public class OrderItemDTO {
     private Long id;
     private Long orderId;
 
-    private ProductDTO product;
+    private ProductDTO product; //Always null when the item is part of an order
 
     private String productName;
     private String productImageUrl;
@@ -18,7 +18,6 @@ public class OrderItemDTO {
 
     private Long userId;
 
-    //Maximum number of items of this product that a user can select (cart)
     private int quantity;
 
     //Stores the price of an item at the moment of the OrderItem creation (cart items = updated with currentPrice * quantity, historic items = original price preserved)

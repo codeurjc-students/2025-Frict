@@ -13,6 +13,7 @@ export interface Product {
   discount: string;
   categories: Category[];
   totalUnits: number;
+  availableUnits: number;
   shopsWithStock: number;
   averageRating: number;
   totalReviews: number;

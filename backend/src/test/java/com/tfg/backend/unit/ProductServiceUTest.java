@@ -1,9 +1,11 @@
 package com.tfg.backend.unit;
 
-
 import com.tfg.backend.model.Product;
+import com.tfg.backend.model.User;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.service.ProductService;
+import com.tfg.backend.service.ShopStockService;
+import com.tfg.backend.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,15 +35,26 @@ class ProductServiceUTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ShopStockService shopStockService;
+
+    // Solo la clase que estamos testeando lleva InjectMocks
     @InjectMocks
     private ProductService productService;
 
     private Product testProduct;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         testProduct = new Product("Cámara reflex", "Fotografías profesionales", 799.99);
         testProduct.setId(1L);
+        testUser = new User("Usuario", "user", "user@gmail.com", "contrasena_falsa", "USER");
+        lenient().when(userService.getLoggedUser()).thenReturn(Optional.of(testUser));
+        lenient().when(shopStockService.getLocalStocks(anyList(), anyLong())).thenReturn(Collections.emptyList());
     }
 
 
@@ -50,12 +63,15 @@ class ProductServiceUTest {
     void findAll_ShouldReturnPage() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Product> expectedPage = new PageImpl<>(Collections.singletonList(testProduct));
+
         when(productRepository.findAll(pageable)).thenReturn(expectedPage);
+
+        when(shopStockService.getLocalStocks(anyList(), any())).thenReturn(Collections.singletonList(1));
 
         Page<Product> result = productService.findAll(pageable);
 
-        assertEquals(expectedPage, result);
-        verify(productRepository).findAll(pageable);
+        assertEquals(expectedPage.getTotalElements(), result.getTotalElements());
+        verify(shopStockService).getLocalStocks(anyList(), any());
     }
 
 
@@ -99,7 +115,7 @@ class ProductServiceUTest {
     @ParameterizedTest(name = "{index} => {1}")
     @MethodSource("invalidProductsProvider")
     void save_ShouldThrowException_WhenFieldsAreInvalid(Product invalidProduct, String expectedMessage) {
-        lenient().when(productRepository.existsByReferenceCode(any())).thenReturn(false); // Conditional behaviour definition
+        lenient().when(productRepository.existsByReferenceCode(any())).thenReturn(false);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> productService.save(invalidProduct));
@@ -128,7 +144,7 @@ class ProductServiceUTest {
     @Test
     void update_ShouldThrowException_WhenDoesNotExist() {
         Product inputProduct = new Product("Name", "Desc", 10.0);
-        inputProduct.setId(99L); // Inexistent id
+        inputProduct.setId(99L);
 
         when(productRepository.existsById(99L)).thenReturn(false);
 

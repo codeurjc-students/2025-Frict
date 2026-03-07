@@ -28,11 +28,28 @@ public class StatusLog {
     @OrderBy("date ASC")
     private List<LogEntry> updates = new ArrayList<>();
 
+    // Constructor vacío requerido por JPA
     public StatusLog() {
     }
 
+    // Constructor inteligente que maneja el mensaje por defecto
     public StatusLog(OrderStatus status, String description) {
         this.status = status;
-        this.updates.add(new LogEntry(description));
+
+        // Si el front no envía comentario (es nulo o está vacío), usamos el del Enum
+        String finalDescription = (description == null || description.trim().isEmpty())
+                ? status.getDefaultMessage()
+                : description;
+
+        this.updates.add(new LogEntry(finalDescription));
+    }
+
+    // If description is empty, then add the current status default description
+    public void addUpdate(String description) {
+        String finalDescription = (description == null || description.trim().isEmpty())
+                ? this.status.getDefaultMessage()
+                : description;
+
+        this.updates.add(new LogEntry(finalDescription));
     }
 }

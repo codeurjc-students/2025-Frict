@@ -68,49 +68,46 @@ public class ProductRestController {
 
     @Operation(summary = "(User) Get logged user favourite products (paged)")
     @GetMapping("/favourites")
-    public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(HttpServletRequest request, Pageable pageable) {
+    public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(Pageable pageable) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(favouriteProducts, ProductDTO::new));
     }
 
 
-    @Operation(summary = "(User) Check a product in logged user favourites")
+    @Operation(summary = "(User) Check if a product is in logged user favourites")
     @GetMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> checkProductInFavourites(HttpServletRequest request, @PathVariable Long id) {
-        //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+    public ResponseEntity<Boolean> checkProductInFavourites(@PathVariable Long id) {
 
-        Product product = findProductHelper(id);
+        User loggedUser = userService.findLoggedUserHelper();
+        Product product = productService.findProductHelper(id);
+
         boolean inFavourites = loggedUser.getFavouriteProducts().contains(product);
 
-        if (!inFavourites){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product with ID " + id + " is not in favourites.");
-        }
-        return ResponseEntity.ok(new ProductDTO(product));
+        return ResponseEntity.ok(inFavourites);
     }
 
 
     @Operation(summary = "(All) Get product by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
         return ResponseEntity.ok(new ProductDTO(product));
     }
 
 
     @Operation(summary = "(All) Get product stock by ID")
     @GetMapping("/stock/{id}")
-    public ResponseEntity<ListResponse<ShopStockDTO>> getProductStock(@PathVariable Long id) {
-        Product product = findProductHelper(id);
+    public ResponseEntity<List<ShopStockDTO>> getProductStock(@PathVariable Long id) {
+        Product product = productService.findProductHelper(id);
 
         List<ShopStockDTO> dtos = new ArrayList<>();
         for (ShopStock s : product.getShopsStock()) {
             dtos.add(new ShopStockDTO(s));
         }
-        return ResponseEntity.ok(new ListResponse<>(dtos));
+        return ResponseEntity.ok(dtos);
     }
 
 
@@ -124,12 +121,12 @@ public class ProductRestController {
 
     @Operation(summary = "(User) Add product to logged user favourites")
     @PostMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> addProductToFavourites(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<ProductDTO> addProductToFavourites(@PathVariable Long id) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
         //Find the product and, if exists, add it to user cart
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
 
         loggedUser.getFavouriteProducts().add(product);
         userService.save(loggedUser);
@@ -140,11 +137,11 @@ public class ProductRestController {
 
     @Operation(summary = "(User) Delete product from logged user favourites")
     @DeleteMapping("/favourites/{id}")
-    public ResponseEntity<ProductDTO> deleteProductFromFavourites(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<ProductDTO> deleteProductFromFavourites(@PathVariable Long id) {
         //Get logged user info if any (User class)
-        User loggedUser = findLoggedUserHelper(request);
+        User loggedUser = userService.findLoggedUserHelper();
 
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
 
         Set<Product> favouriteProducts = loggedUser.getFavouriteProducts();
         favouriteProducts.remove(product);
@@ -199,13 +196,13 @@ public class ProductRestController {
     @Operation(summary = "(Admin) Update product by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
         Optional<Category> othersCategoryOptional = categoryService.findByName("Otros");
         if(othersCategoryOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
         }
         Category othersCategory = othersCategoryOptional.get();
-        
+
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
         product.setCurrentPrice(productDTO.getCurrentPrice());
@@ -239,7 +236,7 @@ public class ProductRestController {
     @Operation(summary = "(Admin) Delete product by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
 
         //Delete the Product entities, as OrderItem entities will have a product snapshot with all necessary information
         //Remove the relations not marked as CascadeType.ALL in Product
@@ -251,6 +248,13 @@ public class ProductRestController {
         }
         orderItemService.saveAll(items);
 
+        //Delete all images from MinIO
+        for (ProductImageInfo i : product.getImages()) {
+            if (!i.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+                storageService.deleteFile(i.getS3Key());
+            }
+        }
+
         productService.deleteById(id);
         return ResponseEntity.ok(new ProductDTO(product));
     }
@@ -259,7 +263,7 @@ public class ProductRestController {
     @Operation(summary = "(Admin) Toggle product global activation by ID")
     @PostMapping("/active/{id}")
     public ResponseEntity<ProductDTO> toggleGlobalActivation(@PathVariable Long id, @RequestParam boolean state) {
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
         product.setActive(state);
         //If the global product state is false, it must not be in any user cart
         if (!state){
@@ -306,16 +310,22 @@ public class ProductRestController {
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ) throws IOException {
 
-        Product product = findProductHelper(id);
+        Product product = productService.findProductHelper(id);
         List<ProductImageInfo> currentImages = product.getImages();
 
-        // Delete images not present in existingImages
-        Set<Long> keepIds = existingImages.stream().map(ProductImageInfo::getId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<String> keepS3Keys = (existingImages != null)
+                ? existingImages.stream()
+                .map(ProductImageInfo::getS3Key)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet())
+                : Collections.emptySet();
+
+        // 2. Iterar sobre las imágenes actuales del producto en BD
         Iterator<ProductImageInfo> iterator = currentImages.iterator();
         while (iterator.hasNext()) {
             ProductImageInfo currentImg = iterator.next();
-            if (!keepIds.contains(currentImg.getId())) {
-                if(!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())){
+            if (currentImg.getS3Key() != null && !keepS3Keys.contains(currentImg.getS3Key())) {
+                if (!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
                     storageService.deleteFile(currentImg.getS3Key());
                 }
                 iterator.remove();
@@ -347,7 +357,7 @@ public class ProductRestController {
     @Operation(summary = "(Admin) Delete remote product image by ID")
     @DeleteMapping("/{productId}/images/{imageId}")
     public ResponseEntity<ProductDTO> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
-        Product product = findProductHelper(productId);
+        Product product = productService.findProductHelper(productId);
 
         ProductImageInfo imageToRemove = product.getImages().stream()
                 .filter(img -> img.getId().equals(imageId))
@@ -367,21 +377,4 @@ public class ProductRestController {
         Product savedProduct = productService.save(product);
         return ResponseEntity.ok(new ProductDTO(savedProduct));
     }
-
-
-    private User findLoggedUserHelper(HttpServletRequest request) {
-        return this.userService.getLoggedUser(request)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be logged to perform this operation."));
-    }
-
-    private Shop findShopHelper(Long id) {
-        return this.shopService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
-    }
-
-    private Product findProductHelper(Long id) {
-        return this.productService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
-    }
-
 }

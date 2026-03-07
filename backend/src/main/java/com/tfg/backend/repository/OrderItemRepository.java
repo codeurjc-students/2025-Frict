@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
@@ -21,4 +22,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> findByProductIdAndOrderIsNull(Long productId);
 
     List<OrderItem> findByProductIdAndOrderIsNotNull(Long productId);
+
+    //Retrieves an user cart item if exists (stock check in ProductInfoComponent)
+    Optional<OrderItem> findByProductIdAndUserIdAndOrderIsNull(Long productId, Long userId);
 }

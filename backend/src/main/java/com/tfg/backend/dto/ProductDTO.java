@@ -22,7 +22,8 @@ public class ProductDTO {
     private boolean active;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
-    private int totalUnits;
+    private int totalUnits; // Sum of all stock from all shops
+    private int availableUnits; // Purchasable units from selected shop (registered users only, other roles will display 0 to avoid unexpected purchases)
     private int shopsWithStock;
     private double averageRating;
     private int totalReviews;
@@ -57,6 +58,12 @@ public class ProductDTO {
             totalUnits += s.getUnits();
         }
         this.totalUnits = totalUnits;
+
+        if(p.getAvailableUnits() != null){
+            this.availableUnits = p.getAvailableUnits(); // Depends on user's selected shop and whether the logged user has "USER" role
+        }
+        else this.availableUnits = 0;
+
         this.shopsWithStock = p.getShopsStock().size();
 
         //Total reviews and average rating

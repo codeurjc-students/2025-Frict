@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 
@@ -17,7 +17,7 @@ import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
 import {Address} from '../../../models/address.model';
 import {PaymentCard} from '../../../models/paymentCard.model';
-import {ConfirmationService, MessageService} from 'primeng/api';
+import {ConfirmationService, MessageService, SharedModule} from 'primeng/api';
 import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
 import {AuthService} from '../../../services/auth.service';
@@ -25,6 +25,10 @@ import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Review} from '../../../models/review.model';
 import {formatPrice} from '../../../utils/textFormat.util';
+import {Select} from 'primeng/select';
+import {ThemeColor, UiService} from '../../../utils/ui.service';
+import {Shop} from '../../../models/shop.model';
+import {ShopService} from '../../../services/shop.service';
 
 @Component({
   selector: 'app-profile',
@@ -41,12 +45,25 @@ import {formatPrice} from '../../../utils/textFormat.util';
     Paginator,
     Dialog,
     InputText,
-    InputMask
+    InputMask,
+    Select,
+    SharedModule
   ],
   templateUrl: './profile.component.html',
   styles: []
 })
 export class ProfileComponent implements OnInit {
+
+  protected uiService = inject(UiService);
+
+  constructor(private authService: AuthService,
+              private userService: UserService,
+              private orderService: OrderService,
+              private reviewService: ReviewService,
+              private messageService: MessageService,
+              private confirmationService: ConfirmationService,
+              private shopService: ShopService,
+              protected router: Router) {}
 
   user!: User;
 
@@ -74,21 +91,61 @@ export class ProfileComponent implements OnInit {
   isDragging = false;
   previewUrl: string | ArrayBuffer | null = null;
 
+  //Customization
+  shops = signal<Shop[]>([]);
+  selectedShop = signal<any>(null);
+  isListLoaded = false;
+  isButtonDisabled = computed(() => {
+    const shop = this.selectedShop();
+    const currentSavedId = this.authService.selectedShopId();
+    const selectedId = shop ? shop.id : null;
+    return selectedId === currentSavedId;
+  });
 
-  constructor(private authService: AuthService,
-              private userService: UserService,
-              private orderService: OrderService,
-              private reviewService: ReviewService,
-              private messageService: MessageService,
-              private confirmationService: ConfirmationService,
-              protected router: Router) {}
+  // Call uiService to change the theme color
+  onColorChange(color: ThemeColor) {
+    if (color) {
+      this.uiService.changeThemeColor(color);
+    }
+  }
 
+  onSaveStore() {
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de querer cambiar de tienda seleccionada? Se eliminarán todos los productos actualmente en el carrito.',
+      header: 'Cambiar tienda seleccionada',
+      icon: 'pi pi-info-circle',
+      rejectLabel: 'Cancel',
+      rejectButtonProps: {
+        label: 'Cancelar',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        label: 'Aceptar',
+        severity: 'warn',
+      },
+
+      accept: () => {
+        this.userService.setSelectedShopId(this.selectedShop()?.id ?? null).subscribe({
+          next: () => {
+            this.authService.setSelectedShopId(this.selectedShop()?.id ?? null);
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Se ha cambiado correctamente la tienda seleccionada.` });
+            this.orderService.itemsCount.set(0);
+          },
+          error: () => {
+            this.selectedShop.set(this.authService.selectedShopId());
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ha ocurrido un error cambiando la tienda seleccionada. Operación cancelada.' });
+          }
+        })
+      }
+    });
+  }
 
   //Delete account confirmation
   confirm(event: Event) {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
-      message: '¿Estás seguro de querer eliminar tu cuenta? Se eliminará tu toda tu información de envío y facturación, y no podrás acceder a ella de nuevo.',
+      message: '¿Estás seguro de querer eliminar tu cuenta? Se eliminará toda tu información de envío y facturación, y no podrás acceder a ella de nuevo.',
       header: 'Eliminar cuenta',
       icon: 'pi pi-info-circle',
       rejectLabel: 'Cancel',
@@ -138,6 +195,7 @@ export class ProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
+        this.loadSelectedShop();
         this.loadUserOrders();
         this.loadUserReviews();
       },
@@ -146,6 +204,33 @@ export class ProfileComponent implements OnInit {
         this.error = true;
       }
     })
+  }
+
+  loadSelectedShop() {
+    const selectedShopId = this.user.selectedShopId;
+    if (selectedShopId){
+      this.shopService.getShopById(selectedShopId).subscribe({
+        next: (shop) => {
+          this.selectedShop.set(shop);
+          this.shops.set([shop]);
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.error = true;
+        }
+      });
+    }
+  }
+
+  onDropdownOpen() {
+    if (this.isListLoaded) return;
+    this.shopService.getAllShopsList().subscribe({
+      next: (allShops) => {
+        this.shops.set(allShops);
+        this.isListLoaded = true;
+      }
+    });
   }
 
   onUserOrdersPageChange(event: PaginatorState) {
@@ -262,6 +347,7 @@ export class ProfileComponent implements OnInit {
   }
 
   //Create/Edit operations
+
   protected submitAddress() {
     this.userService.submitAddress(this.newAddress).subscribe({
       next: (user) => {

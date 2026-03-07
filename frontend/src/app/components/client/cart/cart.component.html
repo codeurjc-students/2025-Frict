@@ -62,12 +62,7 @@
                       {{ item.product.name }}
                     </h3>
                     <div class="flex items-center gap-2 mt-1">
-                      <div *ngIf="item.product.totalUnits > 0" class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
-                        <i class="pi pi-check-circle text-[10px]"></i> Disponible
-                      </div>
-                      <div *ngIf="!(item.product.totalUnits > 0)" class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
-                        <i class="pi pi-times-circle text-[10px]"></i> Agotado
-                      </div>
+                      <app-stock-tag [product]="item.product"></app-stock-tag>
                     </div>
                   </div>
 
@@ -84,7 +79,7 @@
                         <i class="pi pi-minus text-xs"></i>
                       </button>
                       <span class="w-8 text-center font-bold text-surface-900 text-sm">{{ item.quantity }}</span>
-                      <button (click)="updateItemQuantity(item, item.quantity + 1)" [disabled]="item.quantity >= item.product.totalUnits" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-white rounded-md transition-all disabled:opacity-30">
+                      <button (click)="updateItemQuantity(item, item.quantity + 1)" [disabled]="item.quantity >= item.product.availableUnits" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-white rounded-md transition-all disabled:opacity-30">
                         <i class="pi pi-plus text-xs"></i>
                       </button>
                     </div>
@@ -151,7 +146,7 @@
               </div>
 
               <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-50">
-                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.totalUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
+                <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.availableUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
                   <i class="pi pi-cart-plus"></i> Mover al carro
                 </button>
                 <button (click)="removeFavorite(product.id)" class="text-surface-400 hover:text-red-500 transition-colors p-1" pTooltip="Eliminar" tooltipPosition="top">
@@ -176,7 +171,29 @@
       <div class="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-surface-200 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary-400 to-primary-600"></div>
 
-        <h2 class="text-xl font-bold text-surface-900 mb-6">Resumen del pedido</h2>
+        <h2 class="text-xl font-bold text-surface-900 mb-5">Resumen del pedido</h2>
+
+        <div class="mb-6">
+          <div *ngIf="selectedShop" class="bg-blue-50/50 border border-blue-100 p-3.5 rounded-xl flex items-start gap-3 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+              <i class="pi pi-shop"></i>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Tienda origen:</p>
+              <p class="text-sm font-bold text-blue-900">{{ selectedShop.name }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="!selectedShop" class="bg-surface-50 border border-surface-200 p-3.5 rounded-xl flex items-start gap-3 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-surface-200 text-surface-500 flex items-center justify-center shrink-0">
+              <i class="pi pi-map-marker"></i>
+            </div>
+            <div class="flex flex-col justify-center h-8">
+              <p class="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-0.5">Tienda origen:</p>
+              <p class="text-sm font-bold text-surface-700">Ninguna tienda seleccionada</p>
+            </div>
+          </div>
+        </div>
 
         <div class="space-y-3 text-sm mb-6 font-medium">
           <div class="flex justify-between text-surface-600">
