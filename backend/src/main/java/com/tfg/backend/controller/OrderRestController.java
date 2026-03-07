@@ -220,6 +220,11 @@ public class OrderRestController {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cancelled or completed orders cannot change status.");
             }
 
+            //If the new status is ON_DELIVERY, then it must have a truck associated
+            if(orderStatus.equals(OrderStatus.ON_DELIVERY) && order.getAssignedTruck() == null){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "The order must have an associated delivery truck to be delivered.");
+            }
+
             order.changeOrderStatus(orderStatus, comment);
         }
 
@@ -246,7 +251,7 @@ public class OrderRestController {
         }
         Order order = orderOptional.get();
 
-        //Mark the order as cancelled (update order status without deleting it from DB)
+        //Mark the order as canceled (update order status without deleting it from DB)
         if(loggedUser.getRoles().contains("DRIVER")){
             order.changeOrderStatus(OrderStatus.CANCELLED, "El pedido ha sido cancelado por el repartidor.");
         }

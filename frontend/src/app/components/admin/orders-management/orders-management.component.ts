@@ -274,9 +274,7 @@ export class OrdersManagementComponent implements OnInit {
 
     this.orderService.setAssignedTruck(this.selectedOrder.id, this.selectedTruck.id, true).subscribe({
       next: (updatedOrder) => {
-        this.removeOrderFromAllSignals(updatedOrder.id);
-        this.addOrderToCorrectSignal(updatedOrder);
-        this.selectedOrder = updatedOrder;
+        this.syncOrderInListData(updatedOrder);
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Camión asignado correctamente al pedido.' });
       },
       error: () => {
