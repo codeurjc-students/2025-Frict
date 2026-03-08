@@ -5,6 +5,7 @@ import {PageResponse} from '../models/pageResponse.model';
 import {ShopStock} from '../models/shopStock.model';
 import {Truck} from '../models/truck.model';
 import {Product} from '../models/product.model';
+import {Shop} from '../models/shop.model';
 
 
 @Injectable({
@@ -41,5 +42,17 @@ export class TruckService {
     params = params.append('page', page.toString());
     params = params.append('size', size.toString());
     return this.http.get<PageResponse<Truck>>(this.apiUrl + `/shop/${shopId}`, { params });
+  }
+
+  public createTruck(truckData: Truck): Observable<Truck> {
+    return this.http.post<Truck>(this.apiUrl, truckData);
+  }
+
+  public updateTruck(id: string, truckData: Truck): Observable<Truck> {
+    return this.http.put<Truck>(this.apiUrl + `/${id}`, truckData);
+  }
+
+  public deleteTruck(id: string): Observable<Truck> {
+    return this.http.delete<Truck>(this.apiUrl + `/${id}`);
   }
 }

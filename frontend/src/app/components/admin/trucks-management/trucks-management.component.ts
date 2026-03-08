@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
+import { User } from '../../../models/user.model';
 import { PageResponse } from '../../../models/pageResponse.model';
 import {Button} from 'primeng/button';
 import {SelectButton} from 'primeng/selectbutton';
@@ -18,8 +19,6 @@ import {Tag} from 'primeng/tag';
 import {ProgressBar} from 'primeng/progressbar';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Dialog} from 'primeng/dialog';
-import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
-import {Select} from 'primeng/select';
 import {MessageService} from 'primeng/api';
 import {Alert} from '../../../utils/ui.service';
 
@@ -28,12 +27,16 @@ import { Textarea } from 'primeng/textarea';
 import { Truck } from '../../../models/truck.model';
 import { TruckStatusLog } from '../../../models/truckStatusLog.model';
 import { TruckService } from '../../../services/truck.service';
+import { formatAddress } from '../../../utils/textFormat.util';
+import { UserService } from '../../../services/user.service';
+import {Select} from 'primeng/select';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-trucks-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, LoadingScreenComponent, Button, SelectButton, UIChart, InputGroup, InputGroupAddon, InputText, TableModule, Avatar, Tag, ProgressBar, Paginator, Dialog, Tabs, TabList, Tab, TabPanels, TabPanel, Select, Tooltip, Textarea
+    CommonModule, FormsModule, LoadingScreenComponent, Button, SelectButton, UIChart, InputGroup, InputGroupAddon, InputText, TableModule, Avatar, Tag, ProgressBar, Paginator, Dialog, Select, Tooltip, Textarea, RouterLink
   ],
   templateUrl: './trucks-management.component.html'
 })
@@ -72,18 +75,25 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   chartData: any = { labels: [], datasets: [] };
   chartOptions: any;
 
+  // Diálogo de Edición
   displayTruckDialog: boolean = false;
   selectedTruck: Truck | null = null;
   isEditing: boolean = false;
 
+  // Diálogo de Historial
   displayHistoryDialog: boolean = false;
   newHistoryStatus: string = '';
   newHistoryComment: string = '';
 
+  // --- NUEVAS VARIABLES PARA ASIGNACIÓN DE CONDUCTOR ---
+  displayAssignmentDialog: boolean = false;
+  drivers: User[] = [];
+  selectedDriver: User | undefined = undefined;
+  currentTruckForAssignment: Truck | undefined = undefined;
+
   private map: L.Map | undefined;
   private markers: L.Marker[] = [];
 
-  // Opciones actualizadas para coincidir con tu backend en español
   statusOptions = [
     { label: 'Disponible', value: 'Disponible' },
     { label: 'En Ruta / Reparto', value: 'En ruta' },
@@ -92,7 +102,8 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   ];
 
   constructor(private truckService: TruckService,
-              private messageService: MessageService) {}
+              private messageService: MessageService,
+              private userService: UserService) {} // <-- NUEVO SERVICIO INYECTADO
 
   ngOnInit() {
     this.initChartOptions();
@@ -172,7 +183,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right', // <-- Etiquetas a la derecha
+          position: 'right',
           align: 'center',
           labels: {
             usePointStyle: true,
@@ -194,7 +205,6 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     const maintenance = items.filter(t => this.getCurrentStatus(t) === 'En mantenimiento').length;
     const outOfService = items.filter(t => this.getCurrentStatus(t) === 'Fuera de servicio').length;
 
-    // Al reasignar el objeto, PrimeNG detecta el cambio automáticamente
     this.chartData = {
       labels: ['Disponibles', 'En Ruta', 'Mantenimiento', 'Inactivos'],
       datasets: [
@@ -293,7 +303,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   openNew() {
     this.selectedTruck = {
-      id: '', referenceCode: '', plateNumber: '', history: [], maxOrderCapacity: 0, shopId: '', assignedDriver: null as any, activeOrdersToDeliver: 0,
+      id: '', referenceCode: '', plateNumber: '', history: [{ id: Date.now().toString(), status: 'Disponible', icon: '', updates: [] }], maxOrderCapacity: 0, shopId: '', assignedDriver: null as any, activeOrdersToDeliver: 0,
       address: { id: '', alias: '', street: '', number: '', floor: '', postalCode: '', city: '', country: '' }
     };
     this.isEditing = false;
@@ -349,4 +359,36 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       this.renderTruckMarkers();
     }
   }
+
+  openAssignmentDialog(truck: Truck) {
+    this.userService.getAllUsersByRole("DRIVER").subscribe({
+      next: (drivers) => {
+        this.drivers = drivers;
+        this.currentTruckForAssignment = truck;
+        this.selectedDriver = truck.assignedDriver;
+        this.displayAssignmentDialog = true;
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los conductores.' });
+      }
+    });
+  }
+
+  cancelAssignment() {
+    this.displayAssignmentDialog = false;
+    this.currentTruckForAssignment = undefined;
+    this.selectedDriver = undefined;
+  }
+
+  confirmAssignment() {
+    console.log("Confirmar asignación:", this.selectedDriver);
+    this.cancelAssignment();
+  }
+
+  unassignDriver() {
+    console.log("Desasignar conductor del camión:", this.currentTruckForAssignment?.id);
+    this.cancelAssignment();
+  }
+
+  protected readonly formatAddress = formatAddress;
 }
