@@ -208,7 +208,17 @@
         </div>
       </p-dialog>
 
-      <p-paginator (onPageChange)="onPageChange($event)" [rows]="rows" [totalRecords]="shopsPage.totalItems" [dropdownAppendTo]="'body'" styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl"></p-paginator>
+      <p-paginator
+        (onPageChange)="onPageChange($event)"
+        [first]="first"
+        [rows]="rows"
+        [totalRecords]="shopsPage.totalItems"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        [showCurrentPageReport]="true"
+        [dropdownAppendTo]="'body'"
+        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} tiendas"
+        styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl">
+      </p-paginator>
     </div>
 
   </div>
