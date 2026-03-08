@@ -18,6 +18,8 @@ public class TruckService {
     @Autowired
     private TruckRepository truckRepository;
 
+    public Page<Truck> findAll(Pageable pageable) { return truckRepository.findAll(pageable); }
+
     public List<Truck> findAll() { return truckRepository.findAll(); }
 
     public List<Truck> findAllByAssignedShopIsNull() { return truckRepository.findByAssignedShopIsNull(); }

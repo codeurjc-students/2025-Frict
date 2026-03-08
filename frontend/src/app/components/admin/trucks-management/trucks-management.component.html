@@ -8,7 +8,7 @@
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-bold text-yellow-600">Gestor de Camiones</h1>
-        <p class="text-slate-500 mt-1">Administra y monizoriza los vehículos de reparto de la organización.</p>
+        <p class="text-slate-500 mt-1">Administra y monitoriza los vehículos de reparto de la organización.</p>
       </div>
       <p-button label="Añadir Camión" icon="pi pi-plus" styleClass="p-button-warning" [rounded]="true" (onClick)="openNew()"></p-button>
     </div>
@@ -17,7 +17,7 @@
 
       <div class="lg:col-span-1 flex flex-col gap-4">
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-slate-500 text-sm">Flota Total</span><span class="text-2xl font-bold text-slate-800">{{ totalTrucks }}</span></div>
+          <div><span class="block text-slate-500 text-sm">Camiones Totales</span><span class="text-2xl font-bold text-slate-800">{{ totalTrucks }}</span></div>
           <i class="pi pi-truck text-slate-400/20 text-4xl"></i>
         </div>
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
@@ -25,7 +25,7 @@
           <i class="pi pi-send text-blue-600/20 text-4xl"></i>
         </div>
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-slate-500 text-sm">Sin Conductor</span><span class="text-2xl font-bold text-orange-500">{{ noDriverTrucks }}</span></div>
+          <div><span class="block text-slate-500 text-sm">Sin Conductor Asignado</span><span class="text-2xl font-bold text-orange-500">{{ noDriverTrucks }}</span></div>
           <i class="pi pi-user-minus text-orange-500/20 text-4xl"></i>
         </div>
         <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
@@ -43,9 +43,9 @@
         <div class="flex-grow w-full bg-slate-50 relative">
           <div id="trucks-map" class="absolute inset-0 z-[10]" [class.hidden]="selectedViewMode !== 'map'"></div>
 
-          <div *ngIf="selectedViewMode === 'chart'" class="absolute inset-0 z-[20] bg-white flex flex-col p-8 animate-fade-in">
-            <div class="w-full h-full flex justify-center">
-              <p-chart type="pie" [data]="chartData" [options]="chartOptions" class="w-full max-w-2xl"></p-chart>
+          <div *ngIf="selectedViewMode === 'chart'" class="absolute inset-0 z-[20] bg-white flex flex-col justify-center items-center p-8 animate-fade-in">
+            <div class="relative w-full max-w-lg flex justify-center items-center">
+              <p-chart type="pie" [data]="chartData" [options]="chartOptions" height="280px" class="w-full"></p-chart>
             </div>
           </div>
 
@@ -58,7 +58,7 @@
                     <i [class]="alert.icon" class="text-lg"></i>
                   </div>
                   <div class="flex-grow min-w-0">
-                    <p class="text-sm font-bold text-slate-800 truncate">Vehículo {{ alert.truckRef }}</p>
+                    <p class="text-sm font-bold text-slate-800 truncate">Vehículo {{ alert.reference }}</p>
                     <p class="text-sm text-slate-500 mt-0.5">{{ alert.message }}</p>
                   </div>
                   <i class="pi pi-chevron-right text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"></i>
@@ -89,7 +89,7 @@
           <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
             <th class="pl-4 py-3">Identificación</th>
             <th>Conductor Asignado</th>
-            <th>Estado</th>
+            <th>Estado Actual</th>
             <th>Posición</th>
             <th class="w-48">Capacidad</th>
             <th class="!text-center">Acciones</th>
@@ -109,17 +109,18 @@
               </div>
               <span *ngIf="!truck.assignedDriver" class="text-sm text-slate-400 italic">No asignado</span>
             </td>
-            <td><p-tag [value]="getStatusLabel(truck.status)" [severity]="getStatusSeverity(truck.status)"/></td>
-            <td class="text-sm text-slate-500"><i class="pi pi-map-marker mr-1 text-slate-300"></i>{{ truck.address.city }}</td>
+            <td><p-tag [value]="getStatusLabel(getCurrentStatus(truck))" [severity]="getStatusSeverity(getCurrentStatus(truck))"/></td>
+            <td class="text-sm text-slate-500"><i class="pi pi-map-marker mr-1 text-slate-300"></i>{{ truck.address?.city || 'Desconocida' }}</td>
             <td>
               <p-progressBar [value]="getLoadPercentage(truck.activeOrdersToDeliver, truck.maxOrderCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-slate-100" />
               <p class="text-xs text-slate-400 mt-1 font-bold">{{ truck.activeOrdersToDeliver }} / {{ truck.maxOrderCapacity }} pedidos</p>
             </td>
             <td>
               <div class="flex justify-center gap-1">
-                <p-button icon="pi pi-map-marker" (onClick)="locateTruckOnMap(truck)" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" />
-                <p-button icon="pi pi-pencil" (onClick)="editTruck(truck)" styleClass="p-button-xs p-button-outlined p-button-warning" rounded="true" />
-                <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" />
+                <p-button icon="pi pi-history" (onClick)="openHistory(truck)" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true" pTooltip="Historial" tooltipPosition="top" />
+                <p-button icon="pi pi-map-marker" (onClick)="locateTruckOnMap(truck)" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar" tooltipPosition="top" />
+                <p-button icon="pi pi-pencil" (onClick)="editTruck(truck)" styleClass="p-button-xs p-button-outlined p-button-warning" rounded="true" pTooltip="Editar" tooltipPosition="top" />
+                <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Borrar" tooltipPosition="top" />
               </div>
             </td>
           </tr>
@@ -157,12 +158,11 @@
             <div class="flex flex-col gap-2"><label class="text-sm font-bold text-slate-500">Placa</label><input pInputText [(ngModel)]="selectedTruck.plateNumber" /></div>
             <div class="flex flex-col gap-2"><label class="text-sm font-bold text-slate-500">Ref.</label><input pInputText [(ngModel)]="selectedTruck.referenceCode" /></div>
             <div class="flex flex-col gap-2"><label class="text-sm font-bold text-slate-500">Capacidad</label><input pInputText type="number" [(ngModel)]="selectedTruck.maxOrderCapacity" /></div>
-            <div class="flex flex-col gap-2"><label class="text-sm font-bold text-slate-500">Estado</label><p-select [options]="statusOptions" [(ngModel)]="selectedTruck.status" optionLabel="label" optionValue="value" appendTo="body" /></div>
           </div>
         </p-tabpanel>
         <p-tabpanel value="1">
           <div *ngIf="selectedTruck.assignedDriver" class="mt-4 p-4 border rounded-xl flex items-center justify-between bg-slate-50">
-            <div class="flex items-center gap-3"><p-avatar [image]="selectedTruck.assignedDriver.imageInfo.imageUrl" shape="circle" size="large" />
+            <div class="flex items-center gap-3"><p-avatar [image]="selectedTruck.assignedDriver.imageInfo?.imageUrl" shape="circle" size="large" />
               <div><p class="font-bold text-slate-800">{{ selectedTruck.assignedDriver.name }}</p><p class="text-sm text-slate-500">{{ selectedTruck.assignedDriver.username }}</p></div>
             </div>
             <p-button icon="pi pi-user-minus" severity="danger" size="small" rounded="true" />
@@ -172,5 +172,57 @@
       </p-tabpanels>
     </p-tabs>
     <div class="flex justify-end gap-2 mt-4"><p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="displayTruckDialog = false" /><p-button label="Guardar" icon="pi pi-check" (onClick)="saveTruck()" /></div>
+  </div>
+</p-dialog>
+
+
+<p-dialog [(visible)]="displayHistoryDialog" [modal]="true" header="Historial de Estados" [style]="{width: '700px'}" [draggable]="false" [resizable]="false">
+  <div *ngIf="selectedTruck" class="py-2">
+
+    <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-2">
+      <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</label>
+      <div class="flex flex-col gap-3">
+        <p-select [options]="statusOptions" [(ngModel)]="newHistoryStatus" optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full sm:w-64"></p-select>
+        <textarea pTextarea [(ngModel)]="newHistoryComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario sobre la ruta o incidencia..."></textarea>
+      </div>
+      <div class="flex justify-end mt-3">
+        <p-button label="Confirmar" icon="pi pi-check" size="small" (onClick)="addHistoryComment()" [disabled]="!newHistoryComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button>
+      </div>
+    </div>
+
+    <div class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-8 pb-4 mt-8">
+      <div *ngFor="let log of selectedTruck.history" class="relative">
+
+        <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
+          <i class="text-xs" [ngClass]="log.icon || getIconForStatus(log.status)"></i>
+        </div>
+
+        <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-200">
+          <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+            <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">{{ getStatusLabel(log.status) }}</span>
+            <span class="text-xs text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded">
+              {{ (log.updates && log.updates.length > 0) ? (log.updates[0].date | date:'dd/MM/yy HH:mm') : 'Sin fecha' }}
+            </span>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <div *ngFor="let update of log.updates" class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+              <div class="flex items-center gap-1.5 mb-1.5">
+                <i class="pi pi-clock text-xs text-slate-400"></i>
+                <span class="text-xs font-bold text-slate-500">{{ update.date | date:'dd/MM/yy HH:mm' }}</span>
+              </div>
+              <p class="text-sm text-slate-600 leading-relaxed">{{ update.description }}</p>
+            </div>
+
+            <p *ngIf="!log.updates || log.updates.length === 0" class="text-xs text-slate-400 italic">No hay actualizaciones registradas para este estado.</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!selectedTruck.history || selectedTruck.history.length === 0" class="text-sm text-slate-500 italic p-4 bg-slate-50 rounded-lg">
+        El camión no tiene ningún registro en su historial operativo.
+      </div>
+    </div>
+
   </div>
 </p-dialog>

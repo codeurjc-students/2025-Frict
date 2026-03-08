@@ -443,14 +443,17 @@ public class DatabaseInitializer {
         address4.setLatitude(40.607013);
         address4.setLongitude(-3.712612);
 
-        Truck truck1 = truckRepository.save(new Truck("2C4RD", address3));
-        Truck truck2 = truckRepository.save(new Truck("5U7TH", address4));
+        Truck truck1 = truckRepository.save(new Truck("1234ABC", address3, 3));
+        Truck truck2 = truckRepository.save(new Truck("5678DEF", address4, 2));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);
+
+        truck1.addStatusUpdate("El camión ha comenzado el reparto");
+        truck1.changeTruckStatus(TruckStatus.MAINTENANCE, "El camión está en proceso de revisión técnica.");
+
         truckRepository.save(truck1);
         truckRepository.save(truck2);
     }
-
     private void initOrdersAndCart() {
         if (orderRepository.count() > 0) return;
         log.info(">>> Initializing Orders and Cart...");

@@ -1,7 +1,6 @@
 package com.tfg.backend.dto;
 
-import com.tfg.backend.model.LogEntry;
-import com.tfg.backend.model.StatusLog;
+import com.tfg.backend.model.OrderStatusLog;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class StatusLogDTO {
+public class OrderStatusLogDTO {
 
     private Long id;
 
@@ -18,10 +17,10 @@ public class StatusLogDTO {
 
     private List<LogEntryDTO> updates = new ArrayList<>();
 
-    public StatusLogDTO() {
+    public OrderStatusLogDTO() {
     }
 
-    public StatusLogDTO(StatusLog l){
+    public OrderStatusLogDTO(OrderStatusLog l){
         this.id = l.getId();
         this.status = l.getStatus().getDescription();
         this.updates = l.getUpdates().stream().map(LogEntryDTO::new).toList();

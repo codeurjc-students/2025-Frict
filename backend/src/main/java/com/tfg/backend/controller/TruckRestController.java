@@ -36,6 +36,15 @@ public class TruckRestController {
     @Autowired
     private TruckService truckService;
 
+
+    @Operation(summary = "(Admin) Get all trucks information (paged)")
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<TruckDTO>> getAllTrucksPage(Pageable pageable) {
+        Page<Truck> trucks = truckService.findAll(pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(trucks, TruckDTO::new));
+    }
+
+
     @Operation(summary = "(Admin, Manager) Get truck information by ID")
     @GetMapping("/{id}")
     public ResponseEntity<TruckDTO> getTruckById(@PathVariable Long id) {
