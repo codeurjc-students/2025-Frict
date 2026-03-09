@@ -364,9 +364,26 @@
           </h4>
 
           <div *ngIf="selectedTruck">
+
             <div class="flex items-center gap-2 text-sm text-slate-700 font-bold mb-3 pb-3 border-b border-slate-100">
               <i class="pi pi-id-card text-slate-400"></i> Ref: {{ selectedTruck.referenceCode }}
             </div>
+
+            <div class="mb-4">
+              <p class="text-xs text-surface-400 mb-1 font-bold text-left uppercase">
+                Capacidad:
+              </p>
+              <p-progressBar
+                [value]="getLoadPercentage(selectedTruck.ordersToDeliver, selectedTruck.maxOrderCapacity)"
+                [showValue]="false"
+                [style]="{'height': '6px'}"
+                styleClass="!bg-surface-100">
+              </p-progressBar>
+              <p class="text-xs text-surface-400 mt-1 font-bold text-right">
+                {{ selectedTruck.ordersToDeliver || 0 }} / {{ selectedTruck.maxOrderCapacity }} pedidos
+              </p>
+            </div>
+
             <div *ngIf="selectedTruck.assignedDriver" class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
               <img [src]="selectedTruck.assignedDriver.imageInfo.imageUrl || 'assets/default-user.png'" class="w-10 h-10 rounded-full border border-slate-200 object-cover" alt="Conductor">
               <div class="flex flex-col">
@@ -374,9 +391,11 @@
                 <p class="text-xs font-mono text-slate-500 mt-0.5">{{ selectedTruck.assignedDriver.username }}</p>
               </div>
             </div>
+
             <div *ngIf="!selectedTruck.assignedDriver" class="text-xs text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
               <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin conductor asignado al camión
             </div>
+
           </div>
           <div *ngIf="!selectedTruck" class="text-sm text-slate-500 flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
             <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin camión asignado

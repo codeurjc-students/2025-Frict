@@ -10,6 +10,6 @@ export interface Truck {
   shopId: string;
   assignedDriver?: User;
   address: Address;
-  activeOrdersToDeliver: number;
+  ordersToDeliver: number;
   maxOrderCapacity: number;
 }

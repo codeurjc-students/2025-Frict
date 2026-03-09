@@ -102,6 +102,28 @@ public class TruckRestController {
     }
 
 
+    @Operation(summary = "(Admin) Comment and/or update truck status by ID")
+    @PutMapping("/status/{id}")
+    public ResponseEntity<TruckDTO> commentAndOrUpdateTruckStatus(@PathVariable Long id,
+                                                                  @RequestParam TruckStatus truckStatus,
+                                                                  @RequestParam(required = false) String comment){
+        //Check if the order exists
+        Truck truck = truckService.findTruckHelper(id);
+
+        //Difference between commenting only or changing status and commenting
+        //If status has not changed, then it is commenting only
+        if (truckStatus == truck.getHistory().getLast().getStatus()) {
+            truck.addStatusUpdate(comment);
+        }
+        else { //Change status and save the comment as the first of the updates list for that status
+            truck.changeTruckStatus(truckStatus, comment);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.ok(new TruckDTO(savedTruck));
+    }
+
+
     @Operation(summary = "(Admin) Create truck")
     @PostMapping
     public ResponseEntity<TruckDTO> createTruck(@RequestBody TruckDTO truckDTO) {

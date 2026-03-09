@@ -312,30 +312,49 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   addHistoryComment() {
     if (!this.newHistoryComment.trim() || !this.selectedTruck) return;
-    const currentStatus = this.getCurrentStatus(this.selectedTruck);
-    const now = new Date().toISOString();
 
-    if (this.newHistoryStatus === currentStatus) {
-      const lastLog = this.selectedTruck.history[this.selectedTruck.history.length - 1];
-      if (!lastLog.updates) lastLog.updates = [];
-      lastLog.updates.push({ date: now, description: this.newHistoryComment.trim() });
-    } else {
-      const newLog: TruckStatusLog = {
-        id: Date.now().toString(),
-        icon: this.getIconForStatus(this.newHistoryStatus),
-        status: this.newHistoryStatus,
-        updates: [{ date: now, description: this.newHistoryComment.trim() }]
-      };
-      this.selectedTruck.history.push(newLog);
-    }
+    const truckId = this.selectedTruck.id;
+    const newStatus = this.newHistoryStatus;
+    const comment = this.newHistoryComment.trim();
+    const previousStatus = this.getCurrentStatus(this.selectedTruck);
 
-    this.newHistoryComment = '';
+    this.truckService.commentAndOrUpdateTruckStatus(truckId, newStatus, comment).subscribe({
+      next: (updatedTruck) => {
+        this.selectedTruck = updatedTruck;
 
-    if (this.newHistoryStatus !== currentStatus) {
-      this.calculateKPIs(this.trucksPage.items);
-      this.updateChartData(this.trucksPage.items);
-      this.renderTruckMarkers();
-    }
+        const index = this.trucksPage.items.findIndex(t => t.id === truckId);
+        if (index !== -1) {
+          this.trucksPage.items[index] = updatedTruck;
+        }
+        this.newHistoryComment = '';
+
+        // If status changed, then refresh the visual elements and KPIs
+        if (newStatus !== previousStatus) {
+          this.calculateKPIs(this.trucksPage.items);
+          this.updateChartData(this.trucksPage.items);
+          this.renderTruckMarkers();
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Estado Actualizado',
+            detail: `Camión movido a ${newStatus}`
+          });
+        } else {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Comentario añadido',
+            detail: 'Se ha registrado el comentario en el historial.'
+          });
+        }
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo actualizar el historial del camión.'
+        });
+      }
+    });
   }
 
   openAssignmentDialog(truck: Truck) {

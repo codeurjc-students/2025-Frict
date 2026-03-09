@@ -6,6 +6,7 @@ import {ShopStock} from '../models/shopStock.model';
 import {Truck} from '../models/truck.model';
 import {Product} from '../models/product.model';
 import {Shop} from '../models/shop.model';
+import {Order} from '../models/order.model';
 
 
 @Injectable({
@@ -60,5 +61,12 @@ export class TruckService {
     let params = new HttpParams();
     params = params.append('state', state);
     return this.http.post<Truck>(this.apiUrl + `/${truckId}/assign/driver/${driverId}`, null, { params });
+  }
+
+  public commentAndOrUpdateTruckStatus(id: string, truckStatus: string, comment: string): Observable<Truck> {
+    let params = new HttpParams();
+    params = params.append('truckStatus', truckStatus);
+    params = params.append('comment', comment);
+    return this.http.put<Truck>(this.apiUrl + `/status/${id}`, null, { params });
   }
 }

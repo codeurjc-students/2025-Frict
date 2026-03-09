@@ -20,7 +20,7 @@ public class TruckDTO {
     private Long shopId;
     private UserDTO assignedDriver;
     private AddressDTO address;
-    private int activeOrdersToDeliver;
+    private int ordersToDeliver;
     private int maxOrderCapacity;
 
     public TruckDTO() {
@@ -40,21 +40,7 @@ public class TruckDTO {
             this.assignedDriver = new UserDTO(t.getAssignedDriver());
         }
         this.address = new AddressDTO(t.getAddress());
-        this.activeOrdersToDeliver = Math.toIntExact(t.getOrdersToDeliver().stream()
-                .filter(order -> {
-                    List<OrderStatusLog> logs = order.getHistory();
-
-                    if (logs == null || logs.isEmpty()) {
-                        return false;
-                    }
-
-                    OrderStatusLog currentLog = logs.getLast();
-                    OrderStatus status = currentLog.getStatus();
-
-                    // Only keep those order which status is not final
-                    return status != OrderStatus.COMPLETED && status != OrderStatus.CANCELLED;
-                })
-                .count());
+        this.ordersToDeliver = t.getOrdersToDeliver().size();
         this.maxOrderCapacity = t.getMaxOrderCapacity();
     }
 }

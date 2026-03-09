@@ -444,7 +444,7 @@ public class DatabaseInitializer {
         address4.setLongitude(-3.712612);
 
         Truck truck1 = truckRepository.save(new Truck("1234ABC", address3, 3));
-        Truck truck2 = truckRepository.save(new Truck("5678DEF", address4, 2));
+        Truck truck2 = truckRepository.save(new Truck("5678DEF", address4, 1));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);
 
