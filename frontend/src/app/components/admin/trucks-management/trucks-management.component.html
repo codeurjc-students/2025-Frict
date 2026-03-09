@@ -21,15 +21,15 @@
           <i class="pi pi-truck text-surface-400/20 text-4xl"></i>
         </div>
         <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+          <div><span class="block text-surface-500 text-sm">Sin Conductor</span><span class="text-2xl font-bold text-purple-500">{{ noDriverTrucks }}</span></div>
+          <i class="pi pi-user-minus text-orange-500/20 text-4xl"></i>
+        </div>
+        <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
           <div><span class="block text-surface-500 text-sm">En Ruta</span><span class="text-2xl font-bold text-blue-600">{{ onRouteTrucks }}</span></div>
           <i class="pi pi-send text-blue-600/20 text-4xl"></i>
         </div>
         <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-surface-500 text-sm">Sin Conductor</span><span class="text-2xl font-bold text-orange-500">{{ noDriverTrucks }}</span></div>
-          <i class="pi pi-user-minus text-orange-500/20 text-4xl"></i>
-        </div>
-        <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-surface-500 text-sm">En Mantenimiento</span><span class="text-2xl font-bold text-red-500">{{ maintenanceTrucks }}</span></div>
+          <div><span class="block text-surface-500 text-sm">En Mantenimiento</span><span class="text-2xl font-bold text-orange-500">{{ maintenanceTrucks }}</span></div>
           <i class="pi pi-wrench text-red-500/20 text-4xl"></i>
         </div>
       </div>
@@ -172,8 +172,8 @@
 
     <div class="flex justify-end gap-2 mt-4">
       <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelAssignment()" />
-      <p-button *ngIf="currentTruckForAssignment.assignedDriver" label="Desasignar" severity="danger" [outlined]="true" (onClick)="unassignDriver()" />
-      <p-button label="Confirmar" icon="pi pi-check" (onClick)="confirmAssignment()" [disabled]="!selectedDriver" />
+      <p-button *ngIf="currentTruckForAssignment.assignedDriver" label="Desasignar" severity="danger" [outlined]="true" (onClick)="unassignDriver(currentTruckForAssignment.id)" />
+      <p-button label="Confirmar" icon="pi pi-check" (onClick)="confirmAssignment(currentTruckForAssignment.id)" [disabled]="!selectedDriver" />
     </div>
   </div>
 </p-dialog>

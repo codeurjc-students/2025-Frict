@@ -56,9 +56,9 @@ export class TruckService {
     return this.http.delete<Truck>(this.apiUrl + `/${id}`);
   }
 
-  public assignShop(shopId: string, truckId: string, state: boolean): Observable<Shop>{
+  public assignDriver(driverId: string, truckId: string, state: boolean): Observable<Truck>{
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Shop>(this.apiUrl + `/${truckId}/assign/shop/${shopId}`, null, { params });
+    return this.http.post<Truck>(this.apiUrl + `/${truckId}/assign/driver/${driverId}`, null, { params });
   }
 }

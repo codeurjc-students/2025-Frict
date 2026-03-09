@@ -76,9 +76,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   chartOptions: any;
 
   // Diálogo de Edición
-  displayTruckDialog: boolean = false;
   selectedTruck: Truck | null = null;
-  isEditing: boolean = false;
 
   // Diálogo de Historial
   displayHistoryDialog: boolean = false;
@@ -103,7 +101,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   constructor(private truckService: TruckService,
               private messageService: MessageService,
-              private userService: UserService) {} // <-- NUEVO SERVICIO INYECTADO
+              private userService: UserService) {}
 
   ngOnInit() {
     this.initChartOptions();
@@ -124,9 +122,9 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     }
 
     this.truckService.getAllTrucksPage(this.first / this.rows, this.rows).subscribe({
-      next: (page: PageResponse<Truck>) => {
+      next: (page) => {
         this.trucksPage = page;
-
+        console.log(page);
         this.calculateKPIs(page.items);
         this.updateChartData(page.items);
 
@@ -301,27 +299,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     return max === 0 ? 0 : Math.round((active / max) * 100);
   }
 
-  openNew() {
-    this.selectedTruck = {
-      id: '', referenceCode: '', plateNumber: '', history: [{ id: Date.now().toString(), status: 'Disponible', icon: '', updates: [] }], maxOrderCapacity: 0, shopId: '', assignedDriver: null as any, activeOrdersToDeliver: 0,
-      address: { id: '', alias: '', street: '', number: '', floor: '', postalCode: '', city: '', country: '' }
-    };
-    this.isEditing = false;
-    this.displayTruckDialog = true;
-  }
-
-  editTruck(truck: Truck) {
-    this.selectedTruck = { ...truck };
-    this.isEditing = true;
-    this.displayTruckDialog = true;
-  }
-
   deleteTruck(truckId: string) {
-    this.loadTrucks();
-  }
-
-  saveTruck() {
-    this.displayTruckDialog = false;
     this.loadTrucks();
   }
 
@@ -362,10 +340,20 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   openAssignmentDialog(truck: Truck) {
     this.userService.getAvailableDrivers().subscribe({
-      next: (drivers) => {
-        this.drivers = drivers;
+      next: (availableDrivers) => {
+        let finalDriversList = [...availableDrivers];
+
+        if (truck.assignedDriver) {
+          const isAlreadyIncluded = finalDriversList.some(d => d.id === truck.assignedDriver?.id);
+
+          if (!isAlreadyIncluded) {
+            finalDriversList.unshift(truck.assignedDriver);
+          }
+        }
+
+        this.drivers = finalDriversList;
         this.currentTruckForAssignment = truck;
-        this.selectedDriver = truck.assignedDriver;
+        this.selectedDriver = truck.assignedDriver ? this.drivers.find(d => d.id === truck.assignedDriver?.id) : undefined;
         this.displayAssignmentDialog = true;
       },
       error: () => {
@@ -380,14 +368,58 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     this.selectedDriver = undefined;
   }
 
-  confirmAssignment() {
-    console.log("Confirmar asignación:", this.selectedDriver);
-    this.cancelAssignment();
+  confirmAssignment(truckId: string) {
+    const selectedDriver = this.selectedDriver;
+
+    if (selectedDriver) {
+      this.truckService.assignDriver(selectedDriver.id, truckId, true).subscribe({
+        next: () => {
+          const index = this.trucksPage.items.findIndex(t => t.id === truckId);
+
+          if (index !== -1) {
+            this.trucksPage.items[index] = {
+              ...this.trucksPage.items[index],
+              assignedDriver: selectedDriver
+            };
+          }
+          this.calculateKPIs(this.trucksPage.items);
+          this.cancelAssignment();
+        },
+        error: (err) => {
+          console.error('Error al asignar conductor', err);
+        }
+      });
+    }
   }
 
-  unassignDriver() {
-    console.log("Desasignar conductor del camión:", this.currentTruckForAssignment?.id);
-    this.cancelAssignment();
+  unassignDriver(truckId: string) {
+    this.truckService.assignDriver("-1", truckId, false).subscribe({
+      next: () => {
+        const index = this.trucksPage.items.findIndex(t => t.id === truckId);
+        if (index !== -1) {
+          this.trucksPage.items[index] = {
+            ...this.trucksPage.items[index],
+            assignedDriver: undefined
+          };
+        }
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Actualizado',
+          detail: 'Conductor desasignado correctamente'
+        });
+
+        this.calculateKPIs(this.trucksPage.items);
+        this.cancelAssignment();
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo desasignar al conductor.'
+        });
+      }
+    });
   }
 
   protected readonly formatAddress = formatAddress;

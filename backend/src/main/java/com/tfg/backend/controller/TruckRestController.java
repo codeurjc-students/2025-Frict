@@ -5,6 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.TruckService;
+import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +35,9 @@ public class TruckRestController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private UserService userService;
 
 
     @Operation(summary = "(Admin) Get all trucks information (paged)")
@@ -80,17 +84,17 @@ public class TruckRestController {
     }
 
 
-    @Operation(summary = "(Admin) Set shop assignment to a truck")
-    @PostMapping("/{truckId}/assign/shop/{shopId}")
-    public ResponseEntity<TruckDTO> setAssignedTruck(@PathVariable Long shopId, @PathVariable Long truckId, @RequestParam boolean state) {
-        Shop shop = shopService.findShopHelper(shopId);
+    @Operation(summary = "(Admin) Set driver assignment to a truck")
+    @PostMapping("/{truckId}/assign/driver/{driverId}")
+    public ResponseEntity<TruckDTO> setAssignedDriver(@PathVariable Long driverId, @PathVariable Long truckId, @RequestParam boolean state) {
         Truck truck = truckService.findTruckHelper(truckId);
 
         if (state) {
-            truck.setAssignedShop(shop);
+            User user = userService.findUserHelper(driverId);
+            truck.setAssignedDriver(user);
         }
         else {
-            truck.setAssignedShop(null);
+            truck.setAssignedDriver(null);
         }
 
         Truck savedTruck = truckService.save(truck);
