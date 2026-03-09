@@ -38,6 +38,10 @@ export class UserService {
     return this.http.get<PageResponse<User>>(this.apiUrl + `/`, { params });
   }
 
+  public getAvailableDrivers(): Observable<User[]>{
+    return this.http.get<User[]>(this.apiUrl + `/drivers/available/`);
+  }
+
   public getAllUsersByRole(role: string): Observable<User[]> {
     let params = new HttpParams();
     params = params.append('role', role);

@@ -44,7 +44,6 @@
           <div id="trucks-map" class="absolute inset-0 z-[10]" [class.hidden]="selectedViewMode !== 'map'"></div>
 
           <div *ngIf="selectedViewMode === 'chart'" class="absolute inset-0 z-[20] bg-white flex flex-col justify-center items-center p-8 animate-fade-in">
-            <h4 class="text-xs font-bold text-surface-400 mb-6 uppercase tracking-widest text-center">Estado Operativo de la Flota</h4>
             <div class="relative w-full max-w-lg flex justify-center items-center" style="height: 280px;">
               <p-chart type="pie" [data]="chartData" [options]="chartOptions" height="280px" class="w-full"></p-chart>
             </div>

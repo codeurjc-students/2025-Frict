@@ -1,5 +1,6 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.repository.TruckRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,10 @@ public class TruckService {
     public Truck save(Truck t) { return truckRepository.save(t); }
 
     public List<Truck> saveAll(List<Truck> l) { return truckRepository.saveAll(l); }
+
+    public void delete(Truck t) {
+        truckRepository.delete(t);
+    }
 
     public Truck findTruckHelper(Long id) {
         return this.findById(id)

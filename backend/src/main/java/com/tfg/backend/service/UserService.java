@@ -30,15 +30,6 @@ public class UserService {
     @Autowired
     private StorageService storageService;
 
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private OrderItemService orderItemService;
-
-    @Autowired
-    private ReviewService reviewService;
-
 	@Autowired
 	private UserRepository userRepository;
 
@@ -144,6 +135,11 @@ public class UserService {
         user.getAllOrderItems().removeIf(item -> item.getOrder() == null); //Clear cart items
 
         return user;
+    }
+
+    public List<User> findAvailableDrivers() {
+        String driverRole = "DRIVER";
+        return userRepository.findByRolesContainingAndAssignedTruckIsNull(driverRole);
     }
 
     public boolean isEmailTaken(String email) {

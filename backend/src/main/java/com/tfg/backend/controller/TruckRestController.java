@@ -1,13 +1,11 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.ShopStockDTO;
-import com.tfg.backend.dto.TruckDTO;
-import com.tfg.backend.model.Shop;
-import com.tfg.backend.model.ShopStock;
-import com.tfg.backend.model.Truck;
+import com.tfg.backend.dto.*;
+import com.tfg.backend.model.*;
+import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.TruckService;
+import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,14 +14,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/trucks")
@@ -35,6 +31,9 @@ public class TruckRestController {
 
     @Autowired
     private TruckService truckService;
+
+    @Autowired
+    private OrderService orderService;
 
 
     @Operation(summary = "(Admin) Get all trucks information (paged)")
@@ -78,5 +77,83 @@ public class TruckRestController {
     public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
         List<TruckDTO> dtos = truckService.findAllByAssignedShopIsNull().stream().map(TruckDTO::new).toList();
         return ResponseEntity.ok(dtos);
+    }
+
+
+    @Operation(summary = "(Admin) Set shop assignment to a truck")
+    @PostMapping("/{truckId}/assign/shop/{shopId}")
+    public ResponseEntity<TruckDTO> setAssignedTruck(@PathVariable Long shopId, @PathVariable Long truckId, @RequestParam boolean state) {
+        Shop shop = shopService.findShopHelper(shopId);
+        Truck truck = truckService.findTruckHelper(truckId);
+
+        if (state) {
+            truck.setAssignedShop(shop);
+        }
+        else {
+            truck.setAssignedShop(null);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.ok(new TruckDTO(savedTruck));
+    }
+
+
+    @Operation(summary = "(Admin) Create truck")
+    @PostMapping
+    public ResponseEntity<TruckDTO> createTruck(@RequestBody TruckDTO truckDTO) {
+        AddressDTO dto = truckDTO.getAddress();
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(truckDTO.getAddress().getLatitude());
+        address.setLongitude(truckDTO.getAddress().getLongitude());
+        Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxOrderCapacity());
+
+        if (truckDTO.getShopId() != null){
+            Shop assignedShop = shopService.findShopHelper(truckDTO.getShopId());
+            truck.setAssignedShop(assignedShop);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.accepted().body(new TruckDTO(savedTruck));
+    }
+
+    @Operation(summary = "(Admin) Update truck by ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<TruckDTO> updateTruck(@PathVariable Long id, @RequestBody TruckDTO truckDTO) {
+        Truck truck = truckService.findTruckHelper(id);
+
+        truck.setReferenceCode(truckDTO.getReferenceCode());
+        truck.setPlateNumber(truckDTO.getPlateNumber());
+
+        AddressDTO dto = truckDTO.getAddress();
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
+        truck.setAddress(address);
+
+        truck.setMaxOrderCapacity(truckDTO.getMaxOrderCapacity());
+
+        if (truckDTO.getShopId() != null){
+            Shop assignedShop = shopService.findShopHelper(truckDTO.getShopId());
+            truck.setAssignedShop(assignedShop);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.accepted().body(new TruckDTO(savedTruck));
+    }
+
+
+    @Operation(summary = "(Admin) Delete truck by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<TruckDTO> deleteTruck(@PathVariable Long id) {
+        Truck truck = truckService.findTruckHelper(id);
+
+        //Unlink orders
+        Set<Order> linkedOrders = truck.getOrdersToDeliver();
+        for (Order o : linkedOrders) {
+            o.setAssignedTruck(null);
+        }
+        orderService.saveAll(linkedOrders);
+        truckService.delete(truck);
+        return ResponseEntity.ok(new TruckDTO(truck));
     }
 }

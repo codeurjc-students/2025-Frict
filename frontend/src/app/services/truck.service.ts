@@ -55,4 +55,10 @@ export class TruckService {
   public deleteTruck(id: string): Observable<Truck> {
     return this.http.delete<Truck>(this.apiUrl + `/${id}`);
   }
+
+  public assignShop(shopId: string, truckId: string, state: boolean): Observable<Shop>{
+    let params = new HttpParams();
+    params = params.append('state', state);
+    return this.http.post<Shop>(this.apiUrl + `/${truckId}/assign/shop/${shopId}`, null, { params });
+  }
 }

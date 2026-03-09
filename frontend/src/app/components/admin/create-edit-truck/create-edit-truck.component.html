@@ -39,16 +39,38 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label for="shopId" class="text-sm font-semibold text-slate-600">ID de Tienda Base</label>
-              <input pInputText id="shopId" formControlName="shopId" placeholder="Ej: ID-SHOP-01" class="w-full" />
-              <small class="text-red-500" *ngIf="truckForm.get('shopId')?.invalid && truckForm.get('shopId')?.touched">
-                Debes asignar el camión a una tienda base.
-              </small>
+              <label for="shopId" class="text-sm font-semibold text-slate-600">Tienda Base (Opcional)</label>
+              <p-select
+                id="shopId"
+                formControlName="shopId"
+                [options]="availableShops"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccionar tienda..."
+                (onShow)="loadAvailableShops()"
+                [loading]="loadingShops"
+                [showClear]="true"
+                appendTo="body"
+                styleClass="w-full">
+              </p-select>
             </div>
 
             <div class="flex flex-col gap-2">
               <label for="capacity" class="text-sm font-semibold text-slate-600">Capacidad Máxima de Pedidos</label>
-              <p-inputNumber inputId="capacity" formControlName="maxOrderCapacity" [min]="1" [max]="1000" styleClass="w-full"></p-inputNumber>
+              <p-inputNumber
+                inputId="capacity"
+                formControlName="maxOrderCapacity"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                [min]="1"
+                [max]="1000"
+                decrementButtonClass="p-button-secondary"
+                incrementButtonClass="p-button-secondary"
+                incrementButtonIcon="pi pi-plus"
+                decrementButtonIcon="pi pi-minus"
+                styleClass="w-full"
+                inputStyleClass="text-center font-bold">
+              </p-inputNumber>
               <small class="text-red-500" *ngIf="truckForm.get('maxOrderCapacity')?.invalid && truckForm.get('maxOrderCapacity')?.touched">
                 Capacidad inválida (Mínimo 1).
               </small>

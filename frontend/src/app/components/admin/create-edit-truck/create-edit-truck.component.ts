@@ -8,6 +8,7 @@ import { debounceTime, switchMap, filter, catchError, of } from 'rxjs';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Button } from 'primeng/button';
+import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import * as L from 'leaflet';
@@ -15,6 +16,8 @@ import { LocationService } from '../../../services/location.service';
 
 import { Truck } from '../../../models/truck.model';
 import { TruckService } from '../../../services/truck.service';
+import { Shop } from '../../../models/shop.model';
+import { ShopService } from '../../../services/shop.service';
 
 @Component({
   selector: 'app-create-edit-truck',
@@ -24,6 +27,7 @@ import { TruckService } from '../../../services/truck.service';
     ReactiveFormsModule,
     InputText,
     InputNumber,
+    Select,
     NgIf,
     FormsModule,
     RouterLink,
@@ -40,13 +44,15 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
               private route: ActivatedRoute,
               private truckService: TruckService,
               private locationService: LocationService,
+              private shopService: ShopService,
               @Inject(PLATFORM_ID) private platformId: Object) {
 
     this.truckForm = this.fb.group({
       plateNumber: ['', [Validators.required, Validators.minLength(4)]],
       referenceCode: [{ value: '', disabled: true }],
       maxOrderCapacity: [10, [Validators.required, Validators.min(1)]],
-      shopId: ['', [Validators.required]],
+      shopId: [''], // Campo opcional como solicitaste
+
       address: this.fb.group({
         alias: ['Última ubicación conocida', []],
         street: ['', Validators.required],
@@ -68,6 +74,11 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
 
   loading: boolean = true;
   error: boolean = false;
+
+  // Variables para la carga perezosa de Tiendas
+  availableShops: Shop[] = [];
+  shopsLoaded: boolean = false;
+  loadingShops: boolean = false;
 
   // Leaflet
   private map: L.Map | undefined;
@@ -93,8 +104,6 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     this.truckForm.get('address')?.valueChanges.pipe(
       filter(() => this.isGeocodingActive),
       debounceTime(1000),
-
-      // Detect changes in key fields
       filter(address => {
         const currentCheck = `${address.street}|${address.number}|${address.city}|${address.postalCode}|${address.country}`;
         if (this.lastAddressCheck === currentCheck) {
@@ -103,7 +112,6 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         this.lastAddressCheck = currentCheck;
         return !!(address.street && address.city);
       }),
-
       switchMap(address =>
         this.locationService.getCoordinatesFromAddress(address).pipe(
           catchError(() => of(null))
@@ -115,11 +123,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         this.updateFormCoordinates(coords.latitude, coords.longitude);
         this.updateMarker(coords.latitude, coords.longitude);
         if (this.map) this.map.setView([coords.latitude, coords.longitude], 16);
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Ubicación actualizada',
-          detail: 'Se ha movido el marcador según la dirección ingresada.'
-        });
+        this.messageService.add({ severity: 'info', summary: 'Ubicación actualizada', detail: 'Se ha movido el marcador según la dirección ingresada.' });
       }
     });
   }
@@ -141,8 +145,16 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
             address: truck.address
           }, { emitEvent: false });
 
-          this.loading = false;
+          // Si el camión pertenece a una tienda, la cargamos inmediatamente para que el p-select muestre el nombre.
+          if (truck.shopId) {
+            this.shopService.getShopById(truck.shopId).subscribe({
+              next: (shop) => {
+                this.availableShops = [shop]; // Guardamos temporalmente la tienda actual
+              }
+            });
+          }
 
+          this.loading = false;
           setTimeout(() => {
             this.syncAddressMemory();
             this.isGeocodingActive = true;
@@ -164,12 +176,38 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // Se lanza al hacer clic en el p-select (Lazy Loading)
+  loadAvailableShops() {
+    if (this.shopsLoaded) return;
+    this.loadingShops = true;
+
+    this.shopService.getAllShopsList().subscribe({
+      next: (shops) => {
+        // Mezclamos la tienda actual (si existe) con la lista nueva evitando duplicados
+        const newShops = [...shops];
+        if (this.availableShops.length === 1) {
+          const currentShop = this.availableShops[0];
+          if (!newShops.some(s => s.id === currentShop.id)) {
+            newShops.unshift(currentShop);
+          }
+        }
+
+        this.availableShops = newShops;
+        this.shopsLoaded = true;
+        this.loadingShops = false;
+      },
+      error: () => {
+        this.loadingShops = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las tiendas disponibles.' });
+      }
+    });
+  }
+
   private syncAddressMemory() {
     const updated = this.truckForm.get('address')?.getRawValue();
     this.lastAddressCheck = `${updated.street}|${updated.number}|${updated.city}|${updated.postalCode}|${updated.country}`;
   }
 
-  // --- LEAFLET MAP LOGIC ---
   private initMap(): void {
     if (this.map) return;
 
@@ -233,22 +271,12 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
           this.syncAddressMemory();
 
           if (addressData.number) {
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Dirección Exacta',
-              detail: `Detectado nº ${addressData.number}`
-            });
+            this.messageService.add({ severity: 'info', summary: 'Dirección Exacta', detail: `Detectado nº ${addressData.number}` });
           } else {
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Zona detectada',
-              detail: 'Ubicación aproximada (sin número exacto)'
-            });
+            this.messageService.add({ severity: 'info', summary: 'Zona detectada', detail: 'Ubicación aproximada (sin número exacto)' });
           }
 
-          setTimeout(() => {
-            this.isGeocodingActive = true;
-          }, 50);
+          setTimeout(() => { this.isGeocodingActive = true; }, 50);
         } else {
           this.isGeocodingActive = true;
         }
@@ -256,16 +284,11 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
       error: (err) => {
         console.error('Error en geocodificación inversa:', err);
         this.isGeocodingActive = true;
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Aviso',
-          detail: 'No se pudo recuperar la dirección automática.'
-        });
+        this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudo recuperar la dirección automática.' });
       }
     });
   }
 
-  // --- SUBMIT ---
   onSubmit() {
     if (this.truckForm.invalid) {
       this.truckForm.markAllAsTouched();

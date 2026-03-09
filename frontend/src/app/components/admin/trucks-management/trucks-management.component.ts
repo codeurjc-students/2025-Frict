@@ -361,7 +361,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   }
 
   openAssignmentDialog(truck: Truck) {
-    this.userService.getAllUsersByRole("DRIVER").subscribe({
+    this.userService.getAvailableDrivers().subscribe({
       next: (drivers) => {
         this.drivers = drivers;
         this.currentTruckForAssignment = truck;
