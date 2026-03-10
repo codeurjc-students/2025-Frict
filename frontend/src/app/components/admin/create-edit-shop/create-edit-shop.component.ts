@@ -201,6 +201,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       attribution: '© OpenStreetMap'
     }).addTo(this.map);
 
+    this.map.attributionControl.setPrefix('');
+
     const iconDefault = L.icon({
       iconUrl: './location-pointer.png',
       iconSize: [25, 41],

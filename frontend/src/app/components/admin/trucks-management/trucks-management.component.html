@@ -34,7 +34,7 @@
         </div>
       </div>
 
-      <div class="lg:col-span-3 bg-white border border-surface-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[420px]">
+      <div class="lg:col-span-3 bg-white border border-surface-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[485px]">
         <div class="p-4 border-b border-surface-100 flex flex-col sm:flex-row justify-between items-center bg-white z-[400] gap-3">
           <h3 class="font-bold text-surface-700 text-sm flex items-center gap-2"><i class="pi pi-eye text-blue-600"></i> Monitor General</h3>
           <p-selectButton [options]="viewModeOptions" [(ngModel)]="selectedViewMode" unselectable="true" optionLabel="label" optionValue="value" (onChange)="onViewModeChange()" styleClass="p-button-sm"></p-selectButton>
@@ -43,9 +43,24 @@
         <div class="flex-grow w-full bg-surface-50 relative">
           <div id="trucks-map" class="absolute inset-0 z-[10]" [class.hidden]="selectedViewMode !== 'map'"></div>
 
-          <div *ngIf="selectedViewMode === 'chart'" class="absolute inset-0 z-[20] bg-white flex flex-col justify-center items-center p-8 animate-fade-in">
-            <div class="relative w-full max-w-lg flex justify-center items-center" style="height: 280px;">
-              <p-chart type="pie" [data]="chartData" [options]="chartOptions" height="280px" class="w-full"></p-chart>
+          <div *ngIf="selectedViewMode === 'chart'" class="absolute inset-0 z-[20] bg-white animate-fade-in overflow-y-auto custom-scrollbar flex flex-col">
+
+            <div class="w-full max-w-5xl m-auto grid grid-cols-1 md:grid-cols-2 gap-10 py-6">
+
+              <div class="w-full">
+                <h4 class="text-sm font-bold text-surface-500 mb-4 uppercase tracking-wider text-center">Asignación de Camiones</h4>
+                <div class="relative block w-full h-[320px]">
+                  <p-chart type="pie" [data]="assignedChartData" [options]="chartOptions" height="320px"></p-chart>
+                </div>
+              </div>
+
+              <div class="w-full">
+                <h4 class="text-sm font-bold text-surface-500 mb-4 uppercase tracking-wider text-center">Estado Operativo</h4>
+                <div class="relative block w-full h-[320px]">
+                  <p-chart type="pie" [data]="chartData" [options]="chartOptions" height="320px"></p-chart>
+                </div>
+              </div>
+
             </div>
           </div>
 

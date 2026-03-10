@@ -187,6 +187,8 @@ export class OrdersManagementComponent implements OnInit {
       attribution: '© OpenStreetMap'
     }).addTo(this.orderMap);
 
+    this.orderMap.attributionControl.setPrefix('');
+
     const orderIcon = L.icon({
       iconUrl: './location-pointer.png',
       iconSize: [32, 32],

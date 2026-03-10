@@ -112,6 +112,7 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
       attribution: '&copy; OpenStreetMap',
       maxZoom: 19
     }).addTo(this.map);
+    this.map.attributionControl.setPrefix('');
 
     this.renderShopMarkers();
   }

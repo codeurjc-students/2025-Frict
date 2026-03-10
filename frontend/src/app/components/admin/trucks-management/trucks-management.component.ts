@@ -73,6 +73,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   selectedViewMode: string = 'map';
 
   chartData: any = { labels: [], datasets: [] };
+  assignedChartData: any = { labels: [], datasets: [] };
   chartOptions: any;
 
   // Diálogo de Edición
@@ -181,7 +182,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom',
           align: 'center',
           labels: {
             usePointStyle: true,
@@ -192,27 +193,40 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
         }
       },
       layout: {
-        padding: { top: 0, bottom: 0, left: 10, right: 10 }
+        padding: 20
       }
     };
   }
 
   private updateChartData(items: Truck[]) {
+    // --- Gráfica 1: Estados Originales ---
     const available = items.filter(t => this.getCurrentStatus(t) === 'Disponible').length;
     const onRoute = items.filter(t => this.getCurrentStatus(t)?.toLowerCase().includes('ruta') || this.getCurrentStatus(t)?.toLowerCase().includes('reparto')).length;
     const maintenance = items.filter(t => this.getCurrentStatus(t) === 'En mantenimiento').length;
     const outOfService = items.filter(t => this.getCurrentStatus(t) === 'Fuera de servicio').length;
 
     this.chartData = {
-      labels: ['Disponibles', 'En Ruta', 'Mantenimiento', 'Inactivos'],
-      datasets: [
-        {
-          data: [available, onRoute, maintenance, outOfService],
-          backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
-          hoverOffset: 10,
-          borderWidth: 0
-        }
-      ]
+      labels: ['Disponible', 'En Ruta', 'Mantenimiento', 'Inactivo'],
+      datasets: [{
+        data: [available, onRoute, maintenance, outOfService],
+        backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
+        hoverOffset: 15,
+        borderWidth: 0
+      }]
+    };
+
+    // --- Gráfica 2: Asignaciones (NUEVO) ---
+    const assigned = items.filter(t => t.assignedDriver).length;
+    const unassigned = items.filter(t => !t.assignedDriver).length;
+
+    this.assignedChartData = {
+      labels: ['Conductor Asignado', 'Sin Asignar'],
+      datasets: [{
+        data: [assigned, unassigned],
+        backgroundColor: ['#8b5cf6', '#94a3b8'], // Morado y Gris para diferenciarse de los estados
+        hoverOffset: 15,
+        borderWidth: 0
+      }]
     };
   }
 
@@ -222,6 +236,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     this.map = L.map('trucks-map', { zoomControl: false }).setView([40.4168, -3.7038], 6);
     L.control.zoom({ position: 'topright' }).addTo(this.map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(this.map);
+    this.map.attributionControl.setPrefix('');
   }
 
   private renderTruckMarkers() {
@@ -402,6 +417,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
             };
           }
           this.calculateKPIs(this.trucksPage.items);
+          this.updateChartData(this.trucksPage.items);
           this.cancelAssignment();
         },
         error: (err) => {
@@ -429,6 +445,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
         });
 
         this.calculateKPIs(this.trucksPage.items);
+        this.updateChartData(this.trucksPage.items);
         this.cancelAssignment();
       },
       error: (err) => {
