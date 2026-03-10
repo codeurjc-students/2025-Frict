@@ -89,6 +89,18 @@ public class UserRestController {
     }
 
 
+    @Operation(summary = "(Admin) Get all available drivers (no truck assigned)")
+    @GetMapping("/drivers/available/")
+    public ResponseEntity<List<UserDTO>> getAvailableDrivers() {
+        List<UserDTO> dtos = userService.findAvailableDrivers()
+                .stream()
+                .map(UserDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
+    }
+
+
     @Operation(summary = "(Admin) Get all users by role")
     @GetMapping("/role/")
     public ResponseEntity<List<UserDTO>> getAllUsersByRole(@RequestParam String role) {

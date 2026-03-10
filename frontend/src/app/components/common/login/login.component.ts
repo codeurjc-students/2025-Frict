@@ -1,7 +1,7 @@
 import {Component, OnInit, ViewChild, ElementRef, NgZone} from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import { NgIf, NgOptimizedImage } from '@angular/common';
 import {environment} from '../../../../environments/environment';
 import {GoogleAuthComponent} from '../google-auth/google-auth.component';
@@ -21,11 +21,13 @@ import {UserService} from '../../../services/user.service';
   standalone: true,
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
 
   loginForm: FormGroup;
   showPassword: boolean = false;
   showErrorMessage: boolean = false;
+
+  private returnUrl: string = '/';
 
   get usernameControl() { return this.loginForm.get('username'); }
 
@@ -33,6 +35,7 @@ export class LoginComponent {
     private authService: AuthService,
     private userService: UserService,
     private router: Router,
+    private route: ActivatedRoute,
     private fb: FormBuilder
   ) {
     this.loginForm = this.fb.nonNullable.group({
@@ -41,13 +44,17 @@ export class LoginComponent {
     });
   }
 
+  ngOnInit() {
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+  }
+
   onSubmit() {
     if (this.loginForm.invalid) return;
 
     const { username, password } = this.loginForm.getRawValue();
     this.authService.login(username, password).subscribe({
       next: () => {
-        this.router.navigate(['/']);
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: () => {
         this.showErrorMessage = true;

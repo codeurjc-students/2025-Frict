@@ -327,6 +327,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
     L.control.zoom({ position: 'topright' }).addTo(this.map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap' }).addTo(this.map);
+    this.map.attributionControl.setPrefix('');
 
     // Crear LayerGroup para poder borrar marcadores luego
     this.markersLayer = L.layerGroup().addTo(this.map);

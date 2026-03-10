@@ -3,7 +3,7 @@ package com.tfg.backend.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
-import com.tfg.backend.model.StatusLog;
+import com.tfg.backend.model.OrderStatusLog;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +16,7 @@ import java.util.List;
 public class OrderDTO {
     private Long id;
     private String referenceCode;
-    private List<StatusLogDTO> history = new ArrayList<>();
+    private List<OrderStatusLogDTO> history = new ArrayList<>();
     private String userName;
     private List<OrderItemDTO> orderItems = new ArrayList<>();
     private Long assignedShopId;
@@ -41,8 +41,8 @@ public class OrderDTO {
     public OrderDTO(Order o){
         this.id = o.getId();
         this.referenceCode = o.getReferenceCode();
-        for (StatusLog l : o.getHistory()) {
-            this.history.add(new StatusLogDTO(l));
+        for (OrderStatusLog l : o.getHistory()) {
+            this.history.add(new OrderStatusLogDTO(l));
         }
         this.userName = o.getUser().getName();
         for (OrderItem item : o.getItems()) {

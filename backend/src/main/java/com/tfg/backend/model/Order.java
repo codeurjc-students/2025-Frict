@@ -27,7 +27,7 @@ public class Order {
 
     //The current order status will always be the last element of the history list
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StatusLog> history = new ArrayList<>(); //Unidirectional relation with StatusLog (as it is only updated from Order)
+    private List<OrderStatusLog> history = new ArrayList<>(); //Unidirectional relation with OrderStatusLog (as it is only updated from Order)
 
     @ManyToOne
     private User user;
@@ -61,13 +61,13 @@ public class Order {
     private Address fullSendingAddress;
 
     public Order() {
-        this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
+        this.history.add(new OrderStatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
     }
 
     public Order(User user, List<OrderItem> items, Shop assignedShop, Address address, PaymentCard card) {
         this.referenceCode = ReferenceNumberGenerator.generateOrderReferenceNumber();
 
-        this.history.add(new StatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
+        this.history.add(new OrderStatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
 
         this.user = user;
         for (OrderItem item : items) {
@@ -125,6 +125,6 @@ public class Order {
 
     //Changes the order status to a new one (it may be more than one status of the same type, admitting incidents and cancellations)
     public void changeOrderStatus(OrderStatus status, String description) {
-        this.getHistory().addLast(new StatusLog(status, description)); //New status with at least a log (the first description of a status)
+        this.getHistory().addLast(new OrderStatusLog(status, description)); //New status with at least a log (the first description of a status)
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class OrderService {
@@ -36,6 +37,10 @@ public class OrderService {
 
     public Order save(Order o) {
         return repository.save(o);
+    }
+
+    public void saveAll(Set<Order> o) {
+        repository.saveAll(o);
     }
 
     public boolean existsByIdAndUser(Long orderId, User user) {

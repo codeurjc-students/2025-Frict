@@ -36,13 +36,14 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 
 import * as L from 'leaflet';
+import {ProgressBar} from 'primeng/progressbar';
 
 @Component({
   selector: 'app-orders-management',
   standalone: true,
   imports: [
     CommonModule, FormsModule, CdkDropListGroup, CdkDropList, CdkDrag, Avatar, CdkDragPlaceholder, CdkDragPreview,
-    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select
+    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select, ProgressBar
   ],
   templateUrl: './orders-management.component.html',
   styleUrl: './orders-management.component.css'
@@ -186,6 +187,8 @@ export class OrdersManagementComponent implements OnInit {
       attribution: '© OpenStreetMap'
     }).addTo(this.orderMap);
 
+    this.orderMap.attributionControl.setPrefix('');
+
     const orderIcon = L.icon({
       iconUrl: './location-pointer.png',
       iconSize: [32, 32],
@@ -236,13 +239,14 @@ export class OrdersManagementComponent implements OnInit {
     }
   }
 
-  loadAvailableTrucks() {
+  loadAvailableTrucks(forceReload: boolean = false) {
     if (!this.selectedOrder?.assignedShopId) {
       this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'El pedido no tiene tienda asignada.' });
       return;
     }
 
-    if (this.trucksLoaded) return;
+    // Si ya cargaron y NO estamos forzando la recarga, abortamos
+    if (this.trucksLoaded && !forceReload) return;
 
     this.loadingTrucks = true;
     this.truckService.getAllShopTrucks(this.selectedOrder.assignedShopId).subscribe({
@@ -253,7 +257,7 @@ export class OrdersManagementComponent implements OnInit {
         if (this.selectedTruck) {
           const match = this.availableTrucks.find(t => t.id === this.selectedTruck!.id);
           if (match) {
-            this.selectedTruck = match;
+            this.selectedTruck = { ...match };
           } else {
             this.availableTrucks = [this.selectedTruck, ...this.availableTrucks];
           }
@@ -275,6 +279,8 @@ export class OrdersManagementComponent implements OnInit {
     this.orderService.setAssignedTruck(this.selectedOrder.id, this.selectedTruck.id, true).subscribe({
       next: (updatedOrder) => {
         this.syncOrderInListData(updatedOrder);
+        this.loadAvailableTrucks(true);
+
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Camión asignado correctamente al pedido.' });
       },
       error: () => {
@@ -286,12 +292,16 @@ export class OrdersManagementComponent implements OnInit {
   unassignTruck() {
     if (!this.selectedOrder || !this.selectedOrder.assignedTruckId) return;
 
-    this.orderService.setAssignedTruck(this.selectedOrder.id, this.selectedOrder.assignedTruckId, false).subscribe({
+    const truckIdToUnassign = this.selectedOrder.assignedTruckId;
+
+    this.orderService.setAssignedTruck(this.selectedOrder.id, truckIdToUnassign, false).subscribe({
       next: (updatedOrder) => {
         this.removeOrderFromAllSignals(updatedOrder.id);
         this.addOrderToCorrectSignal(updatedOrder);
         this.selectedOrder = updatedOrder;
         this.selectedTruck = null;
+        this.loadAvailableTrucks(true);
+
         this.messageService.add({ severity: 'success', summary: 'Desasignado', detail: 'Camión retirado correctamente.' });
       },
       error: () => {
@@ -451,6 +461,10 @@ export class OrdersManagementComponent implements OnInit {
     this.first = event.first ?? 0;
     this.rows = event.rows ?? 10;
     this.loadOrdersPage();
+  }
+
+  getLoadPercentage(active: number, max: number): number {
+    return max === 0 ? 0 : Math.round((active / max) * 100);
   }
 
   protected readonly formatPrice = formatPrice;

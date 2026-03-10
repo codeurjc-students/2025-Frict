@@ -84,9 +84,9 @@
               </td>
               <td class="text-center">
                 <p-tag
-                  [icon]="getTruckStatusTagInfo(truck.activeOrdersToDeliver, truck.assignedDriver?.logged ?? false).icon"
-                  [value]="getTruckStatusTagInfo(truck.activeOrdersToDeliver, truck.assignedDriver?.logged ?? false).message"
-                  [severity]="getTruckStatusTagInfo(truck.activeOrdersToDeliver, truck.assignedDriver?.logged ?? false).severity"
+                  [icon]="getTruckStatusTagInfo(truck.ordersToDeliver, truck.assignedDriver?.logged ?? false).icon"
+                  [value]="getTruckStatusTagInfo(truck.ordersToDeliver, truck.assignedDriver?.logged ?? false).message"
+                  [severity]="getTruckStatusTagInfo(truck.ordersToDeliver, truck.assignedDriver?.logged ?? false).severity"
                   [rounded]="true"
                   styleClass="text-[10px] uppercase">
                 </p-tag>

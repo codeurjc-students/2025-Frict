@@ -10,7 +10,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-public class StatusLog {
+public class OrderStatusLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +29,11 @@ public class StatusLog {
     private List<LogEntry> updates = new ArrayList<>();
 
     // Constructor vacío requerido por JPA
-    public StatusLog() {
+    public OrderStatusLog() {
     }
 
     // Constructor inteligente que maneja el mensaje por defecto
-    public StatusLog(OrderStatus status, String description) {
+    public OrderStatusLog(OrderStatus status, String description) {
         this.status = status;
 
         // Si el front no envía comentario (es nulo o está vacío), usamos el del Enum

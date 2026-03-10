@@ -24,13 +24,7 @@ import {Select} from 'primeng/select';
 import {UserService} from '../../../services/user.service';
 import {Avatar} from 'primeng/avatar';
 import {AuthService} from '../../../services/auth.service';
-
-interface ShopAlert {
-  shopName: string;
-  message: string;
-  severity: 'high' | 'medium' | 'info';
-  icon: string;
-}
+import {Alert} from '../../../utils/ui.service';
 
 @Component({
   selector: 'app-shops-management',
@@ -44,27 +38,27 @@ interface ShopAlert {
 })
 export class ShopsManagementComponent implements OnInit, OnDestroy {
 
-  shopAlerts = signal<ShopAlert[]>([
+  shopAlerts = signal<Alert[]>([
     {
-      shopName: 'Tienda de Ejemplo 1',
+      reference: 'Tienda de Ejemplo 1',
       message: 'Stock crítico (-15%)',
       severity: 'high',
       icon: 'pi pi-exclamation-triangle'
     },
     {
-      shopName: 'Tienda de Ejemplo 2',
+      reference: 'Tienda de Ejemplo 2',
       message: 'Nuevo camión asignado',
       severity: 'info',
       icon: 'pi pi-truck'
     },
     {
-      shopName: 'Tienda de Ejemplo 3',
+      reference: 'Tienda de Ejemplo 3',
       message: 'Retraso en entrega OR-442-Y5O3',
       severity: 'medium',
       icon: 'pi pi-clock'
     },
     {
-      shopName: 'Tienda de Ejemplo 4',
+      reference: 'Tienda de Ejemplo 4',
       message: 'Inventario completado',
       severity: 'info',
       icon: 'pi pi-check-circle'
@@ -118,6 +112,7 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
       attribution: '&copy; OpenStreetMap',
       maxZoom: 19
     }).addTo(this.map);
+    this.map.attributionControl.setPrefix('');
 
     this.renderShopMarkers();
   }

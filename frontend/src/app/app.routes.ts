@@ -142,7 +142,22 @@ export const routes: Routes = [
         path: 'products/edit/:id',
         loadComponent: () => import('./components/admin/create-edit-product/create-edit-product.component').then(m => m.CreateEditProductComponent),
         data: { roles: ['ADMIN'], title: 'Editar producto', icon: 'admin', breadcrumb: 'Editar Producto' }
-      }
+      },
+      {
+        path: 'trucks',
+        loadComponent: () => import('./components/admin/trucks-management/trucks-management.component').then(m => m.TrucksManagementComponent),
+        data: { roles: ['ADMIN'], title: 'Gestor de Camiones', icon: 'admin', breadcrumb: 'Gestor de Camiones' }
+      },
+      {
+        path: 'trucks/new',
+        loadComponent: () => import('./components/admin/create-edit-truck/create-edit-truck.component').then(m => m.CreateEditTruckComponent),
+        data: { roles: ['ADMIN'], title: 'Nuevo Camión', icon: 'admin', breadcrumb: 'Nuevo Camión' }
+      },
+      {
+        path: 'trucks/edit/:id',
+        loadComponent: () => import('./components/admin/create-edit-truck/create-edit-truck.component').then(m => m.CreateEditTruckComponent),
+        data: { roles: ['ADMIN'], title: 'Editar Camión', icon: 'admin', breadcrumb: 'Editar Camión' }
+      },
     ]
   },
 

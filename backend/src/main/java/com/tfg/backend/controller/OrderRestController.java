@@ -93,18 +93,34 @@ public class OrderRestController {
 
     @Operation(summary = "(Admin, Manager) Set assigned truck to an order")
     @PostMapping("/{orderId}/assign/truck/{truckId}")
-    public ResponseEntity<OrderDTO> setAssignedTruck(@PathVariable Long orderId, @PathVariable Long truckId, @RequestParam boolean state) {
+    public ResponseEntity<OrderDTO> setAssignedTruck(
+            @PathVariable Long orderId,
+            @PathVariable Long truckId,
+            @RequestParam boolean state) {
+
         Order order = orderService.findOrderHelper(orderId);
 
         if (state) {
             Truck truck = truckService.findTruckHelper(truckId);
-            //Check if the found truck is assigned to the same shop as the order
+
+            // Check the order and the truck belong to the same shop
             if (!Objects.equals(order.getAssignedShop().getId(), truck.getAssignedShop().getId())){
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This truck and this order do not belong to the same shop.");
             }
+
+            // Check if this order is already assigned to this truck
+            if (order.getAssignedTruck() != null && order.getAssignedTruck().getId().equals(truck.getId())) {
+                return ResponseEntity.ok(new OrderDTO(order));
+            }
+
+            // Check truck capacity
+            if (truck.getOrdersToDeliver().size() >= truck.getMaxOrderCapacity()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This truck capacity is full and cannot accept any more orders.");
+            }
+
             order.setAssignedTruck(truck);
-        }
-        else {
+
+        } else {
             order.setAssignedTruck(null);
         }
 

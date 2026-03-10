@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="flex-grow min-w-0">
-                  <p class="text-xs font-bold text-slate-700 truncate">{{ alert.shopName }}</p>
+                  <p class="text-xs font-bold text-slate-700 truncate">{{ alert.reference }}</p>
                   <p class="text-[10px] text-slate-500 truncate">{{ alert.message }}</p>
                 </div>
 
@@ -208,7 +208,17 @@
         </div>
       </p-dialog>
 
-      <p-paginator (onPageChange)="onPageChange($event)" [rows]="rows" [totalRecords]="shopsPage.totalItems" [dropdownAppendTo]="'body'" styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl"></p-paginator>
+      <p-paginator
+        (onPageChange)="onPageChange($event)"
+        [first]="first"
+        [rows]="rows"
+        [totalRecords]="shopsPage.totalItems"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        [showCurrentPageReport]="true"
+        [dropdownAppendTo]="'body'"
+        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} tiendas"
+        styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl">
+      </p-paginator>
     </div>
 
   </div>

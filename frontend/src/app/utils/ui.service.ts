@@ -5,6 +5,13 @@ import {updatePrimaryPalette} from '@primeng/themes';
 
 export interface ThemeColor { name: string; value: string; }
 
+export interface Alert {
+  reference: string;
+  message: string;
+  severity: 'high' | 'medium' | 'info';
+  icon: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })

@@ -1,13 +1,12 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.ShopStockDTO;
-import com.tfg.backend.dto.TruckDTO;
-import com.tfg.backend.model.Shop;
-import com.tfg.backend.model.ShopStock;
-import com.tfg.backend.model.Truck;
+import com.tfg.backend.dto.*;
+import com.tfg.backend.model.*;
+import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.TruckService;
+import com.tfg.backend.service.UserService;
+import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,14 +15,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/trucks")
@@ -35,6 +32,21 @@ public class TruckRestController {
 
     @Autowired
     private TruckService truckService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private UserService userService;
+
+
+    @Operation(summary = "(Admin) Get all trucks information (paged)")
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<TruckDTO>> getAllTrucksPage(Pageable pageable) {
+        Page<Truck> trucks = truckService.findAll(pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(trucks, TruckDTO::new));
+    }
+
 
     @Operation(summary = "(Admin, Manager) Get truck information by ID")
     @GetMapping("/{id}")
@@ -69,5 +81,105 @@ public class TruckRestController {
     public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
         List<TruckDTO> dtos = truckService.findAllByAssignedShopIsNull().stream().map(TruckDTO::new).toList();
         return ResponseEntity.ok(dtos);
+    }
+
+
+    @Operation(summary = "(Admin) Set driver assignment to a truck")
+    @PostMapping("/{truckId}/assign/driver/{driverId}")
+    public ResponseEntity<TruckDTO> setAssignedDriver(@PathVariable Long driverId, @PathVariable Long truckId, @RequestParam boolean state) {
+        Truck truck = truckService.findTruckHelper(truckId);
+
+        if (state) {
+            User user = userService.findUserHelper(driverId);
+            truck.setAssignedDriver(user);
+        }
+        else {
+            truck.setAssignedDriver(null);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.ok(new TruckDTO(savedTruck));
+    }
+
+
+    @Operation(summary = "(Admin) Comment and/or update truck status by ID")
+    @PutMapping("/status/{id}")
+    public ResponseEntity<TruckDTO> commentAndOrUpdateTruckStatus(@PathVariable Long id,
+                                                                  @RequestParam TruckStatus truckStatus,
+                                                                  @RequestParam(required = false) String comment){
+        //Check if the order exists
+        Truck truck = truckService.findTruckHelper(id);
+
+        //Difference between commenting only or changing status and commenting
+        //If status has not changed, then it is commenting only
+        if (truckStatus == truck.getHistory().getLast().getStatus()) {
+            truck.addStatusUpdate(comment);
+        }
+        else { //Change status and save the comment as the first of the updates list for that status
+            truck.changeTruckStatus(truckStatus, comment);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.ok(new TruckDTO(savedTruck));
+    }
+
+
+    @Operation(summary = "(Admin) Create truck")
+    @PostMapping
+    public ResponseEntity<TruckDTO> createTruck(@RequestBody TruckDTO truckDTO) {
+        AddressDTO dto = truckDTO.getAddress();
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(truckDTO.getAddress().getLatitude());
+        address.setLongitude(truckDTO.getAddress().getLongitude());
+        Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxOrderCapacity());
+
+        if (truckDTO.getShopId() != null){
+            Shop assignedShop = shopService.findShopHelper(truckDTO.getShopId());
+            truck.setAssignedShop(assignedShop);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.accepted().body(new TruckDTO(savedTruck));
+    }
+
+    @Operation(summary = "(Admin) Update truck by ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<TruckDTO> updateTruck(@PathVariable Long id, @RequestBody TruckDTO truckDTO) {
+        Truck truck = truckService.findTruckHelper(id);
+
+        truck.setReferenceCode(truckDTO.getReferenceCode());
+        truck.setPlateNumber(truckDTO.getPlateNumber());
+
+        AddressDTO dto = truckDTO.getAddress();
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
+        truck.setAddress(address);
+
+        truck.setMaxOrderCapacity(truckDTO.getMaxOrderCapacity());
+
+        if (truckDTO.getShopId() != null){
+            Shop assignedShop = shopService.findShopHelper(truckDTO.getShopId());
+            truck.setAssignedShop(assignedShop);
+        }
+
+        Truck savedTruck = truckService.save(truck);
+        return ResponseEntity.accepted().body(new TruckDTO(savedTruck));
+    }
+
+
+    @Operation(summary = "(Admin) Delete truck by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<TruckDTO> deleteTruck(@PathVariable Long id) {
+        Truck truck = truckService.findTruckHelper(id);
+
+        //Unlink orders
+        Set<Order> linkedOrders = truck.getOrdersToDeliver();
+        for (Order o : linkedOrders) {
+            o.setAssignedTruck(null);
+        }
+        orderService.saveAll(linkedOrders);
+        truckService.delete(truck);
+        return ResponseEntity.ok(new TruckDTO(truck));
     }
 }
