@@ -25,7 +25,6 @@ import {Alert} from '../../../utils/ui.service';
 import { Tooltip } from 'primeng/tooltip';
 import { Textarea } from 'primeng/textarea';
 import { Truck } from '../../../models/truck.model';
-import { TruckStatusLog } from '../../../models/truckStatusLog.model';
 import { TruckService } from '../../../services/truck.service';
 import { formatAddress } from '../../../utils/textFormat.util';
 import { UserService } from '../../../services/user.service';
@@ -220,7 +219,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     const unassigned = items.filter(t => !t.assignedDriver).length;
 
     this.assignedChartData = {
-      labels: ['Conductor Asignado', 'Sin Asignar'],
+      labels: ['Conductor Asignado', 'Sin Conductor Asignado'],
       datasets: [{
         data: [assigned, unassigned],
         backgroundColor: ['#8b5cf6', '#94a3b8'], // Morado y Gris para diferenciarse de los estados
