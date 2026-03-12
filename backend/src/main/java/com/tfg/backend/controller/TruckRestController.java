@@ -176,6 +176,9 @@ public class TruckRestController {
         //Unlink orders
         Set<Order> linkedOrders = truck.getOrdersToDeliver();
         for (Order o : linkedOrders) {
+            if (o.getHistory().getLast().getStatus() == OrderStatus.ON_DELIVERY){
+                o.changeOrderStatus(OrderStatus.SENT, "El camión ha sido borrado y el pedido ha vuelto al estado anterior.");
+            }
             o.setAssignedTruck(null);
         }
         orderService.saveAll(linkedOrders);

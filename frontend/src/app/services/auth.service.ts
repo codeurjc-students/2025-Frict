@@ -1,7 +1,7 @@
 import {computed, effect, Injectable, signal, WritableSignal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {LoginInfo} from '../models/loginInfo.model';
-import {catchError, map, Observable, of, tap} from 'rxjs';
+import {catchError, map, Observable, of, switchMap, tap} from 'rxjs';
 import {ProductService} from './product.service';
 
 @Injectable({
@@ -57,9 +57,9 @@ export class AuthService {
     return this.http.post(this.apiUrl + "/auth/google", { token: token }, { withCredentials: true });
   }
 
-  public login(user: string, pass: string): Observable<any> {
+  public login(user: string, pass: string): Observable<LoginInfo> {
     return this.http.post(this.apiUrl + "/auth/login", { username: user, password: pass }, { withCredentials: true })
-      .pipe(tap(() => this.getLoginInfo().subscribe()));
+      .pipe(switchMap(() => this.getLoginInfo()));
   }
 
   public getLoginInfo(): Observable<LoginInfo> {

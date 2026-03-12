@@ -19,7 +19,7 @@ import {Tag} from 'primeng/tag';
 import {ProgressBar} from 'primeng/progressbar';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Dialog} from 'primeng/dialog';
-import {MessageService} from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import {Alert} from '../../../utils/ui.service';
 
 import { Tooltip } from 'primeng/tooltip';
@@ -48,7 +48,6 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   isInitialLoad: boolean = true;
   loading: boolean = true;
-  tableLoading: boolean = false;
   error: boolean = false;
 
   // KPIs
@@ -101,7 +100,8 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   constructor(private truckService: TruckService,
               private messageService: MessageService,
-              private userService: UserService) {}
+              private userService: UserService,
+              private confirmationService: ConfirmationService) {}
 
   ngOnInit() {
     this.initChartOptions();
@@ -117,19 +117,15 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   loadTrucks() {
     if (this.isInitialLoad) {
       this.loading = true;
-    } else {
-      this.tableLoading = true;
     }
 
     this.truckService.getAllTrucksPage(this.first / this.rows, this.rows).subscribe({
       next: (page) => {
         this.trucksPage = page;
-        console.log(page);
         this.calculateKPIs(page.items);
         this.updateChartData(page.items);
 
         this.loading = false;
-        this.tableLoading = false;
         this.isInitialLoad = false;
 
         setTimeout(() => {
@@ -141,7 +137,6 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loading = false;
-        this.tableLoading = false;
         this.error = true;
       }
     });
@@ -314,7 +309,41 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   }
 
   deleteTruck(truckId: string) {
-    this.loadTrucks();
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de eliminar el camión? Todos pedidos en reparto pasarán a estado Enviado.',
+      header: 'Borrar camión',
+      closable: true,
+      closeOnEscape: true,
+      icon: 'pi pi-exclamation-triangle',
+      rejectButtonProps: {
+        label: 'Cancelar',
+        severity: 'secondary',
+        outlined: true,
+      },
+      acceptButtonProps: {
+        severity: 'danger',
+        label: 'Borrar',
+      },
+      accept: () => {
+        this.truckService.deleteTruck(truckId).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El camión ha sido eliminado correctamente.' });
+            this.loadTrucks();
+          },
+          error: () => {
+            this.messageService.add({ severity: 'danger', summary: 'Error', detail: 'No se ha podido eliminar el camión.' });
+          }
+        })
+      },
+      reject: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Rejected',
+          detail: 'You have rejected',
+          life: 3000,
+        });
+      },
+    });
   }
 
   openHistory(truck: Truck) {
