@@ -84,6 +84,11 @@ export const routes: Routes = [
     children: [
       // Admin-only components and routes
       {
+        path: '',
+        loadComponent: () => import('./components/admin/admin-home/admin-home.component').then(m => m.AdminHomeComponent),
+        data: { roles: ['ADMIN', 'MANAGER', 'DRIVER'], title: 'Inicio', icon: 'admin', breadcrumb: 'Inicio' }
+      },
+      {
         path: 'users',
         loadComponent: () => import('./components/admin/users-management/users-management.component').then(m => m.UsersManagementComponent),
         data: { roles: ['ADMIN'], title: 'Gestor de Usuarios', icon: 'admin', breadcrumb: 'Gestor de Usuarios' }
