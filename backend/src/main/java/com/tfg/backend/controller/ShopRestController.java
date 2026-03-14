@@ -96,7 +96,7 @@ public class ShopRestController {
         Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
         address.setLatitude(shopDTO.getAddress().getLatitude());
         address.setLongitude(shopDTO.getAddress().getLongitude());
-        Shop shop = new Shop(shopDTO.getName(), address);
+        Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
         Shop savedShop = shopService.save(shop);
         return ResponseEntity.accepted().body(new ShopDTO(savedShop));
     }
@@ -112,6 +112,7 @@ public class ShopRestController {
         address.setLatitude(dto.getLatitude());
         address.setLongitude(dto.getLongitude());
         shop.setAddress(address);
+        shop.setAssignedBudget(shopDTO.getAssignedBudget());
         Shop updatedShop = shopService.save(shop);
 
         return ResponseEntity.accepted().body(new ShopDTO(updatedShop));
@@ -166,12 +167,22 @@ public class ShopRestController {
     @PostMapping("/restock/{stockId}")
     public ResponseEntity<ShopStockDTO> restockProduct(@PathVariable Long stockId, @RequestParam int units) {
         ShopStock targetStock = shopStockService.findShopStockHelper(stockId);
-        if (units > 0){
-            targetStock.setUnits(targetStock.getUnits() + units);
-            ShopStock savedStock = shopStockService.save(targetStock);
-            return ResponseEntity.ok(new ShopStockDTO(savedStock));
+
+        if (units <= 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restock units must be positive, " + units + " is not a valid number.");
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restock units must be positive, " + units + " is not a valid number.");
+
+        Shop restockingShop = targetStock.getShop();
+        double supplyCost = units * targetStock.getProduct().getSupplyPrice();
+        if (supplyCost > restockingShop.getAssignedBudget()){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "There is not enough budget in this shop to complete this operation.");
+        }
+
+        targetStock.setUnits(targetStock.getUnits() + units);
+        restockingShop.setAssignedBudget(restockingShop.getAssignedBudget() - supplyCost);
+        shopService.save(restockingShop);
+        ShopStock savedStock = shopStockService.save(targetStock);
+        return ResponseEntity.ok(new ShopStockDTO(savedStock));
     }
 
 

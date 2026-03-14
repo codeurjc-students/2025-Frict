@@ -50,6 +50,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     this.shopForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       referenceCode: [{ value: '', disabled: true }],
+      assignedBudget: [0, [Validators.required, Validators.min(0.01)]],
       // Group address
       address: this.fb.group({
         alias: ['', []],
@@ -151,7 +152,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           this.shopForm.patchValue({
             name: shop.name,
             referenceCode: shop.referenceCode,
-            address: shop.address
+            address: shop.address,
+            assignedBudget: shop.assignedBudget
           }, { emitEvent: false });
 
           this.loading = false;

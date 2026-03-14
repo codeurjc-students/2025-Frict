@@ -7,6 +7,7 @@ export interface Shop {
   referenceCode: string;
   name: string;
   address: Address;
+  assignedBudget: number;
   imageInfo: ImageInfo;
   totalAvailableProducts: number;
   totalAssignedTrucks: number;

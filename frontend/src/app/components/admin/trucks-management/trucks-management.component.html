@@ -219,7 +219,7 @@
           <div class="flex justify-between items-center mb-3 pb-3 border-b border-surface-100">
             <span class="text-sm font-bold text-surface-800 uppercase tracking-wider">{{ getStatusLabel(log.status) }}</span>
             <span class="text-xs text-surface-500 font-mono bg-surface-100 px-2 py-1 rounded">
-              {{ (log.updates && log.updates.length > 0) ? (log.updates[0].date | date:'dd/MM/yy HH:mm') : 'Sin fecha' }}
+              {{ (log.updates && log.updates.length > 0) ? (log.updates[0].date) : 'Sin fecha' }}
             </span>
           </div>
 
@@ -227,7 +227,7 @@
             <div *ngFor="let update of log.updates" class="bg-surface-50 rounded-lg p-3 border border-surface-100">
               <div class="flex items-center gap-1.5 mb-1.5">
                 <i class="pi pi-clock text-xs text-surface-400"></i>
-                <span class="text-xs font-bold text-surface-500">{{ update.date | date:'dd/MM/yy HH:mm' }}</span>
+                <span class="text-xs font-bold text-surface-500">{{ update.date }}</span>
               </div>
               <p class="text-sm text-surface-600 leading-relaxed">{{ update.description }}</p>
             </div>

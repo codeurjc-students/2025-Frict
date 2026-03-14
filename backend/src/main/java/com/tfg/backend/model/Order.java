@@ -57,7 +57,7 @@ public class Order {
 
     private String cardNumberEnding; //Historic fields from Address and PaymentCard (prevent that, when the user deletes their addresses or cards, the order remains identifiable)
 
-    @OneToOne
+    @ManyToOne
     private Address fullSendingAddress;
 
     public Order() {

@@ -20,7 +20,7 @@ import {ToggleSwitch} from 'primeng/toggleswitch';
 import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Tooltip} from 'primeng/tooltip';
-import {formatAddress} from '../../../utils/textFormat.util';
+import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
@@ -216,6 +216,13 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  getMaxRestockAllowed(): number {
+    if (!this.selectedStock || !this.selectedStock.productSupplyPrice || this.selectedStock.productSupplyPrice <= 0) {
+      return 0;
+    }
+    const maxPossible = Math.floor(this.shop.assignedBudget / this.selectedStock.productSupplyPrice);
+    return maxPossible;
+  }
 
   showAddStockDialog() {
     this.productService.getEligibleProducts(this.shop.id).subscribe({
@@ -413,6 +420,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
         next: () => {
           this.stocksPage.items = this.stocksPage.items.map(i => i.id === stock.id ? { ...i, units: i.units + qty } : i);
           this.messageService.add({severity: 'success', summary: 'Stock repuesto correctamente', detail: `${qty} unidades añadidas`});
+          this.shop.assignedBudget -= stock.productSupplyPrice * this.restockQuantity;
           this.restockQuantity = 0;
         },
         error: () => {
@@ -430,4 +438,5 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
   protected readonly formatAddress = formatAddress;
   protected readonly getTruckStatusTagInfo = getTruckStatusTagInfo;
+  protected readonly formatPrice = formatPrice;
 }

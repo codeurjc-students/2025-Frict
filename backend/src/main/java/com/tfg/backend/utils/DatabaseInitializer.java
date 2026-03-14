@@ -410,7 +410,7 @@ public class DatabaseInitializer {
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         address1.setLatitude(40.4168);
         address1.setLongitude(-3.7038);
-        Shop shop1 = new Shop("Madrid-Recoletos", address1);
+        Shop shop1 = new Shop("Madrid-Recoletos", address1, 3000.00);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
         //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
@@ -431,7 +431,7 @@ public class DatabaseInitializer {
         address2.setLatitude(38.348045);
         address2.setLongitude(-0.485225);
 
-        Shop shop2 = new Shop("Alicante", address2);
+        Shop shop2 = new Shop("Alicante", address2, 6000.00);
         shop2.setImage(GlobalDefaults.SHOP_IMAGE);
         shopRepository.save(shop2);
 
