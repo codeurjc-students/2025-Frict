@@ -153,7 +153,7 @@ public class ProductRestController {
     @Operation(summary = "(Admin) Create product")
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
-        Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice());
+        Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice(), productDTO.getSupplyPrice());
         Optional<Category> othersCategoryOptional = categoryService.findByName("Otros");
         if(othersCategoryOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
@@ -205,6 +205,7 @@ public class ProductRestController {
 
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
+        product.setSupplyPrice(productDTO.getSupplyPrice());
         product.setCurrentPrice(productDTO.getCurrentPrice());
         product.setActive(productDTO.isActive());
 

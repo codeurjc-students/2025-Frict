@@ -25,7 +25,7 @@ public class ProductRepositoryITest {
 
     @BeforeEach
     void setUp(){
-        testProduct = new Product("Portátil Gamer", "Potente equipo para gaming y trabajo", 1499.99);
+        testProduct = new Product("Portátil Gamer", "Potente equipo para gaming y trabajo", 1499.99, 999.99);
     }
 
     @Test
@@ -44,7 +44,7 @@ public class ProductRepositoryITest {
     @Transactional
     void updateProductTest() {
         Product savedProduct = productService.save(testProduct);
-        Product modifiedProduct = new Product("Patinete eléctrico", "Desplazamientos rápidos por ciudad", testProduct.getCurrentPrice());
+        Product modifiedProduct = new Product("Patinete eléctrico", "Desplazamientos rápidos por ciudad", testProduct.getCurrentPrice(), 999.99);
         modifiedProduct.setId(savedProduct.getId());
 
         Product updatedProduct = productService.update(modifiedProduct);

@@ -2,16 +2,11 @@ import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 
-import {ButtonModule} from 'primeng/button';
-import {TagModule} from 'primeng/tag';
-import {AvatarModule} from 'primeng/avatar';
-import {RatingModule} from 'primeng/rating';
 import {FormsModule} from '@angular/forms';
 import {User} from '../../../models/user.model';
 import {UserService} from '../../../services/user.service';
 import {OrderService} from '../../../services/order.service';
 import {ReviewService} from '../../../services/review.service';
-import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
@@ -29,30 +24,35 @@ import {Select} from 'primeng/select';
 import {ThemeColor, UiService} from '../../../utils/ui.service';
 import {Shop} from '../../../models/shop.model';
 import {ShopService} from '../../../services/shop.service';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {Button} from 'primeng/button';
+import {Rating} from 'primeng/rating';
+import {Tag} from 'primeng/tag';
+import {Avatar} from 'primeng/avatar';
 
 @Component({
-  selector: 'app-profile',
+  selector: 'app-client-profile',
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     FormsModule,
-    ButtonModule,
-    TagModule,
-    AvatarModule,
-    RatingModule,
     LoadingScreenComponent,
     Paginator,
     Dialog,
     InputText,
     InputMask,
     Select,
-    SharedModule
+    SharedModule,
+    Button,
+    Rating,
+    Tag,
+    Avatar
   ],
-  templateUrl: './profile.component.html',
+  templateUrl: './client-profile.component.html',
   styles: []
 })
-export class ProfileComponent implements OnInit {
+export class ClientProfileComponent implements OnInit {
 
   protected uiService = inject(UiService);
 

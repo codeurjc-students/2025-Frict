@@ -39,6 +39,8 @@ public class Product {
     @Column (length = 5000)
     private String description;
 
+    private double supplyPrice;
+
     private double previousPrice = 0.00; // when updating products
 
     private double currentPrice;
@@ -70,10 +72,11 @@ public class Product {
     public Product() {
     }
 
-    public Product(String name, String description, double price) {
+    public Product(String name, String description, double price, double supplyPrice) {
         this.referenceCode = ReferenceNumberGenerator.generateProductReferenceNumber();
         this.name = name;
         this.description = description;
         this.currentPrice = price;
+        this.supplyPrice = supplyPrice;
     }
 }

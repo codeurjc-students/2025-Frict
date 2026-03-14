@@ -7,6 +7,7 @@ export interface Product {
   name: string;
   imagesInfo: ImageInfo[];
   description: string;
+  supplyPrice: number;
   previousPrice: number;
   currentPrice: number;
   active: boolean;

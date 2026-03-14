@@ -65,7 +65,7 @@ export const routes: Routes = [
 
           {
             path: 'profile',
-            loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
+            loadComponent: () => import('./components/client/client-profile/client-profile.component').then(m => m.ClientProfileComponent),
             data: { roles: ['USER'], title: 'Perfil', icon: 'client', breadcrumb: 'Perfil' }
           }
         ]
