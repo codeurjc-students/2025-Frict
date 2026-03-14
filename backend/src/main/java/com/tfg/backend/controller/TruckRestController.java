@@ -190,6 +190,7 @@ public class TruckRestController {
             }
             o.setAssignedTruck(null);
         }
+        truck.getOrdersToDeliver().clear();
         orderService.saveAll(linkedOrders);
         truckService.delete(truck);
         return ResponseEntity.ok(new TruckDTO(truck));

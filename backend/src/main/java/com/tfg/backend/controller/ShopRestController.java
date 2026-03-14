@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -128,21 +129,41 @@ public class ShopRestController {
     }
 
 
+    @Transactional // Imprescindible para que Hibernate gestione todos los updates y el delete juntos
     @Operation(summary = "(Admin) Delete shop by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ShopDTO> deleteShop(@PathVariable Long id) {
         Shop shop = shopService.findShopHelper(id);
 
-        //Unlink trucks
-        List<Truck> assignedTrucks = shop.getAssignedTrucks();
+        // Unlink trucks
+        List<Truck> assignedTrucks = new ArrayList<>(shop.getAssignedTrucks());
         for (Truck truck : assignedTrucks) {
             truck.setAssignedShop(null);
         }
-        truckService.saveAll(assignedTrucks);
+        shop.getAssignedTrucks().clear();
+
+        // Unlink orders
+        List<Order> assignedOrders = new ArrayList<>(shop.getAssignedOrders());
+        for (Order order : assignedOrders) {
+            order.setAssignedShop(null);
+
+            if(order.getCurrentStatus() == OrderStatus.ORDER_MADE || order.getCurrentStatus() == OrderStatus.SENT){
+                order.changeOrderStatus(OrderStatus.CANCELLED, "La tienda a la que estaba asignado el pedido ha sido eliminada.");
+            }
+        }
+        shop.getAssignedOrders().clear();
+
+        // Unlink clients (that have this shop as selected)
+        List<User> customers = new ArrayList<>(shop.getCustomers());
+        for (User customer : customers) {
+            customer.setSelectedShop(null);
+        }
+        shop.getCustomers().clear();
 
         shopService.delete(shop);
-        //Delete shop image (if it is not the default photo)
-        if (!shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+
+        // Delete shop image if it is not the default image
+        if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
 

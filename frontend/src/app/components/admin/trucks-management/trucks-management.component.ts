@@ -446,6 +446,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
           }
           this.calculateKPIs(this.trucksPage.items);
           this.updateChartData(this.trucksPage.items);
+          this.renderTruckMarkers();
           this.cancelAssignment();
         },
         error: (err) => {
@@ -474,6 +475,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
         this.calculateKPIs(this.trucksPage.items);
         this.updateChartData(this.trucksPage.items);
+        this.renderTruckMarkers();
         this.cancelAssignment();
       },
       error: (err) => {

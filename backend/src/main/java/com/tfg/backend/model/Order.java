@@ -118,6 +118,10 @@ public class Order {
         this.totalCost = Math.round(total * 100.0) / 100.0;
     }
 
+    public OrderStatus getCurrentStatus(){
+        return this.getHistory().getLast().getStatus();
+    }
+
     //Adds an update to the current status. It does not change the current order status
     public void addStatusUpdate(String description) {
         this.getHistory().getLast().addUpdate(description);
