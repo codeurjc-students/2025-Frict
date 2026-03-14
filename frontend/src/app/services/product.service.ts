@@ -155,10 +155,11 @@ export class ProductService {
     formData.append('existingImages', jsonPart);
 
     if (newImages && newImages.length > 0) {
-      newImages.forEach(file => {formData.append('newImages', file);});
+      newImages.forEach(file => {
+        formData.append('newImages', file);
+      });
     }
-
-    return this.http.post<Product>(this.apiUrl + `/${id}/images`, formData);
+    return this.http.put<Product>(this.apiUrl + `/${id}/images`, formData);
   }
 
 }

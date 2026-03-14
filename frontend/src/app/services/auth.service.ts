@@ -105,7 +105,7 @@ export class AuthService {
   }
 
   resetPassword(username: string, otpCode: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/auth/reset`, { username, otpCode, newPassword });
+    return this.http.put<void>(`${this.apiUrl}/auth/reset`, { username, otpCode, newPassword });
   }
 
   //Only works when changing an administration account password (expected behavior)

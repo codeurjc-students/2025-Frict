@@ -19,8 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -52,7 +54,7 @@ public class UserRestController {
 
 
     @Operation(summary = "(Users) Set selected shop")
-    @PostMapping("/shop")
+    @PutMapping("/shop")
     public ResponseEntity<Boolean> setSelectedShop(@RequestBody Map<String, Long> body) {
 
         User loggedUser = userService.findLoggedUserHelper();
@@ -123,7 +125,7 @@ public class UserRestController {
 
     //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
     @Operation(summary = "(User) Update remote user image")
-    @PostMapping("/image/{id}")
+    @PutMapping("/image/{id}")
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.findById(id);
         if(userOptional.isEmpty()){
@@ -157,7 +159,7 @@ public class UserRestController {
     //Option 1: Delete User entities (statistics information will be lost, reviews and orders need to be reassigned to a generic anon user, which affects data possession)
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
     @Operation(summary = "(User) Anonymize logged user account")
-    @DeleteMapping
+    @PutMapping("/anonymize")
     public ResponseEntity<UserDTO> anonymizeLoggedUser() {
         User loggedUser = userService.findLoggedUserHelper();
         User savedUser = userService.save(userService.anonymizeUser(loggedUser));
@@ -210,7 +212,13 @@ public class UserRestController {
         loggedUser.getAddresses().add(address);
         User savedUser = userService.save(loggedUser);
 
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedUser.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new UserDTO(savedUser));
     }
 
 
@@ -263,7 +271,13 @@ public class UserRestController {
         loggedUser.getCards().add(card);
         User savedUser = userService.save(loggedUser);
 
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedUser.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new UserDTO(savedUser));
     }
 
 

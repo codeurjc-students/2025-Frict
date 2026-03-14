@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -61,7 +63,7 @@ public class OrderRestController {
             Page<Order> userOrders = orderService.findAll(pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
         } else {
-            // Lógica para el Manager: delegamos la búsqueda al servicio
+            // Managers logic
             Page<Order> managerOrders = orderService.findOrdersByManagerId(loggedUser.getId(), pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(managerOrders, OrderDTO::new));
         }
@@ -215,7 +217,13 @@ public class OrderRestController {
                 savedOrder.getTotalCost()
         );
 
-        return ResponseEntity.ok(new OrderDTO(savedOrder));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedOrder.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new OrderDTO(savedOrder));
     }
 
 
@@ -257,7 +265,7 @@ public class OrderRestController {
 
 
     @Operation(summary = "(User) Cancel logged user order by ID")
-    @DeleteMapping("/{id}")
+    @PutMapping("/cancel/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id){
         //Get logged user info if any (User class)
         User loggedUser = userService.findLoggedUserHelper();
@@ -418,14 +426,22 @@ public class OrderRestController {
             // Item in cart -> Update quantity
             resultItem = itemInCart.get();
             resultItem.setQuantity(resultItem.getQuantity() + quantity);
+            userService.save(loggedUser);
+            return ResponseEntity.ok(new OrderItemDTO(resultItem));
         } else {
             // Item not found -> Create item
             resultItem = new OrderItem(productOptional.get(), loggedUser, quantity);
             loggedUser.getAllOrderItems().add(resultItem);
-        }
+            userService.save(loggedUser);
 
-        userService.save(loggedUser);
-        return ResponseEntity.ok(new OrderItemDTO(resultItem)); //Returns the added item (optional)
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(resultItem.getId())
+                    .toUri();
+
+            return ResponseEntity.created(location).body(new OrderItemDTO(resultItem));
+        }
     }
 
 

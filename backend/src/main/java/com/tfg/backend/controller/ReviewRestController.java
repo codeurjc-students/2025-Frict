@@ -18,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,9 +76,15 @@ public class ReviewRestController {
         //Check that the product exists
         Product product = productService.findProductHelper(reviewDTO.getProductId());
 
-        Review review = new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
-        reviewService.save(review);
-        return ResponseEntity.ok().body(new ReviewDTO(review));
+        Review savedReview = reviewService.save(new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended()));
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedReview.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new ReviewDTO(savedReview));
     }
 
 

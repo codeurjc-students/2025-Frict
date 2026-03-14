@@ -25,7 +25,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -55,7 +57,7 @@ public class AuthRestController {
     @Operation(summary = "(User) Login with Google account")
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginWithGoogle(HttpServletResponse response,
-                                             @RequestBody GoogleTokenDTO tokenDTO) {
+                                                        @RequestBody GoogleTokenDTO tokenDTO) {
         GoogleIdToken idToken;
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
@@ -64,24 +66,40 @@ public class AuthRestController {
 
             idToken = verifier.verify(tokenDTO.token());
         } catch (Exception e) {
-            throw new BadCredentialsException("Error verificando token Google.", e);
+            throw new BadCredentialsException("Error while verifying Google token.", e);
         }
 
         if (idToken == null) {
-            throw new BadCredentialsException("Token de Google inválido o expirado.");
+            throw new BadCredentialsException("Invalid or expired Google token.");
         }
 
-        // Pasamos el Payload al servicio, él sabrá qué hacer (Login o Registro)
         GoogleIdToken.Payload payload = idToken.getPayload();
-        //Check if the user is banned or deleted
-        if(userService.isBannedByEmail(payload.getEmail())){
+        String email = payload.getEmail();
+
+        if(userService.isBannedByEmail(email)){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
         }
 
-        if(userService.isDeletedByEmail(payload.getEmail())){
+        if(userService.isDeletedByEmail(email)){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user has been previously deleted.");
         }
-        return ResponseEntity.ok(loginService.loginWithGoogle(response, payload));
+
+
+        boolean isNewUser = !userService.existsByEmail(email);
+        AuthResponse authResponse = loginService.loginWithGoogle(response, payload);
+
+        // If new user, then build location header
+        if (isNewUser) {
+            User user = userService.findByEmail(email).orElseThrow();
+            URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/api/v1/users/{id}")
+                    .buildAndExpand(user.getId())
+                    .toUri();
+            return ResponseEntity.created(location).body(authResponse);
+        }
+
+        // If user already existed, then return 200
+        return ResponseEntity.ok(authResponse);
     }
 
 
@@ -118,7 +136,13 @@ public class AuthRestController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Internal error during user signup.");
         }
 
-        return ResponseEntity.ok(new UserLoginDTO(newUser));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(newUser.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new UserLoginDTO(newUser));
     }
 
 
@@ -169,7 +193,7 @@ public class AuthRestController {
 
 
     @Operation(summary = "(All) Reset user password")
-    @PostMapping("/reset")
+    @PutMapping("/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody Map<String, String> payload) {
         User user = userService.findUserHelper(payload.get("username"));
 

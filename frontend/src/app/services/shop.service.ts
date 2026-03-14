@@ -65,43 +65,43 @@ export class ShopService {
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
-    return this.http.post<Shop>(`${this.apiUrl}/image/${shopId}`, formData);
+    return this.http.put<Shop>(`${this.apiUrl}/image/${shopId}`, formData);
   }
 
   public toggleLocalActivation(id: string, state: boolean): Observable<Product> {
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Product>(this.apiUrl + `/active/${id}`, null, { params });
+    return this.http.put<Product>(this.apiUrl + `/active/${id}`, null, { params });
   }
 
   public toggleAllLocalActivations(shopId: string, state: boolean): Observable<Boolean> {
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Boolean>(this.apiUrl + `/${shopId}/active/`, null, { params });
+    return this.http.put<Boolean>(this.apiUrl + `/${shopId}/active/`, null, { params });
   }
 
   public restockProduct(stockId: string, units: number): Observable<ShopStock>{
     let params = new HttpParams();
     params = params.append('units', units);
-    return this.http.post<ShopStock>(this.apiUrl + `/restock/${stockId}`, null, { params });
+    return this.http.put<ShopStock>(this.apiUrl + `/restock/${stockId}`, null, { params });
   }
 
   //stockId will act as an identifier for a product and for a stock (when assigning it will be a product id, whereas when unassigning it will be a stock id)
   public assignStock(shopId: string, stockId: string, state: boolean): Observable<Shop>{
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Shop>(this.apiUrl + `/${shopId}/assign/stock/${stockId}`, null, { params });
+    return this.http.put<Shop>(this.apiUrl + `/${shopId}/assign/stock/${stockId}`, null, { params });
   }
 
   public assignTruck(shopId: string, truckId: string, state: boolean): Observable<Shop>{
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Shop>(this.apiUrl + `/${shopId}/assign/truck/${truckId}`, null, { params });
+    return this.http.put<Shop>(this.apiUrl + `/${shopId}/assign/truck/${truckId}`, null, { params });
   }
 
   public assignManager(shopId: string, userId: string, state: boolean): Observable<Shop>{
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Shop>(this.apiUrl + `/${shopId}/assign/manager/${userId}`, null, { params });
+    return this.http.put<Shop>(this.apiUrl + `/${shopId}/assign/manager/${userId}`, null, { params });
   }
 }

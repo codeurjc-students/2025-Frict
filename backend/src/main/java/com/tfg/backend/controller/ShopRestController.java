@@ -16,8 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 
 @RestController
@@ -98,7 +100,14 @@ public class ShopRestController {
         address.setLongitude(shopDTO.getAddress().getLongitude());
         Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
         Shop savedShop = shopService.save(shop);
-        return ResponseEntity.accepted().body(new ShopDTO(savedShop));
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedShop.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new ShopDTO(savedShop));
     }
 
     @Operation(summary = "(Admin) Update shop by ID")
@@ -142,7 +151,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Manager) Toggle stock local activation by ID")
-    @PostMapping("/active/{id}")
+    @PutMapping("/active/{id}")
     public ResponseEntity<ShopStockDTO> toggleLocalActivation(@PathVariable Long id, @RequestParam boolean state) {
         ShopStock stock = shopStockService.findShopStockHelper(id);
         stock.setActive(state);
@@ -152,7 +161,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Manager) Toggle all stocks local activation")
-    @PostMapping("/{shopId}/active/")
+    @PutMapping("/{shopId}/active/")
     public ResponseEntity<Boolean> toggleAllLocalActivations(@PathVariable Long shopId, @RequestParam boolean state) {
         List<ShopStock> stocks = this.shopStockService.findAllByShopId(shopId);
         for (ShopStock s : stocks) {
@@ -164,7 +173,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Manager) Add n units to a shop's product stock (if exists)")
-    @PostMapping("/restock/{stockId}")
+    @PutMapping("/restock/{stockId}")
     public ResponseEntity<ShopStockDTO> restockProduct(@PathVariable Long stockId, @RequestParam int units) {
         ShopStock targetStock = shopStockService.findShopStockHelper(stockId);
 
@@ -187,7 +196,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Manager) Set stock assignment to a shop")
-    @PostMapping("/{shopId}/assign/stock/{stockId}")
+    @PutMapping("/{shopId}/assign/stock/{stockId}")
     public ResponseEntity<ShopStockDTO> setAssignedStock(@PathVariable Long shopId, @PathVariable Long stockId, @RequestParam boolean state) {
         Shop shop = shopService.findShopHelper(shopId);
         ShopStock targetStock;
@@ -207,7 +216,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Manager) Set truck assignment to a shop")
-    @PostMapping("/{shopId}/assign/truck/{truckId}")
+    @PutMapping("/{shopId}/assign/truck/{truckId}")
     public ResponseEntity<TruckDTO> setAssignedTruck(@PathVariable Long shopId, @PathVariable Long truckId, @RequestParam boolean state) {
         Shop shop = shopService.findShopHelper(shopId);
         Truck truck = truckService.findTruckHelper(truckId);
@@ -225,7 +234,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Admin) Set manager assignment to a shop")
-    @PostMapping("/{shopId}/assign/manager/{userId}")
+    @PutMapping("/{shopId}/assign/manager/{userId}")
     public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long shopId, @PathVariable Long userId, @RequestParam boolean state) {
         Shop shop = shopService.findShopHelper(shopId);
 
@@ -246,7 +255,7 @@ public class ShopRestController {
 
 
     @Operation(summary = "(Admin) Update remote shop image")
-    @PostMapping("/image/{id}")
+    @PutMapping("/image/{id}")
     public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
         Shop shop = shopService.findShopHelper(id);
 

@@ -165,6 +165,7 @@ export class NavbarComponent implements OnInit {
           query: this.searchBarInput
         }
       });
+      this.searchBarInput = '';
     }
   }
 

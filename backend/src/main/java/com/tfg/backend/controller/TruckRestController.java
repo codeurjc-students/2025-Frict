@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -85,7 +87,7 @@ public class TruckRestController {
 
 
     @Operation(summary = "(Admin) Set driver assignment to a truck")
-    @PostMapping("/{truckId}/assign/driver/{driverId}")
+    @PutMapping("/{truckId}/assign/driver/{driverId}")
     public ResponseEntity<TruckDTO> setAssignedDriver(@PathVariable Long driverId, @PathVariable Long truckId, @RequestParam boolean state) {
         Truck truck = truckService.findTruckHelper(truckId);
 
@@ -139,7 +141,14 @@ public class TruckRestController {
         }
 
         Truck savedTruck = truckService.save(truck);
-        return ResponseEntity.accepted().body(new TruckDTO(savedTruck));
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedTruck.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new TruckDTO(savedTruck));
     }
 
     @Operation(summary = "(Admin) Update truck by ID")

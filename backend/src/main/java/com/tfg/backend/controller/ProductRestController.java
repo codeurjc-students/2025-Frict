@@ -304,7 +304,7 @@ public class ProductRestController {
 
 
     @Operation(summary = "(Admin) Update product images (remove unused, add new)")
-    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDTO> updateProductImages(
             @PathVariable Long id,
             @RequestPart("existingImages") List<ProductImageInfo> existingImages,
