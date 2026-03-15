@@ -184,10 +184,10 @@ export class OrdersManagementComponent implements OnInit {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.orderMap);
 
-    this.orderMap.attributionControl.setPrefix('');
+    this.orderMap.attributionControl.setPrefix(false);
 
     const orderIcon = L.icon({
       iconUrl: './location-pointer.png',

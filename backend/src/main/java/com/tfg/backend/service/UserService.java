@@ -120,9 +120,15 @@ public class UserService {
         user.setEncodedPassword(""); // Empty password, as it may contain sensible data
         user.setOtpCode(null);
         user.setOtpExpiration(null);
-        user.getRoles().clear(); // Unauthorized to access secured pages
+        //user.getRoles().clear(); // Unauthorized to access secured pages
         user.setEmail("deleteduser_" + uniqueUuid + "@frictapp.com");
         user.setPhone(null);
+
+        if (user.getRegisteredOrders() != null) {
+            for (Order order : user.getRegisteredOrders()) {
+                order.setFullSendingAddress(null); // Aquí rompemos el vínculo
+            }
+        }
         user.getAddresses().clear();
         user.getCards().clear();
 

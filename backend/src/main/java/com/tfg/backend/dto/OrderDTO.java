@@ -63,7 +63,9 @@ public class OrderDTO {
         this.totalCost = o.getTotalCost();
 
         this.cardNumberEnding = o.getCardNumberEnding();
-        this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
+        if (o.getFullSendingAddress() != null){
+            this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
+        }
         this.createdAt = o.getCreatedAt();
     }
 }
