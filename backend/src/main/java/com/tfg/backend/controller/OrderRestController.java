@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -67,6 +68,17 @@ public class OrderRestController {
             Page<Order> managerOrders = orderService.findOrdersByManagerId(loggedUser.getId(), pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(managerOrders, OrderDTO::new));
         }
+    }
+
+
+    @Operation(summary = "(Admin) Get user orders by user ID (paged)")
+    @GetMapping("/user/{id}")
+    public ResponseEntity<PageResponse<OrderDTO>> getUserOrdersByUserId(@PathVariable Long id, Pageable pageable){
+        //Get logged user info if any (User class)
+        User user = userService.findUserHelper(id);
+
+        Page<Order> userOrders = orderService.findAllByUser(user, pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 
 
@@ -292,6 +304,34 @@ public class OrderRestController {
 
         Order savedOrder = orderService.save(order);
         return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
+
+
+    @Transactional
+    @Operation(summary = "(Admin) Delete cancelled or completed order by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<OrderDTO> deleteFinishedOrderById(@PathVariable Long id){
+        Order order = orderService.findOrderHelper(id);
+
+        //Check if the order is completed or canceled
+        OrderStatus currentStatus = order.getCurrentStatus();
+        if (currentStatus != OrderStatus.CANCELLED && currentStatus != OrderStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only cancelled or completed orders can be deleted. Actual status: " + currentStatus);
+        }
+
+        // Clear in-memory bidirectional references
+        if (order.getAssignedShop() != null && order.getAssignedShop().getAssignedOrders() != null) {
+            order.getAssignedShop().getAssignedOrders().remove(order);
+        }
+        if (order.getAssignedTruck() != null && order.getAssignedTruck().getOrdersToDeliver() != null) {
+            order.getAssignedTruck().getOrdersToDeliver().remove(order);
+        }
+        if (order.getUser() != null && order.getUser().getRegisteredOrders() != null) {
+            order.getUser().getRegisteredOrders().remove(order);
+        }
+
+        orderService.delete(order);
+        return ResponseEntity.ok(new OrderDTO(order));
     }
 
 

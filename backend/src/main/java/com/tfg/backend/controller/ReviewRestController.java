@@ -39,6 +39,15 @@ public class ReviewRestController {
     private UserService userService;
 
 
+    @Operation(summary = "(Admin) Get user reviews by user ID (paged)")
+    @GetMapping("/user/{id}")
+    public ResponseEntity<PageResponse<ReviewDTO>> getUserReviewsByUserId (@PathVariable Long id, Pageable pageable){
+        User user = userService.findUserHelper(id);
+        Page<Review> userReviews = reviewService.findAllByUser(user, pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
+    }
+
+
     @Operation(summary = "(All) Get logged user reviews (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(Pageable pageable){
@@ -111,15 +120,15 @@ public class ReviewRestController {
 
     @Operation(summary = "(Admin, User) Delete review by ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ReviewDTO> deleteReview(@PathVariable Long id) {
+    public ResponseEntity<ReviewDTO> deleteReviewById(@PathVariable Long id) {
         //Check that the review exists
         Review review = reviewService.findReviewHelper(id);
 
         //Check that the logged user and the review creator match
         User loggedUser = userService.findLoggedUserHelper();
 
-        if (!loggedUser.getId().equals(review.getUser().getId())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + review.getUser().getId() + " and logged user ID " + loggedUser.getId() + " do not match.");
+        if (!loggedUser.getRoles().contains("ADMIN") && !loggedUser.getId().equals(review.getUser().getId())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not an administrator or the creator of this review.");
         }
 
         reviewService.deleteById(id);

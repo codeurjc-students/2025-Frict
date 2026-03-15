@@ -60,6 +60,13 @@ export class OrderService {
     return this.http.get<OrderItem>(this.apiUrl + `/cart/item/${id}`);
   }
 
+  public getUserOrdersByUserId(id: string, page: number, size: number): Observable<PageResponse<Order>>{
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<Order>>(this.apiUrl + `/user/${id}`, { params });
+  }
+
   public getLoggedUserOrders(page: number, size: number): Observable<PageResponse<Order>>{
     let params = new HttpParams();
     params = params.append('page', page.toString());
@@ -107,6 +114,10 @@ export class OrderService {
 
   public deleteItem(id: string): Observable<CartSummary> {
     return this.http.delete<CartSummary>(this.apiUrl + `/cart/${id}`)
+  }
+
+  public deleteOrderById(id: string): Observable<CartSummary> {
+    return this.http.delete<CartSummary>(this.apiUrl + `/${id}`)
   }
 
 }
