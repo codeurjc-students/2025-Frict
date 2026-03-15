@@ -135,7 +135,7 @@
                 <p-button icon="pi pi-id-card" (onClick)="openAssignmentDialog(truck)" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Asignar Conductor" tooltipPosition="top" />
                 <p-button icon="pi pi-history" (onClick)="openHistory(truck)" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true" pTooltip="Historial" tooltipPosition="top" />
                 <p-button icon="pi pi-map-marker" (onClick)="locateTruckOnMap(truck)" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar" tooltipPosition="top" />
-                <p-button icon="pi pi-pencil" [routerLink]="['/admin/trucks/edit', truck.id]" styleClass="p-button-xs p-button-outlined p-button-warning" rounded="true" pTooltip="Editar" tooltipPosition="top" />
+                <p-button icon="pi pi-pencil" [routerLink]="['/admin/trucks/edit', truck.id]" styleClass="p-button-xs p-button-outlined p-button-warn" rounded="true" pTooltip="Editar" tooltipPosition="top" />
                 <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Borrar" tooltipPosition="top" />
               </div>
             </td>

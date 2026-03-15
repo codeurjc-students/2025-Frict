@@ -16,11 +16,13 @@
 | Ban/Unban any user                           |           |                 |               |                 | ✅             |
 | Add/Modify/Delete any shop                   |           |                 |               |                 | ✅             |
 | Add/Modify/Delete any delivery truck         |           |                 |               |                 | ✅             |
+| Add/Modify/Delete any category               |           |                 |               |                 | ✅             |
 
 
 ### Intermediate functionalities
 | Intermediate functionality                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
+| Change app primary theme color                         | ✅         | ✅               | ✅             | ✅               | ✅             |
 | Real-time entities data updates                        | ✅         | ✅               | ✅             | ✅               | ✅             |
 | Filter products by its fields                          | ✅         | ✅               | ✅             |                 | ✅             |
 | Filter products from lowest/highest field              | ✅         | ✅               | ✅             |                 | ✅             |

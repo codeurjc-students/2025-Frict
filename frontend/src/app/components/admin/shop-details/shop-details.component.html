@@ -18,14 +18,14 @@
       <div class="absolute inset-0 flex flex-col justify-end p-8 z-10 pointer-events-none">
         <div class="pointer-events-auto">
           <div class="flex items-center gap-3 mb-2">
-            <span class="bg-yellow-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Tienda</span>
+            <span class="bg-primary-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Tienda</span>
             <span class="text-slate-300 text-xs font-mono border border-slate-600 px-2 rounded">{{ shop.referenceCode }}</span>
           </div>
 
           <h1 class="text-4xl font-bold mb-1 text-white leading-tight">{{ shop.name }}</h1>
 
           <div class="text-slate-200 flex items-start gap-2 text-sm mt-1">
-            <i class="pi pi-map-marker text-yellow-500 mt-1 flex-shrink-0"></i>
+            <i class="pi pi-map-marker text-primary-500 mt-1 flex-shrink-0"></i>
             <span class="leading-snug">{{ formatAddress(shop.address) }}</span>
           </div>
         </div>

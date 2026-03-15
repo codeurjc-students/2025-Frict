@@ -65,7 +65,7 @@ export const routes: Routes = [
 
           {
             path: 'profile',
-            loadComponent: () => import('./components/client/client-profile/client-profile.component').then(m => m.ClientProfileComponent),
+            loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
             data: { roles: ['USER'], title: 'Perfil', icon: 'client', breadcrumb: 'Perfil' }
           }
         ]
@@ -163,6 +163,11 @@ export const routes: Routes = [
         loadComponent: () => import('./components/admin/create-edit-truck/create-edit-truck.component').then(m => m.CreateEditTruckComponent),
         data: { roles: ['ADMIN'], title: 'Editar Camión', icon: 'admin', breadcrumb: 'Editar Camión' }
       },
+      {
+        path: 'profile',
+        loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
+        data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Perfil', icon: 'admin', breadcrumb: 'Perfil' }
+      }
     ]
   },
 

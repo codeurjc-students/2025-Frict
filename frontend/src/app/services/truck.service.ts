@@ -26,6 +26,10 @@ export class TruckService {
     return this.http.get<Truck[]>(this.apiUrl + `/available/`);
   }
 
+  public getAssignedTruckByDriverId(id: string): Observable<Truck> {
+    return this.http.get<Truck>(this.apiUrl + `/user/${id}`);
+  }
+
   public getTruckById(id: string): Observable<Truck> {
     return this.http.get<Truck>(this.apiUrl + `/${id}`);
   }

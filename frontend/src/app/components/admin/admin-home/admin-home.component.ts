@@ -111,7 +111,8 @@ export class AdminHomeComponent implements OnInit {
       { id: '1023', reference: 'ORD-A1B2', customer: 'Carlos Ruiz', total: 125.50, status: 'En Reparto', date: new Date().toISOString() },
       { id: '1024', reference: 'ORD-X9Y8', customer: 'Ana Gómez', total: 45.00, status: 'Pedido Realizado', date: new Date().toISOString() },
       { id: '1025', reference: 'ORD-M4N5', customer: 'Luis Pérez', total: 310.20, status: 'Enviado', date: new Date().toISOString() },
-      { id: '1026', reference: 'ORD-P7Q6', customer: 'Marta López', total: 89.99, status: 'Completado', date: new Date().toISOString() }
+      { id: '1026', reference: 'ORD-P7Q6', customer: 'Marta López', total: 89.99, status: 'Completado', date: new Date().toISOString() },
+      { id: '1027', reference: 'ORD-PQ48', customer: 'Sandra Isidro', total: 109.99, status: 'Enviado', date: new Date().toISOString() }
     ]);
 
     this.systemAlerts.set([
@@ -163,16 +164,10 @@ export class AdminHomeComponent implements OnInit {
 
     this.ordersChartOptions.set({
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: textColor, font: { weight: 'bold' } } } },
-      cutout: '70%'
+      layout: { padding: 1 },
+      plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: textColor, font: { weight: 'bold' }, padding: 20 } } },
+      cutout: '65%'
     });
-  }
-
-  getGreeting(): string {
-    const hour = this.currentDate.getHours();
-    if (hour < 12) return 'Buenos días';
-    if (hour < 20) return 'Buenas tardes';
-    return 'Buenas noches';
   }
 
   getOrderStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {

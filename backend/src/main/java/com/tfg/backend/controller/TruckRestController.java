@@ -61,6 +61,18 @@ public class TruckRestController {
     }
 
 
+    @Operation(summary = "(Driver) Get assigned truck by driver ID")
+    @GetMapping("/user/{driverId}")
+    public ResponseEntity<TruckDTO> getAssignedTruckByDriverId(@PathVariable Long driverId) {
+        User loggedUser = userService.findLoggedUserHelper();
+        Truck assignedTruck = loggedUser.getAssignedTruck();
+        if (assignedTruck == null){
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(new TruckDTO(loggedUser.getAssignedTruck()));
+    }
+
+
     @Operation(summary = "(Admin, Manager) Get trucks list by shop ID")
     @GetMapping("/shop/{shopId}/list")
     public ResponseEntity<List<TruckDTO>> getAllShopTrucks(@PathVariable Long shopId) {

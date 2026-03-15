@@ -7,31 +7,35 @@ import {User} from '../../../models/user.model';
 import {UserService} from '../../../services/user.service';
 import {OrderService} from '../../../services/order.service';
 import {ReviewService} from '../../../services/review.service';
+import {ShopService} from '../../../services/shop.service';
+import {TruckService} from '../../../services/truck.service'; // Asegúrate de tener este import
+import {AuthService} from '../../../services/auth.service';
+
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Dialog} from 'primeng/dialog';
 import {InputText} from 'primeng/inputtext';
-import {Address} from '../../../models/address.model';
-import {PaymentCard} from '../../../models/paymentCard.model';
-import {ConfirmationService, MessageService, SharedModule} from 'primeng/api';
-import {HttpErrorResponse} from '@angular/common/http';
 import {InputMask} from 'primeng/inputmask';
-import {AuthService} from '../../../services/auth.service';
-import {PageResponse} from '../../../models/pageResponse.model';
-import {Order} from '../../../models/order.model';
-import {Review} from '../../../models/review.model';
-import {formatPrice} from '../../../utils/textFormat.util';
 import {Select} from 'primeng/select';
-import {ThemeColor, UiService} from '../../../utils/ui.service';
-import {Shop} from '../../../models/shop.model';
-import {ShopService} from '../../../services/shop.service';
-import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Button} from 'primeng/button';
 import {Rating} from 'primeng/rating';
 import {Tag} from 'primeng/tag';
 import {Avatar} from 'primeng/avatar';
+import {ConfirmationService, MessageService, SharedModule} from 'primeng/api';
+
+import {Address} from '../../../models/address.model';
+import {PaymentCard} from '../../../models/paymentCard.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Order} from '../../../models/order.model';
+import {Review} from '../../../models/review.model';
+import {Shop} from '../../../models/shop.model';
+import {Truck} from '../../../models/truck.model'; // Asegúrate de tener este import
+import {ThemeColor, UiService} from '../../../utils/ui.service';
+import {formatPrice} from '../../../utils/textFormat.util';
+import {HttpErrorResponse} from '@angular/common/http';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 
 @Component({
-  selector: 'app-client-profile',
+  selector: 'app-profile',
   standalone: true,
   imports: [
     CommonModule,
@@ -49,31 +53,40 @@ import {Avatar} from 'primeng/avatar';
     Tag,
     Avatar
   ],
-  templateUrl: './client-profile.component.html',
+  templateUrl: './profile.component.html',
   styles: []
 })
-export class ClientProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit {
 
   protected uiService = inject(UiService);
 
-  constructor(private authService: AuthService,
+  constructor(public authService: AuthService, // Cambiado a public para usar sus signals en el HTML
               private userService: UserService,
               private orderService: OrderService,
               private reviewService: ReviewService,
+              private shopService: ShopService,
+              private truckService: TruckService,
               private messageService: MessageService,
               private confirmationService: ConfirmationService,
-              private shopService: ShopService,
               protected router: Router) {}
 
   user!: User;
 
+  // Paginación de pedidos
   foundOrders : PageResponse<Order> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstOrder: number = 0;
   ordersRows: number = 5;
 
+  // Paginación de reseñas
   foundReviews: PageResponse<Review> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstReview: number = 0;
   reviewsRows: number = 5;
+
+  // Variables exclusivas para empleados
+  assignedTruck: Truck | null = null;
+  assignedShopsPage: PageResponse<Shop> | null = null;
+  firstShop: number = 0;
+  shopsRows: number = 5;
 
   loading: boolean = true;
   error: boolean = false;
@@ -195,9 +208,21 @@ export class ClientProfileComponent implements OnInit {
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;
-        this.loadSelectedShop();
-        this.loadUserOrders();
-        this.loadUserReviews();
+
+        // Carga condicional según los roles desde las signals de authService
+        if (this.authService.isUser()) {
+          this.loadSelectedShop();
+          this.loadUserOrders();
+          this.loadUserReviews();
+        } else if (this.authService.isManager()) {
+          this.loadManagerShops();
+          this.loading = false;
+        } else if (this.authService.isDriver()) {
+          this.loadDriverTruck();
+          this.loading = false;
+        } else {
+          this.loading = false;
+        }
       },
       error: () => {
         this.loading = false;
@@ -206,6 +231,33 @@ export class ClientProfileComponent implements OnInit {
     })
   }
 
+  // Carga de entidades exclusivas para Empleados
+  protected loadManagerShops() {
+    // Si tu servicio devuelve un Observable<PageResponse<Shop>>
+    this.shopService.getAssignedShopsPage(this.firstShop / this.shopsRows, this.shopsRows).subscribe({
+      next: (page) => {
+        this.assignedShopsPage = page;
+      },
+      error: () => this.assignedShopsPage = null
+    });
+  }
+
+  onShopsPageChange(event: PaginatorState) {
+    this.firstShop = event.first ?? 0;
+    this.shopsRows = event.rows ?? 5;
+    this.loadManagerShops();
+  }
+
+  protected loadDriverTruck() {
+    this.truckService.getAssignedTruckByDriverId(this.user.id).subscribe({
+      next: (truck) => {
+        this.assignedTruck = truck;
+      },
+      error: () => this.assignedTruck = null
+    });
+  }
+
+  // Resto de métodos (Clientes)
   loadSelectedShop() {
     const selectedShopId = this.user.selectedShopId;
     if (selectedShopId){
@@ -382,7 +434,7 @@ export class ClientProfileComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error de registro',
-            detail: 'El nombre del usuario ya está en uso. Elige otro.' // Usamos el texto exacto del servidor
+            detail: 'El nombre del usuario ya está en uso. Elige otro.'
           });
         } else this.messageService.add({
           severity: 'error',
@@ -427,11 +479,6 @@ export class ClientProfileComponent implements OnInit {
   }
 
   protected isValidDueDate(input: string): boolean {
-    // 0[1-9] -> Accepts from 01 to 09
-    // |      -> or
-    // 1[0-2] -> Accepts 10, 11 and 12
-    // \/     -> Searches for the bar
-    // \d{2}  -> Searches for two digits for the year
     const regex = /^(0[1-9]|1[0-2])\/\d{2}$/;
     return regex.test(input);
   }
