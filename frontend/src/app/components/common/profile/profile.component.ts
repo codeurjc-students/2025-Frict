@@ -115,6 +115,10 @@ export class ProfileComponent implements OnInit {
     return selectedId === currentSavedId;
   });
 
+  //Connection
+  isOnline = signal<boolean>(true);
+  lastCheckTime = signal<Date | null>(null);
+
   // Call uiService to change the theme color
   onColorChange(color: ThemeColor) {
     if (color) {
@@ -507,6 +511,24 @@ export class ProfileComponent implements OnInit {
         this.error = true;
       }
     })
+  }
+
+  checkBackendConnection() {
+    this.userService.checkBackendConnection().subscribe({
+      next: (res) => {
+        this.isOnline.set(res.status === 'UP');
+        this.lastCheckTime.set(new Date());
+
+        if (res.status !== 'UP') {
+          this.messageService.add({ severity: 'warn', summary: 'Sistema', detail: 'El servidor responde pero la BDD podría tener problemas.' });
+        }
+      },
+      error: () => {
+        this.isOnline.set(false);
+        this.lastCheckTime.set(new Date());
+        this.messageService.add({ severity: 'error', summary: 'Error de Red', detail: 'No se ha podido contactar con el backend.' });
+      }
+    });
   }
 
   protected getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {

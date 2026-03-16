@@ -122,4 +122,7 @@ export class UserService {
     return this.http.get<boolean>(this.apiUrl + `/email`, { params });
   }
 
+  checkBackendConnection(): Observable<{status: string}> {
+    return this.http.get<{status: string}>('/actuator/health');
+  }
 }
