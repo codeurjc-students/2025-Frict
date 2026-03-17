@@ -6,7 +6,7 @@ import com.tfg.backend.dto.OrderItemDTO;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
-import com.tfg.backend.utils.EmailService;
+import com.tfg.backend.service.EmailService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

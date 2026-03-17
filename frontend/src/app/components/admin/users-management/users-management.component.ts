@@ -11,7 +11,6 @@ import {UserService} from '../../../services/user.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {UIChart} from 'primeng/chart';
-import {StatData} from '../../../utils/statData.model';
 import {getUserRoleTagInfo, getUserStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -25,6 +24,7 @@ import {ReviewService} from '../../../services/review.service';
 import {OrderService} from '../../../services/order.service';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {ConfirmPopup} from 'primeng/confirmpopup';
+import {Metric} from '../../../models/metric.model';
 
 @Component({
   selector: 'app-users-management',
@@ -65,17 +65,17 @@ export class UsersManagementComponent implements OnInit {
     { name: 'Administrador', code: 'ADMIN' }
   ];
 
-  rawStats = signal<StatData[]>([]);
+  rawStats = signal<Metric[]>([]);
   options = signal<any>(null);
 
   data = computed(() => {
     const stats = this.rawStats();
     const documentStyle = getComputedStyle(document.documentElement);
     return {
-      labels: stats.map(s => s.category),
+      labels: stats.map(s => s.label),
       datasets: [
         {
-          data: stats.map(s => s.total),
+          data: stats.map(s => s.value),
           backgroundColor: [
             documentStyle.getPropertyValue('--p-green-600'),
             documentStyle.getPropertyValue('--p-red-600'),
@@ -217,7 +217,7 @@ export class UsersManagementComponent implements OnInit {
 
   loadStats() {
     this.userService.getUsersStats().subscribe({
-      next: (stats: StatData[]) => {
+      next: (stats: Metric[]) => {
         this.rawStats.set(stats);
       },
       error: (err) => console.error('Error loading stats: ', err)
@@ -225,8 +225,10 @@ export class UsersManagementComponent implements OnInit {
   }
 
   getStatValue(category: string): number {
-    const stat = this.rawStats().find(s => s.category === category);
-    return stat ? stat.total : 0;
+    const stat = this.rawStats().find(s => s.label === category);
+    if (!stat) return 0;
+    const numericValue = Number(stat.value);
+    return isNaN(numericValue) ? 0 : numericValue;
   }
 
 

@@ -182,12 +182,12 @@ export class OrdersManagementComponent implements OnInit {
 
     this.orderMap = L.map('order-map').setView([40.4168, -3.7038], 6);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.orderMap);
 
-    this.orderMap.attributionControl.setPrefix(false);
+    this.orderMap.attributionControl.setPrefix('Leaflet');
 
     const orderIcon = L.icon({
       iconUrl: './location-pointer.png',
@@ -245,7 +245,7 @@ export class OrdersManagementComponent implements OnInit {
       return;
     }
 
-    // Si ya cargaron y NO estamos forzando la recarga, abortamos
+    // Abort if loaded and reload is not forced
     if (this.trucksLoaded && !forceReload) return;
 
     this.loadingTrucks = true;

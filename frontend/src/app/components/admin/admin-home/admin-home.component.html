@@ -37,7 +37,7 @@
 
         <div class="w-px h-8 bg-slate-200 mx-2 hidden md:block"></div>
 
-        <p-button icon="pi pi-refresh" [text]="true" severity="secondary" pTooltip="Refrescar datos" (onClick)="loadDashboardData()"></p-button>
+        <p-button icon="pi pi-refresh" [text]="true" severity="secondary" pTooltip="Refrescar datos" (onClick)="initData()"></p-button>
       </div>
     </div>
 
@@ -52,7 +52,7 @@
             <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-dollar"></i></div>
           </div>
           <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Presupuesto Asignado</h3>
-          <p class="text-3xl font-black text-slate-800">{{ formatPrice(globalKpis().totalRevenue) }}</p>
+          <p class="text-3xl font-black text-slate-800">{{ formatPrice(globalKpis().totalBudget) }}</p>
         </div>
 
         <div routerLink="/admin/orders"
@@ -70,21 +70,19 @@
           <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500"></div>
           <div class="flex justify-between items-start mb-4">
             <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-truck"></i></div>
-            <span class="text-slate-400 text-xs font-medium">En ruta activa</span>
           </div>
           <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Vehículos Operativos</h3>
-          <p class="text-3xl font-black text-slate-800">{{ globalKpis().trucksOnRoute }}</p>
+          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeTrucks }}</p>
         </div>
 
-        <div routerLink="/alerts"
+        <div routerLink="/admin/shops"
              class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
+          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
           <div class="flex justify-between items-start mb-4">
-            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-box"></i></div>
-            <i class="pi pi-exclamation-circle text-red-400"></i>
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-shop"></i></div>
           </div>
-          <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Alertas de Stock</h3>
-          <p class="text-3xl font-black text-slate-800">N/A</p>
+          <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Tiendas Asignadas</h3>
+          <p class="text-3xl font-black text-slate-800">{{ globalKpis().totalShops }}</p>
         </div>
       </div>
 

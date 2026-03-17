@@ -13,7 +13,7 @@ import com.tfg.backend.security.jwt.AuthResponse.Status;
 import com.tfg.backend.security.jwt.LoginRequest;
 import com.tfg.backend.security.jwt.UserLoginService;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.utils.EmailService;
+import com.tfg.backend.service.EmailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;

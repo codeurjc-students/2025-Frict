@@ -2,6 +2,8 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.Truck;
+import com.tfg.backend.model.TruckStatus;
+import com.tfg.backend.model.User;
 import com.tfg.backend.repository.TruckRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -40,5 +42,15 @@ public class TruckService {
     public Truck findTruckHelper(Long id) {
         return this.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
+    }
+
+    //Metrics
+    public long getDashboardActiveTrucks(User currentUser) {
+        List<TruckStatus> inactiveStatuses = List.of(TruckStatus.MAINTENANCE, TruckStatus.OUT_OF_SERVICE);
+
+        if (currentUser.hasRole("ADMIN")) {
+            return truckRepository.countActiveTrucks(inactiveStatuses);
+        }
+        return truckRepository.countActiveTrucksByManagerId(currentUser.getId(), inactiveStatuses);
     }
 }

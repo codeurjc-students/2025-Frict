@@ -1,4 +1,4 @@
-package com.tfg.backend.utils;
+package com.tfg.backend.service;
 
 import com.tfg.backend.model.OrderItem;
 import jakarta.mail.MessagingException;

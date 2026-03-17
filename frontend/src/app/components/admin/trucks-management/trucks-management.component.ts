@@ -229,8 +229,14 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     if (!mapEl) return;
     this.map = L.map('trucks-map', { zoomControl: false }).setView([40.4168, -3.7038], 6);
     L.control.zoom({ position: 'topright' }).addTo(this.map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19 }).addTo(this.map);
-    this.map.attributionControl.setPrefix(false);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(this.map);
+    this.map.attributionControl.setPrefix('Leaflet');
+    setTimeout(() => {
+      this.map?.invalidateSize();
+    }, 100);
   }
 
   private renderTruckMarkers() {

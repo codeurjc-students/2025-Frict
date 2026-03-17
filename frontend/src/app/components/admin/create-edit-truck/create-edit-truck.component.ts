@@ -220,12 +220,12 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
 
     this.map = L.map('map').setView([lat, lng], zoom);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
 
-    this.map.attributionControl.setPrefix(false);
+    this.map.attributionControl.setPrefix('Leaflet');
 
     const iconDefault = L.icon({
       iconUrl: './location-pointer.png',

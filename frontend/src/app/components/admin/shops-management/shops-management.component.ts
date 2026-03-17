@@ -108,11 +108,11 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
 
     L.control.zoom({ position: 'topright' }).addTo(this.map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }).addTo(this.map);
-    this.map.attributionControl.setPrefix(false);
+    this.map.attributionControl.setPrefix('Leaflet');
 
     this.renderShopMarkers();
   }
@@ -120,7 +120,9 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   private renderShopMarkers() {
     if (!this.map) return;
 
-    // Custom shops icon
+    this.markers.forEach(marker => this.map!.removeLayer(marker));
+    this.markers = [];
+
     const shopIcon = L.icon({
       iconUrl: './location-pointer.png',
       iconSize: [32, 32],
@@ -129,7 +131,7 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     });
 
     this.shopsPage.items.forEach(shop => {
-      if (shop.address.latitude && shop.address.longitude){
+      if (shop.address.latitude && shop.address.longitude) {
         const marker = L.marker([shop.address.latitude, shop.address.longitude], { icon: shopIcon })
           .addTo(this.map!)
           .bindPopup(`
@@ -146,12 +148,12 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadShops(){
+  loadShops() {
     let request$;
     if (this.authService.isAdmin()) {
-      request$ = this.shopService.getAllShopsPage(this.first/this.rows, this.rows);
+      request$ = this.shopService.getAllShopsPage(this.first / this.rows, this.rows);
     } else {
-      request$ = this.shopService.getAssignedShopsPage(this.first/this.rows, this.rows);
+      request$ = this.shopService.getAssignedShopsPage(this.first / this.rows, this.rows);
     }
 
     request$.subscribe({
@@ -159,16 +161,19 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
         this.shopsPage = shops;
         this.loading = false;
 
-        // SOLUCIÓN: Usar setTimeout para esperar un ciclo de renderizado
         setTimeout(() => {
-          this.initMap();
+          if (!this.map) {
+            this.initMap();
+          } else {
+            this.renderShopMarkers();
+          }
         }, 10);
       },
       error: () => {
         this.loading = false;
         this.error = true;
       }
-    })
+    });
   }
 
   //Fly to selected shop in map

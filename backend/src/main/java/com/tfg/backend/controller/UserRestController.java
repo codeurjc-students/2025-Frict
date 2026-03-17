@@ -7,10 +7,9 @@ import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
-import com.tfg.backend.utils.StatDataDTO;
+import com.tfg.backend.utils.MetricDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -413,13 +412,13 @@ public class UserRestController {
 
     @Operation(summary = "(Admin) Get users stats")
     @GetMapping("/stats")
-    public ResponseEntity<List<StatDataDTO>> getUsersStats(){
-        List<StatDataDTO> stats = new ArrayList<>();
-        stats.add(new StatDataDTO("Totales", userService.count()));
-        stats.add(new StatDataDTO("Baneados", userService.countByIsBannedTrue()));
-        stats.add(new StatDataDTO("Anonimizados", userService.countByIsDeletedTrue()));
+    public ResponseEntity<List<MetricDTO>> getUsersStats(){
+        List<MetricDTO> stats = new ArrayList<>();
+        stats.add(new MetricDTO("Totales", userService.count()));
+        stats.add(new MetricDTO("Baneados", userService.countByIsBannedTrue()));
+        stats.add(new MetricDTO("Anonimizados", userService.countByIsDeletedTrue()));
         Long internalAccounts = userService.countByRole("ADMIN") + userService.countByRole("MANAGER") + userService.countByRole("DRIVER");
-        stats.add(new StatDataDTO("Cuentas Internas", internalAccounts));
+        stats.add(new MetricDTO("Cuentas Internas", internalAccounts));
         return ResponseEntity.ok(stats);
     }
 }
