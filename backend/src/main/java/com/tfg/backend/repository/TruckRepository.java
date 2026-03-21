@@ -1,6 +1,5 @@
 package com.tfg.backend.repository;
 
-import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
 import org.springframework.data.domain.Page;
@@ -23,9 +22,9 @@ public interface TruckRepository extends JpaRepository<Truck, Long> {
         SELECT COUNT(t) FROM Truck t 
         JOIN t.history h 
         WHERE h.id = (SELECT MAX(h2.id) FROM t.history h2) 
-        AND h.status NOT IN :excludedStatuses
+        AND h.status IN :statuses
     """)
-    long countActiveTrucks(@Param("excludedStatuses") List<TruckStatus> excludedStatuses);
+    long countTrucksByStatus(@Param("statuses") List<TruckStatus> statuses);
 
     // MANAGER: Count of all trucks assigned to their shops that do not have this statuses
     @Query("""
@@ -33,7 +32,7 @@ public interface TruckRepository extends JpaRepository<Truck, Long> {
         JOIN t.history h 
         WHERE t.assignedShop.assignedManager.id = :managerId 
         AND h.id = (SELECT MAX(h2.id) FROM t.history h2) 
-        AND h.status NOT IN :excludedStatuses
+        AND h.status IN :statuses
     """)
-    long countActiveTrucksByManagerId(@Param("managerId") Long managerId, @Param("excludedStatuses") List<TruckStatus> excludedStatuses);
+    long countTrucksByManagerIdAndStatus(@Param("managerId") Long managerId, @Param("statuses") List<TruckStatus> statuses);
 }

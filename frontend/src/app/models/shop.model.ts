@@ -11,5 +11,5 @@ export interface Shop {
   imageInfo: ImageInfo;
   totalAvailableProducts: number;
   totalAssignedTrucks: number;
-  assignedManager: User;
+  assignedManager?: User;
 }

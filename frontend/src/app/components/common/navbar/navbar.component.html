@@ -2,14 +2,14 @@
 
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto flex items-center justify-between gap-2 px-4 h-full">
 
-    <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
+    <div *ngIf="!authService.isLogged() || authService.isUser()">
       <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full hover:opacity-90 transition-opacity">
         <img class="w-8 h-8 m-1 shrink-0 object-contain" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden md:inline text-2xl mr-4 tracking-tight">MiTienda</span>
       </a>
     </div>
 
-    <div *ngIf="authService.isAdmin()">
+    <div *ngIf="authService.isLogged() && !authService.isUser()">
       <a routerLink="/admin" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full hover:opacity-90 transition-opacity">
         <img class="w-8 h-8 m-1 shrink-0 object-contain" ngSrc="/frictLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden md:inline text-2xl mr-4 tracking-tight">Frict</span>
@@ -233,7 +233,7 @@
 
               <ul [class.hidden]="!isAccountExpanded()" class="list-none p-0 m-0 overflow-hidden block">
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
+                  <a [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'" class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-user mr-3"></i>
                     <span class="font-medium">Perfil</span>
                   </a>

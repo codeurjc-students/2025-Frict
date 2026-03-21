@@ -32,10 +32,12 @@ export class OrderService {
     this.itemsCount.set(n);
   }
 
-  public getOrdersByRolePage(page: number, size: number): Observable<PageResponse<Order>> {
-    let params = new HttpParams();
-    params = params.append('page', page.toString());
-    params = params.append('size', size.toString());
+  getOrdersByRolePage(page: number, size: number, sort: string) {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', sort);
+
     return this.http.get<PageResponse<Order>>(this.apiUrl + `/`, { params });
   }
 

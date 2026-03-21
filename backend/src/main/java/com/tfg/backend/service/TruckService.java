@@ -1,6 +1,5 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
 import com.tfg.backend.model.User;
@@ -45,12 +44,12 @@ public class TruckService {
     }
 
     //Metrics
-    public long getDashboardActiveTrucks(User currentUser) {
-        List<TruckStatus> inactiveStatuses = List.of(TruckStatus.MAINTENANCE, TruckStatus.OUT_OF_SERVICE);
+    public long getActiveTrucksCount(User currentUser) {
+        List<TruckStatus> activeStatuses = List.of(TruckStatus.AVAILABLE, TruckStatus.ON_ROUTE, TruckStatus.OUT_OF_SERVICE);
 
         if (currentUser.hasRole("ADMIN")) {
-            return truckRepository.countActiveTrucks(inactiveStatuses);
+            return truckRepository.countTrucksByStatus(activeStatuses);
         }
-        return truckRepository.countActiveTrucksByManagerId(currentUser.getId(), inactiveStatuses);
+        return truckRepository.countTrucksByManagerIdAndStatus(currentUser.getId(), activeStatuses);
     }
 }

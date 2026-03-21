@@ -53,7 +53,7 @@
                     </div>
                   </div>
 
-                  <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.userName }}</div>
+                  <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.user.name }}</div>
 
                   <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
                     <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ formatAddress(order.sendingAddress) }}
@@ -76,7 +76,7 @@
                   <div *cdkDragPlaceholder class="bg-slate-200/50 border-2 border-dashed border-slate-400 rounded-xl min-h-[140px] w-full opacity-60"></div>
                   <div *cdkDragPreview class="bg-white border-2 border-blue-400 rounded-xl p-4 shadow-2xl w-[280px] opacity-95 rotate-2 cursor-grabbing">
                     <span class="text-xs font-mono text-slate-500">{{ order.referenceCode }}</span>
-                    <div class="font-bold text-slate-800 text-sm truncate mt-1">Usuario: {{ order.userName }}</div>
+                    <div class="font-bold text-slate-800 text-sm truncate mt-1">Usuario: {{ order.user.name }}</div>
                   </div>
                 </div>
               }
@@ -107,7 +107,7 @@
               </div>
 
               <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">
-                {{ order.userName }}
+                {{ order.user.name }}
               </div>
 
               <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
@@ -140,7 +140,7 @@
 
               <div *cdkDragPreview class="bg-white border-2 border-red-400 rounded-xl p-4 shadow-2xl w-[280px] opacity-95 rotate-2 cursor-grabbing">
                 <span class="text-xs font-mono text-slate-500">{{ order.referenceCode }}</span>
-                <div class="font-bold text-slate-800 text-sm truncate mt-1">Usuario: {{ order.userName }}</div>
+                <div class="font-bold text-slate-800 text-sm truncate mt-1">Usuario: {{ order.user.name }}</div>
               </div>
             </div>
           }
@@ -166,8 +166,8 @@
           <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-100" (click)="openOrderDetails(order)">
             <td class="py-3 px-4 font-mono text-sm font-medium text-slate-600">{{ order.referenceCode }}</td>
             <td class="py-3 px-4 text-sm text-slate-800 font-bold flex items-center gap-2">
-              <p-avatar [label]="getUserLabel(order.userName)" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
-              {{ order.userName }}
+              <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
+              {{ order.user.name }}
             </td>
             <td class="py-3 px-4">
               <span class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center w-fit gap-1.5" [ngClass]="getStatusBgColor(getCurrentStatus(order))">
@@ -269,7 +269,7 @@
           {{ getCurrentStatus(selectedOrder) }}
         </span>
         <span class="text-xs text-slate-500">
-           Creado el {{ selectedOrder.createdAt }} por <span class="font-bold text-slate-700">{{ selectedOrder.userName }}</span>
+           Creado el {{ selectedOrder.createdAt }} por <span class="font-bold text-slate-700">{{ selectedOrder.user.name }}</span>
         </span>
       </div>
     </div>
@@ -477,8 +477,8 @@
             <i class="pi pi-user"></i> Destinatario
           </h4>
           <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-100">
-            <p-avatar [label]="getUserLabel(selectedOrder.userName)" shape="circle" size="normal" styleClass="w-9 h-9 bg-blue-100 text-blue-700 font-bold text-sm shrink-0"></p-avatar>
-            <p class="text-base font-bold text-slate-800">{{ selectedOrder.userName }}</p>
+            <p-avatar [image]="selectedOrder.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-9 h-9 bg-blue-100 text-blue-700 font-bold text-sm shrink-0"></p-avatar>
+            <p class="text-base font-bold text-slate-800">{{ selectedOrder.user.name }}</p>
           </div>
           <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-700 flex items-start gap-2">
             <i class="pi pi-map-marker text-slate-400"></i>

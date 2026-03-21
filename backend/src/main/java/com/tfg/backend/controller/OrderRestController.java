@@ -55,7 +55,7 @@ public class OrderRestController {
     private TruckService truckService;
 
 
-    @Operation(summary = "(Admin, Manager) Get orders by role (paged)")
+    @Operation(summary = "(Admin, Manager, Driver) Get orders by role (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<OrderDTO>> getOrdersByRole(Pageable pageable){
         User loggedUser = userService.findLoggedUserHelper();
@@ -63,7 +63,12 @@ public class OrderRestController {
         if (loggedUser.getRoles().contains("ADMIN")){
             Page<Order> userOrders = orderService.findAll(pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
-        } else {
+        }
+        else if (loggedUser.getRoles().contains("DRIVER")) {
+            Page<Order> driverOrders = orderService.findOrdersByDriverId(loggedUser.getId(), pageable);
+            return ResponseEntity.ok(PageFormatter.toPageResponse(driverOrders, OrderDTO::new));
+        }
+        else {
             // Managers logic
             Page<Order> managerOrders = orderService.findOrdersByManagerId(loggedUser.getId(), pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(managerOrders, OrderDTO::new));

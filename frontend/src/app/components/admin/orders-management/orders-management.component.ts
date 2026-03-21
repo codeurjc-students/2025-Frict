@@ -215,7 +215,7 @@ export class OrdersManagementComponent implements OnInit {
     // Destinations pointer
     if (this.selectedOrder?.sendingAddress?.latitude && this.selectedOrder?.sendingAddress?.longitude) {
       L.marker([this.selectedOrder.sendingAddress.latitude, this.selectedOrder.sendingAddress.longitude], { icon: orderIcon })
-        .bindPopup('<b>Destino</b><br>' + this.selectedOrder.userName)
+        .bindPopup('<b>Destino</b><br>' + this.selectedOrder.user.name)
         .addTo(this.markersGroup);
     }
 
@@ -433,18 +433,14 @@ export class OrdersManagementComponent implements OnInit {
     return colors[status] || 'bg-slate-100 text-slate-700';
   }
 
-  getUserLabel(userName: string | undefined): string {
-    const idStr = String(userName || '');
-    return (idStr.charAt(0) || 'U').toUpperCase();
-  }
-
   getItemName(item: any): string {
     return item.productName || item.product?.name || 'Producto ID: ' + (item.productId || 'N/A');
   }
 
   private loadOrdersPage() {
-    this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows).subscribe({
+    this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows, 'createdAt,desc').subscribe({
       next: (page: PageResponse<Order>) => {
+        console.log(page);
         this.ordersPage = page;
         this.ordersMade.set(page.items.filter(o => this.getCurrentStatus(o) === 'Pedido Realizado'));
         this.shippedOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Enviado'));

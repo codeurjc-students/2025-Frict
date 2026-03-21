@@ -48,7 +48,7 @@ public class MetricRestController {
         else if (loggedUser.hasRole("ADMIN") || loggedUser.hasRole("MANAGER")) {
             stats.add(new MetricDTO("Presupuesto Total", shopService.getDashboardTotalBudget(loggedUser)));
             stats.add(new MetricDTO("Pedidos Activos", orderService.getDashboardActiveOrders(loggedUser)));
-            stats.add(new MetricDTO("Camiones Operativos", truckService.getDashboardActiveTrucks(loggedUser)));
+            stats.add(new MetricDTO("Camiones Operativos", truckService.getActiveTrucksCount(loggedUser)));
             stats.add(new MetricDTO("Tiendas", shopService.getDashboardShopCount(loggedUser)));
         }
 

@@ -1,55 +1,33 @@
-import {ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection} from '@angular/core';
-import {provideRouter, withRouterConfig} from '@angular/router';
+import { ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
+import { provideRouter, withRouterConfig } from '@angular/router';
+import { routes } from './app.routes';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { providePrimeNG } from 'primeng/config';
+import { MyPreset } from './colorpreset';
+import { provideHttpClient } from '@angular/common/http';
+import { AuthService } from './services/auth.service';
+import { finalize } from 'rxjs';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
-import {routes} from './app.routes';
+// Importaciones para el idioma español
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
 
-import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
-import {providePrimeNG} from 'primeng/config';
-import {MyPreset} from './colorpreset';
-import {provideHttpClient} from '@angular/common/http';
-import {AuthService} from './services/auth.service';
-import {finalize} from 'rxjs';
-import {ConfirmationService, MessageService} from 'primeng/api';
+// Registrar los datos de cultura de España
+registerLocaleData(localeEs);
 
 export const carouselResponsiveOptions = [
-  {
-    breakpoint: '1600px',
-    numVisible: 5,
-    numScroll: 1
-  },
-  {
-    breakpoint: '1400px',
-    numVisible: 4,
-    numScroll: 1
-  },
-  {
-    breakpoint: '1024px',
-    numVisible: 3,
-    numScroll: 1
-  },
-  {
-    breakpoint: '768px',
-    numVisible: 2,
-    numScroll: 1
-  },
-  {
-    breakpoint: '560px',
-    numVisible: 1,
-    numScroll: 1
-  }
+  { breakpoint: '1600px', numVisible: 5, numScroll: 1 },
+  { breakpoint: '1400px', numVisible: 4, numScroll: 1 },
+  { breakpoint: '1024px', numVisible: 3, numScroll: 1 },
+  { breakpoint: '768px', numVisible: 2, numScroll: 1 },
+  { breakpoint: '560px', numVisible: 1, numScroll: 1 }
 ];
 
 export const galleryResponsiveOptions = [
-  {
-    breakpoint: '1300px',
-    numVisible: 4
-  },
-  {
-    breakpoint: '575px',
-    numVisible: 2
-  }
+  { breakpoint: '1300px', numVisible: 4 },
+  { breakpoint: '575px', numVisible: 2 }
 ];
-
 
 function initializeAuth(authService: AuthService): () => Promise<any> {
   return () =>
@@ -61,18 +39,22 @@ function initializeAuth(authService: AuthService): () => Promise<any> {
 }
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes, withRouterConfig({ onSameUrlNavigation: 'reload' })), provideHttpClient(),
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes, withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    provideHttpClient(),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
         preset: MyPreset,
         options: {
-          darkModeSelector: 'none', //Deactivate Dark Mode at all times
+          darkModeSelector: 'none',
         }
       }
     }),
     provideAppInitializer(() => initializeAuth(inject(AuthService))()),
     MessageService,
-    ConfirmationService
+    ConfirmationService,
+    { provide: LOCALE_ID, useValue: 'es-ES' } //Establish the spanish language for all the application
   ]
 };

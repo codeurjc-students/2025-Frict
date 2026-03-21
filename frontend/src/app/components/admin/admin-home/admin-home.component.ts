@@ -12,18 +12,10 @@ import { Tooltip } from 'primeng/tooltip';
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import { AuthService } from '../../../services/auth.service';
 import { MetricService } from '../../../services/metric.service';
-import { formatPrice } from '../../../utils/textFormat.util';
+import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import { LoginInfo } from '../../../models/loginInfo.model';
-
-interface RecentOrder {
-  id: string;
-  reference: string;
-  customer: string;
-  total: number;
-  status: string;
-  date: string;
-  address?: string;
-}
+import {OrderService} from '../../../services/order.service';
+import {Order} from '../../../models/order.model';
 
 interface SystemAlert {
   title: string;
@@ -67,18 +59,22 @@ export class AdminHomeComponent implements OnInit {
 
   salesChartData = signal<any>({});
   salesChartOptions = signal<any>({});
+  driverHistoryChartOptions = signal<any>({});
 
   ordersChartData = signal<any>({});
   ordersChartOptions = signal<any>({});
 
-  recentOrders = signal<RecentOrder[]>([]);
+  driverHistoryChartData = signal<any>({});
+
+  recentOrders = signal<Order[]>([]);
   systemAlerts = signal<SystemAlert[]>([]);
 
   loginInfo!: LoginInfo;
 
   private metricService = inject(MetricService);
 
-  constructor(public authService: AuthService) {}
+  constructor(public authService: AuthService,
+              public orderService: OrderService) {}
 
   ngOnInit() {
     this.getLoginInfo();
@@ -98,11 +94,18 @@ export class AdminHomeComponent implements OnInit {
     this.loading = true;
     this.error = false;
 
-    this.loadKpis(); // Real
-    this.loadSalesChartMock(); // Mock
-    this.loadOrdersDistributionMock(); // Mock
-    this.loadRecentOrdersMock(); // Mock
-    this.loadSystemAlertsMock(); // Mock
+    this.loadKpis();
+
+    // Separación de lógica por roles para datos específicos
+    if (this.authService.isAdmin() || this.authService.isManager()) {
+      this.loadSalesChartMock();
+      this.loadOrdersDistributionMock();
+    } else if (this.authService.isDriver()) {
+      this.loadDriverHistoryMock(); // Nueva función
+    }
+
+    this.loadRecentOrdersByRole();
+    this.loadSystemAlertsMock();
   }
 
   private loadKpis() {
@@ -156,23 +159,17 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
-  // Recent orders table (mock)
-  private loadRecentOrdersMock() {
-    if (this.authService.isAdmin() || this.authService.isManager()) {
-      this.recentOrders.set([
-        { id: '1023', reference: 'ORD-A1B2', customer: 'Carlos Ruiz', total: 125.50, status: 'En Reparto', date: new Date().toISOString() },
-        { id: '1024', reference: 'ORD-X9Y8', customer: 'Ana Gómez', total: 45.00, status: 'Pedido Realizado', date: new Date().toISOString() },
-        { id: '1025', reference: 'ORD-M4N5', customer: 'Luis Pérez', total: 310.20, status: 'Enviado', date: new Date().toISOString() },
-        { id: '1026', reference: 'ORD-P7Q6', customer: 'Marta López', total: 89.99, status: 'Completado', date: new Date().toISOString() },
-        { id: '1027', reference: 'ORD-PQ48', customer: 'Sandra Isidro', total: 109.99, status: 'Enviado', date: new Date().toISOString() }
-      ]);
-    } else {
-      this.recentOrders.set([
-        { id: '2001', reference: 'ORD-A1B2', customer: 'Carlos Ruiz', total: 0, status: 'En Reparto', address: 'Calle Mayor 12, Madrid', date: new Date().toISOString() },
-        { id: '2002', reference: 'ORD-C3D4', customer: 'Marta López', total: 0, status: 'En Reparto', address: 'Paseo del Prado 45, Madrid', date: new Date().toISOString() },
-        { id: '2003', reference: 'ORD-E5F6', customer: 'Juan Gómez', total: 0, status: 'Completado', address: 'Calle Alcalá 102, Madrid', date: new Date().toISOString() }
-      ]);
-    }
+
+  private loadRecentOrdersByRole() {
+    this.orderService.getOrdersByRolePage(0, 5, 'createdAt,desc').subscribe({
+      next: (response) => {
+        console.log(response);
+        this.recentOrders.set(response.items);
+      },
+      error: (err) => {
+        console.error('Error cargando pedidos recientes', err);
+      }
+    });
   }
 
   // Alerts table (mock)
@@ -191,6 +188,30 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
+  private loadDriverHistoryMock() {
+    this.driverHistoryChartData.set({
+      labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+      datasets: [
+        {
+          label: 'Completados',
+          data: [12, 19, 15, 22, 18, 25, 14],
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Pendientes/Incidencias',
+          data: [2, 4, 1, 5, 2, 3, 2],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    });
+  }
+
   private initChartOptions() {
     const documentStyle = getComputedStyle(document.documentElement);
     const textColor = documentStyle.getPropertyValue('--text-color') || '#475569';
@@ -200,6 +221,12 @@ export class AdminHomeComponent implements OnInit {
     this.salesChartOptions.set({
       maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context: any) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(context.parsed.y) } } },
+      scales: { x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }, y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } } }
+    });
+
+    this.driverHistoryChartOptions.set({
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
       scales: { x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }, y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } } }
     });
 
@@ -223,4 +250,5 @@ export class AdminHomeComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
+  protected readonly formatAddress = formatAddress;
 }

@@ -31,6 +31,10 @@ public class OrderService {
         return orderRepository.findByAssignedShop_AssignedManager_Id(managerId, pageable);
     }
 
+    public Page<Order> findOrdersByDriverId(Long driverId, Pageable pageable) {
+        return orderRepository.findByAssignedTruck_AssignedDriver_Id(driverId, pageable);
+    }
+
     public Page<Order> findAllByUser(User u, Pageable pageInfo){
         return orderRepository.findAllByUser(u, pageInfo);
     }
@@ -59,12 +63,12 @@ public class OrderService {
     //Metrics
     // ADMIN, MANAGER
     public long getDashboardActiveOrders(User currentUser) {
-        List<OrderStatus> inactiveStatuses = List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED);
+        List<OrderStatus> statuses = List.of(OrderStatus.ORDER_MADE, OrderStatus.SENT, OrderStatus.ON_DELIVERY);
 
         if (currentUser.hasRole("ADMIN")) {
-            return orderRepository.countActiveOrders(inactiveStatuses);
+            return orderRepository.countOrdersByStatusIn(statuses);
         }
-        return orderRepository.countActiveOrdersByManagerId(currentUser.getId(), inactiveStatuses);
+        return orderRepository.countOrdersByManagerIdAndStatusIn(currentUser.getId(), statuses);
     }
 
     // DRIVER
@@ -78,7 +82,7 @@ public class OrderService {
     }
 
     public long getDriverPendingOrders(User currentUser) {
-        List<OrderStatus> nonPendingStatuses = List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED);
-        return orderRepository.countOrdersByDriverIdAndStatusNotIn(currentUser.getId(), nonPendingStatuses);
+        List<OrderStatus> pendingStatuses = List.of(OrderStatus.ORDER_MADE, OrderStatus.SENT, OrderStatus.ON_DELIVERY);
+        return orderRepository.countOrdersByDriverIdAndStatusIn(currentUser.getId(), pendingStatuses);
     }
 }

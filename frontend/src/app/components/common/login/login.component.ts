@@ -60,14 +60,8 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        if (this.authService.isAdmin()) {
+        if (this.authService.isAdmin() || this.authService.isManager() || this.authService.isDriver()) {
           this.router.navigateByUrl('/admin');
-        }
-        else if (this.authService.isManager()){
-            this.router.navigateByUrl('/admin/shops');
-        }
-        else if (this.authService.isDriver()){
-          this.router.navigateByUrl('/admin/delivery');
         }
         else {
           this.router.navigateByUrl('/');
