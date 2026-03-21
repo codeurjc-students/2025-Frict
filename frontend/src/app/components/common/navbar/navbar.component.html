@@ -1,4 +1,4 @@
-<nav class="sticky top-0 z-[2000] bg-surface-700 h-20 text-white border-b border-surface-700/50">
+<nav class="sticky top-0 z-[50] bg-surface-700 h-20 text-white border-b border-surface-700/50">
 
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto flex items-center justify-between gap-2 px-4 h-full">
 
@@ -108,7 +108,7 @@
   </div>
 </nav>
 
-<p-drawer #drawerRef [(visible)]="visible" styleClass="!bg-surface-800 !border-none !w-90">
+<p-drawer #drawerRef [(visible)]="visible" [autoZIndex]="true" [baseZIndex]="40" [blockScroll]="true" styleClass="!bg-surface-800 !border-none !w-90">
   <ng-template #headless>
     <div class="mt-22 flex flex-col h-full overflow-y-auto">
 

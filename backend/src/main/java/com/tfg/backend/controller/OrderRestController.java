@@ -82,7 +82,7 @@ public class OrderRestController {
         //Get logged user info if any (User class)
         User user = userService.findUserHelper(id);
 
-        Page<Order> userOrders = orderService.findAllByUser(user, pageable);
+        Page<Order> userOrders = orderService.findOrdersByUser(user, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 
@@ -93,7 +93,7 @@ public class OrderRestController {
         //Get logged user info if any (User class)
         User loggedUser = userService.findLoggedUserHelper();
 
-        Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
+        Page<Order> userOrders = orderService.findOrdersByUser(loggedUser, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 

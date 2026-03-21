@@ -11,11 +11,15 @@ import { Tooltip } from 'primeng/tooltip';
 
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import { AuthService } from '../../../services/auth.service';
-import { MetricService } from '../../../services/metric.service';
+import { StatService } from '../../../services/stat.service';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import { LoginInfo } from '../../../models/loginInfo.model';
 import {OrderService} from '../../../services/order.service';
 import {Order} from '../../../models/order.model';
+import {catchError, forkJoin, of, switchMap} from 'rxjs';
+import {ShopService} from '../../../services/shop.service';
+import {TruckService} from '../../../services/truck.service';
+import {StyleClass} from 'primeng/styleclass';
 
 interface SystemAlert {
   title: string;
@@ -30,7 +34,7 @@ interface SystemAlert {
   standalone: true,
   imports: [
     CommonModule, RouterLink, LoadingScreenComponent,
-    Button, ChartModule, TableModule, Tag, Avatar, Tooltip
+    Button, ChartModule, TableModule, Tag, Avatar, Tooltip, StyleClass
   ],
   templateUrl: './admin-home.component.html'
 })
@@ -40,21 +44,16 @@ export class AdminHomeComponent implements OnInit {
   error = false;
   currentDate = new Date();
 
-  globalKpis = signal({
-    totalBudget: 0,
-    activeOrders: 0,
-    activeTrucks: 0,
-    totalShops: 0
-  });
+  driverTruck = signal<any | null>(null);
+  driverShop = signal<any | null>(null);
+
+  globalKpis = signal({ totalBudget: 0, activeOrders: 0, activeTrucks: 0, totalShops: 0 });
 
   driverKpis = signal({
-    assignedToday: 0,
-    delivered: 0,
-    pending: 0,
-    truckReference: 'TRK-001', // Mock data
-    truckStatus: 'En Ruta',
-    shopName: 'Madrid - Recoletos',
-    shopPhone: '+34 912 345 678'
+    orderMade: 0,
+    sent: 0,
+    onDelivery: 0,
+    completed: 0,
   });
 
   salesChartData = signal<any>({});
@@ -71,21 +70,29 @@ export class AdminHomeComponent implements OnInit {
 
   loginInfo!: LoginInfo;
 
-  private metricService = inject(MetricService);
+  private metricService = inject(StatService);
 
-  constructor(public authService: AuthService,
-              public orderService: OrderService) {}
+  constructor(protected authService: AuthService,
+              private orderService: OrderService,
+              private shopService: ShopService,
+              private truckService: TruckService) {}
 
   ngOnInit() {
     this.getLoginInfo();
     this.initChartOptions();
-    this.initData();
   }
 
-  getLoginInfo(){
+  getLoginInfo() {
+    this.loading = true;
     this.authService.getLoginInfo().subscribe({
       next: (info) => {
         this.loginInfo = info;
+        this.initData();
+      },
+      error: (err) => {
+        console.error('Error obteniendo la información de sesión', err);
+        this.error = true;
+        this.loading = false;
       }
     });
   }
@@ -94,41 +101,156 @@ export class AdminHomeComponent implements OnInit {
     this.loading = true;
     this.error = false;
 
-    this.loadKpis();
-
-    // Separación de lógica por roles para datos específicos
     if (this.authService.isAdmin() || this.authService.isManager()) {
+      this.loadKpis();
       this.loadSalesChartMock();
-      this.loadOrdersDistributionMock();
+      this.loadRecentOrdersByRole();
+      this.loadSystemAlertsMock();
     } else if (this.authService.isDriver()) {
-      this.loadDriverHistoryMock(); // Nueva función
+      this.loadContactInformation();
     }
-
-    this.loadRecentOrdersByRole();
-    this.loadSystemAlertsMock();
   }
 
   private loadKpis() {
-    this.metricService.getDashboardStats().subscribe({
-      next: (metrics) => {
-        if (this.authService.isAdmin() || this.authService.isManager()) {
+    this.loading = true;
+    this.error = false;
+
+    if (this.authService.isAdmin() || this.authService.isManager()) {
+
+      forkJoin({
+        orders: this.metricService.getOrdersStatsByRole(),
+        shops: this.metricService.getShopsStatsByRole()
+      }).subscribe({
+        next: ({ orders, shops }) => {
+          // Shop stats
+          const totalBudget = Number(shops.find(m => m.label === 'Presupuesto Total')?.value || 0);
+          const totalShops = Number(shops.find(m => m.label === 'Tiendas')?.value || 0);
+
+          // Order stats
+          const orderMade = Number(orders.find(m => m.label === 'Realizados')?.value || 0);
+          const sent = Number(orders.find(m => m.label === 'Enviados')?.value || 0);
+          const onDelivery = Number(orders.find(m => m.label === 'En Reparto')?.value || 0);
+          const completed = Number(orders.find(m => m.label === 'Completados')?.value || 0);
+
+          const activeOrders = orderMade + sent + onDelivery;
+
           this.globalKpis.set({
-            totalBudget: Number(metrics.find(m => m.label === 'Presupuesto Total')?.value || 0),
-            activeOrders: Number(metrics.find(m => m.label === 'Pedidos Activos')?.value || 0),
-            activeTrucks: Number(metrics.find(m => m.label === 'Camiones Operativos')?.value || 0),
-            totalShops: Number(metrics.find(m => m.label === 'Tiendas')?.value || 0)
+            totalBudget: totalBudget,
+            activeOrders: activeOrders,
+            activeTrucks: 12,
+            totalShops: totalShops
           });
-        } else if (this.authService.isDriver()) {
+
+          this.ordersChartData.set({
+            labels: ['Completados', 'En Reparto', 'Enviados', 'Realizados'],
+            datasets: [{
+              data: [completed, onDelivery, sent, orderMade],
+              backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#64748b'],
+              hoverOffset: 4,
+              borderWidth: 0
+            }]
+          });
+
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error cargando KPIs globales:', err);
+          this.error = true;
+          this.loading = false;
+        }
+      });
+
+    } else if (this.authService.isDriver()) {
+
+      this.metricService.getOrdersStatsByRole().subscribe({
+        next: (orders) => {
+          const completed = Number(orders.find(m => m.label === 'Completados')?.value || 0);
+          const orderMade = Number(orders.find(m => m.label === 'Realizados')?.value || 0);
+          const sent = Number(orders.find(m => m.label === 'Enviados')?.value || 0);
+          const onDelivery = Number(orders.find(m => m.label === 'En Reparto')?.value || 0);
+
+          // 2. Actualizamos los KPIs del conductor con los valores reales
           this.driverKpis.update(current => ({
             ...current,
-            assignedToday: Number(metrics.find(m => m.label === 'Total Asignados')?.value || 0),
-            delivered: Number(metrics.find(m => m.label === 'Completados')?.value || 0),
-            pending: Number(metrics.find(m => m.label === 'Pendientes')?.value || 0)
+            orderMade,
+            sent,
+            onDelivery,
+            completed
           }));
+
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error cargando KPIs del conductor:', err);
+          this.error = true;
+          this.loading = false;
         }
+      });
+    }
+  }
+
+  private loadContactInformation() {
+    if (!this.loginInfo || !this.loginInfo.id) return;
+
+    this.truckService.getAssignedTruckByDriverId(this.loginInfo.id).pipe(
+      switchMap(truck => {
+        // Scenario 1: No truck
+        if (!truck) {
+          this.driverTruck.set(null);
+          return of(null); // Stop execution
+        }
+
+        // Save the truck and request the shop
+        this.driverTruck.set(truck);
+        return this.shopService.getShopByAssignedTruckId(truck.id).pipe(
+          catchError(() => of(null)) // If shop response fails, the loading continues (scenario 2)
+        );
+      }),
+      catchError(err => {
+        console.error('Error cargando información operativa:', err);
+        this.driverTruck.set(null);
+        return of(null);
+      })
+    ).subscribe({
+      next: (shop) => {
+        // Scenario 1: No truck
+        if (!this.driverTruck()) {
+          this.loading = false; //Stop loading so the warning message can be displayed
+          return;
+        }
+
+        this.driverShop.set(shop || null);
+
+        // Scenario 2: Truck, but no shop
+        if (!shop) {
+          this.loadSystemAlertsMock();
+          this.loading = false;
+        }
+        // Scenario 3: Truck and Shop
+        else {
+          this.loadDriverData();
+        }
+      }
+    });
+  }
+
+  private loadDriverData() {
+    this.metricService.getOrdersStatsByRole().subscribe({
+      next: (orders) => {
+        this.driverKpis.set({
+          orderMade: Number(orders.find(m => m.label === 'Realizados')?.value || 0),
+          sent: Number(orders.find(m => m.label === 'Enviados')?.value || 0),
+          onDelivery: Number(orders.find(m => m.label === 'En Reparto')?.value || 0),
+          completed: Number(orders.find(m => m.label === 'Completados')?.value || 0)
+        });
+
+        this.loadDriverHistoryMock();
+        this.loadRecentOrdersByRole();
+        this.loadSystemAlertsMock();
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error cargando KPIs del conductor:', err);
         this.error = true;
         this.loading = false;
       }
@@ -139,26 +261,16 @@ export class AdminHomeComponent implements OnInit {
   private loadSalesChartMock() {
     this.salesChartData.set({
       labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-      datasets: [{ label: 'Ingresos', data: [2500, 3200, 2800, 4100, 3900, 5200, 2880.50], fill: true, borderColor: '#3b82f6', tension: 0.4, backgroundColor: 'rgba(59, 130, 246, 0.1)' }]
+      datasets: [{
+        label: 'Ingresos',
+        data: [2500, 3200, 2800, 4100, 3900, 5200, 2880.50],
+        fill: true,
+        borderColor: '#3b82f6',
+        tension: 0.4,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)'
+      }]
     });
   }
-
-  // Distribution shart (mock)
-  private loadOrdersDistributionMock() {
-    if (this.authService.isAdmin() || this.authService.isManager()) {
-      this.ordersChartData.set({
-        labels: ['Completados', 'En Reparto', 'Pendientes', 'Cancelados'],
-        datasets: [{ data: [350, 85, 42, 15], backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'], hoverOffset: 4, borderWidth: 0 }]
-      });
-    } else {
-      this.ordersChartData.set({
-        labels: ['Entregados', 'Pendientes'],
-        // Usamos los datos dinámicos aunque estemos en el mock (si ya llegaron)
-        datasets: [{ data: [this.driverKpis().delivered || 28, this.driverKpis().pending || 17], backgroundColor: ['#22c55e', '#f59e0b'], hoverOffset: 4, borderWidth: 0 }]
-      });
-    }
-  }
-
 
   private loadRecentOrdersByRole() {
     this.orderService.getOrdersByRolePage(0, 5, 'createdAt,desc').subscribe({
@@ -188,25 +300,30 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
+  // 3. Modificado para generar datos de barras apiladas separados en 4 estados
   private loadDriverHistoryMock() {
     this.driverHistoryChartData.set({
       labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
       datasets: [
         {
           label: 'Completados',
-          data: [12, 19, 15, 22, 18, 25, 14],
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          fill: true,
-          tension: 0.4
+          data: [15, 18, 14, 20, 19, 22, 12],
+          backgroundColor: '#22c55e'
         },
         {
-          label: 'Pendientes/Incidencias',
-          data: [2, 4, 1, 5, 2, 3, 2],
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
-          fill: true,
-          tension: 0.4
+          label: 'En Reparto',
+          data: [2, 1, 3, 0, 2, 1, 0],
+          backgroundColor: '#3b82f6'
+        },
+        {
+          label: 'Enviados',
+          data: [1, 2, 1, 1, 0, 2, 1],
+          backgroundColor: '#f59e0b'
+        },
+        {
+          label: 'Realizados',
+          data: [0, 1, 0, 2, 1, 0, 0],
+          backgroundColor: '#64748b'
         }
       ]
     });
@@ -224,10 +341,17 @@ export class AdminHomeComponent implements OnInit {
       scales: { x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }, y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } } }
     });
 
+    // 4. Modificado para permitir 'stacked' (apilamiento) en X e Y
     this.driverHistoryChartOptions.set({
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }, y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } } }
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, color: textColor, padding: 20 } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: textColorSecondary }, grid: { display: false, drawBorder: false } },
+        y: { stacked: true, ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }
+      }
     });
 
     this.ordersChartOptions.set({
@@ -236,11 +360,6 @@ export class AdminHomeComponent implements OnInit {
       plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: textColor, font: { weight: 'bold' }, padding: 20 } } },
       cutout: '65%'
     });
-  }
-
-  getOrderStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const map: Record<string, any> = { 'Completado': 'success', 'En Reparto': 'info', 'Enviado': 'info', 'Pedido Realizado': 'warn', 'Cancelado': 'danger' };
-    return map[status] || 'secondary';
   }
 
   getAlertColors(severity: string) {

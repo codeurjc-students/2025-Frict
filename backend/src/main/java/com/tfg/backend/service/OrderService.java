@@ -4,6 +4,7 @@ import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderStatus;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.OrderRepository;
+import com.tfg.backend.utils.StatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +36,7 @@ public class OrderService {
         return orderRepository.findByAssignedTruck_AssignedDriver_Id(driverId, pageable);
     }
 
-    public Page<Order> findAllByUser(User u, Pageable pageInfo){
+    public Page<Order> findOrdersByUser(User u, Pageable pageInfo){
         return orderRepository.findAllByUser(u, pageInfo);
     }
 
@@ -61,28 +62,39 @@ public class OrderService {
     }
 
     //Metrics
-    // ADMIN, MANAGER
-    public long getDashboardActiveOrders(User currentUser) {
-        List<OrderStatus> statuses = List.of(OrderStatus.ORDER_MADE, OrderStatus.SENT, OrderStatus.ON_DELIVERY);
+    //Counts the orders in each status for each role (admin: all, manager: assigned shops, driver: assigned truck)
+    public List<StatDTO> getOrdersStatistics(User currentUser) {
+        Long userId = currentUser.getId();
+
+        long orderMade = 0;
+        long sent = 0;
+        long onDelivery = 0;
+        long completed = 0;
 
         if (currentUser.hasRole("ADMIN")) {
-            return orderRepository.countOrdersByStatusIn(statuses);
+            orderMade = orderRepository.countOrdersByStatusIn(List.of(OrderStatus.ORDER_MADE));
+            sent = orderRepository.countOrdersByStatusIn(List.of(OrderStatus.SENT));
+            onDelivery = orderRepository.countOrdersByStatusIn(List.of(OrderStatus.ON_DELIVERY));
+            completed = orderRepository.countOrdersByStatusIn(List.of(OrderStatus.COMPLETED));
+
+        } else if (currentUser.hasRole("MANAGER")) {
+            orderMade = orderRepository.countOrdersByManagerIdAndStatusIn(userId, List.of(OrderStatus.ORDER_MADE));
+            sent = orderRepository.countOrdersByManagerIdAndStatusIn(userId, List.of(OrderStatus.SENT));
+            onDelivery = orderRepository.countOrdersByManagerIdAndStatusIn(userId, List.of(OrderStatus.ON_DELIVERY));
+            completed = orderRepository.countOrdersByManagerIdAndStatusIn(userId, List.of(OrderStatus.COMPLETED));
+
+        } else if (currentUser.hasRole("DRIVER")) {
+            orderMade = orderRepository.countOrdersByDriverIdAndStatusIn(userId, List.of(OrderStatus.ORDER_MADE));
+            sent = orderRepository.countOrdersByDriverIdAndStatusIn(userId, List.of(OrderStatus.SENT));
+            onDelivery = orderRepository.countOrdersByDriverIdAndStatusIn(userId, List.of(OrderStatus.ON_DELIVERY));
+            completed = orderRepository.countOrdersByDriverIdAndStatusIn(userId, List.of(OrderStatus.COMPLETED));
         }
-        return orderRepository.countOrdersByManagerIdAndStatusIn(currentUser.getId(), statuses);
-    }
 
-    // DRIVER
-    public long getDriverTotalOrders(User currentUser) {
-        return orderRepository.countTotalOrdersByDriverId(currentUser.getId());
-    }
-
-    public long getDriverCompletedOrders(User currentUser) {
-        List<OrderStatus> completedStatuses = List.of(OrderStatus.COMPLETED);
-        return orderRepository.countOrdersByDriverIdAndStatusIn(currentUser.getId(), completedStatuses);
-    }
-
-    public long getDriverPendingOrders(User currentUser) {
-        List<OrderStatus> pendingStatuses = List.of(OrderStatus.ORDER_MADE, OrderStatus.SENT, OrderStatus.ON_DELIVERY);
-        return orderRepository.countOrdersByDriverIdAndStatusIn(currentUser.getId(), pendingStatuses);
+        return List.of(
+                new StatDTO("Realizados", orderMade),
+                new StatDTO("Enviados", sent),
+                new StatDTO("En Reparto", onDelivery),
+                new StatDTO("Completados", completed)
+        );
     }
 }

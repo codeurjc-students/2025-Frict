@@ -7,7 +7,6 @@ import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +83,18 @@ public class ShopRestController {
     }
 
 
+    @Operation(summary = "(Driver) Get shop information by assigned truck ID")
+    @GetMapping("/truck/{id}")
+    public ResponseEntity<ShopDTO> getShopByAssignedTruckId(@PathVariable Long id) {
+        Truck truck = truckService.findTruckHelper(id);
+        Shop assignedShop = truck.getAssignedShop();
+        if (assignedShop == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This truck is not assigned to any shop.");
+        }
+        return ResponseEntity.ok(new ShopDTO(assignedShop));
+    }
+
+
     @Operation(summary = "(All) Get shop stock page by ID")
     @GetMapping("/stock/{id}")
     public ResponseEntity<PageResponse<ShopStockDTO>> getShopStocks(@PathVariable Long id, Pageable pageable) {
@@ -129,7 +140,7 @@ public class ShopRestController {
     }
 
 
-    @Transactional // Imprescindible para que Hibernate gestione todos los updates y el delete juntos
+    @Transactional
     @Operation(summary = "(Admin) Delete shop by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ShopDTO> deleteShop(@PathVariable Long id) {

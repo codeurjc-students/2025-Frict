@@ -3,6 +3,7 @@ package com.tfg.backend.service;
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.ShopRepository;
+import com.tfg.backend.utils.StatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,17 +44,23 @@ public class ShopService {
     }
 
     //Metrics
-    public long getDashboardShopCount(User currentUser) {
-        if (currentUser.hasRole("ADMIN")) {
-            return shopRepository.count();
-        }
-        return shopRepository.countByAssignedManagerId(currentUser.getId());
-    }
+    public List<StatDTO> getShopsStatistics(User currentUser) {
+        long shopCount = 0;
+        double totalBudget = 0.0;
 
-    public double getDashboardTotalBudget(User currentUser) {
         if (currentUser.hasRole("ADMIN")) {
-            return shopRepository.sumAllAssignedBudgets();
+            shopCount = shopRepository.count();
+            totalBudget = shopRepository.sumAllAssignedBudgets();
+        } else if (currentUser.hasRole("MANAGER")) {
+            shopCount = shopRepository.countByAssignedManagerId(currentUser.getId());
+            totalBudget = shopRepository.sumAssignedBudgetsByManagerId(currentUser.getId());
+        } else {
+            return List.of();
         }
-        return shopRepository.sumAssignedBudgetsByManagerId(currentUser.getId());
+
+        return List.of(
+                new StatDTO("Tiendas", shopCount),
+                new StatDTO("Presupuesto Total", totalBudget)
+        );
     }
 }

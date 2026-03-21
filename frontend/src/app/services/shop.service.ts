@@ -33,6 +33,10 @@ export class ShopService {
     return this.http.get<Shop[]>(this.apiUrl + `/list`);
   }
 
+  public getShopByAssignedTruckId(id: string): Observable<Shop> {
+    return this.http.get<Shop>(this.apiUrl + `/truck/${id}`);
+  }
+
   //Admin: Retrieve all organization shops
   public getAllShopsPage(page: number, size: number): Observable<PageResponse<Shop>> {
     let params = new HttpParams();

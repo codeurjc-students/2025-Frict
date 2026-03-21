@@ -7,7 +7,7 @@ import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
-import com.tfg.backend.utils.MetricDTO;
+import com.tfg.backend.utils.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,7 +138,7 @@ public class UserRestController {
         }
 
         // Upload
-        if (image.isEmpty()){
+        if (!image.isEmpty()){
             Map<String, String> res = storageService.uploadFile(image, "users");
             ImageInfo userImageInfo = new ImageInfo(
                     res.get("url"),
@@ -412,13 +412,13 @@ public class UserRestController {
 
     @Operation(summary = "(Admin) Get users stats")
     @GetMapping("/stats")
-    public ResponseEntity<List<MetricDTO>> getUsersStats(){
-        List<MetricDTO> stats = new ArrayList<>();
-        stats.add(new MetricDTO("Totales", userService.count()));
-        stats.add(new MetricDTO("Baneados", userService.countByIsBannedTrue()));
-        stats.add(new MetricDTO("Anonimizados", userService.countByIsDeletedTrue()));
+    public ResponseEntity<List<StatDTO>> getUsersStats(){
+        List<StatDTO> stats = new ArrayList<>();
+        stats.add(new StatDTO("Totales", userService.count()));
+        stats.add(new StatDTO("Baneados", userService.countByIsBannedTrue()));
+        stats.add(new StatDTO("Anonimizados", userService.countByIsDeletedTrue()));
         Long internalAccounts = userService.countByRole("ADMIN") + userService.countByRole("MANAGER") + userService.countByRole("DRIVER");
-        stats.add(new MetricDTO("Cuentas Internas", internalAccounts));
+        stats.add(new StatDTO("Cuentas Internas", internalAccounts));
         return ResponseEntity.ok(stats);
     }
 }

@@ -247,7 +247,7 @@
 <p-dialog
   [(visible)]="displayOrderDialog"
   [modal]="true"
-  [baseZIndex]="10000"
+  appendTo="body"
   [breakpoints]="{'1199px': '85vw', '991px': '95vw', '575px': '100vw'}"
   [style]="{width: '1100px', height: '90vh'}"
   [draggable]="false"
