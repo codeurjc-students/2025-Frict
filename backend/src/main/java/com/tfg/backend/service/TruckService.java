@@ -4,6 +4,7 @@ import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.TruckRepository;
+import com.tfg.backend.utils.StatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,12 +45,34 @@ public class TruckService {
     }
 
     //Metrics
-    public long getActiveTrucksCount(User currentUser) {
-        List<TruckStatus> activeStatuses = List.of(TruckStatus.AVAILABLE, TruckStatus.ON_ROUTE, TruckStatus.OUT_OF_SERVICE);
+    public List<StatDTO> getTruckStats(User currentUser) {
+        long available = 0;
+        long onRoute = 0;
+        long onMaintenance = 0;
+        long outOfService = 0;
 
         if (currentUser.hasRole("ADMIN")) {
-            return truckRepository.countTrucksByStatus(activeStatuses);
+            available = truckRepository.countTrucksByStatus(List.of(TruckStatus.AVAILABLE));
+            onRoute = truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE));
+            onMaintenance = truckRepository.countTrucksByStatus(List.of(TruckStatus.MAINTENANCE));
+            outOfService = truckRepository.countTrucksByStatus(List.of(TruckStatus.OUT_OF_SERVICE));
+
+        } else if (currentUser.hasRole("MANAGER")) {
+            Long managerId = currentUser.getId();
+            available = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.AVAILABLE));
+            onRoute = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.ON_ROUTE));
+            onMaintenance = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.MAINTENANCE));
+            outOfService = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.OUT_OF_SERVICE));
+
+        } else {
+            return List.of();
         }
-        return truckRepository.countTrucksByManagerIdAndStatus(currentUser.getId(), activeStatuses);
+
+        return List.of(
+                new StatDTO("Disponibles", available),
+                new StatDTO("En Ruta", onRoute),
+                new StatDTO("En mantenimiento", onMaintenance),
+                new StatDTO("Fuera de servicio", outOfService)
+        );
     }
 }

@@ -47,7 +47,7 @@ export class AdminHomeComponent implements OnInit {
   driverTruck = signal<any | null>(null);
   driverShop = signal<any | null>(null);
 
-  globalKpis = signal({ totalBudget: 0, activeOrders: 0, activeTrucks: 0, totalShops: 0 });
+  globalKpis = signal({ totalBudget: 0, activeOrders: 0, totalOrders:0, activeTrucks: 0, totalTrucks: 0, totalShops: 0 });
 
   driverKpis = signal({
     orderMade: 0,
@@ -119,9 +119,10 @@ export class AdminHomeComponent implements OnInit {
 
       forkJoin({
         orders: this.metricService.getOrdersStatsByRole(),
-        shops: this.metricService.getShopsStatsByRole()
+        shops: this.metricService.getShopsStatsByRole(),
+        trucks: this.metricService.getTrucksStatsByRole()
       }).subscribe({
-        next: ({ orders, shops }) => {
+        next: ({ orders, shops, trucks }) => {
           // Shop stats
           const totalBudget = Number(shops.find(m => m.label === 'Presupuesto Total')?.value || 0);
           const totalShops = Number(shops.find(m => m.label === 'Tiendas')?.value || 0);
@@ -132,12 +133,23 @@ export class AdminHomeComponent implements OnInit {
           const onDelivery = Number(orders.find(m => m.label === 'En Reparto')?.value || 0);
           const completed = Number(orders.find(m => m.label === 'Completados')?.value || 0);
 
+          //Truck stats
+          const available = Number(trucks.find(m => m.label === 'Disponibles')?.value || 0);
+          const onRoute = Number(trucks.find(m => m.label === 'En Ruta')?.value || 0);
+          const onMaintenance = Number(trucks.find(m => m.label === 'En mantenimiento')?.value || 0);
+          const outOfService = Number(trucks.find(m => m.label === 'Fuera de servicio')?.value || 0);
+
+
           const activeOrders = orderMade + sent + onDelivery;
+          const activeTrucks = available + onRoute;
+
 
           this.globalKpis.set({
             totalBudget: totalBudget,
             activeOrders: activeOrders,
-            activeTrucks: 12,
+            totalOrders: activeOrders + completed,
+            activeTrucks: activeTrucks,
+            totalTrucks: activeTrucks + onMaintenance + outOfService,
             totalShops: totalShops
           });
 

@@ -22,4 +22,8 @@ export class StatService {
   getShopsStatsByRole(): Observable<StatDTO[]> {
     return this.http.get<StatDTO[]>(this.apiUrl + `/shops`);
   }
+
+  getTrucksStatsByRole(): Observable<StatDTO[]> {
+    return this.http.get<StatDTO[]>(this.apiUrl + `/trucks`);
+  }
 }

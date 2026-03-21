@@ -30,7 +30,7 @@ import {Review} from '../../../models/review.model';
 import {Shop} from '../../../models/shop.model';
 import {Truck} from '../../../models/truck.model'; // Asegúrate de tener este import
 import {ThemeColor, UiService} from '../../../utils/ui.service';
-import {formatPrice} from '../../../utils/textFormat.util';
+import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {HttpErrorResponse} from '@angular/common/http';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 
@@ -553,4 +553,5 @@ export class ProfileComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
+  protected readonly formatAddress = formatAddress;
 }

@@ -74,7 +74,7 @@
             <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-shopping-cart"></i></div>
           </div>
           <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Pedidos Activos</h3>
-          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeOrders }}</p>
+          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeOrders }} / {{ globalKpis().totalOrders }}</p>
         </div>
 
         <div routerLink="/admin/trucks"
@@ -84,7 +84,7 @@
             <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-truck"></i></div>
           </div>
           <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Vehículos Operativos</h3>
-          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeTrucks }}</p>
+          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeTrucks }} / {{ globalKpis().totalTrucks }}</p>
         </div>
 
         <div routerLink="/admin/shops"

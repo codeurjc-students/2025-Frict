@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/stats")
-@Tag(name = "Metrics Management", description = "Entity metrics management")
+@Tag(name = "Statistics Management", description = "Entity statistics management")
 public class StatRestController {
 
     @Autowired
@@ -49,5 +49,13 @@ public class StatRestController {
         User loggedUser = userService.findLoggedUserHelper();
         List<StatDTO> shopMetrics = shopService.getShopsStatistics(loggedUser);
         return ResponseEntity.ok(shopMetrics);
+    }
+
+    @Operation(summary = "(Admin, Manager) Get truck statistics by role")
+    @GetMapping("/trucks")
+    public ResponseEntity<List<StatDTO>> getTruckStatsByRole() {
+        User loggedUser = userService.findLoggedUserHelper();
+        List<StatDTO> truckMetrics = truckService.getTruckStats(loggedUser);
+        return ResponseEntity.ok(truckMetrics);
     }
 }
