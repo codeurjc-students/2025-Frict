@@ -24,7 +24,7 @@ import {ReviewService} from '../../../services/review.service';
 import {OrderService} from '../../../services/order.service';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {ConfirmPopup} from 'primeng/confirmpopup';
-import {Metric} from '../../../models/stat.model';
+import {Stat} from '../../../models/stat.model';
 
 @Component({
   selector: 'app-users-management',
@@ -65,7 +65,7 @@ export class UsersManagementComponent implements OnInit {
     { name: 'Administrador', code: 'ADMIN' }
   ];
 
-  rawStats = signal<Metric[]>([]);
+  rawStats = signal<Stat[]>([]);
   options = signal<any>(null);
 
   data = computed(() => {
@@ -217,7 +217,7 @@ export class UsersManagementComponent implements OnInit {
 
   loadStats() {
     this.userService.getUsersStats().subscribe({
-      next: (stats: Metric[]) => {
+      next: (stats) => {
         this.rawStats.set(stats);
       },
       error: (err) => console.error('Error loading stats: ', err)

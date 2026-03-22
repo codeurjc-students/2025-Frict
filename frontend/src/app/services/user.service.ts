@@ -5,7 +5,7 @@ import {User} from '../models/user.model';
 import {PaymentCard} from '../models/paymentCard.model';
 import {Address} from '../models/address.model';
 import {PageResponse} from '../models/pageResponse.model';
-import {Metric} from '../models/stat.model';
+import {Stat} from '../models/stat.model';
 
 @Injectable({
   providedIn: 'root'
@@ -106,8 +106,8 @@ export class UserService {
     return this.http.delete<boolean>(this.apiUrl + `/${id}`);
   }
 
-  public getUsersStats(): Observable<Metric[]> {
-    return this.http.get<Metric[]>(this.apiUrl + `/stats`)
+  public getUsersStats(): Observable<Stat[]> {
+    return this.http.get<Stat[]>(this.apiUrl + `/stats`)
   }
 
   checkUsernameTaken(username: string): Observable<boolean> {
