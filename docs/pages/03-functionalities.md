@@ -1,46 +1,82 @@
 ## 💻 Functionalities / Features
 
 ### Basic functionalities
-| Basic functionality                          | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
-|----------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
-| Modify/Delete profile information            |           | ✅               | ✅             | ✅               | ✅             |
-| View product details                         | ✅         | ✅               | ✅             | ✅               | ✅             |
-| Add/Delete a product from/to the cart        | ✅         | ✅               |               |                 |               |
-| Add/Delete a product from/to the wishlist    |           | ✅               |               |                 |               |
-| Add/Modify/Delete any product from/to a shop |           |                 | ✅             |                 | ✅             |
-| Make/Cancel a personal order                 |           | ✅               |               |                 |               |
-| Cancel any associated order                  |           |                 | ✅             | ✅               | ✅             |
-| Change order status                          |           |                 |               | ✅               |               |
-| Publish/Delete a personal product review     |           | ✅               |               |                 |               |
-| Delete any product review                    |           |                 |               |                 | ✅             |
-| Ban/Unban any user                           |           |                 |               |                 | ✅             |
-| Add/Modify/Delete any shop                   |           |                 |               |                 | ✅             |
-| Add/Modify/Delete any delivery truck         |           |                 |               |                 | ✅             |
-| Add/Modify/Delete any category               |           |                 |               |                 | ✅             |
+#### Shop Subsystem
+| Ready? | Basic functionality                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+|--------|-------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
+| ✅      | Create user account / Sign up with Google       | ✅         |                 |               |                 |               |
+| ✅      | Reset password via OTP to account email         | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Log in with user account / with Google          |           | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Check category information and related products | ✅         | ✅               |               |                 |               |
+| ✅      | Check product general information               | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Check product stock in each shop                | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Add/Remove a product from/to the cart           | ✅         | ✅               |               |                 |               |
+| ✅      | Add/Remove a product from/to favourites         |           | ✅               |               |                 |               |
+| ✅      | Make/Cancel a personal order                    |           | ✅               |               |                 |               |
+| ✅      | Check personal order status                     |           | ✅               |               |                 |               |
+| ✅      | Change personal profile information             |           | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Soft delete self account (anonymization)        |           | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Create/Edit/Remove a delivery address           |           | ✅               |               |                 |               |
+| ✅      | Create/Edit/Remove a payment card               |           | ✅               |               |                 |               |
+| ✅      | Create/Edit/Delete a personal product review    |           | ✅               |               |                 |               |
+| ✅      | Check system availability                       | ✅         | ✅               | ✅             | ✅               | ✅             |
+
+#### Organization Management Subsystem
+| Ready? | Basic functionality                                   | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+|--------|-------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
+| ✅      | Check overall application status (by role)            |           |                 | ✅             | ✅               | ✅             |
+| ✅      | Create/Modify/Delete any product globally             |           |                 |               |                 | ✅             |
+| ✅      | Toggle product global visibility                      |           |                 |               |                 | ✅             |
+| ✅      | Add/Modify/Delete any category                        |           |                 |               |                 | ✅             |
+| ✅      | Check category hierarchy and usage metrics            |           |                 |               |                 | ✅             |
+| ✅      | Check shops status and related metrics                |           |                 | ✅             |                 | ✅             |
+| ✅      | Create/Modify/Delete any shop                         |           |                 |               |                 | ✅             |
+| ✅      | Manage shop-managers assignments                      |           |                 |               |                 | ✅             |
+| ✅      | Add/Remove any product stock from/to a shop           |           |                 | ✅             |                 |               |
+| ✅      | Manage shop-trucks assignments                        |           |                 | ✅             |                 |               |
+| ✅      | Toggle stock local visibility                         |           |                 | ✅             |                 |               |
+| ✅      | Restock product units using assigned budget           |           |                 | ✅             |                 |               |
+| ✅      | Check orders status and related information (by role) |           |                 | ✅             | ✅               | ✅             |
+| ✅      | Change order status                                   |           |                 | ✅             | ✅               | ✅             |
+| ✅      | Add a comment as an order status update               |           |                 | ✅             | ✅               | ✅             |
+| ✅      | Manage truck-order assignments using truck capacity   |           |                 |               | ✅               | ✅             |
+| ✅      | Create/Modify/Delete any delivery truck               |           |                 |               |                 | ✅             |
+| ✅      | Check trucks status and related metrics               |           |                 |               |                 | ✅             |
+| ✅      | Manage truck-driver assignments                       |           |                 |               |                 | ✅             |
+| ✅      | Change truck status                                   |           |                 |               | ✅               | ✅             |
+| ✅      | Add a comment as a truck status update                |           |                 |               | ✅               | ✅             |
+| ✅      | Check any user public information                     |           |                 |               |                 | ✅             |
+| ✅      | Create/Delete an internal user account                |           |                 |               |                 | ✅             |
+| ✅      | Change an internal user account password              |           |                 |               |                 | ✅             |
+| ✅      | Delete any inappropriate user product review          |           |                 |               |                 | ✅             |
+| ✅      | Ban/Unban any user                                    |           |                 |               |                 | ✅             |
+| ✅      | Soft delete any user account (anonymization)          |           |                 |               |                 | ✅             |
+| ✅      | Hard delete any user account                          |           |                 |               |                 | ✅             |
 
 
 ### Intermediate functionalities
-| Intermediate functionality                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
-|--------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
-| Change app primary theme color                         | ✅         | ✅               | ✅             | ✅               | ✅             |
-| Real-time entities data updates                        | ✅         | ✅               | ✅             | ✅               | ✅             |
-| Filter products by its fields                          | ✅         | ✅               | ✅             |                 | ✅             |
-| Filter products from lowest/highest field              | ✅         | ✅               | ✅             |                 | ✅             |
-| Receive mail confirmations about relevant info         | ✅         | ✅               | ✅             |                 | ✅             |
-| Receive in-app notifications about relevant info       | ✅         | ✅               | ✅             | ✅               | ✅             |
-| View product recommendations based on user preferences |           | ✅               |               |                 |               |
-| Download PDF product/order resumes/invoices            |           | ✅               | ✅             | ✅               | ✅             |
+| Ready? | Intermediate functionality                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+|--------|--------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
+| ✅      | Search products by name                                | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Filter products by associated categories               | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Order search results by lowest/highest field           | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Change app primary theme color (session-persistent)    | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Receive mail confirmations about relevant info         |           | ✅               | ✅             | ✅               | ✅             |
+| 🔄     | Receive in-app notifications about relevant info       |           | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Toggle global / local stock visibility                 | ✅         | ✅               | ✅             | ✅               | ✅             |
+| 🔄     | View product recommendations based on user preferences |           | ✅               |               |                 |               |
+| 🔄     | Download PDF invoices and resumes                      |           | ✅               | ✅             | ✅               | ✅             |
 
 
 ### Advanced functionalities
-| Advanced functionality                                              | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
-|---------------------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
-| View associated trucks approximate position in embedded map         |           | ✅               | ✅             | ✅               | ✅             |
-| View stored use data displayed in graphs                            |           |                 | ✅             |                 | ✅             |
-| View predicted and statistically-generated data displayed in graphs |           |                 | ✅             |                 | ✅             |
-| Import/Export Excel charts                                          |           |                 | ✅             |                 | ✅             |
-| Read unique QR code for order reception                             |           |                 | ✅             | ✅               |               |
-| Generate unique QR code for order reception                         |           | ✅               |               |                 |               |
+| Ready? | Advanced functionality                                    | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+|--------|-----------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
+| 🔄     | Check shops, trucks and/or addresses approximate location |           | ✅               | ✅             | ✅               | ✅             |
+| 🔄     | View stored use data displayed in charts                  |           |                 | ✅             |                 | ✅             |
+| 🔄     | View predicted data displayed in charts                   |           |                 | ✅             |                 | ✅             |
+| 🔄     | Import/Export Excel tables                                |           |                 | ✅             |                 | ✅             |
+| 🔄     | Read unique QR code for order reception                   |           |                 | ✅             | ✅               |               |
+| 🔄     | Generate unique QR code for order reception               |           | ✅               |               |                 |               |
 
 &nbsp;
 

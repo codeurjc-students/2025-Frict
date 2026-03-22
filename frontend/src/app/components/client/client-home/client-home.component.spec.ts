@@ -24,7 +24,7 @@ describe('ClientHomeComponent', () => {
     // 1. Create Mocks
     productServiceSpy = jasmine.createSpyObj('ProductService', [
       'getProductsByCategoryName',
-      'searchScope' // Add it here
+      'searchScope'
     ]);
     productServiceSpy.searchScope.and.returnValue('GLOBAL');
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getAllCategories']);
