@@ -24,7 +24,7 @@ import {ReviewService} from '../../../services/review.service';
 import {OrderService} from '../../../services/order.service';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {ConfirmPopup} from 'primeng/confirmpopup';
-import {Metric} from '../../../models/metric.model';
+import {Metric} from '../../../models/stat.model';
 
 @Component({
   selector: 'app-users-management',

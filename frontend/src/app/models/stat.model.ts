@@ -1,4 +1,4 @@
-export interface Metric {
+export interface Stat {
   label: string;
   value: string | number;
 }

@@ -2,11 +2,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export interface StatDTO {
-  label: string;
-  value: string | number;
-}
+import {Stat} from '../models/stat.model';
 
 @Injectable({
   providedIn: 'root'
@@ -15,15 +11,15 @@ export class StatService {
   private http = inject(HttpClient);
   private apiUrl = '/api/v1/stats';
 
-  getOrdersStatsByRole(): Observable<StatDTO[]> {
-    return this.http.get<StatDTO[]>(this.apiUrl + `/orders`);
+  getOrdersStatsByRole(): Observable<Stat[]> {
+    return this.http.get<Stat[]>(this.apiUrl + `/orders`);
   }
 
-  getShopsStatsByRole(): Observable<StatDTO[]> {
-    return this.http.get<StatDTO[]>(this.apiUrl + `/shops`);
+  getShopsStatsByRole(): Observable<Stat[]> {
+    return this.http.get<Stat[]>(this.apiUrl + `/shops`);
   }
 
-  getTrucksStatsByRole(): Observable<StatDTO[]> {
-    return this.http.get<StatDTO[]>(this.apiUrl + `/trucks`);
+  getTrucksStatsByRole(): Observable<Stat[]> {
+    return this.http.get<Stat[]>(this.apiUrl + `/trucks`);
   }
 }

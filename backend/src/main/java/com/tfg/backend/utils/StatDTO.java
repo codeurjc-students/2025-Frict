@@ -5,7 +5,7 @@ public record StatDTO(String label, Object value) {
 
     public StatDTO {
         if (!(value instanceof String || value instanceof Number)) {
-            throw new IllegalArgumentException("El valor de la métrica debe ser String o Number");
+            throw new IllegalArgumentException("The statistic value must be a string or a Number");
         }
     }
 
