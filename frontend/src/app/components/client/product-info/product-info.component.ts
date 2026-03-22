@@ -100,7 +100,7 @@ export class ProductInfoComponent implements OnInit {
   protected newReview: Partial<Review> = { rating: 5, recommended: true };
 
   protected selectedShop: Shop | null = null;
-  protected stocks: ShopStock[] = []
+  protected stocks: ShopStock[] = [];
 
   protected loggedUserInfo!: LoginInfo;
 

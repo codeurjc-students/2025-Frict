@@ -6,7 +6,7 @@ import com.tfg.backend.dto.OrderItemDTO;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
-import com.tfg.backend.utils.EmailService;
+import com.tfg.backend.service.EmailService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,9 +15,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,7 +55,7 @@ public class OrderRestController {
     private TruckService truckService;
 
 
-    @Operation(summary = "(Admin, Manager) Get orders by role (paged)")
+    @Operation(summary = "(Admin, Manager, Driver) Get orders by role (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<OrderDTO>> getOrdersByRole(Pageable pageable){
         User loggedUser = userService.findLoggedUserHelper();
@@ -60,11 +63,27 @@ public class OrderRestController {
         if (loggedUser.getRoles().contains("ADMIN")){
             Page<Order> userOrders = orderService.findAll(pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
-        } else {
-            // Lógica para el Manager: delegamos la búsqueda al servicio
+        }
+        else if (loggedUser.getRoles().contains("DRIVER")) {
+            Page<Order> driverOrders = orderService.findOrdersByDriverId(loggedUser.getId(), pageable);
+            return ResponseEntity.ok(PageFormatter.toPageResponse(driverOrders, OrderDTO::new));
+        }
+        else {
+            // Managers logic
             Page<Order> managerOrders = orderService.findOrdersByManagerId(loggedUser.getId(), pageable);
             return ResponseEntity.ok(PageFormatter.toPageResponse(managerOrders, OrderDTO::new));
         }
+    }
+
+
+    @Operation(summary = "(Admin) Get user orders by user ID (paged)")
+    @GetMapping("/user/{id}")
+    public ResponseEntity<PageResponse<OrderDTO>> getUserOrdersByUserId(@PathVariable Long id, Pageable pageable){
+        //Get logged user info if any (User class)
+        User user = userService.findUserHelper(id);
+
+        Page<Order> userOrders = orderService.findOrdersByUser(user, pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 
 
@@ -74,7 +93,7 @@ public class OrderRestController {
         //Get logged user info if any (User class)
         User loggedUser = userService.findLoggedUserHelper();
 
-        Page<Order> userOrders = orderService.findAllByUser(loggedUser, pageable);
+        Page<Order> userOrders = orderService.findOrdersByUser(loggedUser, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userOrders, OrderDTO::new));
     }
 
@@ -215,7 +234,13 @@ public class OrderRestController {
                 savedOrder.getTotalCost()
         );
 
-        return ResponseEntity.ok(new OrderDTO(savedOrder));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedOrder.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new OrderDTO(savedOrder));
     }
 
 
@@ -233,13 +258,13 @@ public class OrderRestController {
 
         //Difference between commenting only or changing status and commenting
         //If status has not changed, then it is commenting only
-        if (orderStatus == order.getHistory().getLast().getStatus()) {
+        if (orderStatus == order.getCurrentStatus()) {
             order.addStatusUpdate(comment);
         }
         else { //Change status and save the comment as the first of the updates list for that status
 
             //If status is completed or canceled, it is not possible to change its status
-            if (order.getHistory().getLast().getStatus() == OrderStatus.CANCELLED || order.getHistory().getLast().getStatus() == OrderStatus.COMPLETED){
+            if (order.getCurrentStatus() == OrderStatus.CANCELLED || order.getCurrentStatus() == OrderStatus.COMPLETED){
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cancelled or completed orders cannot change status.");
             }
 
@@ -257,7 +282,7 @@ public class OrderRestController {
 
 
     @Operation(summary = "(User) Cancel logged user order by ID")
-    @DeleteMapping("/{id}")
+    @PutMapping("/cancel/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id){
         //Get logged user info if any (User class)
         User loggedUser = userService.findLoggedUserHelper();
@@ -284,6 +309,34 @@ public class OrderRestController {
 
         Order savedOrder = orderService.save(order);
         return ResponseEntity.ok(new OrderDTO(savedOrder));
+    }
+
+
+    @Transactional
+    @Operation(summary = "(Admin) Delete cancelled or completed order by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<OrderDTO> deleteFinishedOrderById(@PathVariable Long id){
+        Order order = orderService.findOrderHelper(id);
+
+        //Check if the order is completed or canceled
+        OrderStatus currentStatus = order.getCurrentStatus();
+        if (currentStatus != OrderStatus.CANCELLED && currentStatus != OrderStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only cancelled or completed orders can be deleted. Actual status: " + currentStatus);
+        }
+
+        // Clear in-memory bidirectional references
+        if (order.getAssignedShop() != null && order.getAssignedShop().getAssignedOrders() != null) {
+            order.getAssignedShop().getAssignedOrders().remove(order);
+        }
+        if (order.getAssignedTruck() != null && order.getAssignedTruck().getOrdersToDeliver() != null) {
+            order.getAssignedTruck().getOrdersToDeliver().remove(order);
+        }
+        if (order.getUser() != null && order.getUser().getRegisteredOrders() != null) {
+            order.getUser().getRegisteredOrders().remove(order);
+        }
+
+        orderService.delete(order);
+        return ResponseEntity.ok(new OrderDTO(order));
     }
 
 
@@ -418,14 +471,22 @@ public class OrderRestController {
             // Item in cart -> Update quantity
             resultItem = itemInCart.get();
             resultItem.setQuantity(resultItem.getQuantity() + quantity);
+            userService.save(loggedUser);
+            return ResponseEntity.ok(new OrderItemDTO(resultItem));
         } else {
             // Item not found -> Create item
             resultItem = new OrderItem(productOptional.get(), loggedUser, quantity);
             loggedUser.getAllOrderItems().add(resultItem);
-        }
+            userService.save(loggedUser);
 
-        userService.save(loggedUser);
-        return ResponseEntity.ok(new OrderItemDTO(resultItem)); //Returns the added item (optional)
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(resultItem.getId())
+                    .toUri();
+
+            return ResponseEntity.created(location).body(new OrderItemDTO(resultItem));
+        }
     }
 
 

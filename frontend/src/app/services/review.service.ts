@@ -14,6 +14,13 @@ export class ReviewService {
 
   private apiUrl = '/api/v1/reviews';
 
+  public getUserReviewsByUserId (id: string, page: number, size: number): Observable<PageResponse<Review>>{
+    let params = new HttpParams();
+    params = params.append('page', page.toString());
+    params = params.append('size', size.toString());
+    return this.http.get<PageResponse<Review>>(this.apiUrl + `/user/${id}`, { params });
+  }
+
   public getLoggedUserReviews(page: number, size: number): Observable<PageResponse<Review>>{
     let params = new HttpParams();
     params = params.append('page', page.toString());

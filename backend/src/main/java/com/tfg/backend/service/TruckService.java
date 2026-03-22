@@ -1,8 +1,10 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.Truck;
+import com.tfg.backend.model.TruckStatus;
+import com.tfg.backend.model.User;
 import com.tfg.backend.repository.TruckRepository;
+import com.tfg.backend.utils.StatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,5 +42,37 @@ public class TruckService {
     public Truck findTruckHelper(Long id) {
         return this.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
+    }
+
+    //Metrics
+    public List<StatDTO> getTruckStats(User currentUser) {
+        long available = 0;
+        long onRoute = 0;
+        long onMaintenance = 0;
+        long outOfService = 0;
+
+        if (currentUser.hasRole("ADMIN")) {
+            available = truckRepository.countTrucksByStatus(List.of(TruckStatus.AVAILABLE));
+            onRoute = truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE));
+            onMaintenance = truckRepository.countTrucksByStatus(List.of(TruckStatus.MAINTENANCE));
+            outOfService = truckRepository.countTrucksByStatus(List.of(TruckStatus.OUT_OF_SERVICE));
+
+        } else if (currentUser.hasRole("MANAGER")) {
+            Long managerId = currentUser.getId();
+            available = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.AVAILABLE));
+            onRoute = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.ON_ROUTE));
+            onMaintenance = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.MAINTENANCE));
+            outOfService = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.OUT_OF_SERVICE));
+
+        } else {
+            return List.of();
+        }
+
+        return List.of(
+                new StatDTO("Disponibles", available),
+                new StatDTO("En Ruta", onRoute),
+                new StatDTO("En mantenimiento", onMaintenance),
+                new StatDTO("Fuera de servicio", outOfService)
+        );
     }
 }

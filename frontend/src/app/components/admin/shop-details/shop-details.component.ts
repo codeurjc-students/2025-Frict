@@ -20,7 +20,7 @@ import {ToggleSwitch} from 'primeng/toggleswitch';
 import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Tooltip} from 'primeng/tooltip';
-import {formatAddress} from '../../../utils/textFormat.util';
+import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
@@ -216,6 +216,13 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  getMaxRestockAllowed(): number {
+    if (!this.selectedStock || !this.selectedStock.productSupplyPrice || this.selectedStock.productSupplyPrice <= 0) {
+      return 0;
+    }
+    const maxPossible = Math.floor(this.shop.assignedBudget / this.selectedStock.productSupplyPrice);
+    return maxPossible;
+  }
 
   showAddStockDialog() {
     this.productService.getEligibleProducts(this.shop.id).subscribe({
@@ -326,8 +333,8 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     }
 
     L.control.zoom({ position: 'topright' }).addTo(this.map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap' }).addTo(this.map);
-    this.map.attributionControl.setPrefix('');
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(this.map);
+    this.map.attributionControl.setPrefix('Leaflet');
 
     // Crear LayerGroup para poder borrar marcadores luego
     this.markersLayer = L.layerGroup().addTo(this.map);
@@ -413,6 +420,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
         next: () => {
           this.stocksPage.items = this.stocksPage.items.map(i => i.id === stock.id ? { ...i, units: i.units + qty } : i);
           this.messageService.add({severity: 'success', summary: 'Stock repuesto correctamente', detail: `${qty} unidades añadidas`});
+          this.shop.assignedBudget -= stock.productSupplyPrice * this.restockQuantity;
           this.restockQuantity = 0;
         },
         error: () => {
@@ -430,4 +438,5 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
   protected readonly formatAddress = formatAddress;
   protected readonly getTruckStatusTagInfo = getTruckStatusTagInfo;
+  protected readonly formatPrice = formatPrice;
 }

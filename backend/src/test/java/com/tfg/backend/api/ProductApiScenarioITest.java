@@ -31,9 +31,9 @@ public class ProductApiScenarioITest {
     private ProductRepository productRepository;
 
     //Sample products
-    Product product1 = new Product("Auriculares inalámbricos", "Auriculares con cancelación de ruido y Bluetooth 5.0", 120.0);
-    Product product2 = new Product("Monitor 24\" Full HD", "Monitor con panel IPS y colores precisos", 175.0);
-    Product product3 = new Product("Teclado mecánico", "Teclado RGB con switches táctiles y anti-ghosting", 95.0);
+    Product product1 = new Product("Auriculares inalámbricos", "Auriculares con cancelación de ruido y Bluetooth 5.0", 120.0, 80.0);
+    Product product2 = new Product("Monitor 24\" Full HD", "Monitor con panel IPS y colores precisos", 175.0, 100.0);
+    Product product3 = new Product("Teclado mecánico", "Teclado RGB con switches táctiles y anti-ghosting", 95.0, 70.0);
 
     private static final String CONTENT_TYPE = "application/json";
 

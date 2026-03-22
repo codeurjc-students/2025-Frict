@@ -17,7 +17,7 @@ public class OrderDTO {
     private Long id;
     private String referenceCode;
     private List<OrderStatusLogDTO> history = new ArrayList<>();
-    private String userName;
+    private UserDTO user;
     private List<OrderItemDTO> orderItems = new ArrayList<>();
     private Long assignedShopId;
     private Long assignedTruckId;
@@ -44,7 +44,7 @@ public class OrderDTO {
         for (OrderStatusLog l : o.getHistory()) {
             this.history.add(new OrderStatusLogDTO(l));
         }
-        this.userName = o.getUser().getName();
+        this.user = new UserDTO(o.getUser());
         for (OrderItem item : o.getItems()) {
             orderItems.add(new OrderItemDTO(item));
         }
@@ -63,7 +63,9 @@ public class OrderDTO {
         this.totalCost = o.getTotalCost();
 
         this.cardNumberEnding = o.getCardNumberEnding();
-        this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
+        if (o.getFullSendingAddress() != null){
+            this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
+        }
         this.createdAt = o.getCreatedAt();
     }
 }

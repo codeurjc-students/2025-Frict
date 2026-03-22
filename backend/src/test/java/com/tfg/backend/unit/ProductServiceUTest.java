@@ -50,7 +50,7 @@ class ProductServiceUTest {
 
     @BeforeEach
     void setUp() {
-        testProduct = new Product("Cámara reflex", "Fotografías profesionales", 799.99);
+        testProduct = new Product("Cámara reflex", "Fotografías profesionales", 799.99, 719.99);
         testProduct.setId(1L);
         testUser = new User("Usuario", "user", "user@gmail.com", "contrasena_falsa", "USER");
         lenient().when(userService.getLoggedUser()).thenReturn(Optional.of(testUser));
@@ -128,7 +128,7 @@ class ProductServiceUTest {
     // update() method tests
     @Test
     void update_ShouldReturnUpdatedProduct_WhenExists() {
-        Product inputProduct = new Product("Updated Name", "Desc", 100.0);
+        Product inputProduct = new Product("Updated Name", "Desc", 100.0, 69.99);
         inputProduct.setId(1L);
 
         when(productRepository.existsById(1L)).thenReturn(true);
@@ -143,7 +143,7 @@ class ProductServiceUTest {
 
     @Test
     void update_ShouldThrowException_WhenDoesNotExist() {
-        Product inputProduct = new Product("Name", "Desc", 10.0);
+        Product inputProduct = new Product("Name", "Desc", 10.0, 3.99);
         inputProduct.setId(99L);
 
         when(productRepository.existsById(99L)).thenReturn(false);
@@ -181,9 +181,9 @@ class ProductServiceUTest {
     // Parametrized data provider
     static Stream<Arguments> invalidProductsProvider() {
         return Stream.of(
-                Arguments.of(new Product("", "Desc", 10.0), "The title is null or empty"),
-                Arguments.of(new Product(null, "Desc", 10.0), "The title is null or empty"),
-                Arguments.of(new Product("Valid", "Desc", -1.0), "The price should be positive or 0")
+                Arguments.of(new Product("", "Desc", 10.0, 4.95), "The title is null or empty"),
+                Arguments.of(new Product(null, "Desc", 10.0, 8.90), "The title is null or empty"),
+                Arguments.of(new Product("Valid", "Desc", -1.0, 6.50), "The price should be positive or 0")
         );
     }
 }

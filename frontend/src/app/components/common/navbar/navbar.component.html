@@ -1,15 +1,15 @@
-<nav class="sticky top-0 z-[2000] bg-surface-700 h-20 text-white border-b border-surface-700/50">
+<nav class="sticky top-0 z-[50] bg-surface-700 h-20 text-white border-b border-surface-700/50">
 
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto flex items-center justify-between gap-2 px-4 h-full">
 
-    <div *ngIf="!authService.isLogged() || !authService.isAdmin()">
+    <div *ngIf="!authService.isLogged() || authService.isUser()">
       <a routerLink="/" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full hover:opacity-90 transition-opacity">
         <img class="w-8 h-8 m-1 shrink-0 object-contain" ngSrc="/shopLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden md:inline text-2xl mr-4 tracking-tight">MiTienda</span>
       </a>
     </div>
 
-    <div *ngIf="authService.isAdmin()">
+    <div *ngIf="authService.isLogged() && !authService.isUser()">
       <a routerLink="/admin" class="flex items-center gap-2 font-bold order-2 sm:order-1 h-full hover:opacity-90 transition-opacity">
         <img class="w-8 h-8 m-1 shrink-0 object-contain" ngSrc="/frictLogo.png" alt="logo" height="96" width="96"/>
         <span class="hidden md:inline text-2xl mr-4 tracking-tight">Frict</span>
@@ -108,12 +108,12 @@
   </div>
 </nav>
 
-<p-drawer #drawerRef [(visible)]="visible" styleClass="!bg-surface-800 !border-none !w-90">
+<p-drawer #drawerRef [(visible)]="visible" [autoZIndex]="true" [baseZIndex]="40" [blockScroll]="true" styleClass="!bg-surface-800 !border-none !w-90">
   <ng-template #headless>
     <div class="mt-22 flex flex-col h-full overflow-y-auto">
 
       <div *ngIf="authService.isLogged()" class="top-0 w-full">
-        <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors cursor-pointer" routerLink="/profile">
+        <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors cursor-pointer" [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'">
           <p-avatar [image]=loggedUserInfo.imageUrl class="mr-2" size="large" shape="circle" />
           <div class="flex flex-col">
             <span class="font-bold">{{ loggedUserInfo.name }}</span>
@@ -169,7 +169,7 @@
 
           <li>
             <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
-               [routerLink]="['/']"
+               [routerLink]="(authService.isAdmin() || authService.isManager() || authService.isDriver()) ? ['/admin'] : ['/']"
                routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
                [routerLinkActiveOptions]="routerOptions">
               <i class="pi pi-home mr-3 text-lg"></i>
@@ -233,7 +233,7 @@
 
               <ul [class.hidden]="!isAccountExpanded()" class="list-none p-0 m-0 overflow-hidden block">
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
+                  <a [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'" class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-user mr-3"></i>
                     <span class="font-medium">Perfil</span>
                   </a>

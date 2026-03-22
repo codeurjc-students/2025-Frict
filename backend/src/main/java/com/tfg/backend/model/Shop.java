@@ -29,6 +29,8 @@ public class Shop {
     @JoinColumn(name = "address_id")
     private Address address;
 
+    private double assignedBudget;
+
     @Embedded
     private ImageInfo image;
 
@@ -52,9 +54,10 @@ public class Shop {
     public Shop() {
     }
 
-    public Shop(String name, Address address) {
+    public Shop(String name, Address address, double budget) {
         this.referenceCode = ReferenceNumberGenerator.generateShopReferenceNumber();
         this.name = name;
         this.address = address;
+        this.assignedBudget = budget;
     }
 }

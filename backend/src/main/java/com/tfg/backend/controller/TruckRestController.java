@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,6 +61,18 @@ public class TruckRestController {
     }
 
 
+    @Operation(summary = "(Driver) Get assigned truck by driver ID")
+    @GetMapping("/user/{driverId}")
+    public ResponseEntity<TruckDTO> getAssignedTruckByDriverId(@PathVariable Long driverId) {
+        User loggedUser = userService.findUserHelper(driverId);
+        Truck assignedTruck = loggedUser.getAssignedTruck();
+        if (assignedTruck == null){
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(new TruckDTO(loggedUser.getAssignedTruck()));
+    }
+
+
     @Operation(summary = "(Admin, Manager) Get trucks list by shop ID")
     @GetMapping("/shop/{shopId}/list")
     public ResponseEntity<List<TruckDTO>> getAllShopTrucks(@PathVariable Long shopId) {
@@ -85,7 +99,7 @@ public class TruckRestController {
 
 
     @Operation(summary = "(Admin) Set driver assignment to a truck")
-    @PostMapping("/{truckId}/assign/driver/{driverId}")
+    @PutMapping("/{truckId}/assign/driver/{driverId}")
     public ResponseEntity<TruckDTO> setAssignedDriver(@PathVariable Long driverId, @PathVariable Long truckId, @RequestParam boolean state) {
         Truck truck = truckService.findTruckHelper(truckId);
 
@@ -139,7 +153,14 @@ public class TruckRestController {
         }
 
         Truck savedTruck = truckService.save(truck);
-        return ResponseEntity.accepted().body(new TruckDTO(savedTruck));
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedTruck.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new TruckDTO(savedTruck));
     }
 
     @Operation(summary = "(Admin) Update truck by ID")
@@ -176,8 +197,12 @@ public class TruckRestController {
         //Unlink orders
         Set<Order> linkedOrders = truck.getOrdersToDeliver();
         for (Order o : linkedOrders) {
+            if (o.getHistory().getLast().getStatus() == OrderStatus.ON_DELIVERY){
+                o.changeOrderStatus(OrderStatus.SENT, "El camión ha sido borrado y el pedido ha vuelto al estado anterior.");
+            }
             o.setAssignedTruck(null);
         }
+        truck.getOrdersToDeliver().clear();
         orderService.saveAll(linkedOrders);
         truckService.delete(truck);
         return ResponseEntity.ok(new TruckDTO(truck));

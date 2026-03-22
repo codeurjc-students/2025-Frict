@@ -84,6 +84,11 @@ export const routes: Routes = [
     children: [
       // Admin-only components and routes
       {
+        path: '',
+        loadComponent: () => import('./components/admin/admin-home/admin-home.component').then(m => m.AdminHomeComponent),
+        data: { roles: ['ADMIN', 'MANAGER', 'DRIVER'], title: 'Inicio', icon: 'admin', breadcrumb: 'Inicio' }
+      },
+      {
         path: 'users',
         loadComponent: () => import('./components/admin/users-management/users-management.component').then(m => m.UsersManagementComponent),
         data: { roles: ['ADMIN'], title: 'Gestor de Usuarios', icon: 'admin', breadcrumb: 'Gestor de Usuarios' }
@@ -158,6 +163,11 @@ export const routes: Routes = [
         loadComponent: () => import('./components/admin/create-edit-truck/create-edit-truck.component').then(m => m.CreateEditTruckComponent),
         data: { roles: ['ADMIN'], title: 'Editar Camión', icon: 'admin', breadcrumb: 'Editar Camión' }
       },
+      {
+        path: 'profile',
+        loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
+        data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Perfil', icon: 'admin', breadcrumb: 'Perfil' }
+      }
     ]
   },
 

@@ -1,10 +1,17 @@
 # 2025-Frict
 
 ## 📍 Introduction
-FRICT (Flexible Real-Time Inventory Control Tool) is a composed system, designed for sales and inventory control both in physical stores and in a company’s online store, which will make the inventory management process easier and more efficient, while processing use-based data to provide more advanced functionalities. In this way, it will include:
-- Management and analysis functionalities for administrators and managers
-- Registration features for delivery personnel
-- Order tracking and product purchasing and rating for users.
+FRICT (Flexible Responsive Inventory Control Tool) is a powerful omnichannel platform designed to unify sales and inventory management across both physical and digital storefronts.
+
+Built on a high-performance, reactive architecture, FRICT streamlines complex logistical workflows while leveraging data-driven insights to maximize operational efficiency. The system provides a seamless experience through three specialized interfaces:
+
+* **Strategic Management**: Empowers administrators and managers with comprehensive control tools and advanced data analysis to make informed, real-time business decisions.
+
+
+* **Operational Logistics**: Features a dedicated module for delivery personnel, ensuring agile registration and precise tracking of the entire fulfillment process.
+
+
+* **Customer-Centric Commerce**: Offers an intuitive online shopping environment where users can easily purchase products, track their orders in real-time, and contribute to the community through a transparent rating system.
 
 Feature sketches:
 

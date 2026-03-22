@@ -253,132 +253,132 @@ public class DatabaseInitializer {
         List<Product> products = new ArrayList<>();
 
         // --- COMPUTERS ---
-        Product p1 = new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad", 1250.50);
+        Product p1 = new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad", 1250.50, 980.00);
         p1.setPreviousPrice(1500.00);
         assignCategories(p1, catMap, "Portátiles", "Recomendado", "Destacado");
         products.add(p1);
 
-        Product p2 = new Product("Mini PC Industrial", "Potencia compacta", 510.10);
+        Product p2 = new Product("Mini PC Industrial", "Potencia compacta", 510.10, 415.00);
         assignCategories(p2, catMap, "Sobremesa y Mini PC", "Destacado");
         products.add(p2);
 
-        Product p18 = new Product("Portátil Gaming Beast 17\"", "RTX 4090 y i9 de última gen", 3200.00);
+        Product p18 = new Product("Portátil Gaming Beast 17\"", "RTX 4090 y i9 de última gen", 3200.00, 2650.00);
         p18.setPreviousPrice(3500.00);
         assignCategories(p18, catMap, "Portátiles", "Top Ventas");
         products.add(p18);
 
-        Product p19 = new Product("All-in-One Oficina Pro", "Pantalla 27\" y diseño limpio", 899.99);
+        Product p19 = new Product("All-in-One Oficina Pro", "Pantalla 27\" y diseño limpio", 899.99, 710.50);
         assignCategories(p19, catMap, "Sobremesa y Mini PC");
         products.add(p19);
 
         // --- MOBILITY ---
-        Product p3 = new Product("Smartphone Plegable X", "Innovación en diseño", 750.00);
+        Product p3 = new Product("Smartphone Plegable X", "Innovación en diseño", 750.00, 590.00);
         p3.setPreviousPrice(1000.00);
         assignCategories(p3, catMap, "Móviles y Smartphones", "Top Ventas", "Destacado");
         products.add(p3);
 
-        Product p4 = new Product("Smartwatch con ECG", "Salud en tu muñeca", 220.00);
+        Product p4 = new Product("Smartwatch con ECG", "Salud en tu muñeca", 220.00, 165.00);
         assignCategories(p4, catMap, "Smartwatches", "Recomendado");
         products.add(p4);
 
-        Product p20 = new Product("Tablet Pro 12.9\"", "Pantalla Liquid Retina XDR", 1100.00);
+        Product p20 = new Product("Tablet Pro 12.9\"", "Pantalla Liquid Retina XDR", 1100.00, 895.00);
         assignCategories(p20, catMap, "Móviles y Smartphones", "Destacado");
         products.add(p20);
 
         // --- COMPONENTS ---
-        Product p5 = new Product("Tarjeta Gráfica RTX 5080", "Next Gen Gaming", 780.25);
+        Product p5 = new Product("Tarjeta Gráfica RTX 5080", "Next Gen Gaming", 780.25, 620.00);
         assignCategories(p5, catMap, "Tarjetas Gráficas", "Top Ventas", "Destacado");
         products.add(p5);
 
-        Product p6 = new Product("Disco SSD NVMe 2TB", "Velocidad extrema", 155.99);
+        Product p6 = new Product("Disco SSD NVMe 2TB", "Velocidad extrema", 155.99, 112.40);
         assignCategories(p6, catMap, "Almacenamiento", "Recomendado");
         products.add(p6);
 
-        Product p7 = new Product("Pasta Térmica Gold", "Refrigeración eficiente", 12.50);
+        Product p7 = new Product("Pasta Térmica Gold", "Refrigeración eficiente", 12.50, 6.25);
         assignCategories(p7, catMap, "Herramientas y Montaje");
         products.add(p7);
 
-        Product p21 = new Product("Procesador Intel Core i9", "24 núcleos de potencia pura", 589.90);
+        Product p21 = new Product("Procesador Intel Core i9", "24 núcleos de potencia pura", 589.90, 495.00);
         assignCategories(p21, catMap, "Recomendado");
         products.add(p21);
 
-        Product p22 = new Product("Kit RAM DDR5 32GB", "6000MHz RGB", 145.00);
+        Product p22 = new Product("Kit RAM DDR5 32GB", "6000MHz RGB", 145.00, 108.00);
         assignCategories(p22, catMap, "Destacado");
         products.add(p22);
 
-        Product p23 = new Product("Fuente Alimentación 850W", "Certificación Gold Modular", 119.99);
+        Product p23 = new Product("Fuente Alimentación 850W", "Certificación Gold Modular", 119.99, 85.50);
         assignCategories(p23, catMap, "Herramientas y Montaje");
         products.add(p23);
 
         // --- PERIPHERALS ---
-        Product p8 = new Product("Monitor Curvo Ultrawide", "Inmersión total", 499.00);
+        Product p8 = new Product("Monitor Curvo Ultrawide", "Inmersión total", 499.00, 390.00);
         assignCategories(p8, catMap, "Monitores y Pantallas", "Destacado");
         products.add(p8);
 
-        Product p9 = new Product("Teclado Mecánico RGB", "Switches táctiles", 89.65);
+        Product p9 = new Product("Teclado Mecánico RGB", "Switches táctiles", 89.65, 58.00);
         assignCategories(p9, catMap, "Teclados y Ratones", "Top Ventas");
         products.add(p9);
 
-        Product p10 = new Product("Auriculares Cancelación Ruido", "Silencio absoluto", 199.50);
+        Product p10 = new Product("Auriculares Cancelación Ruido", "Silencio absoluto", 199.50, 142.00);
         assignCategories(p10, catMap, "Audio y Sonido", "Recomendado");
         products.add(p10);
 
-        Product p24 = new Product("Ratón Gaming Inalámbrico", "Sensor óptico 25K DPI", 79.99);
+        Product p24 = new Product("Ratón Gaming Inalámbrico", "Sensor óptico 25K DPI", 79.99, 52.30);
         p24.setPreviousPrice(99.99);
         assignCategories(p24, catMap, "Teclados y Ratones", "Top Ventas");
         products.add(p24);
 
-        Product p25 = new Product("Webcam StreamCam 1080p", "60fps para creadores", 115.50);
+        Product p25 = new Product("Webcam StreamCam 1080p", "60fps para creadores", 115.50, 88.00);
         assignCategories(p25, catMap, "Foto y Video");
         products.add(p25);
 
-        Product p26 = new Product("Micrófono USB Condensador", "Calidad de estudio podcast", 129.99);
+        Product p26 = new Product("Micrófono USB Condensador", "Calidad de estudio podcast", 129.99, 94.50);
         assignCategories(p26, catMap, "Audio y Sonido");
         products.add(p26);
 
-        Product p27 = new Product("Ratón Vertical Ergonómico", "Reduce la fatiga de muñeca", 45.00);
+        Product p27 = new Product("Ratón Vertical Ergonómico", "Reduce la fatiga de muñeca", 45.00, 28.50);
         assignCategories(p27, catMap, "Teclados y Ratones", "Recomendado");
         products.add(p27);
 
         // --- HOME & NETWORK ---
-        Product p11 = new Product("Router WiFi 6E Mesh", "Cobertura total", 185.70);
+        Product p11 = new Product("Router WiFi 6E Mesh", "Cobertura total", 185.70, 142.00);
         assignCategories(p11, catMap, "Redes y WiFi", "Destacado");
         products.add(p11);
 
-        Product p12 = new Product("Altavoz Inteligente IA", "Asistente de hogar", 75.30);
+        Product p12 = new Product("Altavoz Inteligente IA", "Asistente de hogar", 75.30, 52.00);
         assignCategories(p12, catMap, "Hogar Inteligente", "Audio y Sonido", "Top Ventas");
         products.add(p12);
 
-        Product p13 = new Product("Batería Externa 65W", "Carga rápida", 55.45);
+        Product p13 = new Product("Batería Externa 65W", "Carga rápida", 55.45, 36.50);
         assignCategories(p13, catMap, "Energía", "Móviles y Smartphones");
         products.add(p13);
 
-        Product p28 = new Product("Bombilla Inteligente RGB", "Control por voz y app", 15.99);
+        Product p28 = new Product("Bombilla Inteligente RGB", "Control por voz y app", 15.99, 8.40);
         assignCategories(p28, catMap, "Hogar Inteligente", "Energía");
         products.add(p28);
 
-        Product p29 = new Product("Switch Gigabit 8 Puertos", "Expansión de red metálica", 25.00);
+        Product p29 = new Product("Switch Gigabit 8 Puertos", "Expansión de red metálica", 25.00, 16.20);
         assignCategories(p29, catMap, "Redes y WiFi");
         products.add(p29);
 
         // --- MULTIMEDIA ---
-        Product p14 = new Product("Cámara Mirrorless 4K", "Calidad profesional", 1120.40);
+        Product p14 = new Product("Cámara Mirrorless 4K", "Calidad profesional", 1120.40, 915.00);
         assignCategories(p14, catMap, "Foto y Video", "Destacado");
         products.add(p14);
 
-        Product p15 = new Product("Dron Plegable GPS", "Tomas aéreas", 345.80);
+        Product p15 = new Product("Dron Plegable GPS", "Tomas aéreas", 345.80, 268.00);
         assignCategories(p15, catMap, "Foto y Video");
         products.add(p15);
 
-        Product p16 = new Product("Gafas Realidad Mixta", "El futuro hoy", 2400.00);
+        Product p16 = new Product("Gafas Realidad Mixta", "El futuro hoy", 2400.00, 1980.00);
         assignCategories(p16, catMap, "Destacado", "Monitores y Pantallas");
         products.add(p16);
 
-        Product p17 = new Product("Impresora 3D Resina", "Crea prototipos", 425.99);
+        Product p17 = new Product("Impresora 3D Resina", "Crea prototipos", 425.99, 315.50);
         assignCategories(p17, catMap, "Herramientas y Montaje");
         products.add(p17);
 
-        Product p30 = new Product("Barra de Sonido Atmos", "Cine en casa compacto", 350.00);
+        Product p30 = new Product("Barra de Sonido Atmos", "Cine en casa compacto", 350.00, 265.00);
         p30.setPreviousPrice(450.00);
         assignCategories(p30, catMap, "Audio y Sonido");
         products.add(p30);
@@ -410,7 +410,7 @@ public class DatabaseInitializer {
         Address address1 = new Address("Madrid-Recoletos", "CallePorDefecto4", "3", "", "28900", "Madrid", "España");
         address1.setLatitude(40.4168);
         address1.setLongitude(-3.7038);
-        Shop shop1 = new Shop("Madrid-Recoletos", address1);
+        Shop shop1 = new Shop("Madrid-Recoletos", address1, 3000.00);
         shop1.setImage(GlobalDefaults.SHOP_IMAGE);
         //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
@@ -431,7 +431,7 @@ public class DatabaseInitializer {
         address2.setLatitude(38.348045);
         address2.setLongitude(-0.485225);
 
-        Shop shop2 = new Shop("Alicante", address2);
+        Shop shop2 = new Shop("Alicante", address2, 6000.00);
         shop2.setImage(GlobalDefaults.SHOP_IMAGE);
         shopRepository.save(shop2);
 
@@ -484,9 +484,11 @@ public class DatabaseInitializer {
             Order order1 = new Order(user1, orderItems1, allShops.getFirst(), user1.getAddresses().getFirst(), user1.getCards().getFirst());
             Order order2 = new Order(user2, orderItems2, allShops.getLast(), user2.getAddresses().getFirst(), user2.getCards().getFirst());
 
+            /*
             List<Truck> allTrucks = truckRepository.findAll();
             order1.setAssignedTruck(allTrucks.getFirst());
             order2.setAssignedTruck(allTrucks.getLast());
+             */
 
             order1.addStatusUpdate("El pedido ha quedado registrado correctamente en la tienda asignada");
             order1.changeOrderStatus(OrderStatus.SENT, "El pedido se está procesando");

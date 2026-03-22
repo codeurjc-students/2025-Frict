@@ -2,11 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {PageResponse} from '../models/pageResponse.model';
-import {ShopStock} from '../models/shopStock.model';
 import {Truck} from '../models/truck.model';
-import {Product} from '../models/product.model';
-import {Shop} from '../models/shop.model';
-import {Order} from '../models/order.model';
 
 
 @Injectable({
@@ -28,6 +24,10 @@ export class TruckService {
 
   public getUnassignedTrucks(): Observable<Truck[]> {
     return this.http.get<Truck[]>(this.apiUrl + `/available/`);
+  }
+
+  public getAssignedTruckByDriverId(id: string): Observable<Truck> {
+    return this.http.get<Truck>(this.apiUrl + `/user/${id}`);
   }
 
   public getTruckById(id: string): Observable<Truck> {
@@ -60,7 +60,7 @@ export class TruckService {
   public assignDriver(driverId: string, truckId: string, state: boolean): Observable<Truck>{
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Truck>(this.apiUrl + `/${truckId}/assign/driver/${driverId}`, null, { params });
+    return this.http.put<Truck>(this.apiUrl + `/${truckId}/assign/driver/${driverId}`, null, { params });
   }
 
   public commentAndOrUpdateTruckStatus(id: string, truckStatus: string, comment: string): Observable<Truck> {

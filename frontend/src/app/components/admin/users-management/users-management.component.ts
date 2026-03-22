@@ -11,7 +11,6 @@ import {UserService} from '../../../services/user.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {UIChart} from 'primeng/chart';
-import {StatData} from '../../../utils/statData.model';
 import {getUserRoleTagInfo, getUserStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -19,12 +18,19 @@ import {InputText} from 'primeng/inputtext';
 import {CustomValidators} from '../../../utils/customValidators.util';
 import {AuthService} from '../../../services/auth.service';
 import {Select} from 'primeng/select';
+import {Review} from '../../../models/review.model';
+import {Order} from '../../../models/order.model';
+import {ReviewService} from '../../../services/review.service';
+import {OrderService} from '../../../services/order.service';
+import {formatPrice} from '../../../utils/textFormat.util';
+import {ConfirmPopup} from 'primeng/confirmpopup';
+import {Stat} from '../../../models/stat.model';
 
 @Component({
   selector: 'app-users-management',
   standalone: true,
   imports: [
-    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select
+    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select, ConfirmPopup
   ],
   templateUrl: './users-management.component.html',
   styleUrl: 'users-management.component.css'
@@ -40,23 +46,36 @@ export class UsersManagementComponent implements OnInit {
   loading: boolean = true;
   error: boolean = false;
 
+  //Selected user reviews / orders visualization
+  visibleOrdersDialog: boolean = false;
+  visibleReviewsDialog: boolean = false;
+
+  userOrdersPage: PageResponse<Order> | null = null;
+  userReviewsPage: PageResponse<Review> | null = null;
+
+  ordersFirst: number = 0;
+  ordersRows: number = 5;
+
+  reviewsFirst: number = 0;
+  reviewsRows: number = 5;
+
   internalRoles = [
     { name: 'Gerente', code: 'MANAGER' },
     { name: 'Conductor', code: 'DRIVER' },
     { name: 'Administrador', code: 'ADMIN' }
   ];
 
-  rawStats = signal<StatData[]>([]);
+  rawStats = signal<Stat[]>([]);
   options = signal<any>(null);
 
   data = computed(() => {
     const stats = this.rawStats();
     const documentStyle = getComputedStyle(document.documentElement);
     return {
-      labels: stats.map(s => s.category),
+      labels: stats.map(s => s.label),
       datasets: [
         {
-          data: stats.map(s => s.total),
+          data: stats.map(s => s.value),
           backgroundColor: [
             documentStyle.getPropertyValue('--p-green-600'),
             documentStyle.getPropertyValue('--p-red-600'),
@@ -87,7 +106,9 @@ export class UsersManagementComponent implements OnInit {
               private confirmationService: ConfirmationService,
               private fb: FormBuilder,
               private authService: AuthService,
-              private messageService: MessageService,) {
+              private messageService: MessageService,
+              private reviewService: ReviewService,
+              private orderService: OrderService) {
 
     this.changePasswordForm = this.fb.nonNullable.group({
       password: ['', Validators.required],
@@ -196,7 +217,7 @@ export class UsersManagementComponent implements OnInit {
 
   loadStats() {
     this.userService.getUsersStats().subscribe({
-      next: (stats: StatData[]) => {
+      next: (stats) => {
         this.rawStats.set(stats);
       },
       error: (err) => console.error('Error loading stats: ', err)
@@ -204,8 +225,10 @@ export class UsersManagementComponent implements OnInit {
   }
 
   getStatValue(category: string): number {
-    const stat = this.rawStats().find(s => s.category === category);
-    return stat ? stat.total : 0;
+    const stat = this.rawStats().find(s => s.label === category);
+    if (!stat) return 0;
+    const numericValue = Number(stat.value);
+    return isNaN(numericValue) ? 0 : numericValue;
   }
 
 
@@ -334,6 +357,99 @@ export class UsersManagementComponent implements OnInit {
     });
   }
 
+  //Reviews / Orders functions
+  openOrdersDialog(userId: string) {
+    this.ordersFirst = 0;
+    this.loadUserOrders(userId, true);
+  }
+
+  loadUserOrders(userId: string, openDialog: boolean = false) {
+    this.orderService.getUserOrdersByUserId(userId, this.ordersFirst / this.ordersRows, this.ordersRows).subscribe({
+      next: (page) => {
+        this.userOrdersPage = page;
+        if (openDialog) this.visibleOrdersDialog = true;
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los pedidos.' })
+    });
+  }
+
+  onOrdersPageChange(event: PaginatorState) {
+    this.ordersFirst = event.first ?? 0;
+    this.ordersRows = event.rows ?? 5;
+    if (this.selectedUser) this.loadUserOrders(this.selectedUser.id);
+  }
+
+  getLatestOrderStatus(order: Order): string {
+    return order.history[order.history.length - 1].status;
+  }
+
+  openReviewsDialog(userId: string) {
+    this.reviewsFirst = 0;
+    this.loadUserReviews(userId, true);
+  }
+
+  loadUserReviews(userId: string, openDialog: boolean = false) {
+    this.reviewService.getUserReviewsByUserId(userId, this.reviewsFirst / this.reviewsRows, this.reviewsRows).subscribe({
+      next: (page) => {
+        this.userReviewsPage = page;
+        if (openDialog) this.visibleReviewsDialog = true;
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las reseñas.' })
+    });
+  }
+
+  onReviewsPageChange(event: PaginatorState) {
+    this.reviewsFirst = event.first ?? 0;
+    this.reviewsRows = event.rows ?? 5;
+    if (this.selectedUser) this.loadUserReviews(this.selectedUser.id);
+  }
+
+  canDeleteOrder(order: Order): boolean {
+    const status = this.getLatestOrderStatus(order);
+    return status === 'Cancelado' || status === 'Completado';
+  }
+
+  deleteOrder(orderId: string, event: Event) {
+    this.confirmationService.confirm({
+      key: 'usersMgmtDialog',
+      target: event.target as EventTarget,
+      message: '¿Estás seguro de que quieres eliminar este pedido de forma permanente?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Eliminar', severity: 'danger', size: 'small' },
+      rejectButtonProps: { label: 'Cancelar', severity: 'secondary', outlined: true, size: 'small' },
+      accept: () => {
+        this.orderService.deleteOrderById(orderId).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Pedido eliminado' });
+            if (this.selectedUser) this.loadUserOrders(this.selectedUser.id);
+          },
+          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar' })
+        });
+      }
+    });
+  }
+
+  deleteReview(reviewId: string, event: Event) {
+    this.confirmationService.confirm({
+      target: event.currentTarget as EventTarget,
+      key: "usersMgmtDialog",
+      message: '¿Estás seguro de que quieres eliminar esta reseña?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonProps: { label: 'Eliminar', severity: 'danger' },
+      rejectButtonProps: { label: 'Cancelar', severity: 'secondary', outlined: true },
+      accept: () => {
+        this.reviewService.deleteReviewById(reviewId).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Reseña eliminada' });
+            if (this.selectedUser) this.loadUserReviews(this.selectedUser.id);
+          },
+          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar la reseña' })
+        });
+      }
+    });
+  }
+
   protected readonly getUserStatusTagInfo = getUserStatusTagInfo;
   protected readonly getUserRoleTagInfo = getUserRoleTagInfo;
+  protected readonly formatPrice = formatPrice;
 }

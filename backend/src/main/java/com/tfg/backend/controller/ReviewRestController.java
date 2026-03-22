@@ -18,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +37,15 @@ public class ReviewRestController {
 
     @Autowired
     private UserService userService;
+
+
+    @Operation(summary = "(Admin) Get user reviews by user ID (paged)")
+    @GetMapping("/user/{id}")
+    public ResponseEntity<PageResponse<ReviewDTO>> getUserReviewsByUserId (@PathVariable Long id, Pageable pageable){
+        User user = userService.findUserHelper(id);
+        Page<Review> userReviews = reviewService.findAllByUser(user, pageable);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
+    }
 
 
     @Operation(summary = "(All) Get logged user reviews (paged)")
@@ -74,9 +85,15 @@ public class ReviewRestController {
         //Check that the product exists
         Product product = productService.findProductHelper(reviewDTO.getProductId());
 
-        Review review = new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended());
-        reviewService.save(review);
-        return ResponseEntity.ok().body(new ReviewDTO(review));
+        Review savedReview = reviewService.save(new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended()));
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedReview.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new ReviewDTO(savedReview));
     }
 
 
@@ -103,15 +120,15 @@ public class ReviewRestController {
 
     @Operation(summary = "(Admin, User) Delete review by ID")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ReviewDTO> deleteReview(@PathVariable Long id) {
+    public ResponseEntity<ReviewDTO> deleteReviewById(@PathVariable Long id) {
         //Check that the review exists
         Review review = reviewService.findReviewHelper(id);
 
         //Check that the logged user and the review creator match
         User loggedUser = userService.findLoggedUserHelper();
 
-        if (!loggedUser.getId().equals(review.getUser().getId())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + review.getUser().getId() + " and logged user ID " + loggedUser.getId() + " do not match.");
+        if (!loggedUser.getRoles().contains("ADMIN") && !loggedUser.getId().equals(review.getUser().getId())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not an administrator or the creator of this review.");
         }
 
         reviewService.deleteById(id);

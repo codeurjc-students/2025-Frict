@@ -12,6 +12,7 @@ public class ShopDTO {
     private String referenceCode;
     private String name;
     private AddressDTO address;
+    private double assignedBudget;
     private ImageInfo imageInfo;
     private int totalAvailableProducts;
     private int totalAssignedTrucks;
@@ -25,6 +26,7 @@ public class ShopDTO {
         this.referenceCode = s.getReferenceCode();
         this.name = s.getName();
         this.address = new AddressDTO(s.getAddress());
+        this.assignedBudget = s.getAssignedBudget();
         this.imageInfo = s.getImage();
         this.totalAvailableProducts = s.getAvailableProducts().size();
         this.totalAssignedTrucks = s.getAssignedTrucks().size();

@@ -115,9 +115,10 @@ export class NavbarComponent implements OnInit {
   public adminItems = [
     { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products', roles: ['ADMIN'] },
     { label: 'Categorías', icon: 'pi pi-tag',   link: '/admin/categories', roles: ['ADMIN'] },
-    { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports', roles: ['ADMIN', 'MANAGER', 'DRIVER'] },
+    //{ label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports', roles: ['ADMIN', 'MANAGER', 'DRIVER'] },
     { label: 'Tiendas',   icon: 'pi pi-shop',      link: '/admin/shops', roles: ['ADMIN', 'MANAGER'] },
     { label: 'Pedidos',   icon: 'pi pi-box',       link: '/admin/orders', roles: ['ADMIN', 'MANAGER'] },
+    //{ label: 'Reparto',   icon: 'pi pi-truck',     link: '/admin/delivery', roles: ['DRIVER'] },
     { label: 'Camiones',   icon: 'pi pi-truck',     link: '/admin/trucks', roles: ['ADMIN'] },
     { label: 'Usuarios',  icon: 'pi pi-users',     link: '/admin/users', roles: ['ADMIN'] }
   ];
@@ -164,6 +165,7 @@ export class NavbarComponent implements OnInit {
           query: this.searchBarInput
         }
       });
+      this.searchBarInput = '';
     }
   }
 

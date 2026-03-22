@@ -91,7 +91,7 @@ class OrderServiceUTest {
 
         when(repository.findAllByUser(user, pageable)).thenReturn(page);
 
-        Page<Order> result = orderService.findAllByUser(user, pageable);
+        Page<Order> result = orderService.findOrdersByUser(user, pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());

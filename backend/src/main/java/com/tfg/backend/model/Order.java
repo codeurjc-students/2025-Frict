@@ -57,7 +57,7 @@ public class Order {
 
     private String cardNumberEnding; //Historic fields from Address and PaymentCard (prevent that, when the user deletes their addresses or cards, the order remains identifiable)
 
-    @OneToOne
+    @ManyToOne
     private Address fullSendingAddress;
 
     public Order() {
@@ -116,6 +116,10 @@ public class Order {
         this.totalDiscount = Math.round(totalDiscount * 100.0) / 100.0;
         this.shippingCost = (total > 50.0) ? 0.0 : 5.0;
         this.totalCost = Math.round(total * 100.0) / 100.0;
+    }
+
+    public OrderStatus getCurrentStatus(){
+        return this.getHistory().getLast().getStatus();
     }
 
     //Adds an update to the current status. It does not change the current order status

@@ -17,6 +17,7 @@ public class ProductDTO {
     private String name;
     private List<ImageInfo> imagesInfo = new ArrayList<>();
     private String description;
+    private double supplyPrice;
     private double previousPrice;
     private double currentPrice;
     private boolean active;
@@ -39,6 +40,7 @@ public class ProductDTO {
             this.imagesInfo.add(new ImageInfo(image.getImageUrl(), image.getS3Key(), image.getFileName()));
         }
         this.description = p.getDescription();
+        this.supplyPrice = p.getSupplyPrice();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();
         this.active = p.isActive();

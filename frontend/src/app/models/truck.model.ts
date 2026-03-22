@@ -7,7 +7,7 @@ export interface Truck {
   referenceCode: string;
   plateNumber: string;
   history: TruckStatusLog[];
-  shopId: string;
+  shopId?: string;
   assignedDriver?: User;
   address: Address;
   ordersToDeliver: number;

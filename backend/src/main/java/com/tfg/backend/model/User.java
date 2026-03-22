@@ -92,6 +92,10 @@ public class User {
 	public User() {
 	}
 
+    public boolean hasRole(String roleName) {
+        return roles != null && roles.contains(roleName);
+    }
+
     public User(String name, String username, String email, String encodedPassword, String... roles) {
         this.name = name;
         this.username = username;

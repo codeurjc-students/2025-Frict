@@ -7,10 +7,9 @@ import com.tfg.backend.service.StorageService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
-import com.tfg.backend.utils.StatDataDTO;
+import com.tfg.backend.utils.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +18,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -52,7 +53,7 @@ public class UserRestController {
 
 
     @Operation(summary = "(Users) Set selected shop")
-    @PostMapping("/shop")
+    @PutMapping("/shop")
     public ResponseEntity<Boolean> setSelectedShop(@RequestBody Map<String, Long> body) {
 
         User loggedUser = userService.findLoggedUserHelper();
@@ -123,7 +124,7 @@ public class UserRestController {
 
     //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
     @Operation(summary = "(User) Update remote user image")
-    @PostMapping("/image/{id}")
+    @PutMapping("/image/{id}")
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
         Optional<User> userOptional = userService.findById(id);
         if(userOptional.isEmpty()){
@@ -137,7 +138,7 @@ public class UserRestController {
         }
 
         // Upload
-        if (image.isEmpty()){
+        if (!image.isEmpty()){
             Map<String, String> res = storageService.uploadFile(image, "users");
             ImageInfo userImageInfo = new ImageInfo(
                     res.get("url"),
@@ -157,7 +158,7 @@ public class UserRestController {
     //Option 1: Delete User entities (statistics information will be lost, reviews and orders need to be reassigned to a generic anon user, which affects data possession)
     //Option 2 (active): Anonymize / Clear sensible user data (delete address and cards, anonymize the rest of sensible information, mark account as deleted (non-accessible))
     @Operation(summary = "(User) Anonymize logged user account")
-    @DeleteMapping
+    @PutMapping("/anonymize")
     public ResponseEntity<UserDTO> anonymizeLoggedUser() {
         User loggedUser = userService.findLoggedUserHelper();
         User savedUser = userService.save(userService.anonymizeUser(loggedUser));
@@ -210,7 +211,13 @@ public class UserRestController {
         loggedUser.getAddresses().add(address);
         User savedUser = userService.save(loggedUser);
 
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedUser.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new UserDTO(savedUser));
     }
 
 
@@ -263,7 +270,13 @@ public class UserRestController {
         loggedUser.getCards().add(card);
         User savedUser = userService.save(loggedUser);
 
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedUser.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(new UserDTO(savedUser));
     }
 
 
@@ -399,13 +412,13 @@ public class UserRestController {
 
     @Operation(summary = "(Admin) Get users stats")
     @GetMapping("/stats")
-    public ResponseEntity<List<StatDataDTO>> getUsersStats(){
-        List<StatDataDTO> stats = new ArrayList<>();
-        stats.add(new StatDataDTO("Totales", userService.count()));
-        stats.add(new StatDataDTO("Baneados", userService.countByIsBannedTrue()));
-        stats.add(new StatDataDTO("Anonimizados", userService.countByIsDeletedTrue()));
+    public ResponseEntity<List<StatDTO>> getUsersStats(){
+        List<StatDTO> stats = new ArrayList<>();
+        stats.add(new StatDTO("Totales", userService.count()));
+        stats.add(new StatDTO("Baneados", userService.countByIsBannedTrue()));
+        stats.add(new StatDTO("Anonimizados", userService.countByIsDeletedTrue()));
         Long internalAccounts = userService.countByRole("ADMIN") + userService.countByRole("MANAGER") + userService.countByRole("DRIVER");
-        stats.add(new StatDataDTO("Cuentas Internas", internalAccounts));
+        stats.add(new StatDTO("Cuentas Internas", internalAccounts));
         return ResponseEntity.ok(stats);
     }
 }

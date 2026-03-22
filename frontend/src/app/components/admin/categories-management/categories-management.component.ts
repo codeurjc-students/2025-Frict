@@ -98,8 +98,8 @@ export class CategoriesManagementComponent implements OnInit {
         children: mappedChildren
       };
 
-      // METRICS CALCULATION
-      const stats = this.calculateMetrics([rootNode]);
+      // STATISTICS CALCULATION
+      const stats = this.calculateStatistics([rootNode]);
 
       this.totalCategories.set(stats.totalNodes);
       this.maxDepth.set(stats.maxDepth);
@@ -136,13 +136,13 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
 
-  private calculateMetrics(nodes: TreeNode[], currentDepth: number = 0): { totalNodes: number, activeNodes: number, maxDepth: number, totalVolume: number } {
+  private calculateStatistics(nodes: TreeNode[], currentDepth: number = 0): { totalNodes: number, activeNodes: number, maxDepth: number, totalVolume: number } {
     let stats = { totalNodes: 0, activeNodes: 0, maxDepth: currentDepth, totalVolume: 0 };
 
     for (const node of nodes) {
       // Ignore virtual root node and descend to its children
       if (node.data?.id === -1) {
-        return this.calculateMetrics(node.children || [], 0);
+        return this.calculateStatistics(node.children || [], 0);
       }
 
       stats.totalNodes++;
@@ -159,7 +159,7 @@ export class CategoriesManagementComponent implements OnInit {
 
       // Recursive
       if (node.children && node.children.length > 0) {
-        const childStats = this.calculateMetrics(node.children, currentDepth + 1);
+        const childStats = this.calculateStatistics(node.children, currentDepth + 1);
 
         stats.totalNodes += childStats.totalNodes;
         stats.activeNodes += childStats.activeNodes;

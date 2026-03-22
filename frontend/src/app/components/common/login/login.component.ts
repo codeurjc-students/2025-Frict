@@ -52,9 +52,20 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.invalid) return;
 
     const { username, password } = this.loginForm.getRawValue();
+
     this.authService.login(username, password).subscribe({
-      next: () => {
-        this.router.navigateByUrl(this.returnUrl);
+      next: (response) => {
+        if (this.returnUrl !== '/') {
+          this.router.navigateByUrl(this.returnUrl);
+          return;
+        }
+
+        if (this.authService.isAdmin() || this.authService.isManager() || this.authService.isDriver()) {
+          this.router.navigateByUrl('/admin');
+        }
+        else {
+          this.router.navigateByUrl('/');
+        }
       },
       error: () => {
         this.showErrorMessage = true;

@@ -182,12 +182,12 @@ export class OrdersManagementComponent implements OnInit {
 
     this.orderMap = L.map('order-map').setView([40.4168, -3.7038], 6);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.orderMap);
 
-    this.orderMap.attributionControl.setPrefix('');
+    this.orderMap.attributionControl.setPrefix('Leaflet');
 
     const orderIcon = L.icon({
       iconUrl: './location-pointer.png',
@@ -215,7 +215,7 @@ export class OrdersManagementComponent implements OnInit {
     // Destinations pointer
     if (this.selectedOrder?.sendingAddress?.latitude && this.selectedOrder?.sendingAddress?.longitude) {
       L.marker([this.selectedOrder.sendingAddress.latitude, this.selectedOrder.sendingAddress.longitude], { icon: orderIcon })
-        .bindPopup('<b>Destino</b><br>' + this.selectedOrder.userName)
+        .bindPopup('<b>Destino</b><br>' + this.selectedOrder.user.name)
         .addTo(this.markersGroup);
     }
 
@@ -245,7 +245,7 @@ export class OrdersManagementComponent implements OnInit {
       return;
     }
 
-    // Si ya cargaron y NO estamos forzando la recarga, abortamos
+    // Abort if loaded and reload is not forced
     if (this.trucksLoaded && !forceReload) return;
 
     this.loadingTrucks = true;
@@ -433,18 +433,14 @@ export class OrdersManagementComponent implements OnInit {
     return colors[status] || 'bg-slate-100 text-slate-700';
   }
 
-  getUserLabel(userName: string | undefined): string {
-    const idStr = String(userName || '');
-    return (idStr.charAt(0) || 'U').toUpperCase();
-  }
-
   getItemName(item: any): string {
     return item.productName || item.product?.name || 'Producto ID: ' + (item.productId || 'N/A');
   }
 
   private loadOrdersPage() {
-    this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows).subscribe({
+    this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows, 'createdAt,desc').subscribe({
       next: (page: PageResponse<Order>) => {
+        console.log(page);
         this.ordersPage = page;
         this.ordersMade.set(page.items.filter(o => this.getCurrentStatus(o) === 'Pedido Realizado'));
         this.shippedOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Enviado'));

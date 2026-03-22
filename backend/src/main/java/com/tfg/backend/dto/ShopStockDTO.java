@@ -14,6 +14,8 @@ public class ShopStockDTO {
     private Long productId;
     private String productName;
     private String productReferenceCode;
+    private double productSupplyPrice;
+    private double productCurrentPrice;
     private int units;
     private boolean active;
 
@@ -28,6 +30,8 @@ public class ShopStockDTO {
         this.productId = s.getProduct().getId();
         this.productName = s.getProduct().getName();
         this.productReferenceCode = s.getProduct().getReferenceCode();
+        this.productSupplyPrice = s.getProduct().getSupplyPrice();
+        this.productCurrentPrice = s.getProduct().getCurrentPrice();
         this.units = s.getUnits();
         this.active = s.isActive();
     }

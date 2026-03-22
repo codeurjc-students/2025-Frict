@@ -28,15 +28,11 @@ public class OrderStatusLog {
     @OrderBy("date ASC")
     private List<LogEntry> updates = new ArrayList<>();
 
-    // Constructor vacío requerido por JPA
     public OrderStatusLog() {
     }
 
-    // Constructor inteligente que maneja el mensaje por defecto
     public OrderStatusLog(OrderStatus status, String description) {
         this.status = status;
-
-        // Si el front no envía comentario (es nulo o está vacío), usamos el del Enum
         String finalDescription = (description == null || description.trim().isEmpty())
                 ? status.getDefaultMessage()
                 : description;

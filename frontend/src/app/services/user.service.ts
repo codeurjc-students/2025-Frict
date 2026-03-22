@@ -5,8 +5,7 @@ import {User} from '../models/user.model';
 import {PaymentCard} from '../models/paymentCard.model';
 import {Address} from '../models/address.model';
 import {PageResponse} from '../models/pageResponse.model';
-import {StatData} from '../utils/statData.model';
-import {Shop} from '../models/shop.model';
+import {Stat} from '../models/stat.model';
 
 @Injectable({
   providedIn: 'root'
@@ -20,11 +19,11 @@ export class UserService {
   public uploadUserImage(userId: string, selectedImage: File): Observable<User> {
     const formData = new FormData();
     formData.append('image', selectedImage);
-    return this.http.post<User>(this.apiUrl + `/image/${userId}`, formData);
+    return this.http.put<User>(this.apiUrl + `/image/${userId}`, formData);
   }
 
   public setSelectedShopId(shopId: number | null): Observable<Boolean> {
-    return this.http.post<Boolean>(this.apiUrl + `/shop`, { shopId: shopId });
+    return this.http.put<Boolean>(this.apiUrl + `/shop`, { shopId: shopId });
   }
 
   public getLoggedUserInfo(): Observable<User>{
@@ -49,7 +48,7 @@ export class UserService {
   }
 
   public anonLoggedUser(): Observable<User> {
-    return this.http.delete<User>(this.apiUrl);
+    return this.http.put<User>(this.apiUrl + `/anonymize`, {});
   }
 
   //POST method could be used by administrators to create new user profiles
@@ -107,8 +106,8 @@ export class UserService {
     return this.http.delete<boolean>(this.apiUrl + `/${id}`);
   }
 
-  public getUsersStats(): Observable<StatData[]> {
-    return this.http.get<StatData[]>(this.apiUrl + `/stats`)
+  public getUsersStats(): Observable<Stat[]> {
+    return this.http.get<Stat[]>(this.apiUrl + `/stats`)
   }
 
   checkUsernameTaken(username: string): Observable<boolean> {
@@ -123,4 +122,7 @@ export class UserService {
     return this.http.get<boolean>(this.apiUrl + `/email`, { params });
   }
 
+  checkBackendConnection(): Observable<{status: string}> {
+    return this.http.get<{status: string}>('/actuator/health');
+  }
 }

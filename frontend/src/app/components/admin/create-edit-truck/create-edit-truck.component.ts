@@ -145,11 +145,11 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
             address: truck.address
           }, { emitEvent: false });
 
-          // Si el camión pertenece a una tienda, la cargamos inmediatamente para que el p-select muestre el nombre.
+          // If the truck belongs to a shop, load it to the available shops list
           if (truck.shopId) {
             this.shopService.getShopById(truck.shopId).subscribe({
               next: (shop) => {
-                this.availableShops = [shop]; // Guardamos temporalmente la tienda actual
+                this.availableShops = [shop]; // Store temporarily
               }
             });
           }
@@ -176,14 +176,13 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Se lanza al hacer clic en el p-select (Lazy Loading)
+  // Loaded when clicking over p-select element (lazy loading)
   loadAvailableShops() {
     if (this.shopsLoaded) return;
     this.loadingShops = true;
 
     this.shopService.getAllShopsList().subscribe({
       next: (shops) => {
-        // Mezclamos la tienda actual (si existe) con la lista nueva evitando duplicados
         const newShops = [...shops];
         if (this.availableShops.length === 1) {
           const currentShop = this.availableShops[0];
@@ -220,12 +219,12 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
 
     this.map = L.map('map').setView([lat, lng], zoom);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
 
-    this.map.attributionControl.setPrefix('');
+    this.map.attributionControl.setPrefix('Leaflet');
 
     const iconDefault = L.icon({
       iconUrl: './location-pointer.png',

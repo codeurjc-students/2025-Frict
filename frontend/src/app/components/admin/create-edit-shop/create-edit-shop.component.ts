@@ -50,6 +50,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     this.shopForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
       referenceCode: [{ value: '', disabled: true }],
+      assignedBudget: [0, [Validators.required, Validators.min(0.01)]],
       // Group address
       address: this.fb.group({
         alias: ['', []],
@@ -151,7 +152,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           this.shopForm.patchValue({
             name: shop.name,
             referenceCode: shop.referenceCode,
-            address: shop.address
+            address: shop.address,
+            assignedBudget: shop.assignedBudget
           }, { emitEvent: false });
 
           this.loading = false;
@@ -196,12 +198,12 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
 
     this.map = L.map('map').setView([lat, lng], zoom);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
 
-    this.map.attributionControl.setPrefix('');
+    this.map.attributionControl.setPrefix('Leaflet');
 
     const iconDefault = L.icon({
       iconUrl: './location-pointer.png',
