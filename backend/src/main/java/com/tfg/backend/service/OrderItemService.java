@@ -1,7 +1,6 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.OrderItem;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.OrderItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

@@ -1,6 +1,6 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable, signal} from '@angular/core';
-import {catchError, map, Observable, switchMap, tap, throwError} from 'rxjs';
+import {catchError, Observable, switchMap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {Product} from '../models/product.model';
 import {PageResponse} from '../models/pageResponse.model';

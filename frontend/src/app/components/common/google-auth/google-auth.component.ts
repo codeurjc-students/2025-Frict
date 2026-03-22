@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, NgZone, ViewChild, viewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, NgZone, ViewChild} from '@angular/core';
 import {AuthService} from '../../../services/auth.service';
 import {Router} from '@angular/router';
 import {environment} from '../../../../environments/environment';

@@ -1,16 +1,16 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
-import { provideRouter, withRouterConfig } from '@angular/router';
-import { routes } from './app.routes';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { providePrimeNG } from 'primeng/config';
-import { MyPreset } from './colorpreset';
-import { provideHttpClient } from '@angular/common/http';
-import { AuthService } from './services/auth.service';
-import { finalize } from 'rxjs';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import {ApplicationConfig, inject, LOCALE_ID, provideAppInitializer, provideZoneChangeDetection} from '@angular/core';
+import {provideRouter, withRouterConfig} from '@angular/router';
+import {routes} from './app.routes';
+import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
+import {providePrimeNG} from 'primeng/config';
+import {MyPreset} from './colorpreset';
+import {provideHttpClient} from '@angular/common/http';
+import {AuthService} from './services/auth.service';
+import {finalize} from 'rxjs';
+import {ConfirmationService, MessageService} from 'primeng/api';
 
 // Importaciones para el idioma español
-import { registerLocaleData } from '@angular/common';
+import {registerLocaleData} from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 
 // Registrar los datos de cultura de España

@@ -1,7 +1,10 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
-import com.tfg.backend.model.*;
+import com.tfg.backend.dto.CategoryDTO;
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.model.Category;
+import com.tfg.backend.model.ImageInfo;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.StorageService;

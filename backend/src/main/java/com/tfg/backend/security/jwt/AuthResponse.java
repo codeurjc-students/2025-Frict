@@ -1,10 +1,16 @@
 package com.tfg.backend.security.jwt;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class AuthResponse {
 
 	private Status status;
 	private String message;
 	private String error;
+	private String newUserEmail = null;
 
 	public enum Status {
 		SUCCESS, FAILURE
@@ -18,34 +24,10 @@ public class AuthResponse {
 		this.message = message;
 	}
 
-	public AuthResponse(Status status, String message, String error) {
+	public AuthResponse(Status status, String message, String newUserEmail) {
 		this.status = status;
 		this.message = message;
-		this.error = error;
-	}
-
-	public Status getStatus() {
-		return status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public String getError() {
-		return error;
-	}
-
-	public void setError(String error) {
-		this.error = error;
+		this.newUserEmail = newUserEmail;
 	}
 
 	@Override

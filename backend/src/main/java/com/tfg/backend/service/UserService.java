@@ -2,11 +2,10 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.UserLoginDTO;
 import com.tfg.backend.dto.UserSignupDTO;
-import com.tfg.backend.model.*;
+import com.tfg.backend.model.Order;
+import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import jakarta.servlet.http.HttpServletRequest;
-import org.hamcrest.Condition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,11 +14,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.security.Principal;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -98,6 +97,10 @@ public class UserService {
     }
 
     public User registerUser(UserSignupDTO dto) {
+        if (this.isUsernameTaken(dto.getUsername()) || this.isEmailTaken(dto.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This username or email is already taken.");
+        }
+
         String role;
         if (dto.getRole() == null || dto.getRole().isEmpty()){
             role = "USER";

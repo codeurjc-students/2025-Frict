@@ -1,7 +1,5 @@
 package com.tfg.backend.dto;
 
-import com.tfg.backend.model.OrderStatus;
-import com.tfg.backend.model.OrderStatusLog;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatusLog;
 import lombok.Getter;

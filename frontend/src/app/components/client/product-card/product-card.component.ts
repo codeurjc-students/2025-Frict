@@ -3,7 +3,6 @@ import {RouterLink} from "@angular/router";
 import {Product} from '../../../models/product.model';
 import {NgIf} from '@angular/common';
 import {formatPrice, formatRating} from '../../../utils/textFormat.util';
-import {Tag} from 'primeng/tag';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 

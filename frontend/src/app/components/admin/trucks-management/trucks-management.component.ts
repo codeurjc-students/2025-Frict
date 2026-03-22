@@ -1,12 +1,12 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 
 import * as L from 'leaflet';
 
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { User } from '../../../models/user.model';
-import { PageResponse } from '../../../models/pageResponse.model';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {User} from '../../../models/user.model';
+import {PageResponse} from '../../../models/pageResponse.model';
 import {Button} from 'primeng/button';
 import {SelectButton} from 'primeng/selectbutton';
 import {UIChart} from 'primeng/chart';
@@ -22,12 +22,12 @@ import {Dialog} from 'primeng/dialog';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {Alert} from '../../../utils/ui.service';
 
-import { Tooltip } from 'primeng/tooltip';
-import { Textarea } from 'primeng/textarea';
-import { Truck } from '../../../models/truck.model';
-import { TruckService } from '../../../services/truck.service';
-import { formatAddress } from '../../../utils/textFormat.util';
-import { UserService } from '../../../services/user.service';
+import {Tooltip} from 'primeng/tooltip';
+import {Textarea} from 'primeng/textarea';
+import {Truck} from '../../../models/truck.model';
+import {TruckService} from '../../../services/truck.service';
+import {formatAddress} from '../../../utils/textFormat.util';
+import {UserService} from '../../../services/user.service';
 import {Select} from 'primeng/select';
 import {RouterLink} from '@angular/router';
 

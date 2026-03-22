@@ -1,23 +1,23 @@
-import { Component, OnInit, AfterViewInit, signal, Inject, PLATFORM_ID, DestroyRef, inject } from '@angular/core';
-import { NgIf, isPlatformBrowser } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, switchMap, filter, catchError, of } from 'rxjs';
+import {AfterViewInit, Component, DestroyRef, Inject, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
+import {isPlatformBrowser, NgIf} from '@angular/common';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {catchError, debounceTime, filter, of, switchMap} from 'rxjs';
 
-import { InputText } from 'primeng/inputtext';
-import { InputNumber } from 'primeng/inputnumber';
-import { Button } from 'primeng/button';
-import { Select } from 'primeng/select';
-import { MessageService } from 'primeng/api';
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
+import {InputText} from 'primeng/inputtext';
+import {InputNumber} from 'primeng/inputnumber';
+import {Button} from 'primeng/button';
+import {Select} from 'primeng/select';
+import {MessageService} from 'primeng/api';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import * as L from 'leaflet';
-import { LocationService } from '../../../services/location.service';
+import {LocationService} from '../../../services/location.service';
 
-import { Truck } from '../../../models/truck.model';
-import { TruckService } from '../../../services/truck.service';
-import { Shop } from '../../../models/shop.model';
-import { ShopService } from '../../../services/shop.service';
+import {Truck} from '../../../models/truck.model';
+import {TruckService} from '../../../services/truck.service';
+import {Shop} from '../../../models/shop.model';
+import {ShopService} from '../../../services/shop.service';
 
 @Component({
   selector: 'app-create-edit-truck',

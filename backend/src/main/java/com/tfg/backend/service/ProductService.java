@@ -1,11 +1,8 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.Product;
-import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.User;
-import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.repository.ProductRepository;
-import com.tfg.backend.repository.ShopStockRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,9 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {

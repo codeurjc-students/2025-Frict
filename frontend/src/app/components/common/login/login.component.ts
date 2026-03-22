@@ -1,9 +1,8 @@
-import {Component, OnInit, ViewChild, ElementRef, NgZone} from '@angular/core';
-import { AuthService } from '../../../services/auth.service';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {Component, OnInit} from '@angular/core';
+import {AuthService} from '../../../services/auth.service';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import { NgIf, NgOptimizedImage } from '@angular/common';
-import {environment} from '../../../../environments/environment';
+import {NgIf, NgOptimizedImage} from '@angular/common';
 import {GoogleAuthComponent} from '../google-auth/google-auth.component';
 import {CustomValidators} from '../../../utils/customValidators.util';
 import {UserService} from '../../../services/user.service';

@@ -1,6 +1,6 @@
-import { Component, OnInit, signal, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 
 import {RouterLink} from '@angular/router';
 import {InputGroup} from 'primeng/inputgroup';

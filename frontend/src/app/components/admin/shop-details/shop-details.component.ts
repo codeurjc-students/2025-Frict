@@ -1,11 +1,11 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core'; // IMPORTANTE: ChangeDetectorRef
+import {ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core'; // IMPORTANTE: ChangeDetectorRef
 import {isPlatformBrowser, NgClass, NgIf} from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 
 import * as L from 'leaflet';
 import {ConfirmationService, MessageService} from 'primeng/api';
-import { ShopService } from '../../../services/shop.service';
-import { TruckService } from '../../../services/truck.service';
+import {ShopService} from '../../../services/shop.service';
+import {TruckService} from '../../../services/truck.service';
 import {Shop} from '../../../models/shop.model';
 import {Truck} from '../../../models/truck.model';
 import {ShopStock} from '../../../models/shopStock.model';
@@ -27,7 +27,6 @@ import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {Message} from 'primeng/message';
-import {Address} from '../../../models/address.model';
 
 @Component({
   selector: 'app-shop-details',

@@ -1,12 +1,13 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
+import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

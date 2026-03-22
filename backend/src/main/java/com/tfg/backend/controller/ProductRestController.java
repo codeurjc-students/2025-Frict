@@ -1,13 +1,15 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
+import com.tfg.backend.dto.CategoryDTO;
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.ShopStockDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
