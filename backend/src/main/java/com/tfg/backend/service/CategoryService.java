@@ -1,8 +1,11 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.model.Category;
+import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.CategoryRepository;
+import com.tfg.backend.utils.GlobalDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -10,27 +13,31 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class CategoryService {
 
     @Autowired
-    private ProductService productService;
+    private StorageService storageService;
 
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Transactional(readOnly = true)
+    // --- Read-only methods ---
+
     public List<Category> findAll() {
         return categoryRepository.findRootsWithChildren();
     }
 
-    @Transactional(readOnly = true)
     public Page<Category> getCategoriesPage(Pageable pageable) {
         Page<Category> rootsPage = categoryRepository.findRoots(pageable);
 
@@ -42,18 +49,118 @@ public class CategoryService {
         return new PageImpl<>(rootsWithChildren, pageable, rootsPage.getTotalElements());
     }
 
-    @Transactional(readOnly = true)
     public Optional<Category> findById(long id) {
         return categoryRepository.findByIdWithChildren(id);
     }
 
-    @Transactional(readOnly = true)
     public Optional<Category> findByName(String name) {
         return categoryRepository.findByNameWithChildren(name);
     }
 
+    public Category findByIdHelper(Long id) {
+        return this.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " does not exist."));
+    }
+
+    public Category findByNameHelper(String name) {
+        return this.findByName(name)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with name " + name + " does not exist."));
+    }
+
+    // --- Writing  methods (override Transactional) ---
+
+    @Transactional
+    public Category createCategory(CategoryDTO dto) {
+        Category othersCategory = this.findByNameHelper("Otros");
+
+        if (othersCategory.getId().equals(dto.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot create a subcategory for \"Otros\" category");
+        }
+
+        Category newCategory = new Category(dto.getName(), dto.getIcon(), dto.getBannerText(), dto.getShortDescription(), dto.getLongDescription());
+
+        Long parentId = dto.getParentId();
+        if (parentId != null) {
+            Category parentCategory = this.findByIdHelper(parentId);
+            parentCategory.addChild(newCategory);
+        }
+
+        return categoryRepository.save(newCategory);
+    }
+
+    @Transactional
+    public Category updateCategory(Long id, CategoryDTO dto) {
+        Category category = this.findByIdHelper(id);
+        Category othersCategory = this.findByNameHelper("Otros");
+
+        if (othersCategory.getId().equals(dto.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot update \"Otros\" category");
+        }
+
+        category.setName(dto.getName());
+        category.setIcon(dto.getIcon());
+        category.setBannerText(dto.getBannerText());
+        category.setShortDescription(dto.getShortDescription());
+        category.setLongDescription(dto.getLongDescription());
+
+        Long newParentId = dto.getParentId();
+        Category currentParent = category.getParent();
+
+        if (newParentId == null) {
+            if (currentParent != null) {
+                currentParent.removeChild(category);
+            }
+        } else {
+            boolean isSameParent = currentParent != null && currentParent.getId().equals(newParentId);
+
+            if (!isSameParent) {
+                Category newParent = this.findByIdHelper(newParentId);
+                validateCircularReference(category, newParent);
+
+                if (newParent.getProducts() != null && !newParent.getProducts().isEmpty()) {
+                    List<Product> productsToClean = new ArrayList<>(newParent.getProducts());
+
+                    for (Product product : productsToClean) {
+                        product.getCategories().remove(newParent);
+                        if (product.getCategories().isEmpty()) {
+                            product.getCategories().add(othersCategory);
+                        }
+                        // Updated automatically
+                    }
+                    newParent.getProducts().clear();
+                }
+
+                if (currentParent != null) {
+                    currentParent.removeChild(category);
+                }
+                newParent.addChild(category);
+            }
+        }
+
+        return category; // Saved automatically
+    }
+
+    @Transactional
+    public Category deleteCategory(Long id) {
+        Category categoryToDelete = this.findByIdHelper(id);
+        Category othersCategory = this.findByNameHelper("Otros");
+
+        if (othersCategory.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete 'Otros' category");
+        }
+
+        this.processCategoryForDeletion(categoryToDelete, othersCategory);
+
+        if (categoryToDelete.getParent() != null) {
+            categoryToDelete.getParent().removeChild(categoryToDelete);
+        }
+
+        categoryRepository.delete(categoryToDelete);
+        return categoryToDelete;
+    }
+
+    @Transactional
     public void processCategoryForDeletion(Category category, Category othersCategory) {
-        // Children processed first
         if (category.getChildren() != null && !category.getChildren().isEmpty()) {
             List<Category> children = new ArrayList<>(category.getChildren());
             for (Category child : children) {
@@ -61,37 +168,78 @@ public class CategoryService {
             }
         }
 
-        // Products logic
         if (category.getProducts() != null && !category.getProducts().isEmpty()) {
             List<Product> productsToUpdate = new ArrayList<>(category.getProducts());
 
             for (Product product : productsToUpdate) {
                 product.getCategories().remove(category);
 
-                // Check for unclassified products
                 if (product.getCategories().isEmpty()) {
                     product.getCategories().add(othersCategory);
                 }
-
-                // Save changes in product
-                productService.update(product);
+                // Updated automatically
             }
-            // Clean list in memory
             category.getProducts().clear();
         }
     }
 
+    @Transactional
+    public Category uploadCategoryImage(Long id, MultipartFile file) {
+        Category category = this.findByIdHelper(id);
+
+        if (category.getCategoryImage() != null && !category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
+            storageService.deleteFile(category.getCategoryImage().getS3Key());
+        }
+
+        if (!file.isEmpty()){
+            try {
+                Map<String, String> res = storageService.uploadFile(file, "categories");
+                ImageInfo imageInfo = new ImageInfo(
+                        res.get("url"),
+                        res.get("key"),
+                        file.getOriginalFilename()
+                );
+                category.setCategoryImage(imageInfo);
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload category image to storage");
+            }
+        } else {
+            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
+        }
+
+        return category; // Saved automatically
+    }
+
+    @Transactional
+    public Category deleteCategoryImage(Long id) {
+        Category category = this.findByIdHelper(id);
+
+        if (!category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
+            storageService.deleteFile(category.getCategoryImage().getS3Key());
+            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
+        }
+
+        return category; // Saved automatically
+    }
+
+    @Transactional
     public Category save(Category category) {
         return categoryRepository.save(category);
     }
 
-    public void delete(Category category) {
-        categoryRepository.delete(category);
-    }
+    // --- PRIVATE VALIDATION METHOD ---
 
-    @Transactional(readOnly = true)
-    public Category findCategoryHelper(Long id) {
-        return this.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category with ID " + id + " does not exist."));
+    private void validateCircularReference(Category categoryToMove, Category newParentCandidate) {
+        if (categoryToMove.getId().equals(newParentCandidate.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "A category cannot be its own parent.");
+        }
+
+        Category temp = newParentCandidate;
+        while (temp.getParent() != null) {
+            if (temp.getParent().getId().equals(categoryToMove.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot move category into its own descendant.");
+            }
+            temp = temp.getParent();
+        }
     }
 }
