@@ -26,12 +26,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,14 +43,9 @@ public class UserLoginService {
 	private final UserDetailsService userDetailsService;
 	private final JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private UserService userService;
-
-	@Autowired
-	private EmailService emailService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+	@Autowired private UserService userService;
+	@Autowired private EmailService emailService;
+	@Autowired private PasswordEncoder passwordEncoder;
 
 	@Value("${google.auth.clientId}")
 	private String googleClientId;
@@ -61,15 +56,13 @@ public class UserLoginService {
 		this.jwtTokenProvider = jwtTokenProvider;
 	}
 
-
-	//As it may act as
-    public AuthResponse loginWithGoogle(HttpServletResponse response, GoogleTokenDTO tokenDTO) {
+	@Transactional
+	public AuthResponse loginWithGoogle(HttpServletResponse response, GoogleTokenDTO tokenDTO) {
 		GoogleIdToken idToken;
 		try {
 			GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
 					.setAudience(Collections.singletonList(googleClientId))
 					.build();
-
 			idToken = verifier.verify(tokenDTO.token());
 		} catch (Exception e) {
 			throw new BadCredentialsException("Error while verifying Google token.", e);
@@ -85,72 +78,55 @@ public class UserLoginService {
 		if(userService.isBannedByEmail(email)){
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
 		}
-
 		if(userService.isDeletedByEmail(email)){
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user has been previously deleted.");
 		}
 
-        User user;
+		User user;
 		boolean existentUser = userService.existsByEmail(email);
-        if (existentUser) {
-            user = userService.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Data integrity error: Corrupt user data"));
-        } else {
-            String uniqueUuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-            String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString()); // Trash secure password (never used)
+		if (existentUser) {
+			user = userService.findByEmail(email)
+					.orElseThrow(() -> new UsernameNotFoundException("Data integrity error: Corrupt user data"));
+		} else {
+			String uniqueUuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+			String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+			user = userService.registerUser(new UserSignupDTO(
+					(String) payload.get("name"), "google_" + uniqueUuid, dummyPassword, email, "USER"
+			));
+		}
 
-            user = userService.registerUser(new UserSignupDTO(
-                    (String) payload.get("name"), //Real Google name
-                    "google_" + uniqueUuid,
-                    dummyPassword,
-                    email,
-                    "USER"
-            ));
-        }
+		UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+		Authentication authentication = new UsernamePasswordAuthenticationToken(
+				userDetails, null, userDetails.getAuthorities()
+		);
+		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Bypass AuthenticationManager and trust the valid Google token only
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null, // No credentials to show
-                userDetails.getAuthorities()
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Generate and add session JWT tokens
-        var newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
-        var newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
-        response.addCookie(buildTokenCookie(TokenType.ACCESS, newAccessToken));
-        response.addCookie(buildTokenCookie(TokenType.REFRESH, newRefreshToken));
+		var newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
+		var newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+		response.addCookie(buildTokenCookie(TokenType.ACCESS, newAccessToken));
+		response.addCookie(buildTokenCookie(TokenType.REFRESH, newRefreshToken));
 
 		if (existentUser){
 			return new AuthResponse(AuthResponse.Status.SUCCESS, "Successful Google Login");
 		}
 		else return new AuthResponse(AuthResponse.Status.SUCCESS, "Successful Google Signup", email);
-    }
+	}
+
 
 	public AuthResponse login(HttpServletResponse response, LoginRequest loginRequest) {
-
-		//Check if the user is banned or deleted
 		if(userService.isBannedByUsername(loginRequest.getUsername())){
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
 		}
-
 		if(userService.isDeletedByUsername(loginRequest.getUsername())){
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This user has been previously deleted.");
 		}
-		
+
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		
-		String username = loginRequest.getUsername();
-		UserDetails user = userDetailsService.loadUserByUsername(username);
-
+		UserDetails user = userDetailsService.loadUserByUsername(loginRequest.getUsername());
 		var newAccessToken = jwtTokenProvider.generateAccessToken(user);
 		var newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
 
@@ -160,11 +136,11 @@ public class UserLoginService {
 		return new AuthResponse(AuthResponse.Status.SUCCESS, "Auth successful. Tokens are created in cookie.");
 	}
 
+	// Igual que login, solo lee y genera tokens.
 	public AuthResponse refresh(HttpServletResponse response, String refreshToken) {
 		try {
 			var claims = jwtTokenProvider.validateToken(refreshToken);
 			UserDetails user = userDetailsService.loadUserByUsername(claims.getSubject());
-
 			var newAccessToken = jwtTokenProvider.generateAccessToken(user);
 			response.addCookie(buildTokenCookie(TokenType.ACCESS, newAccessToken));
 			return new AuthResponse(AuthResponse.Status.SUCCESS, "Auth successful. Tokens are created in cookie.");
@@ -182,29 +158,27 @@ public class UserLoginService {
 		return new AuthResponse(AuthResponse.Status.SUCCESS, "Logout successfully");
 	}
 
+	@Transactional
 	public void recoverPassword(String username){
 		User user = userService.findUserHelper(username);
 
 		SecureRandom secureRandom = new SecureRandom();
-		String newOtp = String.format("%06d", secureRandom.nextInt(1000000)); //6-digit OTP
+		String newOtp = String.format("%06d", secureRandom.nextInt(1000000));
 		user.setOtpCode(newOtp);
 		user.setOtpExpiration(LocalDateTime.now().plusMinutes(15));
-		User savedUser = userService.save(user);
 
-		emailService.sendRecoveryOtp(savedUser.getEmail(), savedUser.getUsername(), savedUser.getOtpCode());
+		// Saved automatically
+
+		// If this fails, OTP is not stored in DB
+		emailService.sendRecoveryOtp(user.getEmail(), user.getUsername(), user.getOtpCode());
 	}
 
 	public boolean verifyOtp(String username, String otpCode){
 		User user = userService.findUserHelper(username);
-		if (!user.isOtpValid(otpCode)){
-			return false;
-		}
-		user.setOtpCode(null);
-		user.setOtpExpiration(null);
-		userService.save(user);
-		return true;
+		return user.isOtpValid(otpCode);
 	}
 
+	@Transactional
 	public void resetSelfPassword(String username, String otpCode, String newPassword){
 		User user = userService.findUserHelper(username);
 
@@ -213,30 +187,30 @@ public class UserLoginService {
 		}
 
 		user.setEncodedPassword(passwordEncoder.encode(newPassword));
-		userService.save(user);
+		user.setOtpCode(null); // Clean OTP after using it
+		user.setOtpExpiration(null);
+		// Saved automatically
 	}
 
+	@Transactional
 	public void resetInternalPassword(Long id, String newPassword){
-		Optional<User> userOptional = userService.findById(id);
-
-		if (userOptional.isEmpty()){
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
-		}
-		User user = userOptional.get();
+		User user = userService.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist."));
 
 		if (user.getRoles().contains("USER")){
 			throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "User password cannot be changed by other accounts.");
 		}
 
 		user.setEncodedPassword(passwordEncoder.encode(newPassword));
-		userService.save(user);
+		// Saved automatically
 	}
 
+	// -- PRIVATE COOKIES METHODS --
 	private Cookie buildTokenCookie(TokenType type, String token) {
 		Cookie cookie = new Cookie(type.cookieName, token);
 		cookie.setMaxAge((int) type.duration.getSeconds());
 		cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+		cookie.setSecure(true);
 		cookie.setPath("/");
 		return cookie;
 	}
@@ -245,7 +219,7 @@ public class UserLoginService {
 		Cookie cookie = new Cookie(type.cookieName, "");
 		cookie.setMaxAge(0);
 		cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+		cookie.setSecure(true);
 		cookie.setPath("/");
 		return cookie;
 	}
