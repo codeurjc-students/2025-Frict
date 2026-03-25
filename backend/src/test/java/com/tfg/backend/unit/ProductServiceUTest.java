@@ -60,7 +60,7 @@ class ProductServiceUTest {
 
     // findAll() method tests
     @Test
-    void findAll_ShouldReturnPage() {
+    void getAllProducts_ShouldReturnPage() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Product> expectedPage = new PageImpl<>(Collections.singletonList(testProduct));
 
@@ -68,7 +68,7 @@ class ProductServiceUTest {
 
         when(shopStockService.getLocalStocks(anyList(), any())).thenReturn(Collections.singletonList(1));
 
-        Page<Product> result = productService.findAll(pageable);
+        Page<Product> result = productService.getAllProducts(pageable);
 
         assertEquals(expectedPage.getTotalElements(), result.getTotalElements());
         verify(shopStockService).getLocalStocks(anyList(), any());

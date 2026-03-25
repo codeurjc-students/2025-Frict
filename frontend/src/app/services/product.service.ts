@@ -128,13 +128,13 @@ export class ProductService {
   public toggleGlobalActivation(id: string, state: boolean): Observable<Product> {
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Product>(this.apiUrl + `/active/${id}`, null, { params });
+    return this.http.put<Product>(this.apiUrl + `/active/${id}`, null, { params });
   }
 
   public toggleAllGlobalActivations(state: boolean): Observable<Boolean> {
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Boolean>(this.apiUrl + `/active/`, null, { params });
+    return this.http.put<Boolean>(this.apiUrl + `/active/`, null, { params });
   }
 
   public createProduct(productData: Product): Observable<Product> {
