@@ -14,7 +14,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,19 +61,19 @@ class ReviewServiceUTest {
 
     // findAllByUser() method tests
     @Test
-    void findAllByUser_ShouldReturnPage() {
+    void findAllByUser_ShouldReturnList() {
         User user = new User();
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Review> expectedPage = new PageImpl<>(Collections.singletonList(new Review()));
+        List<Review> expectedList = new ArrayList<>();
 
-        when(reviewRepository.findAllByUser(user, pageable)).thenReturn(expectedPage);
+        when(reviewRepository.findAllByUser(user)).thenReturn(expectedList);
 
-        Page<Review> result = reviewService.findAllByUser(user, pageable);
+        List<Review> result = reviewService.findAllByUser(user);
 
         assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        assertEquals(expectedPage, result);
-        verify(reviewRepository, times(1)).findAllByUser(user, pageable);
+        assertEquals(0, result.size());
+        assertEquals(expectedList, result);
+        verify(reviewRepository, times(1)).findAllByUser(user);
     }
 
 

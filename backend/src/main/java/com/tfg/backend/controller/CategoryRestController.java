@@ -3,30 +3,20 @@ package com.tfg.backend.controller;
 import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.Category;
-import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.CategoryService;
-import com.tfg.backend.service.ProductService;
-import com.tfg.backend.service.StorageService;
-import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/categories")

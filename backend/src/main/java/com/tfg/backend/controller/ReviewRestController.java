@@ -2,27 +2,21 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.ReviewDTO;
-import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
-import com.tfg.backend.model.User;
-import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.ReviewService;
-import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/reviews")
@@ -32,18 +26,10 @@ public class ReviewRestController {
     @Autowired
     private ReviewService reviewService;
 
-    @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private UserService userService;
-
-
     @Operation(summary = "(Admin) Get user reviews by user ID (paged)")
     @GetMapping("/user/{id}")
     public ResponseEntity<PageResponse<ReviewDTO>> getUserReviewsByUserId (@PathVariable Long id, Pageable pageable){
-        User user = userService.findUserHelper(id);
-        Page<Review> userReviews = reviewService.findAllByUser(user, pageable);
+        Page<Review> userReviews = reviewService.getReviewsByUserId(id, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
     }
 
@@ -51,10 +37,7 @@ public class ReviewRestController {
     @Operation(summary = "(All) Get logged user reviews (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<ReviewDTO>> getAllUserReviews(Pageable pageable){
-        //Get logged user info if any (User class)
-        User loggedUser = userService.findLoggedUserHelper();
-
-        Page<Review> userReviews = reviewService.findAllByUser(loggedUser, pageable);
+        Page<Review> userReviews = reviewService.getLoggedUserReviews(pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(userReviews, ReviewDTO::new));
     }
 
@@ -62,12 +45,9 @@ public class ReviewRestController {
     //Get all the reviews of a product
     @Operation(summary = "(All) Get all reviews by product ID")
     @GetMapping("/")
-    public ResponseEntity<List<ReviewDTO>> showAllByProductId(@RequestParam Long productId) {
-        Product product = productService.findProductHelper(productId);
-        List<ReviewDTO> dtos = new ArrayList<>();
-        for (Review r : product.getReviews()) {
-            dtos.add(new ReviewDTO(r));
-        }
+    public ResponseEntity<List<ReviewDTO>> getAllReviewsByProductId(@RequestParam Long productId) {
+        Set<Review> reviews = reviewService.getReviewsByProductId(productId);
+        List<ReviewDTO> dtos = reviews.stream().map(ReviewDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
 
@@ -75,17 +55,7 @@ public class ReviewRestController {
     @Operation(summary = "(User) Create review")
     @PostMapping
     public ResponseEntity<ReviewDTO> createReview(@RequestBody ReviewDTO reviewDTO) {
-        //Check that the logged user and the review creator match
-        User loggedUser = userService.findLoggedUserHelper();
-
-        if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
-        }
-
-        //Check that the product exists
-        Product product = productService.findProductHelper(reviewDTO.getProductId());
-
-        Review savedReview = reviewService.save(new Review(loggedUser, product, reviewDTO.getRating(), reviewDTO.getText(), reviewDTO.isRecommended()));
+        Review savedReview = reviewService.createReview(reviewDTO);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -100,38 +70,15 @@ public class ReviewRestController {
     @Operation(summary = "(User) Update review")
     @PutMapping
     public ResponseEntity<ReviewDTO> updateReview(@RequestBody ReviewDTO reviewDTO) {
-        //Check that the logged user and the review creator match
-        User loggedUser = userService.findLoggedUserHelper();
-
-        if (!loggedUser.getId().equals(reviewDTO.getCreatorId())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Creator ID " + reviewDTO.getCreatorId() + " and logged user ID " + loggedUser.getId() + " do not match.");
-        }
-
-        //Check that the review exists
-        Review review = reviewService.findReviewHelper(reviewDTO.getId());
-
-        review.setText(reviewDTO.getText());
-        review.setRating(reviewDTO.getRating());
-        review.setRecommended(reviewDTO.isRecommended());
-        reviewService.save(review);
-        return ResponseEntity.ok().body(new ReviewDTO(review));
+        Review updatedReview = reviewService.updateReview(reviewDTO);
+        return ResponseEntity.ok().body(new ReviewDTO(updatedReview));
     }
 
 
     @Operation(summary = "(Admin, User) Delete review by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ReviewDTO> deleteReviewById(@PathVariable Long id) {
-        //Check that the review exists
-        Review review = reviewService.findReviewHelper(id);
-
-        //Check that the logged user and the review creator match
-        User loggedUser = userService.findLoggedUserHelper();
-
-        if (!loggedUser.getRoles().contains("ADMIN") && !loggedUser.getId().equals(review.getUser().getId())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not an administrator or the creator of this review.");
-        }
-
-        reviewService.deleteById(id);
-        return ResponseEntity.ok().body(new ReviewDTO(review));
+        Review deletedReview = reviewService.deleteReview(id);
+        return ResponseEntity.ok().body(new ReviewDTO(deletedReview));
     }
 }

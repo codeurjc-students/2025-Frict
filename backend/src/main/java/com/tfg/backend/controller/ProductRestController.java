@@ -6,7 +6,6 @@ import com.tfg.backend.dto.ShopStockDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.ProductImageInfo;
 import com.tfg.backend.service.ProductService;
-import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +26,6 @@ import java.util.List;
 @Tag(name = "Product Management", description = "Product data management")
 public class ProductRestController {
 
-    // 1. Inyección por constructor en lugar de @Autowired en el campo
     @Autowired
     private ProductService productService;
 

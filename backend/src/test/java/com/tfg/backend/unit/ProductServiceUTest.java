@@ -163,7 +163,7 @@ class ProductServiceUTest {
 
         productService.deleteById(1L);
 
-        verify(productRepository).deleteById(1L);
+        verify(productRepository).delete(testProduct);
     }
 
     @Test
