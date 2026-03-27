@@ -1,49 +1,244 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.Shop;
-import com.tfg.backend.model.User;
+import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.ShopDTO;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ShopRepository;
+import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.StatDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class ShopService {
 
-    @Autowired
-    private ShopRepository shopRepository;
+    @Autowired private StorageService storageService;
+    @Autowired private UserService userService;
+    @Autowired private TruckService truckService;
+    @Autowired private ShopStockService shopStockService;
+    @Autowired private ProductService productService;
+    @Autowired private ShopRepository shopRepository;
+
+    // --- READ-ONLY METHODS ---
 
     public List<Shop> findAll() { return shopRepository.findAll(); }
-
     public Page<Shop> findAll(Pageable pageInfo) { return shopRepository.findAll(pageInfo); }
-
     public Page<Shop> findAllByAssignedManagerId(Long userId, Pageable pageInfo) { return shopRepository.findAllByAssignedManagerId(userId, pageInfo); }
-
-    public Optional<Shop> findById(Long id) {
-        return shopRepository.findById(id);
-    }
-
-    public Shop save(Shop s) {
-        return shopRepository.save(s);
-    }
-
-    public void delete(Shop s) {
-        shopRepository.delete(s);
-    }
+    public Optional<Shop> findById(Long id) { return shopRepository.findById(id); }
 
     public Shop findShopHelper(Long id) {
         return this.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
     }
 
-    //Metrics
+    public Page<Shop> getAssignedShopsPage(Pageable pageable) {
+        User loggedUser = userService.findLoggedUserHelper();
+        return this.findAllByAssignedManagerId(loggedUser.getId(), pageable);
+    }
+
+    public Shop getShopByAssignedTruckId(Long id) {
+        Truck truck = truckService.findTruckHelper(id);
+        Shop assignedShop = truck.getAssignedShop();
+        if (assignedShop == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This truck is not assigned to any shop.");
+        }
+        return assignedShop;
+    }
+
+    // --- WRITING METHODS (override Transactional) ---
+
+    @Transactional
+    public Shop save(Shop s) {
+        return shopRepository.save(s);
+    }
+
+    @Transactional
+    public Shop createShop(ShopDTO shopDTO){
+        AddressDTO dto = shopDTO.getAddress();
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
+
+        Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
+        return shopRepository.save(shop); // New entity, needs an explicit save
+    }
+
+    @Transactional
+    public Shop updateShop(Long id, ShopDTO shopDTO){
+        Shop shop = this.findShopHelper(id);
+
+        shop.setName(shopDTO.getName());
+        AddressDTO dto = shopDTO.getAddress();
+        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
+
+        shop.setAddress(address);
+        shop.setAssignedBudget(shopDTO.getAssignedBudget());
+
+        return shop; // Updated automatically
+    }
+
+    @Transactional
+    public Shop deleteShop(Long id){
+        Shop shop = this.findShopHelper(id);
+
+        // Unlink trucks
+        new ArrayList<>(shop.getAssignedTrucks()).forEach(truck -> truck.setAssignedShop(null));
+        shop.getAssignedTrucks().clear();
+
+        // Unlink orders and mark then as canceled if applies
+        new ArrayList<>(shop.getAssignedOrders()).forEach(order -> {
+            order.setAssignedShop(null);
+            if(order.getCurrentStatus() == OrderStatus.ORDER_MADE || order.getCurrentStatus() == OrderStatus.SENT){
+                order.changeOrderStatus(OrderStatus.CANCELLED, "La tienda a la que estaba asignado el pedido ha sido eliminada.");
+            }
+        });
+        shop.getAssignedOrders().clear();
+
+        // Unlink clients
+        new ArrayList<>(shop.getCustomers()).forEach(customer -> customer.setSelectedShop(null));
+        shop.getCustomers().clear();
+
+        shopRepository.delete(shop);
+
+        // Delete remote image if is not the default one
+        if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+            storageService.deleteFile(shop.getImage().getS3Key());
+        }
+
+        return shop;
+    }
+
+    @Transactional
+    public ShopStock toggleLocalActivation(Long id, boolean state){
+        ShopStock stock = shopStockService.findShopStockHelper(id);
+        stock.setActive(state);
+        return stock; // Saved automatically
+    }
+
+    @Transactional
+    public boolean toggleAllLocalActivations(Long shopId, boolean state){
+        List<ShopStock> stocks = this.shopStockService.findAllByShopId(shopId);
+        stocks.forEach(s -> s.setActive(state));
+        return state; // Updated automatically (one for each stock)
+    }
+
+    @Transactional
+    public ShopStock restockProduct(Long stockId, int units){
+        ShopStock targetStock = shopStockService.findShopStockHelper(stockId);
+
+        if (units <= 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Restock units must be positive, " + units + " is not a valid number.");
+        }
+
+        Shop restockingShop = targetStock.getShop();
+        double supplyCost = units * targetStock.getProduct().getSupplyPrice();
+        if (supplyCost > restockingShop.getAssignedBudget()){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "There is not enough budget in this shop to complete this operation.");
+        }
+
+        targetStock.setUnits(targetStock.getUnits() + units);
+        restockingShop.setAssignedBudget(restockingShop.getAssignedBudget() - supplyCost);
+
+        return targetStock; // Shop and stock is saved automatically
+    }
+
+    @Transactional
+    public ShopStock setAssignedStock(Long shopId, Long stockId, boolean state){
+        Shop shop = this.findShopHelper(shopId);
+        ShopStock targetStock;
+
+        if (state) {
+            Product product = productService.findProductHelper(stockId);
+            // Needs to be saved (as it is a new entity)
+            targetStock = this.shopStockService.save(new ShopStock(shop, product, 0));
+        } else {
+            targetStock = shopStockService.findShopStockHelper(stockId);
+            this.shopStockService.deleteById(stockId); // Delegate the real deletion
+        }
+        return targetStock;
+    }
+
+    @Transactional
+    public Truck setAssignedTruck(Long shopId, Long truckId, boolean state){
+        Shop shop = this.findShopHelper(shopId);
+        Truck truck = truckService.findTruckHelper(truckId);
+
+        if (state) {
+            truck.setAssignedShop(shop);
+        } else {
+            truck.setAssignedShop(null);
+        }
+
+        return truck; // Saved automatically
+    }
+
+    @Transactional
+    public Shop setAssignedManager(Long shopId, Long userId, boolean state) {
+        Shop shop = this.findShopHelper(shopId);
+
+        if (state) {
+            User newManager = userService.findUserHelper(userId);
+            shop.setAssignedManager(newManager);
+        } else {
+            User currentManager = shop.getAssignedManager();
+            if (currentManager != null && currentManager.getId().equals(userId)) {
+                shop.setAssignedManager(null);
+            }
+        }
+
+        return shop; // Saved automatically
+    }
+
+    @Transactional
+    public Shop uploadShopImage(Long id, MultipartFile image){
+        Shop shop = this.findShopHelper(id);
+
+        if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+            storageService.deleteFile(shop.getImage().getS3Key());
+        }
+
+        if (image != null && !image.isEmpty()){
+            try {
+                Map<String, String> res = storageService.uploadFile(image, "shops");
+                ImageInfo shopImageInfo = new ImageInfo(res.get("url"), res.get("key"), image.getOriginalFilename());
+                shop.setImage(shopImageInfo);
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload shop image to storage");
+            }
+        } else {
+            shop.setImage(GlobalDefaults.SHOP_IMAGE);
+        }
+        return shop; // Saved automatically
+    }
+
+    @Transactional
+    public Shop deleteShopImage(Long id){
+        Shop shop = this.findShopHelper(id);
+
+        if (!shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+            storageService.deleteFile(shop.getImage().getS3Key());
+            shop.setImage(GlobalDefaults.SHOP_IMAGE);
+        }
+        return shop; // Saved automatically
+    }
+
+    // --- METRICS METHODS ---
+
     public List<StatDTO> getShopsStatistics(User currentUser) {
         long shopCount = 0;
         double totalBudget = 0.0;

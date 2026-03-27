@@ -55,7 +55,7 @@ public class StatRestController {
     @GetMapping("/trucks")
     public ResponseEntity<List<StatDTO>> getTruckStatsByRole() {
         User loggedUser = userService.findLoggedUserHelper();
-        List<StatDTO> truckMetrics = truckService.getTruckStats(loggedUser);
+        List<StatDTO> truckMetrics = truckService.getTruckStatistics(loggedUser);
         return ResponseEntity.ok(truckMetrics);
     }
 }

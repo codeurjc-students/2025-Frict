@@ -45,7 +45,7 @@ public class TruckService {
     }
 
     //Metrics
-    public List<StatDTO> getTruckStats(User currentUser) {
+    public List<StatDTO> getTruckStatistics(User currentUser) {
         long available = 0;
         long onRoute = 0;
         long onMaintenance = 0;
