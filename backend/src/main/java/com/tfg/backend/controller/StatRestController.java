@@ -1,10 +1,6 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.model.User;
-import com.tfg.backend.service.OrderService;
-import com.tfg.backend.service.ShopService;
-import com.tfg.backend.service.TruckService;
-import com.tfg.backend.service.UserService;
+import com.tfg.backend.service.StatService;
 import com.tfg.backend.utils.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,40 +18,28 @@ import java.util.List;
 public class StatRestController {
 
     @Autowired
-    private ShopService shopService;
-
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private TruckService truckService;
-
-    @Autowired
-    private UserService userService;
+    private StatService statService;
 
 
     @Operation(summary = "(Admin, Manager, Driver) Get order statistics by role")
     @GetMapping("/orders")
     public ResponseEntity<List<StatDTO>> getOrdersStatsByRole() {
-        User loggedUser = userService.findLoggedUserHelper();
-        List<StatDTO> metrics = orderService.getOrdersStatistics(loggedUser);
-        return ResponseEntity.ok(metrics);
+        List<StatDTO> ordersStatsByRole = statService.getOrdersStatsByRole();
+        return ResponseEntity.ok(ordersStatsByRole);
     }
 
 
     @Operation(summary = "(Admin, Manager) Get shop statistics by role")
     @GetMapping("/shops")
     public ResponseEntity<List<StatDTO>> getShopsStatsByRole() {
-        User loggedUser = userService.findLoggedUserHelper();
-        List<StatDTO> shopMetrics = shopService.getShopsStatistics(loggedUser);
-        return ResponseEntity.ok(shopMetrics);
+        List<StatDTO> shopsStatsByRole = statService.getShopsStatsByRole();
+        return ResponseEntity.ok(shopsStatsByRole);
     }
 
     @Operation(summary = "(Admin, Manager) Get truck statistics by role")
     @GetMapping("/trucks")
-    public ResponseEntity<List<StatDTO>> getTruckStatsByRole() {
-        User loggedUser = userService.findLoggedUserHelper();
-        List<StatDTO> truckMetrics = truckService.getTruckStatistics(loggedUser);
-        return ResponseEntity.ok(truckMetrics);
+    public ResponseEntity<List<StatDTO>> getTrucksStatsByRole() {
+        List<StatDTO> trucksStatsByRole = statService.getTrucksStatsByRole();
+        return ResponseEntity.ok(trucksStatsByRole);
     }
 }

@@ -27,12 +27,11 @@ public class ShopService {
 
     @Autowired private StorageService storageService;
     @Autowired private UserService userService;
-    @Autowired private TruckService truckService;
     @Autowired private ShopStockService shopStockService;
     @Autowired private ProductService productService;
     @Autowired private ShopRepository shopRepository;
 
-    // --- READ-ONLY METHODS ---
+    // --- MÉTODOS DE LECTURA ---
 
     public List<Shop> findAll() { return shopRepository.findAll(); }
     public Page<Shop> findAll(Pageable pageInfo) { return shopRepository.findAll(pageInfo); }
@@ -49,21 +48,10 @@ public class ShopService {
         return this.findAllByAssignedManagerId(loggedUser.getId(), pageable);
     }
 
-    public Shop getShopByAssignedTruckId(Long id) {
-        Truck truck = truckService.findTruckHelper(id);
-        Shop assignedShop = truck.getAssignedShop();
-        if (assignedShop == null){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This truck is not assigned to any shop.");
-        }
-        return assignedShop;
-    }
-
-    // --- WRITING METHODS (override Transactional) ---
+    // --- MÉTODOS DE ESCRITURA ---
 
     @Transactional
-    public Shop save(Shop s) {
-        return shopRepository.save(s);
-    }
+    public Shop save(Shop s) { return shopRepository.save(s); }
 
     @Transactional
     public Shop createShop(ShopDTO shopDTO){
@@ -73,7 +61,7 @@ public class ShopService {
         address.setLongitude(dto.getLongitude());
 
         Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
-        return shopRepository.save(shop); // New entity, needs an explicit save
+        return shopRepository.save(shop);
     }
 
     @Transactional
@@ -89,18 +77,16 @@ public class ShopService {
         shop.setAddress(address);
         shop.setAssignedBudget(shopDTO.getAssignedBudget());
 
-        return shop; // Updated automatically
+        return shop;
     }
 
     @Transactional
     public Shop deleteShop(Long id){
         Shop shop = this.findShopHelper(id);
 
-        // Unlink trucks
         new ArrayList<>(shop.getAssignedTrucks()).forEach(truck -> truck.setAssignedShop(null));
         shop.getAssignedTrucks().clear();
 
-        // Unlink orders and mark then as canceled if applies
         new ArrayList<>(shop.getAssignedOrders()).forEach(order -> {
             order.setAssignedShop(null);
             if(order.getCurrentStatus() == OrderStatus.ORDER_MADE || order.getCurrentStatus() == OrderStatus.SENT){
@@ -109,13 +95,11 @@ public class ShopService {
         });
         shop.getAssignedOrders().clear();
 
-        // Unlink clients
         new ArrayList<>(shop.getCustomers()).forEach(customer -> customer.setSelectedShop(null));
         shop.getCustomers().clear();
 
         shopRepository.delete(shop);
 
-        // Delete remote image if is not the default one
         if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
@@ -127,14 +111,14 @@ public class ShopService {
     public ShopStock toggleLocalActivation(Long id, boolean state){
         ShopStock stock = shopStockService.findShopStockHelper(id);
         stock.setActive(state);
-        return stock; // Saved automatically
+        return stock;
     }
 
     @Transactional
     public boolean toggleAllLocalActivations(Long shopId, boolean state){
         List<ShopStock> stocks = this.shopStockService.findAllByShopId(shopId);
         stocks.forEach(s -> s.setActive(state));
-        return state; // Updated automatically (one for each stock)
+        return state;
     }
 
     @Transactional
@@ -154,7 +138,7 @@ public class ShopService {
         targetStock.setUnits(targetStock.getUnits() + units);
         restockingShop.setAssignedBudget(restockingShop.getAssignedBudget() - supplyCost);
 
-        return targetStock; // Shop and stock is saved automatically
+        return targetStock;
     }
 
     @Transactional
@@ -164,27 +148,12 @@ public class ShopService {
 
         if (state) {
             Product product = productService.findProductHelper(stockId);
-            // Needs to be saved (as it is a new entity)
             targetStock = this.shopStockService.save(new ShopStock(shop, product, 0));
         } else {
             targetStock = shopStockService.findShopStockHelper(stockId);
-            this.shopStockService.deleteById(stockId); // Delegate the real deletion
+            this.shopStockService.deleteById(stockId);
         }
         return targetStock;
-    }
-
-    @Transactional
-    public Truck setAssignedTruck(Long shopId, Long truckId, boolean state){
-        Shop shop = this.findShopHelper(shopId);
-        Truck truck = truckService.findTruckHelper(truckId);
-
-        if (state) {
-            truck.setAssignedShop(shop);
-        } else {
-            truck.setAssignedShop(null);
-        }
-
-        return truck; // Saved automatically
     }
 
     @Transactional
@@ -201,7 +170,7 @@ public class ShopService {
             }
         }
 
-        return shop; // Saved automatically
+        return shop;
     }
 
     @Transactional
@@ -223,7 +192,7 @@ public class ShopService {
         } else {
             shop.setImage(GlobalDefaults.SHOP_IMAGE);
         }
-        return shop; // Saved automatically
+        return shop;
     }
 
     @Transactional
@@ -234,10 +203,10 @@ public class ShopService {
             storageService.deleteFile(shop.getImage().getS3Key());
             shop.setImage(GlobalDefaults.SHOP_IMAGE);
         }
-        return shop; // Saved automatically
+        return shop;
     }
 
-    // --- METRICS METHODS ---
+    // --- MÉTODOS DE MÉTRICAS ---
 
     public List<StatDTO> getShopsStatistics(User currentUser) {
         long shopCount = 0;
