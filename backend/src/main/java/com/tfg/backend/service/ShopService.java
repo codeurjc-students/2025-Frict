@@ -95,7 +95,7 @@ public class ShopService {
 
         shopRepository.delete(shop);
 
-        if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+        if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
 
@@ -155,7 +155,7 @@ public class ShopService {
     public Shop uploadShopImage(Long id, MultipartFile image){
         Shop shop = this.findShopHelper(id);
 
-        if (shop.getImage() != null && !shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+        if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
             storageService.deleteFile(shop.getImage().getS3Key());
         }
 
@@ -168,7 +168,7 @@ public class ShopService {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload shop image to storage");
             }
         } else {
-            shop.setImage(GlobalDefaults.SHOP_IMAGE);
+            shop.setImage(GlobalDefaults.getDefaultShopImage());
         }
         return shop;
     }
@@ -177,9 +177,9 @@ public class ShopService {
     public Shop deleteShopImage(Long id){
         Shop shop = this.findShopHelper(id);
 
-        if (!shop.getImage().equals(GlobalDefaults.SHOP_IMAGE)) {
+        if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
             storageService.deleteFile(shop.getImage().getS3Key());
-            shop.setImage(GlobalDefaults.SHOP_IMAGE);
+            shop.setImage(GlobalDefaults.getDefaultShopImage());
         }
         return shop;
     }

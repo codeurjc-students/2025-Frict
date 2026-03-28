@@ -135,7 +135,7 @@ public class DatabaseInitializer {
         user1.getAddresses().add(address2);
 
         // Assign GLOBAL default image
-        user1.setUserImage(GlobalDefaults.USER_IMAGE);
+        user1.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user1);
 
         User user2 = new User("Administrador", "admin", "laxari3928@1200b.com", passwordEncoder.encode("adminpass"), "ADMIN");
@@ -143,16 +143,16 @@ public class DatabaseInitializer {
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
         user2.getAddresses().add(address3);
-        user2.setUserImage(GlobalDefaults.USER_IMAGE);
+        user2.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user2);
 
 
         User user3 = new User("Gerente", "manager", "manager@gmail.com", passwordEncoder.encode("managerpass"), "MANAGER");
-        user3.setUserImage(GlobalDefaults.USER_IMAGE);
+        user3.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user3);
 
         User user4 = new User("Conductor", "driver", "driver@gmail.com", passwordEncoder.encode("driverpass"), "DRIVER");
-        user4.setUserImage(GlobalDefaults.USER_IMAGE);
+        user4.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user4);
     }
 
@@ -234,7 +234,7 @@ public class DatabaseInitializer {
     }
 
     private void assignCategoryImage(Category category) {
-        category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
+        category.setCategoryImage(GlobalDefaults.getDefaultCategoryImage());
         if (category.getChildren() != null) {
             for (Category child : category.getChildren()) {
                 assignCategoryImage(child);
@@ -384,7 +384,7 @@ public class DatabaseInitializer {
         products.add(p30);
 
         for (Product p : products) {
-            ProductImageInfo pImage = new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, p);
+            ProductImageInfo pImage = new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), p);
             p.getImages().add(pImage);
             productRepository.save(p);
         }
@@ -411,7 +411,7 @@ public class DatabaseInitializer {
         address1.setLatitude(40.4168);
         address1.setLongitude(-3.7038);
         Shop shop1 = new Shop("Madrid-Recoletos", address1, 3000.00);
-        shop1.setImage(GlobalDefaults.SHOP_IMAGE);
+        shop1.setImage(GlobalDefaults.getDefaultShopImage());
         //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
         if(manager.isPresent()){
@@ -432,7 +432,7 @@ public class DatabaseInitializer {
         address2.setLongitude(-0.485225);
 
         Shop shop2 = new Shop("Alicante", address2, 6000.00);
-        shop2.setImage(GlobalDefaults.SHOP_IMAGE);
+        shop2.setImage(GlobalDefaults.getDefaultShopImage());
         shopRepository.save(shop2);
 
         Address address3 = new Address("Camión 1", "Avenida del Invierno", "", "", "28022", "Madrid", "España");

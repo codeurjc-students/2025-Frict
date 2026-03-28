@@ -151,7 +151,7 @@ public class ProductService {
         orderItemService.saveAll(items);
 
         for (ProductImageInfo i : product.getImages()) {
-            if (!i.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+            if (!GlobalDefaults.isDefaultProductImage(i)) {
                 storageService.deleteFile(i.getS3Key());
             }
         }
@@ -208,7 +208,7 @@ public class ProductService {
         while (iterator.hasNext()) {
             ProductImageInfo currentImg = iterator.next();
             if (currentImg.getS3Key() != null && !keepS3Keys.contains(currentImg.getS3Key())) {
-                if (!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+                if (!GlobalDefaults.isDefaultProductImage(currentImg)) {
                     storageService.deleteFile(currentImg.getS3Key());
                 }
                 iterator.remove();
@@ -219,18 +219,15 @@ public class ProductService {
             for (MultipartFile file : newImages) {
                 try {
                     Map<String, String> res = storageService.uploadFile(file, "products");
-                    ProductImageInfo newImg = new ProductImageInfo();
-                    newImg.setImageUrl(res.get("url"));
-                    newImg.setS3Key(res.get("key"));
-                    newImg.setFileName(file.getOriginalFilename());
-                    newImg.setProduct(product);
+                    ImageInfo imageInfo = new ImageInfo(res.get("url"), res.get("key"), file.getOriginalFilename());
+                    ProductImageInfo newImg = new ProductImageInfo(imageInfo, product);
                     currentImages.add(newImg);
                 } catch (IOException e) {
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload product image to storage");
                 }
             }
         } else if (currentImages.isEmpty()) {
-            currentImages.add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
+            currentImages.add(new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), product));
         }
 
         return product; // Saved automatically
@@ -245,13 +242,13 @@ public class ProductService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Image not found in this product."));
 
-        if(!imageToRemove.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
+        if(!GlobalDefaults.isDefaultProductImage(imageToRemove)) {
             storageService.deleteFile(imageToRemove.getS3Key());
             product.getImages().remove(imageToRemove);
         }
 
         if(product.getImages().isEmpty()){
-            product.getImages().add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
+            product.getImages().add(new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), product));
         }
 
         return product; // Saved automatically

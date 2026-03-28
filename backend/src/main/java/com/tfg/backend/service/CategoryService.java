@@ -153,6 +153,10 @@ public class CategoryService {
             categoryToDelete.getParent().removeChild(categoryToDelete);
         }
 
+        if(!GlobalDefaults.isDefaultCategoryImage(categoryToDelete.getCategoryImage())){
+            storageService.deleteFile(categoryToDelete.getCategoryImage().getS3Key());
+        }
+
         categoryRepository.delete(categoryToDelete);
         return categoryToDelete;
     }
@@ -185,7 +189,7 @@ public class CategoryService {
     public Category uploadCategoryImage(Long id, MultipartFile file) {
         Category category = this.findByIdHelper(id);
 
-        if (category.getCategoryImage() != null && !category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
+        if (!GlobalDefaults.isDefaultCategoryImage(category.getCategoryImage())){
             storageService.deleteFile(category.getCategoryImage().getS3Key());
         }
 
@@ -202,7 +206,7 @@ public class CategoryService {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload category image to storage");
             }
         } else {
-            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
+            category.setCategoryImage(GlobalDefaults.getDefaultCategoryImage());
         }
 
         return category; // Saved automatically
@@ -212,9 +216,9 @@ public class CategoryService {
     public Category deleteCategoryImage(Long id) {
         Category category = this.findByIdHelper(id);
 
-        if (!category.getCategoryImage().equals(GlobalDefaults.CATEGORY_IMAGE)){
+        if (!GlobalDefaults.isDefaultCategoryImage(category.getCategoryImage())){
             storageService.deleteFile(category.getCategoryImage().getS3Key());
-            category.setCategoryImage(GlobalDefaults.CATEGORY_IMAGE);
+            category.setCategoryImage(GlobalDefaults.getDefaultCategoryImage());
         }
 
         return category; // Saved automatically

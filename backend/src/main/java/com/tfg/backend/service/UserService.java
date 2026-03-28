@@ -105,7 +105,7 @@ public class UserService {
 
         String role = (dto.getRole() == null || dto.getRole().isEmpty()) ? "USER" : dto.getRole();
         User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), role);
-        newUser.setUserImage(GlobalDefaults.USER_IMAGE);
+        newUser.setUserImage(GlobalDefaults.getDefaultUserImage());
 
         return userRepository.save(newUser);
     }
@@ -212,7 +212,7 @@ public class UserService {
     public User uploadUserImage(Long id, MultipartFile image){
         User loggedUser = this.findUserHelper(id);
 
-        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
+        if (!GlobalDefaults.isDefaultUserImage(loggedUser.getUserImage())) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
         }
 
@@ -225,7 +225,7 @@ public class UserService {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload user image to storage");
             }
         } else {
-            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
+            loggedUser.setUserImage(GlobalDefaults.getDefaultUserImage());
         }
         return loggedUser;
     }
@@ -233,9 +233,9 @@ public class UserService {
     @Transactional
     public User deleteUserImage() {
         User loggedUser = this.findLoggedUserHelper();
-        if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
+        if (!GlobalDefaults.isDefaultUserImage(loggedUser.getUserImage())) {
             storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
+            loggedUser.setUserImage(GlobalDefaults.getDefaultUserImage());
         }
         return loggedUser;
     }
@@ -288,6 +288,9 @@ public class UserService {
         List<User> allUsers = this.findAll();
         for (User u : allUsers) {
             if (!u.getRoles().contains("ADMIN")){
+                if(!GlobalDefaults.isDefaultUserImage(u.getUserImage())){
+                    storageService.deleteFile(u.getUserImage().getS3Key());
+                }
                 userRepository.delete(u);
             }
         }
@@ -297,6 +300,9 @@ public class UserService {
     @Transactional
     public boolean deleteUserById(Long id){
         User user = this.findUserHelper(id);
+        if(!GlobalDefaults.isDefaultUserImage(user.getUserImage())){
+            storageService.deleteFile(user.getUserImage().getS3Key());
+        }
         userRepository.delete(user);
         return true;
     }
@@ -321,10 +327,10 @@ public class UserService {
         user.getAddresses().clear();
         user.getCards().clear();
 
-        if (user.getUserImage() != null && !user.getUserImage().getS3Key().equals(GlobalDefaults.USER_IMAGE.getS3Key())) {
+        if (!GlobalDefaults.isDefaultUserImage(user.getUserImage())) {
             storageService.deleteFile(user.getUserImage().getS3Key());
         }
-        user.setUserImage(GlobalDefaults.USER_IMAGE);
+        user.setUserImage(GlobalDefaults.getDefaultUserImage());
         user.setDeleted(true);
         user.getAllOrderItems().removeIf(item -> item.getOrder() == null);
 
