@@ -25,7 +25,7 @@ import java.util.List;
 public class TruckRestController {
 
     @Autowired
-    private ShopTruckOrchestrator orchestrator;
+    private ShopTruckOrchestrator shopTruckOrchestrator;
 
     @Autowired
     private TruckService truckService;
@@ -61,7 +61,7 @@ public class TruckRestController {
     @Operation(summary = "(Admin, Manager) Get trucks list by shop ID")
     @GetMapping("/shop/{shopId}/list")
     public ResponseEntity<List<TruckDTO>> getAllShopTrucks(@PathVariable Long shopId) {
-        List<Truck> allShopTrucks = orchestrator.getAllShopTrucks(shopId);
+        List<Truck> allShopTrucks = shopTruckOrchestrator.getAllShopTrucks(shopId);
         return ResponseEntity.ok(allShopTrucks.stream().map(TruckDTO::new).toList());
     }
 
@@ -103,7 +103,7 @@ public class TruckRestController {
     @Operation(summary = "(Admin) Create truck")
     @PostMapping
     public ResponseEntity<TruckDTO> createTruck(@RequestBody TruckDTO truckDTO) {
-        Truck savedTruck = orchestrator.createTruck(truckDTO);
+        Truck savedTruck = shopTruckOrchestrator.createTruck(truckDTO);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -117,7 +117,7 @@ public class TruckRestController {
     @Operation(summary = "(Admin) Update truck by ID")
     @PutMapping("/{id}")
     public ResponseEntity<TruckDTO> updateTruck(@PathVariable Long id, @RequestBody TruckDTO truckDTO) {
-        Truck updatedTruck = orchestrator.updateTruck(id, truckDTO);
+        Truck updatedTruck = shopTruckOrchestrator.updateTruck(id, truckDTO);
         return ResponseEntity.accepted().body(new TruckDTO(updatedTruck));
     }
 

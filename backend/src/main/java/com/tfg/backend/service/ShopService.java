@@ -26,12 +26,11 @@ import java.util.Optional;
 public class ShopService {
 
     @Autowired private StorageService storageService;
-    @Autowired private UserService userService;
     @Autowired private ShopStockService shopStockService;
     @Autowired private ProductService productService;
     @Autowired private ShopRepository shopRepository;
 
-    // --- MÉTODOS DE LECTURA ---
+    // --- READ-ONLY METHODS ---
 
     public List<Shop> findAll() { return shopRepository.findAll(); }
     public Page<Shop> findAll(Pageable pageInfo) { return shopRepository.findAll(pageInfo); }
@@ -43,12 +42,7 @@ public class ShopService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + id + " does not exist."));
     }
 
-    public Page<Shop> getAssignedShopsPage(Pageable pageable) {
-        User loggedUser = userService.findLoggedUserHelper();
-        return this.findAllByAssignedManagerId(loggedUser.getId(), pageable);
-    }
-
-    // --- MÉTODOS DE ESCRITURA ---
+    // --- WRITING METHODS ---
 
     @Transactional
     public Shop save(Shop s) { return shopRepository.save(s); }
@@ -157,23 +151,6 @@ public class ShopService {
     }
 
     @Transactional
-    public Shop setAssignedManager(Long shopId, Long userId, boolean state) {
-        Shop shop = this.findShopHelper(shopId);
-
-        if (state) {
-            User newManager = userService.findUserHelper(userId);
-            shop.setAssignedManager(newManager);
-        } else {
-            User currentManager = shop.getAssignedManager();
-            if (currentManager != null && currentManager.getId().equals(userId)) {
-                shop.setAssignedManager(null);
-            }
-        }
-
-        return shop;
-    }
-
-    @Transactional
     public Shop uploadShopImage(Long id, MultipartFile image){
         Shop shop = this.findShopHelper(id);
 
@@ -206,7 +183,7 @@ public class ShopService {
         return shop;
     }
 
-    // --- MÉTODOS DE MÉTRICAS ---
+    // --- METRIC METHODS ---
 
     public List<StatDTO> getShopsStatistics(User currentUser) {
         long shopCount = 0;

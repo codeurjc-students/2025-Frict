@@ -10,6 +10,7 @@ import com.tfg.backend.model.Truck;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.ShopStockService;
 import com.tfg.backend.service.ShopTruckOrchestrator;
+import com.tfg.backend.service.ShopUserOrchestrator;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,7 +33,7 @@ import java.util.List;
 public class ShopRestController {
 
     @Autowired
-    private ShopTruckOrchestrator orchestrator;
+    private ShopTruckOrchestrator shopTruckOrchestrator;
 
     @Autowired
     private ShopService shopService;
@@ -40,11 +41,14 @@ public class ShopRestController {
     @Autowired
     private ShopStockService shopStockService;
 
+    @Autowired
+    private ShopUserOrchestrator shopUserOrchestrator;
+
 
     @Operation(summary = "(Manager) Get assigned shops information (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<ShopDTO>> getAssignedShopsPage(Pageable pageable) {
-        Page<Shop> assignedShopsPage = shopService.getAssignedShopsPage(pageable);
+        Page<Shop> assignedShopsPage = shopUserOrchestrator.getAssignedShopsPage(pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(assignedShopsPage, ShopDTO::new));
     }
 
@@ -76,7 +80,7 @@ public class ShopRestController {
     @Operation(summary = "(Driver) Get shop information by assigned truck ID")
     @GetMapping("/truck/{id}")
     public ResponseEntity<ShopDTO> getShopByAssignedTruckId(@PathVariable Long id) {
-        Shop shopByAssignedTruckId = orchestrator.getShopByAssignedTruckId(id);
+        Shop shopByAssignedTruckId = shopTruckOrchestrator.getShopByAssignedTruckId(id);
         return ResponseEntity.ok(new ShopDTO(shopByAssignedTruckId));
     }
 
@@ -155,7 +159,7 @@ public class ShopRestController {
     @Operation(summary = "(Manager) Set truck assignment to a shop")
     @PutMapping("/{shopId}/assign/truck/{truckId}")
     public ResponseEntity<TruckDTO> setAssignedTruck(@PathVariable Long shopId, @PathVariable Long truckId, @RequestParam boolean state) {
-        Truck savedTruck = orchestrator.setAssignedTruck(shopId, truckId, state);
+        Truck savedTruck = shopTruckOrchestrator.setAssignedTruck(shopId, truckId, state);
         return ResponseEntity.ok(new TruckDTO(savedTruck));
     }
 
@@ -163,7 +167,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Set manager assignment to a shop")
     @PutMapping("/{shopId}/assign/manager/{userId}")
     public ResponseEntity<ShopDTO> setAssignedManager(@PathVariable Long shopId, @PathVariable Long userId, @RequestParam boolean state) {
-        Shop savedShop = shopService.setAssignedManager(shopId, userId, state);
+        Shop savedShop = shopUserOrchestrator.setAssignedManager(shopId, userId, state);
         return ResponseEntity.ok(new ShopDTO(savedShop));
     }
 

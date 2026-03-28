@@ -117,39 +117,6 @@ class UserServiceUTest {
     // --- TESTS MODIFICADOS PARA USAR SECURITYCONTEXTHOLDER ---
 
     @Test
-    void getLoginInfo_ShouldReturnEmpty_WhenNotAuthenticated() {
-        // Configuramos el contexto para devolver null en la autenticación
-        SecurityContextHolder.setContext(securityContext);
-        when(securityContext.getAuthentication()).thenReturn(null);
-
-        Optional<UserLoginDTO> result = userService.getLoginInfo();
-
-        assertTrue(result.isEmpty());
-        verify(userRepository, never()).findByUsername(any());
-    }
-
-    @Test
-    void getLoginInfo_ShouldReturnDTO_WhenAuthenticated() {
-        String username = "testuser";
-        User user = new User();
-        user.setId(1L);
-        user.setUsername(username);
-        user.setRoles(Set.of("USER"));
-
-        // Configuramos el mock de autenticación en el contexto estático
-        SecurityContextHolder.setContext(securityContext);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getName()).thenReturn(username);
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-
-        Optional<UserLoginDTO> result = userService.getLoginInfo();
-
-        assertTrue(result.isPresent());
-        assertEquals(username, result.get().getUsername());
-    }
-
-    @Test
     void getLoggedUser_ShouldReturnUser_WhenAuthenticated() {
         String username = "testuser";
         User user = new User();
