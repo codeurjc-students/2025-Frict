@@ -1,6 +1,7 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -78,5 +79,15 @@ public class Product {
         this.description = description;
         this.currentPrice = price;
         this.supplyPrice = supplyPrice;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.images == null || this.images.isEmpty()) {
+            if (this.images == null) {
+                this.images = new ArrayList<>();
+            }
+            this.images.add(new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), this));
+        }
     }
 }

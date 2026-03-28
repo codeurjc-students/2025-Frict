@@ -104,8 +104,6 @@ public class UserService {
 
         String role = (dto.getRole() == null || dto.getRole().isEmpty()) ? "USER" : dto.getRole();
         User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), role);
-        newUser.setUserImage(GlobalDefaults.getDefaultUserImage());
-
         return userRepository.save(newUser);
     }
 

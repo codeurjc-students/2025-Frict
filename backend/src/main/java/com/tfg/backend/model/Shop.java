@@ -1,5 +1,6 @@
 package com.tfg.backend.model;
 
+import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -59,5 +60,12 @@ public class Shop {
         this.name = name;
         this.address = address;
         this.assignedBudget = budget;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.image == null) {
+            this.image = GlobalDefaults.getDefaultShopImage();
+        }
     }
 }

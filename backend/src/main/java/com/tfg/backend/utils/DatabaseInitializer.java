@@ -135,7 +135,6 @@ public class DatabaseInitializer {
         user1.getAddresses().add(address2);
 
         // Assign GLOBAL default image
-        user1.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user1);
 
         User user2 = new User("Administrador", "admin", "laxari3928@1200b.com", passwordEncoder.encode("adminpass"), "ADMIN");
@@ -143,16 +142,13 @@ public class DatabaseInitializer {
         Address address3 = new Address("Casa","Calle del Ciudadano", "18", "3ºC", "34567", "Ciudad de Ejemplo", "España");
         user2.getCards().add(paymentCard3);
         user2.getAddresses().add(address3);
-        user2.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user2);
 
 
         User user3 = new User("Gerente", "manager", "manager@gmail.com", passwordEncoder.encode("managerpass"), "MANAGER");
-        user3.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user3);
 
         User user4 = new User("Conductor", "driver", "driver@gmail.com", passwordEncoder.encode("driverpass"), "DRIVER");
-        user4.setUserImage(GlobalDefaults.getDefaultUserImage());
         userRepository.save(user4);
     }
 
@@ -227,19 +223,7 @@ public class DatabaseInitializer {
         roots.add(new Category("Top Ventas", "", "Los más vendidos", "Favoritos de la comunidad", "Éxito garantizado."));
         roots.add(new Category("Otros", "", "No clasificados o pendientes", "", ""));
 
-        for (Category root : roots) {
-            assignCategoryImage(root);
-            categoryRepository.save(root);
-        }
-    }
-
-    private void assignCategoryImage(Category category) {
-        category.setCategoryImage(GlobalDefaults.getDefaultCategoryImage());
-        if (category.getChildren() != null) {
-            for (Category child : category.getChildren()) {
-                assignCategoryImage(child);
-            }
-        }
+        categoryRepository.saveAll(roots);
     }
 
     private void initProducts() {
@@ -383,11 +367,7 @@ public class DatabaseInitializer {
         assignCategories(p30, catMap, "Audio y Sonido");
         products.add(p30);
 
-        for (Product p : products) {
-            ProductImageInfo pImage = new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), p);
-            p.getImages().add(pImage);
-            productRepository.save(p);
-        }
+        productRepository.saveAll(products);
     }
 
     private void assignCategories(Product product, Map<String, Category> catMap, String... categoryNames) {
@@ -411,7 +391,7 @@ public class DatabaseInitializer {
         address1.setLatitude(40.4168);
         address1.setLongitude(-3.7038);
         Shop shop1 = new Shop("Madrid-Recoletos", address1, 3000.00);
-        shop1.setImage(GlobalDefaults.getDefaultShopImage());
+
         //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
         if(manager.isPresent()){
@@ -432,7 +412,6 @@ public class DatabaseInitializer {
         address2.setLongitude(-0.485225);
 
         Shop shop2 = new Shop("Alicante", address2, 6000.00);
-        shop2.setImage(GlobalDefaults.getDefaultShopImage());
         shopRepository.save(shop2);
 
         Address address3 = new Address("Camión 1", "Avenida del Invierno", "", "", "28022", "Madrid", "España");

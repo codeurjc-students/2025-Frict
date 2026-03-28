@@ -1,6 +1,7 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -116,5 +117,12 @@ public class User {
 
         // Input and stored OTP match, and stored OTP has not expired yet
         return this.otpCode.equals(inputCode) && LocalDateTime.now().isBefore(this.otpExpiration);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.userImage == null) {
+            this.userImage = GlobalDefaults.getDefaultUserImage();
+        }
     }
 }
