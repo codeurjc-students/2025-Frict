@@ -2,7 +2,7 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.repository.OrderItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -13,10 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderItemService {
 
-    @Autowired
-    private OrderItemRepository orderItemRepository;
+    private final OrderItemRepository orderItemRepository;
+
+
 
     public Optional<OrderItem> findById(Long id) { return this.orderItemRepository.findById(id); }
 

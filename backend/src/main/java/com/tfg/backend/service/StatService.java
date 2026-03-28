@@ -2,25 +2,19 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.model.User;
 import com.tfg.backend.utils.StatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class StatService {
 
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private ShopService shopService;
-
-    @Autowired
-    private TruckService truckService;
+    private final OrderService orderService;
+    private final UserService userService;
+    private final ShopService shopService;
+    private final TruckService truckService;
 
     public List<StatDTO> getOrdersStatsByRole() {
         User loggedUser = userService.findLoggedUserHelper();

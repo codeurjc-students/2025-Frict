@@ -6,7 +6,7 @@ import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.repository.CategoryRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,13 +24,11 @@ import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class CategoryService {
 
-    @Autowired
-    private StorageService storageService;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final StorageService storageService;
+    private final CategoryRepository categoryRepository;
 
     // --- Read-only methods ---
 

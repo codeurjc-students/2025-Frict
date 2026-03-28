@@ -33,7 +33,6 @@ public class ProductApiFunctionalITest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    //
     private static final String JWT_COOKIE_NAME = "AuthToken";
     private static final String CONTENT_TYPE = "application/json";
     private static final String BASE_URL = "/api/v1";

@@ -5,7 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.StatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,11 +24,12 @@ import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private StorageService storageService;
-    @Autowired private UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final StorageService storageService;
+    private final UserRepository userRepository;
 
     // --- READ-ONLY METHODS ---
 

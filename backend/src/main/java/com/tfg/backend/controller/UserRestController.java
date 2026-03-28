@@ -1,14 +1,14 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
-import com.tfg.backend.model.*;
+import com.tfg.backend.model.User;
 import com.tfg.backend.service.ShopUserOrchestrator;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +23,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "User Management", description = "System users data management")
+@RequiredArgsConstructor
 public class UserRestController {
-	
-	@Autowired
-	private UserService userService;
 
-    @Autowired
-    private ShopUserOrchestrator shopUserOrchestrator;
+	private final UserService userService;
+    private final ShopUserOrchestrator shopUserOrchestrator;
 
 
     @Operation(summary = "(All) Get current session information")

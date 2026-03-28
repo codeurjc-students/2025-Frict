@@ -1,6 +1,5 @@
 package com.tfg.backend.unit;
 
-import com.tfg.backend.dto.UserLoginDTO;
 import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.UserRepository;

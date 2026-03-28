@@ -5,7 +5,7 @@ import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.ReviewRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,16 +19,13 @@ import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class ReviewService {
 
-    @Autowired
-    private ReviewRepository reviewRepository;
+    private final ReviewRepository reviewRepository;
+    private final UserService userService;
+    private final ProductService productService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private ProductService productService;
 
     // --- READ-ONLY METHODS ---
 

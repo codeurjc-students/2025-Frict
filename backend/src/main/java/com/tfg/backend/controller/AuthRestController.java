@@ -11,7 +11,7 @@ import com.tfg.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +25,11 @@ import java.util.Map;
 // @Slf4j // For custom logs (log.warn("Warning message"))
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication Management", description = "Users authentication management")
+@RequiredArgsConstructor
 public class AuthRestController {
-	
-	@Autowired
-	private UserLoginService loginService;
 
-    @Autowired
-    private UserService userService;
+	private final UserLoginService loginService;
+    private final UserService userService;
 
     @Operation(summary = "(User) Login with Google account")
     @PostMapping("/google")

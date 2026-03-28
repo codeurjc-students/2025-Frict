@@ -5,7 +5,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.utils.SaveResult;
 import com.tfg.backend.utils.StatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,15 +20,16 @@ import java.util.Set;
 
 @Service
 @Transactional(readOnly = true) // 1. Protege todas las consultas de lectura por defecto
+@RequiredArgsConstructor
 public class OrderService {
 
-    @Autowired private UserService userService;
-    @Autowired private TruckService truckService;
-    @Autowired private ShopService shopService;
-    @Autowired private EmailService emailService;
-    @Autowired private OrderItemService orderItemService;
-    @Autowired private ProductService productService;
-    @Autowired private OrderRepository orderRepository;
+    private final UserService userService;
+    private final TruckService truckService;
+    private final ShopService shopService;
+    private final EmailService emailService;
+    private final OrderItemService orderItemService;
+    private final ProductService productService;
+    private final OrderRepository orderRepository;
 
     // --- MÉTODOS DE LECTURA ---
 

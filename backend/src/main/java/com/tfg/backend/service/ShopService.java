@@ -6,7 +6,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.StatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -23,12 +23,13 @@ import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class ShopService {
 
-    @Autowired private StorageService storageService;
-    @Autowired private ShopStockService shopStockService;
-    @Autowired private ProductService productService;
-    @Autowired private ShopRepository shopRepository;
+    private final StorageService storageService;
+    private final ShopStockService shopStockService;
+    private final ProductService productService;
+    private final ShopRepository shopRepository;
 
     // --- READ-ONLY METHODS ---
 

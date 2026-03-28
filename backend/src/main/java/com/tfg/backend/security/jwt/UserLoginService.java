@@ -11,9 +11,9 @@ import com.tfg.backend.service.EmailService;
 import com.tfg.backend.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserLoginService {
 
 	private static final Logger log = LoggerFactory.getLogger(UserLoginService.class);
@@ -43,18 +44,12 @@ public class UserLoginService {
 	private final UserDetailsService userDetailsService;
 	private final JwtTokenProvider jwtTokenProvider;
 
-	@Autowired private UserService userService;
-	@Autowired private EmailService emailService;
-	@Autowired private PasswordEncoder passwordEncoder;
+	private final UserService userService;
+	private final EmailService emailService;
+	private final PasswordEncoder passwordEncoder;
 
 	@Value("${google.auth.clientId}")
 	private String googleClientId;
-
-	public UserLoginService(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtTokenProvider jwtTokenProvider) {
-		this.authenticationManager = authenticationManager;
-		this.userDetailsService = userDetailsService;
-		this.jwtTokenProvider = jwtTokenProvider;
-	}
 
 	@Transactional
 	public AuthResponse loginWithGoogle(HttpServletResponse response, GoogleTokenDTO tokenDTO) {

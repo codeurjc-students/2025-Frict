@@ -14,7 +14,7 @@ import com.tfg.backend.service.ShopUserOrchestrator;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -30,19 +30,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/shops")
 @Tag(name = "Shop Management", description = "Shop data management")
+@RequiredArgsConstructor
 public class ShopRestController {
 
-    @Autowired
-    private ShopTruckOrchestrator shopTruckOrchestrator;
-
-    @Autowired
-    private ShopService shopService;
-
-    @Autowired
-    private ShopStockService shopStockService;
-
-    @Autowired
-    private ShopUserOrchestrator shopUserOrchestrator;
+    private final ShopTruckOrchestrator shopTruckOrchestrator;
+    private final ShopService shopService;
+    private final ShopStockService shopStockService;
+    private final ShopUserOrchestrator shopUserOrchestrator;
 
 
     @Operation(summary = "(Manager) Get assigned shops information (paged)")

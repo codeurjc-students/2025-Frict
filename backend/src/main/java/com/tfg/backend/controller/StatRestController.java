@@ -4,7 +4,7 @@ import com.tfg.backend.service.StatService;
 import com.tfg.backend.utils.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,10 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/stats")
 @Tag(name = "Statistics Management", description = "Entity statistics management")
+@RequiredArgsConstructor
 public class StatRestController {
 
-    @Autowired
-    private StatService statService;
+    private final StatService statService;
 
 
     @Operation(summary = "(Admin, Manager, Driver) Get order statistics by role")

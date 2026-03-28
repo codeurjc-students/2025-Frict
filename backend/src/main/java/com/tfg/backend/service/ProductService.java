@@ -6,7 +6,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -21,14 +21,15 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class ProductService {
 
-    @Autowired private ProductRepository productRepository;
-    @Autowired private UserService userService;
-    @Autowired private ShopStockService shopStockService;
-    @Autowired private CategoryService categoryService;
-    @Autowired private StorageService storageService;
-    @Autowired private OrderItemService orderItemService;
+    private final ProductRepository productRepository;
+    private final UserService userService;
+    private final ShopStockService shopStockService;
+    private final CategoryService categoryService;
+    private final StorageService storageService;
+    private final OrderItemService orderItemService;
 
     // --- READ-ONLY METHODS ---
 

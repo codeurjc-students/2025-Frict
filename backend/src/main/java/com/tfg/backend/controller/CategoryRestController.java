@@ -7,7 +7,7 @@ import com.tfg.backend.service.CategoryService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +21,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/categories")
 @Tag(name = "Category Management", description = "Product categories data management")
+@RequiredArgsConstructor
 public class CategoryRestController {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
 
     @Operation(summary = "(All) Get all categories (paged)")

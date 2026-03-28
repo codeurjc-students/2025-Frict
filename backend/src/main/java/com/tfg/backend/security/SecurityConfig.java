@@ -2,7 +2,7 @@ package com.tfg.backend.security;
 
 import com.tfg.backend.security.jwt.JwtRequestFilter;
 import com.tfg.backend.security.jwt.UnauthorizedHandlerJwt;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,16 +26,12 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-	@Autowired
-	private JwtRequestFilter jwtRequestFilter;
-
-	@Autowired
-	RepositoryUserDetailsService userDetailsService;
-
-	@Autowired
-	private UnauthorizedHandlerJwt unauthorizedHandlerJwt;
+	private final JwtRequestFilter jwtRequestFilter;
+	private final RepositoryUserDetailsService userDetailsService;
+	private final UnauthorizedHandlerJwt unauthorizedHandlerJwt;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {

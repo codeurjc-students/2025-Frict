@@ -9,7 +9,7 @@ import com.tfg.backend.service.TruckService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +22,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/trucks")
 @Tag(name = "Trucks Management", description = "System trucks data management")
+@RequiredArgsConstructor
 public class TruckRestController {
 
-    @Autowired
-    private ShopTruckOrchestrator shopTruckOrchestrator;
-
-    @Autowired
-    private TruckService truckService;
+    private final ShopTruckOrchestrator shopTruckOrchestrator;
+    private final TruckService truckService;
 
 
     @Operation(summary = "(Admin) Get all trucks information (paged)")

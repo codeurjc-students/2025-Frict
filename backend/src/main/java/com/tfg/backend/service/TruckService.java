@@ -5,7 +5,7 @@ import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.utils.StatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,10 +19,12 @@ import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class TruckService {
 
-    @Autowired private UserService userService;
-    @Autowired private TruckRepository truckRepository;
+    private final UserService userService;
+    private final TruckRepository truckRepository;
+
 
     // --- MÉTODOS DE LECTURA ---
 

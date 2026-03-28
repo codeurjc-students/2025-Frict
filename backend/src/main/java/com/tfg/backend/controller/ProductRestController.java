@@ -9,7 +9,7 @@ import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -24,10 +24,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/products")
 @Tag(name = "Product Management", description = "Product data management")
+@RequiredArgsConstructor
 public class ProductRestController {
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
 
     @Operation(summary = "(Admin) Get all products (paged)")
     @GetMapping("/")

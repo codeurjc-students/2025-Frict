@@ -4,8 +4,8 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
 import com.tfg.backend.service.StorageService;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,19 +22,20 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class DatabaseInitializer {
 
-    @Autowired private OrderRepository orderRepository;
-    @Autowired private ProductRepository productRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private ReviewRepository reviewRepository;
-    @Autowired private ShopRepository shopRepository;
-    @Autowired private TruckRepository truckRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private ShopStockRepository shopStockRepository;
-    @Autowired private OrderItemRepository orderItemRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private StorageService storageService;
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final ReviewRepository reviewRepository;
+    private final ShopRepository shopRepository;
+    private final TruckRepository truckRepository;
+    private final UserRepository userRepository;
+    private final ShopStockRepository shopStockRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final StorageService storageService;
 
     // Read a list separated by commas. Default: empty list
     @Value("#{'${app.db.init:}'.split(',')}")

@@ -12,7 +12,7 @@ import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.SaveResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +25,10 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/v1/orders")
 @Tag(name = "Order Management", description = "Users orders data management")
+@RequiredArgsConstructor
 public class OrderRestController {
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
 
 
     @Operation(summary = "(Admin, Manager, Driver) Get orders by role (paged)")
