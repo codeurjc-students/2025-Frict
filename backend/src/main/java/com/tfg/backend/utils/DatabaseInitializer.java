@@ -2,7 +2,7 @@ package com.tfg.backend.utils;
 
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
-import com.tfg.backend.service.StorageService;
+import com.tfg.backend.service.ImageService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class DatabaseInitializer {
     private final ShopStockRepository shopStockRepository;
     private final OrderItemRepository orderItemRepository;
     private final PasswordEncoder passwordEncoder;
-    private final StorageService storageService;
+    private final ImageService imageService;
 
     // Read a list separated by commas. Default: empty list
     @Value("#{'${app.db.init:}'.split(',')}")
@@ -538,7 +538,7 @@ public class DatabaseInitializer {
         try {
             // Use getContentAsByteArray() instead of getInputStream()
             byte[] bytes = resource.getContentAsByteArray();
-            Map<String, String> result = storageService.uploadFile(
+            Map<String, String> result = imageService.uploadFile(
                     bytes,
                     resource.getFilename(),
                     "image/jpeg",
@@ -553,7 +553,7 @@ public class DatabaseInitializer {
 
 
     private Map<String, String> uploadToMinio(ClassPathResource resource, String originalName, String folder) throws IOException {
-        return storageService.uploadFile(
+        return imageService.uploadFile(
                 resource.getContentAsByteArray(),
                 originalName,
                 "image/jpeg",

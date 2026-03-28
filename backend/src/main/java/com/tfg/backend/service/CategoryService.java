@@ -16,10 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -27,7 +25,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CategoryService {
 
-    private final StorageService storageService;
+    private final ImageService imageService;
     private final CategoryRepository categoryRepository;
 
     // --- Read-only methods ---
@@ -154,7 +152,7 @@ public class CategoryService {
         }
 
         if(!GlobalDefaults.isDefaultCategoryImage(categoryToDelete.getCategoryImage())){
-            storageService.deleteFile(categoryToDelete.getCategoryImage().getS3Key());
+            imageService.deleteFile(categoryToDelete.getCategoryImage().getS3Key());
         }
 
         categoryRepository.delete(categoryToDelete);
@@ -189,27 +187,16 @@ public class CategoryService {
     public Category uploadCategoryImage(Long id, MultipartFile file) {
         Category category = this.findByIdHelper(id);
 
-        if (!GlobalDefaults.isDefaultCategoryImage(category.getCategoryImage())){
-            storageService.deleteFile(category.getCategoryImage().getS3Key());
-        }
+        ImageInfo newImage = imageService.processImageReplacement(
+                category.getCategoryImage(),
+                file,
+                "categories",
+                GlobalDefaults::isDefaultCategoryImage,
+                GlobalDefaults::getDefaultCategoryImage
+        );
 
-        if (!file.isEmpty()){
-            try {
-                Map<String, String> res = storageService.uploadFile(file, "categories");
-                ImageInfo imageInfo = new ImageInfo(
-                        res.get("url"),
-                        res.get("key"),
-                        file.getOriginalFilename()
-                );
-                category.setCategoryImage(imageInfo);
-            } catch (IOException e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload category image to storage");
-            }
-        } else {
-            category.setCategoryImage(GlobalDefaults.getDefaultCategoryImage());
-        }
-
-        return category; // Saved automatically
+        category.setCategoryImage(newImage);
+        return category;
     }
 
     @Transactional
@@ -217,7 +204,7 @@ public class CategoryService {
         Category category = this.findByIdHelper(id);
 
         if (!GlobalDefaults.isDefaultCategoryImage(category.getCategoryImage())){
-            storageService.deleteFile(category.getCategoryImage().getS3Key());
+            imageService.deleteFile(category.getCategoryImage().getS3Key());
             category.setCategoryImage(GlobalDefaults.getDefaultCategoryImage());
         }
 

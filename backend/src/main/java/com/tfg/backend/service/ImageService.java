@@ -1,11 +1,14 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.model.ImageInfo;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -14,11 +17,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class StorageService {
+public class ImageService {
 
     private final S3Client s3Client;
 
@@ -98,6 +103,39 @@ public class StorageService {
     public void deleteFile(String key) {
         if (key != null && !key.isBlank()) {
             s3Client.deleteObject(b -> b.bucket(bucketName).key(key));
+        }
+    }
+
+
+    //Entities image replacement
+    public ImageInfo uploadImageAndGetInfo(MultipartFile file, String folder) {
+        if (file == null || file.isEmpty()) return null;
+        try {
+            Map<String, String> res = this.uploadFile(file, folder);
+            return new ImageInfo(res.get("url"), res.get("key"), file.getOriginalFilename());
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload image to S3");
+        }
+    }
+
+
+    public ImageInfo processImageReplacement(
+            ImageInfo currentImage,
+            MultipartFile newFile,
+            String folder,
+            Predicate<ImageInfo> isDefaultChecker,
+            Supplier<ImageInfo> defaultImageSupplier) {
+
+        // 1. Delete the old one if is not the default image
+        if (currentImage != null && !isDefaultChecker.test(currentImage)) {
+            this.deleteFile(currentImage.getS3Key());
+        }
+
+        // 2. Upload new or set default
+        if (newFile != null && !newFile.isEmpty()) {
+            return this.uploadImageAndGetInfo(newFile, folder);
+        } else {
+            return defaultImageSupplier.get();
         }
     }
 }

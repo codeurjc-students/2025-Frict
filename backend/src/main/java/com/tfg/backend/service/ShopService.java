@@ -15,10 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -26,7 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ShopService {
 
-    private final StorageService storageService;
+    private final ImageService imageService;
     private final ShopStockService shopStockService;
     private final ProductService productService;
     private final ShopRepository shopRepository;
@@ -96,7 +94,7 @@ public class ShopService {
         shopRepository.delete(shop);
 
         if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
-            storageService.deleteFile(shop.getImage().getS3Key());
+            imageService.deleteFile(shop.getImage().getS3Key());
         }
 
         return shop;
@@ -155,21 +153,15 @@ public class ShopService {
     public Shop uploadShopImage(Long id, MultipartFile image){
         Shop shop = this.findShopHelper(id);
 
-        if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
-            storageService.deleteFile(shop.getImage().getS3Key());
-        }
+        ImageInfo newImage = imageService.processImageReplacement(
+                shop.getImage(),
+                image,
+                "shops",
+                GlobalDefaults::isDefaultShopImage,
+                GlobalDefaults::getDefaultShopImage
+        );
 
-        if (image != null && !image.isEmpty()){
-            try {
-                Map<String, String> res = storageService.uploadFile(image, "shops");
-                ImageInfo shopImageInfo = new ImageInfo(res.get("url"), res.get("key"), image.getOriginalFilename());
-                shop.setImage(shopImageInfo);
-            } catch (IOException e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload shop image to storage");
-            }
-        } else {
-            shop.setImage(GlobalDefaults.getDefaultShopImage());
-        }
+        shop.setImage(newImage);
         return shop;
     }
 
@@ -178,7 +170,7 @@ public class ShopService {
         Shop shop = this.findShopHelper(id);
 
         if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
-            storageService.deleteFile(shop.getImage().getS3Key());
+            imageService.deleteFile(shop.getImage().getS3Key());
             shop.setImage(GlobalDefaults.getDefaultShopImage());
         }
         return shop;

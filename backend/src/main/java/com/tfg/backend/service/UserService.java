@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -28,7 +27,7 @@ import java.util.*;
 public class UserService {
 
     private final PasswordEncoder passwordEncoder;
-    private final StorageService storageService;
+    private final ImageService imageService;
     private final UserRepository userRepository;
 
     // --- READ-ONLY METHODS ---
@@ -212,21 +211,15 @@ public class UserService {
     public User uploadUserImage(Long id, MultipartFile image){
         User loggedUser = this.findUserHelper(id);
 
-        if (!GlobalDefaults.isDefaultUserImage(loggedUser.getUserImage())) {
-            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-        }
+        ImageInfo newImage = imageService.processImageReplacement(
+                loggedUser.getUserImage(),
+                image,
+                "users",
+                GlobalDefaults::isDefaultUserImage,
+                GlobalDefaults::getDefaultUserImage
+        );
 
-        if (!image.isEmpty()){
-            try {
-                Map<String, String> res = storageService.uploadFile(image, "users");
-                ImageInfo userImageInfo = new ImageInfo(res.get("url"), res.get("key"), image.getOriginalFilename());
-                loggedUser.setUserImage(userImageInfo);
-            } catch (IOException e){
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload user image to storage");
-            }
-        } else {
-            loggedUser.setUserImage(GlobalDefaults.getDefaultUserImage());
-        }
+        loggedUser.setUserImage(newImage);
         return loggedUser;
     }
 
@@ -234,7 +227,7 @@ public class UserService {
     public User deleteUserImage() {
         User loggedUser = this.findLoggedUserHelper();
         if (!GlobalDefaults.isDefaultUserImage(loggedUser.getUserImage())) {
-            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
+            imageService.deleteFile(loggedUser.getUserImage().getS3Key());
             loggedUser.setUserImage(GlobalDefaults.getDefaultUserImage());
         }
         return loggedUser;
@@ -289,7 +282,7 @@ public class UserService {
         for (User u : allUsers) {
             if (!u.getRoles().contains("ADMIN")){
                 if(!GlobalDefaults.isDefaultUserImage(u.getUserImage())){
-                    storageService.deleteFile(u.getUserImage().getS3Key());
+                    imageService.deleteFile(u.getUserImage().getS3Key());
                 }
                 userRepository.delete(u);
             }
@@ -301,7 +294,7 @@ public class UserService {
     public boolean deleteUserById(Long id){
         User user = this.findUserHelper(id);
         if(!GlobalDefaults.isDefaultUserImage(user.getUserImage())){
-            storageService.deleteFile(user.getUserImage().getS3Key());
+            imageService.deleteFile(user.getUserImage().getS3Key());
         }
         userRepository.delete(user);
         return true;
@@ -328,7 +321,7 @@ public class UserService {
         user.getCards().clear();
 
         if (!GlobalDefaults.isDefaultUserImage(user.getUserImage())) {
-            storageService.deleteFile(user.getUserImage().getS3Key());
+            imageService.deleteFile(user.getUserImage().getS3Key());
         }
         user.setUserImage(GlobalDefaults.getDefaultUserImage());
         user.setDeleted(true);

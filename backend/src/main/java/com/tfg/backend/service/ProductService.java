@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ public class ProductService {
     private final UserService userService;
     private final ShopStockService shopStockService;
     private final CategoryService categoryService;
-    private final StorageService storageService;
+    private final ImageService imageService;
     private final OrderItemService orderItemService;
 
     // --- READ-ONLY METHODS ---
@@ -152,7 +151,7 @@ public class ProductService {
 
         for (ProductImageInfo i : product.getImages()) {
             if (!GlobalDefaults.isDefaultProductImage(i)) {
-                storageService.deleteFile(i.getS3Key());
+                imageService.deleteFile(i.getS3Key());
             }
         }
 
@@ -204,33 +203,29 @@ public class ProductService {
                 ? existingImages.stream().map(ProductImageInfo::getS3Key).filter(Objects::nonNull).collect(Collectors.toSet())
                 : Collections.emptySet();
 
+        // 1. Delete discarded ones
         Iterator<ProductImageInfo> iterator = currentImages.iterator();
         while (iterator.hasNext()) {
             ProductImageInfo currentImg = iterator.next();
             if (currentImg.getS3Key() != null && !keepS3Keys.contains(currentImg.getS3Key())) {
                 if (!GlobalDefaults.isDefaultProductImage(currentImg)) {
-                    storageService.deleteFile(currentImg.getS3Key());
+                    imageService.deleteFile(currentImg.getS3Key());
                 }
                 iterator.remove();
             }
         }
 
+        // 2. Upload new ones
         if (newImages != null && !newImages.isEmpty()) {
             for (MultipartFile file : newImages) {
-                try {
-                    Map<String, String> res = storageService.uploadFile(file, "products");
-                    ImageInfo imageInfo = new ImageInfo(res.get("url"), res.get("key"), file.getOriginalFilename());
-                    ProductImageInfo newImg = new ProductImageInfo(imageInfo, product);
-                    currentImages.add(newImg);
-                } catch (IOException e) {
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not upload product image to storage");
-                }
+                ImageInfo imageInfo = imageService.uploadImageAndGetInfo(file, "products");
+                currentImages.add(new ProductImageInfo(imageInfo, product));
             }
         } else if (currentImages.isEmpty()) {
             currentImages.add(new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), product));
         }
 
-        return product; // Saved automatically
+        return product;
     }
 
     @Transactional
@@ -243,7 +238,7 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Image not found in this product."));
 
         if(!GlobalDefaults.isDefaultProductImage(imageToRemove)) {
-            storageService.deleteFile(imageToRemove.getS3Key());
+            imageService.deleteFile(imageToRemove.getS3Key());
             product.getImages().remove(imageToRemove);
         }
 

@@ -1,6 +1,6 @@
 package com.tfg.backend.unit;
 
-import com.tfg.backend.service.StorageService;
+import com.tfg.backend.service.ImageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class StorageServiceUTest {
+class ImageServiceUTest {
 
     @Mock
     private S3Client s3Client;
@@ -32,7 +32,7 @@ class StorageServiceUTest {
     private MultipartFile multipartFile;
 
     @InjectMocks
-    private StorageService storageService;
+    private ImageService imageService;
 
     private final String BUCKET_NAME = "test-images";
     private final String PUBLIC_URL = "http://localhost:9001";
@@ -41,9 +41,9 @@ class StorageServiceUTest {
     @BeforeEach
     void setUp() {
         // Injecting @Value fields manually for the unit test
-        ReflectionTestUtils.setField(storageService, "bucketName", BUCKET_NAME);
-        ReflectionTestUtils.setField(storageService, "publicUrl", PUBLIC_URL);
-        ReflectionTestUtils.setField(storageService, "minioUrl", MINIO_URL);
+        ReflectionTestUtils.setField(imageService, "bucketName", BUCKET_NAME);
+        ReflectionTestUtils.setField(imageService, "publicUrl", PUBLIC_URL);
+        ReflectionTestUtils.setField(imageService, "minioUrl", MINIO_URL);
     }
 
     // --- INIT TESTS ---
@@ -56,7 +56,7 @@ class StorageServiceUTest {
         ListObjectsV2Response emptyResponse = ListObjectsV2Response.builder().build();
         when(s3Client.listObjectsV2(any(Consumer.class))).thenReturn(emptyResponse);
 
-        storageService.init();
+        imageService.init();
 
         verify(s3Client).createBucket(any(CreateBucketRequest.class));
         verify(s3Client).putBucketPolicy(any(Consumer.class));
@@ -74,7 +74,7 @@ class StorageServiceUTest {
 
         when(s3Client.listObjectsV2(any(Consumer.class))).thenReturn(listResponse);
 
-        storageService.init();
+        imageService.init();
 
         verify(s3Client).deleteObjects(any(Consumer.class));
         verify(s3Client).putBucketPolicy(any(Consumer.class));
@@ -94,7 +94,7 @@ class StorageServiceUTest {
         when(multipartFile.getOriginalFilename()).thenReturn(fileName);
         when(multipartFile.getContentType()).thenReturn(contentType);
 
-        Map<String, String> result = storageService.uploadFile(multipartFile, folderName);
+        Map<String, String> result = imageService.uploadFile(multipartFile, folderName);
 
         assertNotNull(result);
         String resultKey = result.get("key");
@@ -119,7 +119,7 @@ class StorageServiceUTest {
 
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
 
-        Map<String, String> result = storageService.uploadFile(content, fileName, contentType, folderName);
+        Map<String, String> result = imageService.uploadFile(content, fileName, contentType, folderName);
 
         assertNotNull(result);
         String key = result.get("key");
@@ -141,13 +141,13 @@ class StorageServiceUTest {
     @Test
     void deleteFile_ShouldDelete_WhenKeyIsValid() {
         String key = "folder/image.jpg";
-        storageService.deleteFile(key);
+        imageService.deleteFile(key);
         verify(s3Client, times(1)).deleteObject(any(Consumer.class));
     }
 
     @Test
     void deleteFile_ShouldDoNothing_WhenKeyIsNull() {
-        storageService.deleteFile(null);
+        imageService.deleteFile(null);
         verify(s3Client, never()).deleteObject(any(Consumer.class));
     }
 }
