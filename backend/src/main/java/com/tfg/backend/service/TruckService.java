@@ -26,7 +26,7 @@ public class TruckService {
     private final TruckRepository truckRepository;
 
 
-    // --- MÉTODOS DE LECTURA ---
+    // --- READ-ONLY METHODS ---
 
     public Page<Truck> findAll(Pageable pageable) { return truckRepository.findAll(pageable); }
     public List<Truck> findAll() { return truckRepository.findAll(); }
@@ -47,7 +47,7 @@ public class TruckService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
     }
 
-    // --- MÉTODOS DE ESCRITURA ---
+    // --- WRITING METHODS (override Transactional) ---
 
     @Transactional
     public Truck save(Truck t) { return truckRepository.save(t); }
@@ -85,7 +85,7 @@ public class TruckService {
     public Truck createTruck(TruckDTO truckDTO, Shop assignedShop) {
         Address address = mapAddressFromDTO(truckDTO.getAddress());
         Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxOrderCapacity());
-        truck.setAssignedShop(assignedShop); // Puede ser null, es totalmente lícito
+        truck.setAssignedShop(assignedShop); //Can be null (valid)
 
         return truckRepository.save(truck);
     }
@@ -107,6 +107,19 @@ public class TruckService {
     public Truck deleteTruck(Long id) {
         Truck truck = this.findTruckHelper(id);
 
+        // 1. Unlink shop
+        if (truck.getAssignedShop() != null) {
+            truck.getAssignedShop().getAssignedTrucks().remove(truck);
+            truck.setAssignedShop(null);
+        }
+
+        // 2. Unlink driver
+        if (truck.getAssignedDriver() != null) {
+            truck.getAssignedDriver().setAssignedTruck(null);
+            truck.setAssignedDriver(null);
+        }
+
+        // 3. Unlink orders
         Set<Order> linkedOrders = truck.getOrdersToDeliver();
         for (Order o : linkedOrders) {
             if (o.getHistory().getLast().getStatus() == OrderStatus.ON_DELIVERY) {
@@ -116,11 +129,12 @@ public class TruckService {
         }
         truck.getOrdersToDeliver().clear();
 
+        // 4. Secure deletion
         truckRepository.delete(truck);
         return truck;
     }
 
-    // --- MÉTODOS DE MÉTRICAS ---
+    // --- METRICS METHODS ---
 
     public List<StatDTO> getTruckStatistics(User currentUser) {
         long available = 0, onRoute = 0, onMaintenance = 0, outOfService = 0;
@@ -148,7 +162,7 @@ public class TruckService {
         );
     }
 
-    // --- MÉTODOS AUXILIARES ---
+    // --- AUXILIARY METHODS ---
 
     private Address mapAddressFromDTO(AddressDTO dto) {
         Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());

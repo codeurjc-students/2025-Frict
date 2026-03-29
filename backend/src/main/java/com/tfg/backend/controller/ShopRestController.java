@@ -101,7 +101,7 @@ public class ShopRestController {
         return ResponseEntity.created(location).body(new ShopDTO(savedShop));
     }
 
-    @Operation(summary = "(Admin) Update shop by ID")
+    @Operation(summary = "(Admin, Manager) Update shop by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ShopDTO> updateShop(@PathVariable Long id, @RequestBody ShopDTO shopDTO) {
         Shop updatedShop = shopService.updateShop(id, shopDTO);
@@ -166,7 +166,7 @@ public class ShopRestController {
     }
 
 
-    @Operation(summary = "(Admin) Update remote shop image")
+    @Operation(summary = "(Admin, Manager) Update remote shop image")
     @PutMapping("/image/{id}")
     public ResponseEntity<ShopDTO> uploadShopImage(@PathVariable Long id, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
         Shop shop = shopService.uploadShopImage(id, image);

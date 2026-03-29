@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-@Transactional(readOnly = true) // 1. Protege todas las consultas de lectura por defecto
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class OrderService {
 
@@ -31,7 +31,7 @@ public class OrderService {
     private final ProductService productService;
     private final OrderRepository orderRepository;
 
-    // --- MÉTODOS DE LECTURA ---
+    // --- READ-ONLY METHODS ---
 
     public Optional<Order> findById(Long id){ return orderRepository.findById(id); }
     public Page<Order> findAll(Pageable pageable) { return orderRepository.findAll(pageable); }
@@ -182,7 +182,7 @@ public class OrderService {
         Order order = this.findOrderHelper(id);
         String reason = loggedUser.getRoles().contains("DRIVER") ? "El pedido ha sido cancelado por el repartidor." : "Has cancelado este pedido.";
         order.changeOrderStatus(OrderStatus.CANCELLED, reason);
-        return order; // Automático
+        return order; // Saved automatically
     }
 
     @Transactional

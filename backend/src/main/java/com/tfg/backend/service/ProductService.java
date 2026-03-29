@@ -121,7 +121,7 @@ public class ProductService {
     public Product createProduct(ProductDTO dto){
         Product product = new Product(dto.getName(), dto.getDescription(), dto.getCurrentPrice(), dto.getSupplyPrice());
         product.setCategories(processCategories(dto.getCategories()));
-        return this.save(product);
+        return productRepository.save(product);
     }
 
     @Transactional

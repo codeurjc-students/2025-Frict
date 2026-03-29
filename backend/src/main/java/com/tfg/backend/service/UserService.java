@@ -275,25 +275,36 @@ public class UserService {
     }
 
     @Transactional
-    public boolean deleteAllUsers(){
+    public boolean deleteAllUsers() {
         List<User> allUsers = this.findAll();
         for (User u : allUsers) {
-            if (!u.getRoles().contains("ADMIN")){
-                if(!GlobalDefaults.isDefaultUserImage(u.getUserImage())){
-                    imageService.deleteFile(u.getUserImage().getS3Key());
-                }
-                userRepository.delete(u);
+            if (!u.hasRole("ADMIN")) {
+                this.deleteUserById(u.getId());
             }
         }
         return true;
     }
 
     @Transactional
-    public boolean deleteUserById(Long id){
-        User user = this.findUserHelper(id);
-        if(!GlobalDefaults.isDefaultUserImage(user.getUserImage())){
-            imageService.deleteFile(user.getUserImage().getS3Key());
+    public boolean deleteUserById(Long userId) {
+        User user = this.findUserHelper(userId);
+
+        // 1. Unlink shops (if manager)
+        if (user.hasRole("MANAGER") && user.getAssignedShops() != null) {
+            for (Shop shop : user.getAssignedShops()) {
+                shop.setAssignedManager(null);
+            }
+            user.getAssignedShops().clear();
         }
+
+        // 2. Unlink truck (if driver)
+        if (user.hasRole("DRIVER") && user.getAssignedTruck() != null) {
+            Truck truck = user.getAssignedTruck();
+            truck.setAssignedDriver(null);
+            user.setAssignedTruck(null);
+        }
+
+        // 3. Cascade delete (cart items, favourite items, orders, reviews, addresses and cards)
         userRepository.delete(user);
         return true;
     }

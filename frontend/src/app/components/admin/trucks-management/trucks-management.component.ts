@@ -93,7 +93,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   statusOptions = [
     { label: 'Disponible', value: 'Disponible' },
-    { label: 'En Ruta / Reparto', value: 'En ruta' },
+    { label: 'En Ruta / Reparto', value: 'En reparto' },
     { label: 'En Mantenimiento', value: 'En mantenimiento' },
     { label: 'Fuera de Servicio', value: 'Fuera de servicio' }
   ];
