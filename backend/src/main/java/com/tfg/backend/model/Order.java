@@ -22,7 +22,6 @@ public class Order {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    @Setter(AccessLevel.NONE)
     private String referenceCode;
 
     //The current order status will always be the last element of the history list
