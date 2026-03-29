@@ -12,6 +12,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -78,7 +79,7 @@ class EmailServiceUTest {
         when(templateEngine.process(anyString(), any(Context.class))).thenReturn("<html>...</html>");
 
         // Simulating the email server being down
-        doThrow(new RuntimeException(new MessagingException("SMTP Server down")))
+        doThrow(new MailException("SMTP Server down") {})
                 .when(mailSender).send(any(MimeMessage.class));
 
         // Act & Assert

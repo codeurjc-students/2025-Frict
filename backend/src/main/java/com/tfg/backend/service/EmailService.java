@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -79,7 +80,11 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             // Send
-            mailSender.send(message);
+            try {
+                mailSender.send(message);
+            } catch (MailException e) { // Captura ambas
+                log.error("Error al enviar el correo: {}", e.getMessage());
+            }
             log.info("OTP de recuperación enviado a {}", to);
 
         } catch (MessagingException e) {

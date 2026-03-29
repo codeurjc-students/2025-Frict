@@ -28,7 +28,6 @@ public class Product {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    @Setter(AccessLevel.NONE)
     private String referenceCode;
 
     private String name;

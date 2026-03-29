@@ -16,7 +16,7 @@ public class ProductImageInfo {
     private Long id;
 
     @Embedded // Insert the 3 ImageInfo fields in this DB table
-    private ImageInfo imageInfo;
+    private ImageInfo imageInfo = new ImageInfo();
 
     @ManyToOne
     @JoinColumn(name = "product_id")
