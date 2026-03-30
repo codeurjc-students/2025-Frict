@@ -329,7 +329,8 @@ public class UserService {
         user.getAddresses().clear();
         user.getCards().clear();
 
-        if (!GlobalDefaults.isDefaultUserImage(user.getUserImage())) {
+        //Null checks for tests
+        if (user.getUserImage() != null && user.getUserImage().getS3Key() != null && !GlobalDefaults.isDefaultUserImage(user.getUserImage())) {
             imageService.deleteFile(user.getUserImage().getS3Key());
         }
         user.setUserImage(GlobalDefaults.getDefaultUserImage());

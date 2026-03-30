@@ -59,7 +59,7 @@ public class Product {
 
     //Controlled by the intermediate entities OrderItem and ShopStock
     //Only in cart items are deleted with product deletion
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

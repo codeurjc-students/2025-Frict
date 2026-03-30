@@ -142,12 +142,24 @@ public class ProductService {
     @Transactional
     public Product deleteProduct(Long id){
         Product product = this.findProductHelper(id);
-
         product.getCategories().clear();
 
-        List<OrderItem> items = orderItemService.findByProductIdAndOrderIsNotNull(product.getId());
-        items.forEach(item -> item.setProduct(null));
-        orderItemService.saveAll(items);
+        List<OrderItem> itemsToKeep = new ArrayList<>();
+        List<OrderItem> itemsToDelete = new ArrayList<>();
+        for (OrderItem item : product.getOrderItems()) {
+            if (item.getOrder() != null) {
+                item.setProduct(null);
+                itemsToKeep.add(item);
+            } else {
+                itemsToDelete.add(item);
+            }
+        }
+
+        product.getOrderItems().clear();
+        orderItemService.saveAll(itemsToKeep);
+        for (OrderItem cartItem : itemsToDelete) {
+            orderItemService.delete(cartItem);
+        }
 
         for (ProductImageInfo i : product.getImages()) {
             if (!GlobalDefaults.isDefaultProductImage(i)) {
@@ -155,7 +167,7 @@ public class ProductService {
             }
         }
 
-        productRepository.delete(product); // Direct deletion
+        productRepository.delete(product);
         return product;
     }
 

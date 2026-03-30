@@ -79,7 +79,7 @@ public class User {
 
     //For MANAGER role users: Allows them to manage this shops
     @OneToMany(mappedBy = "assignedManager")
-    private List<Shop> assignedShops;
+    private List<Shop> assignedShops = new ArrayList<>();
 
     //For USER role users: Allows them to choose the shop in which to place their orders
     @ManyToOne

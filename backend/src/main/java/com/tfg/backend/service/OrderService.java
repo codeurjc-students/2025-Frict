@@ -175,16 +175,24 @@ public class OrderService {
     @Transactional
     public Order cancelOrder(Long id){
         User loggedUser = userService.findLoggedUserHelper();
-        if(!this.existsByIdAndUser(id, loggedUser)){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order with ID " + id + " does not belong to this user.");
+        Order order = this.findOrderHelper(id);
+
+        // Check if it is the original buyer
+        boolean isBuyer = order.getUser() != null && order.getUser().getId().equals(loggedUser.getId());
+
+        // Check if it is the delivery driver assigned to this order
+        boolean isAssignedDriver = order.getAssignedTruck() != null &&
+                order.getAssignedTruck().getAssignedDriver() != null &&
+                order.getAssignedTruck().getAssignedDriver().getId().equals(loggedUser.getId());
+
+        if(!isBuyer && !isAssignedDriver){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order with ID " + id + " cannot be cancelled by this user.");
         }
 
-        Order order = this.findOrderHelper(id);
         String reason = loggedUser.getRoles().contains("DRIVER") ? "El pedido ha sido cancelado por el repartidor." : "Has cancelado este pedido.";
         order.changeOrderStatus(OrderStatus.CANCELLED, reason);
         return order; // Saved automatically
     }
-
     @Transactional
     public Order deleteFinishedOrderById(Long id){
         Order order = this.findOrderHelper(id);
