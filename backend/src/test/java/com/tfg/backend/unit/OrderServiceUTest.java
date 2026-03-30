@@ -224,7 +224,14 @@ class OrderServiceUTest {
         @DisplayName("cancelOrder throws FORBIDDEN if order does not belong to user")
         void cancelOrder_ThrowsForbidden_WhenNotUsersOrder() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
-            when(orderRepository.existsByIdAndUser(1L, loggedUser)).thenReturn(false);
+
+            User anotherUser = new User();
+            anotherUser.setId(999L);
+            order.setUser(anotherUser);
+            order.setAssignedTruck(null);
+
+            //Mock the user search
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
             ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> orderService.cancelOrder(1L));
             assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
@@ -234,7 +241,6 @@ class OrderServiceUTest {
         @DisplayName("cancelOrder sets CANCELLED status with different reasons based on role")
         void cancelOrder_AppliesCorrectReason_BasedOnRole() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
-            when(orderRepository.existsByIdAndUser(1L, loggedUser)).thenReturn(true);
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
             // Test as USER

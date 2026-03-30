@@ -80,26 +80,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/products/favourites/*").hasRole("USER")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/favourites/*").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/available/*").hasRole("MANAGER") // (Manager)
-                        .requestMatchers("/api/v1/products/**").hasRole("ADMIN") // (Admin) para CRUD, imágenes y activaciones
+                        .requestMatchers("/api/v1/products/**").hasRole("ADMIN") // (Admin) for CRUD, images and activations
 
                         // --- 4. ORDERS & CART (OrderRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart/**").hasRole("USER") // (User)
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/cart/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cart/**").hasRole("USER")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/cart/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("USER") // (User) Crear pedido
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cancel/*").hasRole("USER") // (User) Cancelar
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("USER") // (User) Create order
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cancel/*").hasRole("USER") // (User) Cancel order
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}").hasAnyRole("USER", "MANAGER", "DRIVER", "ADMIN") // (User, etc.)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/*").hasRole("ADMIN") // (Admin) Pedidos de un usuario
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasRole("ADMIN") // (Admin) Borrar finalizados
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager) Actualizar estado
-                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/assign/truck/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager) Asignar camión
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/").hasAnyRole("ADMIN", "MANAGER", "DRIVER") // Endpoint para roles internos
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("USER") // Endpoint exclusivo de clientes
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/*").hasRole("ADMIN") // (Admin) User orders
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasRole("ADMIN") // (Admin) Clear finished orders
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager) Update order status
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/assign/truck/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager) Assign truck
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/").hasAnyRole("ADMIN", "MANAGER", "DRIVER") // Internal roles endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("USER") // Client exclusive endpoint
 
                         // --- 5. REVIEWS (ReviewRestController) ---
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Reviews de producto
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyRole("USER", "ADMIN") // (All/User) Propias y Admin
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Product reviews
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyRole("USER", "ADMIN") // (All/User) Reviews for logged user and for admin
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/user/*").hasRole("ADMIN") // (Admin)
                         .requestMatchers(HttpMethod.POST, "/api/v1/reviews").hasRole("USER") // (User)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/reviews").hasRole("USER") // (User)
@@ -109,11 +109,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/list").hasAnyRole("USER", "ADMIN") // (User)
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/truck/*").hasRole("DRIVER") // (Driver)
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/stock/*").permitAll() // (All)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/shops").hasRole("ADMIN") // (Admin) Crear
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/shops/*", "/api/v1/shops/image/*").hasRole("ADMIN") // (Admin) Borrar
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/shops/*/assign/manager/*").hasRole("ADMIN") // (Admin) Asignar manager
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/").hasRole("ADMIN") // Todas las tiendas
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shops").hasRole("MANAGER") // Tiendas asignadas al manager
+                        .requestMatchers(HttpMethod.POST, "/api/v1/shops").hasRole("ADMIN") // (Admin) Create shop
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/shops/*", "/api/v1/shops/image/*").hasRole("ADMIN") // (Admin) Delete shop
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/shops/*/assign/manager/*").hasRole("ADMIN") // (Admin) Assign manager
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/").hasRole("ADMIN") // All shops
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops").hasRole("MANAGER") // Shops assigned to manager
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/{id}").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/shops/{id}", "/api/v1/shops/image/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/shops/active/*", "/api/v1/shops/*/active/", "/api/v1/shops/restock/*", "/api/v1/shops/*/assign/stock/*", "/api/v1/shops/*/assign/truck/*").hasRole("MANAGER") // (Manager)
@@ -124,7 +124,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/", "/api/v1/trucks/available/").hasAnyRole("ADMIN", "MANAGER") // (Admin) All vs (Admin, Manager) Available
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/{id}", "/api/v1/trucks/shop/*/list").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
                         .requestMatchers(HttpMethod.POST, "/api/v1/trucks").hasRole("ADMIN") // (Admin)
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/**").hasRole("ADMIN") // (Admin) CRUD y asignaciones
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/**").hasRole("ADMIN") // (Admin) CRUD and assignments
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/trucks/*").hasRole("ADMIN") // (Admin)
 
                         // --- 8. USERS (UserRestController) ---
@@ -132,13 +132,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/", "/api/v1/users/drivers/available/", "/api/v1/users/role/", "/api/v1/users/stats").hasRole("ADMIN") // (Admin)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/ban/**", "/api/v1/users/anon/**").hasRole("ADMIN") // (Admin)
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/", "/api/v1/users/*").hasRole("ADMIN") // (Admin)
-                        .requestMatchers("/api/v1/users/**").authenticated() // (User) Direcciones, tarjetas, imagen, datos propios
+                        .requestMatchers("/api/v1/users/**").authenticated() // (User) Addresses, cards, images and own personal data
 
                         // --- 9. STATS (StatRestController) ---
                         .requestMatchers("/api/v1/stats/orders").hasAnyRole("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver)
                         .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
 
-                        .anyRequest().denyAll() // Bloqueo total por defecto para máxima seguridad
+                        .anyRequest().denyAll() // Block any URL that is not contained in this list
                 )
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt))
                 .authenticationProvider(authenticationProvider())

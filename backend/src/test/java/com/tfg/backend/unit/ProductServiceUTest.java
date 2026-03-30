@@ -293,15 +293,26 @@ class ProductServiceUTest {
     class DeletionAndActivationTests {
 
         @Test
-        @DisplayName("deleteProduct clears categories, unlinks OrderItems and deletes S3 images")
+        @DisplayName("deleteProduct clears categories, unlinks historical OrderItems, deletes cart items and deletes S3 images")
         void deleteProduct_Success() {
+            // 1. Setup Category
             Category c = new Category();
             product.getCategories().add(c);
 
-            OrderItem item = new OrderItem();
-            item.setProduct(product);
-            when(orderItemService.findByProductIdAndOrderIsNotNull(1L)).thenReturn(List.of(item));
+            // 2. Setup OrderItems
+            // History item (must not be removed)
+            OrderItem historicalItem = new OrderItem();
+            historicalItem.setProduct(product);
+            historicalItem.setOrder(new Order());
+            product.getOrderItems().add(historicalItem);
 
+            // Cart item (must be removed)
+            OrderItem cartItem = new OrderItem();
+            cartItem.setProduct(product);
+            cartItem.setOrder(null); // The service will erase it
+            product.getOrderItems().add(cartItem);
+
+            // 3. Setup Images
             ProductImageInfo pii = mock(ProductImageInfo.class);
             when(pii.getS3Key()).thenReturn("custom-pic.jpg");
             product.getImages().add(pii);
@@ -314,7 +325,8 @@ class ProductServiceUTest {
                 productService.deleteProduct(1L);
 
                 assertTrue(product.getCategories().isEmpty(), "Categories must be cleared");
-                assertNull(item.getProduct(), "OrderItem must be unlinked from product");
+                assertNull(historicalItem.getProduct(), "Historical OrderItem must be unlinked from product");
+                verify(orderItemService).delete(cartItem);
                 verify(imageService).deleteFile("custom-pic.jpg");
                 verify(productRepository).delete(product);
             }
