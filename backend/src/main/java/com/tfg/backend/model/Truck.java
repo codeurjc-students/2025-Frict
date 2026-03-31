@@ -31,7 +31,6 @@ public class Truck {
 
     //Record the address and exact truck positioning
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "address_id")
     private Address address;
 
     @OneToMany(mappedBy = "assignedTruck")

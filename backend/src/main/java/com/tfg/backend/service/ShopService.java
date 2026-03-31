@@ -93,7 +93,7 @@ public class ShopService {
 
         shopRepository.delete(shop);
 
-        if (!GlobalDefaults.isDefaultShopImage(shop.getImage())) {
+        if (shop.getImage() != null && shop.getImage().getS3Key() != null && !GlobalDefaults.isDefaultShopImage(shop.getImage())) {
             imageService.deleteFile(shop.getImage().getS3Key());
         }
 

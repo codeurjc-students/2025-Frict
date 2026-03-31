@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Setter
@@ -36,7 +33,7 @@ public class User {
     private LocalDateTime otpExpiration;
 
 	@ElementCollection(fetch = FetchType.EAGER) //Mandatory for JWT to work properly
-	private Set<String> roles;
+	private Set<String> roles = new HashSet<>();
 
     @Column(nullable = false)
     private String email;
@@ -83,7 +80,6 @@ public class User {
 
     //For USER role users: Allows them to choose the shop in which to place their orders
     @ManyToOne
-    @JoinColumn(name = "selected_shop_id")
     private Shop selectedShop;
 
     //For DRIVER role users: Allows them to manage this truck assigned orders
@@ -101,7 +97,7 @@ public class User {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
-        this.roles = Set.of(roles);
+        this.roles = new HashSet<>(Arrays.asList(roles));
         this.email = email;
     }
 
