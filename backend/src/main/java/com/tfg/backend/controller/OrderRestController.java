@@ -158,8 +158,6 @@ public class OrderRestController {
         OrderItem resultItem = result.data();
 
         if (result.isNew()) {
-            return ResponseEntity.ok(new OrderItemDTO(resultItem));
-        } else {
             URI location = ServletUriComponentsBuilder
                     .fromCurrentRequest()
                     .path("/{id}")
@@ -167,6 +165,8 @@ public class OrderRestController {
                     .toUri();
 
             return ResponseEntity.created(location).body(new OrderItemDTO(resultItem));
+        } else {
+            return ResponseEntity.ok(new OrderItemDTO(resultItem));
         }
     }
 
