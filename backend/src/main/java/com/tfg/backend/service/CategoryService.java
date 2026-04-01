@@ -89,7 +89,7 @@ public class CategoryService {
         Category category = this.findByIdHelper(id);
         Category othersCategory = this.findByNameHelper("Otros");
 
-        if (othersCategory.getId().equals(dto.getId())){
+        if (othersCategory.getId().equals(id)){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot update \"Otros\" category");
         }
 

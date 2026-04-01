@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.notNullValue;
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-@ActiveProfiles("test") // CRÍTICO: Asegura que usa la BD de test aislada
+@ActiveProfiles("test") // CRITICAL: Ensures it uses the isolated test database
 public class AuthApiFunctionalITest {
 
     @LocalServerPort
@@ -41,7 +41,7 @@ public class AuthApiFunctionalITest {
     private static final String BASE_URL = "/api/v1/auth";
     private static final String CONTENT_TYPE = "application/json";
 
-    // Credenciales del usuario por defecto para las pruebas
+    // Default user credentials for testing
     private static final String TEST_USER = "auth_user";
     private static final String TEST_PASS = "password123";
 
@@ -51,21 +51,21 @@ public class AuthApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. Setup limpio: Creamos SIEMPRE un usuario válido antes de empezar el test
+        // 1. Clean setup: ALWAYS create a valid user before starting the test
         User standardUser = new User("Auth Test User", TEST_USER, "auth@test.com", passwordEncoder.encode(TEST_PASS), "USER");
         userRepository.save(standardUser);
     }
 
     @AfterEach
     public void tearDown() {
-        // 2. Limpieza absoluta: Vaciamos la tabla de usuarios tras cada test
-        // Esto garantiza que el test de "signup" no choque nunca con usuarios anteriores
+        // 2. Absolute cleanup: Clear the user table after each test
+        // This ensures that the "signup" test never conflicts with previous users
         userRepository.deleteAll();
     }
 
     @Test
     public void registerUserTest() {
-        // Usamos un username distinto al del setUp para probar el registro correctamente
+        // Use a different username than the one in setUp to test registration correctly
         UserSignupDTO signupDTO = new UserSignupDTO("New Signup User", "new_signup", "password123", "newsignup@test.com", "USER");
 
         given()
@@ -104,7 +104,7 @@ public class AuthApiFunctionalITest {
 
     @Test
     public void logoutTest() {
-        // Obtenemos las cookies haciendo un login previo real
+        // Obtain cookies by performing a real prior login
         Response loginResponse = performLogin();
 
         String authToken = loginResponse.getCookie("AuthToken");
@@ -149,11 +149,10 @@ public class AuthApiFunctionalITest {
                 .statusCode(200);
     }
 
-    // --- Método Auxiliar ---
+    // --- Auxiliary Method ---
 
     /**
-     * Realiza una petición de login para extraer las cookies necesarias
-     * en los tests que requieren autenticación previa (logout, refresh).
+     * Perform login to extract cookies needed for tests requiring prior authentication (logout, refresh).
      */
     private Response performLogin() {
         return given()
