@@ -216,7 +216,7 @@
         <div class="flex justify-between items-end mb-8">
           <span class="text-lg font-bold text-surface-900 pb-1">Total</span>
           <div class="text-right">
-            <span class="text-4xl font-extrabold text-surface-900 block leading-none tracking-tight">{{ formatPrice(cartSummary.totalCost) }}</span>
+            <span class="text-4xl font-extrabold text-surface-900 block leading-none tracking-tight">{{ formatPrice(cartSummary.totalCost + cartSummary.shippingCost) }}</span>
             <span class="text-[10px] text-surface-500 font-medium uppercase tracking-wider">IVA incluido</span>
           </div>
         </div>

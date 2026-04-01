@@ -44,9 +44,9 @@ export class OrderDetailsComponent implements OnInit {
   error: boolean = false;
 
   private readonly stepsDefinitions = [
-    { status: 'Pedido realizado', icon: 'pi pi-shopping-cart' },
+    { status: 'Pedido Realizado', icon: 'pi pi-shopping-cart' },
     { status: 'Enviado', icon: 'pi pi-box' },
-    { status: 'En reparto', icon: 'pi pi-truck' },
+    { status: 'En Reparto', icon: 'pi pi-truck' },
     { status: 'Completado', icon: 'pi pi-check' },
     { status: 'Cancelado', icon: 'pi pi-ban' }
   ];

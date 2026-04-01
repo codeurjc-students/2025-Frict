@@ -114,7 +114,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/shops/*/assign/manager/*").hasRole("ADMIN") // (Admin) Assign manager
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/").hasRole("ADMIN") // All shops
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops").hasRole("MANAGER") // Shops assigned to manager
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/{id}").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/{id}").hasAnyRole("ADMIN", "MANAGER", "USER")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/shops/{id}", "/api/v1/shops/image/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/shops/active/*", "/api/v1/shops/*/active/", "/api/v1/shops/restock/*", "/api/v1/shops/*/assign/stock/*", "/api/v1/shops/*/assign/truck/*").hasRole("MANAGER") // (Manager)
 

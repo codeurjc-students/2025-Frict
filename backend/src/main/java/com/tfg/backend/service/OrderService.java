@@ -112,32 +112,21 @@ public class OrderService {
 
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
 
-        // Validate stock
+        // Validate AND reduce stock in a single pass
         for (OrderItem i : cartItems) {
-            int totalStock = i.getProduct().getShopsStock().stream().mapToInt(ShopStock::getUnits).sum();
-            if (totalStock < i.getQuantity()){
-                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product " + i.getProduct().getName() + " is not enough.");
-            }
-        }
+            ShopStock localStock = i.getProduct().getShopsStock().stream()
+                    .filter(stock -> stock.getShop().getId().equals(selectedShop.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "El producto " + i.getProduct().getName() + " no está disponible en tu tienda seleccionada."));
 
-        // Reduce stock and unlink product (Dirty checking saves the changes automatically)
-        for (OrderItem i : cartItems) {
-            int remainingUnits = i.getQuantity();
-            int shopIndex = 0;
-            List<ShopStock> shopsStock = i.getProduct().getShopsStock();
-
-            while (remainingUnits > 0 && shopIndex < shopsStock.size()) {
-                ShopStock currentShopStock = shopsStock.get(shopIndex);
-                int availableStock = currentShopStock.getUnits();
-
-                if (availableStock > 0) {
-                    int unitsToTake = Math.min(remainingUnits, availableStock);
-                    currentShopStock.setUnits(availableStock - unitsToTake);
-                    remainingUnits -= unitsToTake;
-                }
-                shopIndex++;
+            if (localStock.getUnits() < i.getQuantity()){
+                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "No hay suficiente stock del producto " + i.getProduct().getName() + " en tu tienda seleccionada.");
             }
 
+            // Decrease stock (Safe because @Transactional will roll this back if a later item throws an exception)
+            localStock.setUnits(localStock.getUnits() - i.getQuantity());
+
+            // Make the order item historical
             i.setProductName(i.getProduct().getName());
             i.setProductImageUrl(i.getProduct().getImages().getFirst().getImageUrl());
             i.setProductPrice(i.getProduct().getCurrentPrice());
@@ -147,6 +136,10 @@ public class OrderService {
         Order newOrder = new Order(loggedUser, cartItems, selectedShop, address, card);
         newOrder.setFullSendingAddress(address);
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
+
+        //Add the
+        double orderTotal = newOrder.getTotalCost();
+        selectedShop.setAssignedBudget(selectedShop.getAssignedBudget() + orderTotal);
 
         Order savedOrder = orderRepository.save(newOrder);
 
