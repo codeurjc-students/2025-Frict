@@ -62,7 +62,7 @@ public class StatApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. Temporarily bypass security for Hibernate to see everything
+        // 1. Security bypass cleaning
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
@@ -71,7 +71,7 @@ public class StatApiFunctionalITest {
         cleanDatabase();
         SecurityContextHolder.clearContext();
 
-        // 2. USER CREATION
+        // 2. User creation
         testAdmin = new User("Admin", "admin_stat", "admin@stat.com", passwordEncoder.encode("pass"), "ADMIN");
         userRepository.saveAndFlush(testAdmin);
 
@@ -84,7 +84,7 @@ public class StatApiFunctionalITest {
         testUser = new User("User", "user_stat", "user@stat.com", passwordEncoder.encode("pass"), "USER");
         userRepository.saveAndFlush(testUser);
 
-        // 3. COOKIE CACHING
+        // 3. Cache login cookies
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         managerCookie = loginAndGetCookie(testManager.getUsername(), "pass");
         driverCookie = loginAndGetCookie(testDriver.getUsername(), "pass");
@@ -96,11 +96,7 @@ public class StatApiFunctionalITest {
         cleanDatabase();
     }
 
-    /**
-     * CLEAN DATABASE (TRADITIONAL):
-     * Safely cleans the database respecting the JPA lifecycle and
-     * breaking relationships to avoid Foreign Key exceptions.
-     */
+
     private void cleanDatabase() {
         transactionTemplate.executeWithoutResult(status -> {
             // 1. Delete dependent (child) entities using direct JPQL for speed
@@ -123,7 +119,7 @@ public class StatApiFunctionalITest {
 
             // 4. Delete parent entities
             entityManager.createQuery("DELETE FROM Truck").executeUpdate();
-            userRepository.deleteAll(); // Use the repository here to cascade deletes (cards, etc)
+            userRepository.deleteAll(); // Cascade deletes (cards, addresses, etc.)
             entityManager.createQuery("DELETE FROM Shop").executeUpdate();
             entityManager.createQuery("DELETE FROM Product").executeUpdate();
             entityManager.createQuery("DELETE FROM Category").executeUpdate();
@@ -134,18 +130,6 @@ public class StatApiFunctionalITest {
             entityManager.clear();
         });
     }
-
-    // --- REFACTORED AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
-    private RequestSpecification authAsManager() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, managerCookie).build(); }
-    private RequestSpecification authAsDriver() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, driverCookie).build(); }
-    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 
     // ==========================================
     // ORDERS STATISTICS TESTS
@@ -228,4 +212,19 @@ public class StatApiFunctionalITest {
                 .body("[0].label", notNullValue())
                 .body("[0].value", notNullValue());
     }
+
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
+    private RequestSpecification authAsManager() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, managerCookie).build(); }
+    private RequestSpecification authAsDriver() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, driverCookie).build(); }
+    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_STATS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 }

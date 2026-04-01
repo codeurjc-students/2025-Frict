@@ -51,15 +51,14 @@ public class AuthApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. Clean setup: ALWAYS create a valid user before starting the test
+        // Always create a valid user before starting the test
         User standardUser = new User("Auth Test User", TEST_USER, "auth@test.com", passwordEncoder.encode(TEST_PASS), "USER");
         userRepository.save(standardUser);
     }
 
     @AfterEach
     public void tearDown() {
-        // 2. Absolute cleanup: Clear the user table after each test
-        // This ensures that the "signup" test never conflicts with previous users
+        // Ensures that the "signup" test never conflicts with previous users
         userRepository.deleteAll();
     }
 
@@ -99,7 +98,7 @@ public class AuthApiFunctionalITest {
                 .when()
                 .post(BASE_URL + "/login")
                 .then()
-                .statusCode(401); // Unauthorized
+                .statusCode(401);
     }
 
     @Test
@@ -148,8 +147,6 @@ public class AuthApiFunctionalITest {
                 .then()
                 .statusCode(200);
     }
-
-    // --- Auxiliary Method ---
 
     /**
      * Perform login to extract cookies needed for tests requiring prior authentication (logout, refresh).

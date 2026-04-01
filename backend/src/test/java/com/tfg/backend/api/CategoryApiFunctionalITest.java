@@ -60,7 +60,7 @@ public class CategoryApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. CLEANUP WITH ADMIN BYPASS
+        // 1. Admin bypass cleanup (the only who has permission to delete categories and users)
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
@@ -68,7 +68,7 @@ public class CategoryApiFunctionalITest {
         cleanDatabase();
         SecurityContextHolder.clearContext();
 
-        // 2. DATA PROVISIONING
+        // 2. Data provisioning
         transactionTemplate.executeWithoutResult(status -> {
             // "Otros" is mandatory for system integrity
             otrosCategory = new Category("Otros", "icon", "banner", "Default", "Default");
@@ -78,7 +78,7 @@ public class CategoryApiFunctionalITest {
             userRepository.saveAndFlush(testAdmin);
         });
 
-        // 3. CACHE LOGIN
+        // 3. Cache login
         adminCookie = given().contentType(ContentType.JSON).body(new LoginRequest(testAdmin.getUsername(), "pass"))
                 .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
     }
@@ -132,7 +132,7 @@ public class CategoryApiFunctionalITest {
 
     @Test
     public void uploadCategoryImage_Admin_UploadsMultipart() {
-        // Create a category to upload an image to
+        // Create a category to upload an image to it
         CategoryDTO dto = new CategoryDTO();
         dto.setName("Image Category");
         Long catId = given().spec(authAsAdmin()).body(dto).when().post().jsonPath().getLong("id");
@@ -152,7 +152,7 @@ public class CategoryApiFunctionalITest {
                 .pathParam("id", otrosCategory.getId())
                 .when().delete("/{id}/image")
                 .then().statusCode(200)
-                .body("imageInfo", notNullValue()); // Should return default image info
+                .body("imageInfo", notNullValue());
     }
 
     // ==========================================

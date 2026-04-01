@@ -75,7 +75,7 @@ public class ShopApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. DUPLICATE ENTRY FIX: Admin bypass
+        // 1. Admin bypass DB cleaning
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
@@ -84,7 +84,7 @@ public class ShopApiFunctionalITest {
         cleanDatabase();
         SecurityContextHolder.clearContext();
 
-        // 2. DATA CREATION
+        // 2. Data creation
         Category category = new Category("Otros", "icon", "banner", "Desc", "Desc");
         categoryRepository.saveAndFlush(category);
 
@@ -93,13 +93,13 @@ public class ShopApiFunctionalITest {
         testProduct.setActive(true);
         testProduct = productRepository.saveAndFlush(testProduct);
 
-        // --- SHOP CREATION ---
+        // Shop creation
         Address shopAddress = new Address("ShopHQ", "Main Street", "1", "1A", "28000", "Madrid", "Spain");
         testShop = new Shop("API Test Shop", shopAddress, 5000.0);
         testShop.setReferenceCode("SHP-001");
-        testShop = shopRepository.saveAndFlush(testShop); // Se guarda y se hace Persistente
+        testShop = shopRepository.saveAndFlush(testShop);
 
-        // --- STOCK AND USERS CREATION ---
+        // Stock and users creation
         testStock = new ShopStock(testShop, testProduct, 50);
         testStock = shopStockRepository.saveAndFlush(testStock);
 
@@ -115,7 +115,7 @@ public class ShopApiFunctionalITest {
         testUser = new User("User", "user_shp", "user@shp.com", passwordEncoder.encode("pass"), "USER");
         userRepository.saveAndFlush(testUser);
 
-        // --- USER-SHOP ASSIGNMENTS ---
+        // User-Shop Assignments
         testShop.setAssignedManager(testManager);
         testShop = shopRepository.saveAndFlush(testShop);
 
@@ -127,7 +127,7 @@ public class ShopApiFunctionalITest {
         testTruck.setAssignedShop(testShop);
         testTruck = truckRepository.saveAndFlush(testTruck);
 
-        // CACHE LOGIN COOKIES
+        // Cache login cookies
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         managerCookie = loginAndGetCookie(testManager.getUsername(), "pass");
         driverCookie = loginAndGetCookie(testDriver.getUsername(), "pass");
@@ -162,7 +162,7 @@ public class ShopApiFunctionalITest {
             entityManager.flush();
             entityManager.clear();
 
-            // Clean and secure entitiy deletions
+            // Clean and secure entity deletions
             truckRepository.deleteAll();
             shopRepository.deleteAll();
             userRepository.deleteAll();
@@ -172,18 +172,6 @@ public class ShopApiFunctionalITest {
             entityManager.createQuery("DELETE FROM Address").executeUpdate();
         });
     }
-
-    // --- REFACTORED AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
-    private RequestSpecification authAsManager() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, managerCookie).build(); }
-    private RequestSpecification authAsDriver() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, driverCookie).build(); }
-    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 
     // ==========================================
     // READ ENDPOINTS TESTS
@@ -201,7 +189,7 @@ public class ShopApiFunctionalITest {
     @Test
     public void getAssignedShopsPage_AsManager_ReturnsPagedShops() {
         given().spec(authAsManager())
-                .when().get() // Maps to @GetMapping (no slash)
+                .when().get()
                 .then().statusCode(200)
                 .body("items", notNullValue())
                 .body("items[0].id", equalTo(testShop.getId().intValue()));
@@ -345,4 +333,19 @@ public class ShopApiFunctionalITest {
                 .then().statusCode(200)
                 .body("imageInfo", notNullValue());
     }
+
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
+    private RequestSpecification authAsManager() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, managerCookie).build(); }
+    private RequestSpecification authAsDriver() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, driverCookie).build(); }
+    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_SHOPS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 }

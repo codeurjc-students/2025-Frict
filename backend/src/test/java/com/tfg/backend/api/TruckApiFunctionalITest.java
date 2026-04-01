@@ -28,6 +28,7 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
         classes = BackendApplication.class,
@@ -72,8 +73,7 @@ public class TruckApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. BYPASS SECURITY FOR CLEANUP
-        // Authenticate manually as ADMIN to ensure visibility aspects do not hide data during cleanup
+        // 1. Security bypass cleaning
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
@@ -82,15 +82,15 @@ public class TruckApiFunctionalITest {
         cleanDatabase();
         SecurityContextHolder.clearContext();
 
-        // 2. DATA CREATION (Wrapped in a transaction to safely handle complex relationships)
+        // 2. Data creation (avoids transient object exceptions)
         transactionTemplate.executeWithoutResult(status -> {
-            // --- SHOP CREATION ---
+            // Shop creation
             Address shopAddress = new Address("ShopHQ", "Main Street", "1", "1A", "28000", "Madrid", "Spain");
             testShop = new Shop("API Test Shop", shopAddress, 5000.0);
             testShop.setReferenceCode("SHP-001");
             testShop = shopRepository.save(testShop);
 
-            // --- USERS CREATION ---
+            // Users creation
             testAdmin = new User("Admin", "admin_trk", "admin@trk.com", passwordEncoder.encode("pass"), "ADMIN");
             testAdmin = userRepository.save(testAdmin);
 
@@ -103,12 +103,11 @@ public class TruckApiFunctionalITest {
             testUser = new User("User", "user_trk", "user@trk.com", passwordEncoder.encode("pass"), "USER");
             testUser = userRepository.save(testUser);
 
-            // --- SHOP ASSIGNMENTS ---
+            // Shop assignments
             testShop.setAssignedManager(testManager);
             testShop = shopRepository.save(testShop);
 
-            // --- TRUCKS CREATION ---
-            // Creating trucks inside the transaction ensures no TransientObjectExceptions occur
+            // Trucks creation
             Address truckAddress1 = new Address("Garage 1", "Industrial St", "10", "B", "28001", "Madrid", "Spain");
             testTruck = new Truck("1111-ABC", truckAddress1, 50);
             testTruck.setAssignedShop(testShop);
@@ -124,7 +123,7 @@ public class TruckApiFunctionalITest {
             entityManager.flush();
         });
 
-        // 3. CACHE LOGIN COOKIES (Executed only once per test setup)
+        // 3. Cache login cookies
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         managerCookie = loginAndGetCookie(testManager.getUsername(), "pass");
         driverCookie = loginAndGetCookie(testDriver.getUsername(), "pass");
@@ -136,10 +135,6 @@ public class TruckApiFunctionalITest {
         cleanDatabase();
     }
 
-    /**
-     * Safely breaks all complex relationships and clears Hibernate's memory before deleting records.
-     * This avoids both ConstraintViolationException and TransientObjectException.
-     */
     private void cleanDatabase() {
         transactionTemplate.executeWithoutResult(status -> {
             // 1. Delete standalone dependent entities directly
@@ -176,17 +171,6 @@ public class TruckApiFunctionalITest {
         });
     }
 
-    // --- REFACTORED AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
-    private RequestSpecification authAsManager() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, managerCookie).build(); }
-    private RequestSpecification authAsDriver() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, driverCookie).build(); }
-    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 
     // ==========================================
     // READ ENDPOINTS TESTS
@@ -315,8 +299,6 @@ public class TruckApiFunctionalITest {
 
     @Test
     public void commentAndOrUpdateTruckStatus_AsAdmin_UpdatesStatus() {
-        // Use a generic string contains check to avoid guessing the exact variable name
-        // (like 'description', 'updates', or 'logs') inside TruckStatusLogDTO.
         String responseBody = given().spec(authAsAdmin())
                 .pathParam("id", testTruck.getId())
                 .queryParam("truckStatus", "MAINTENANCE")
@@ -326,7 +308,7 @@ public class TruckApiFunctionalITest {
                 .extract().asString();
 
         // Ensure the comment was successfully appended to the history and returned
-        org.junit.jupiter.api.Assertions.assertTrue(
+        assertTrue(
                 responseBody.contains("Going to the mechanic"),
                 "The truck history should contain the new status comment"
         );
@@ -345,4 +327,19 @@ public class TruckApiFunctionalITest {
                 .when().get("/{id}")
                 .then().statusCode(404);
     }
+
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
+    private RequestSpecification authAsManager() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, managerCookie).build(); }
+    private RequestSpecification authAsDriver() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, driverCookie).build(); }
+    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_TRUCKS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 }

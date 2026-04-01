@@ -82,7 +82,7 @@ public class OrderApiFunctionalITest {
         cleanDatabase();
         SecurityContextHolder.clearContext();
 
-        // 2. DATA CREATION (Wrapped in a transaction)
+        // 2. Data creation (Wrapped in a transaction)
         transactionTemplate.executeWithoutResult(status -> {
 
             testProduct = new Product("Test Product", "Desc", 10.0, 5.0);
@@ -92,14 +92,14 @@ public class OrderApiFunctionalITest {
             testShop = new Shop("Test Shop", new Address("Shop", "Shop St", "1", "1", "00000", "City", "Country"), 5000.0);
             testShop = shopRepository.saveAndFlush(testShop);
 
-            // ADMIN CREATION (Has permission to change order status and assign trucks)
+            // Admin creation (Has permission to change order status and assign trucks)
             testAdmin = new User("Admin", "admin_ord", "admin@test.com", passwordEncoder.encode("pass"), "ADMIN");
             testAdmin = userRepository.saveAndFlush(testAdmin);
 
             ShopStock stock = new ShopStock(testShop, testProduct, 5);
             shopStockRepository.saveAndFlush(stock);
 
-            // TRUCK CREATION
+            // Truck creation
             Address truckAddress = new Address("Garage", "Ind St", "1", "1", "28001", "City", "Country");
             testTruck = new Truck("1111-ORD", truckAddress, 20);
             testTruck = truckRepository.saveAndFlush(testTruck);
@@ -107,7 +107,7 @@ public class OrderApiFunctionalITest {
             testTruck.setAssignedShop(testShop);
             testTruck = truckRepository.saveAndFlush(testTruck);
 
-            // BUYER USER CREATION
+            // Buyer user creation
             testUser = new User("Buyer User", "buyer_user", "buyer@test.com", passwordEncoder.encode("pass"), "USER");
             testUser.setSelectedShop(testShop);
 
@@ -122,14 +122,14 @@ public class OrderApiFunctionalITest {
             addressId = testUser.getAddresses().iterator().next().getId();
             cardId = testUser.getCards().iterator().next().getId();
 
-            // MALICIOUS USER CREATION
+            // Malicious user creation
             hackerUser = new User("Hacker", "hacker", "hacker@test.com", passwordEncoder.encode("pass"), "USER");
             hackerUser = userRepository.saveAndFlush(hackerUser);
 
             entityManager.flush();
         });
 
-        // 3. CACHE LOGIN COOKIES
+        // 3. Cache login cookies
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         userCookie = loginAndGetCookie(testUser.getUsername(), "pass");
         hackerCookie = loginAndGetCookie(hackerUser.getUsername(), "pass");
@@ -177,17 +177,6 @@ public class OrderApiFunctionalITest {
             entityManager.clear();
         });
     }
-
-    // --- AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_ORDERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
-    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_ORDERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
-    private RequestSpecification authAsHacker() { return new RequestSpecBuilder().setBasePath(BASE_URL_ORDERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, hackerCookie).build(); }
 
     // ==========================================
     // CART TESTS
@@ -258,7 +247,7 @@ public class OrderApiFunctionalITest {
         given().spec(authAsUser())
                 .queryParam("addressId", addressId)
                 .queryParam("cardId", cardId)
-                .when().post() // Uses POST to base URL
+                .when().post() // POST to base URL
                 .then().statusCode(201).body("totalCost", equalTo(10.0f));
     }
 
@@ -317,4 +306,18 @@ public class OrderApiFunctionalITest {
                 .body("history[-1].status", equalTo("Enviado"))
                 .body("history[-1].updates[-1].description", equalTo("Order has been dispatched"));
     }
+
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_ORDERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
+    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_ORDERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
+    private RequestSpecification authAsHacker() { return new RequestSpecBuilder().setBasePath(BASE_URL_ORDERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, hackerCookie).build(); }
 }

@@ -71,9 +71,8 @@ public class ProductApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. DUPLICATE ENTRY FIX:
         // Authenticate manually as ADMIN in the SecurityContext so the ProductVisibilityAspect
-        // disables the filters, allowing cleanDatabase() to see and delete INACTIVE products.
+        // disables the filters, allowing cleanDatabase() to see and delete inactive products.
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
@@ -84,7 +83,7 @@ public class ProductApiFunctionalITest {
         // Clear the dummy authentication before actual test setup
         SecurityContextHolder.clearContext();
 
-        // 2. DATA CREATION (Using saveAndFlush to ensure immediate persistence)
+        // 2. Data creation (Using saveAndFlush to ensure immediate persistence)
         Category otrosCategory = new Category("Otros", "icon", "banner", "Desc", "Desc");
         categoryRepository.saveAndFlush(otrosCategory);
 
@@ -112,7 +111,7 @@ public class ProductApiFunctionalITest {
         testShop.setAssignedManager(testManager);
         shopRepository.saveAndFlush(testShop);
 
-        // 3. CACHE LOGIN COOKIES (Executed only once per test)
+        // 3. Cache login cookies (Executed only once per test)
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         userCookie = loginAndGetCookie(testUser.getUsername(), "pass");
         managerCookie = loginAndGetCookie(testManager.getUsername(), "pass");
@@ -161,31 +160,6 @@ public class ProductApiFunctionalITest {
         });
     }
 
-    // --- AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON)
-                .addCookie(JWT_COOKIE_NAME, adminCookie).build();
-    }
-
-    private RequestSpecification authAsUser() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON)
-                .addCookie(JWT_COOKIE_NAME, userCookie).build();
-    }
-
-    private RequestSpecification authAsManager() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON)
-                .addCookie(JWT_COOKIE_NAME, managerCookie).build();
-    }
-
-    private RequestSpecification asAnonymous() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON).build();
-    }
 
     // ==========================================
     // BUSINESS LOGIC CRITICAL TESTS
@@ -305,5 +279,33 @@ public class ProductApiFunctionalITest {
                 .pathParam("id", testProduct.getId())
                 .when().get("/{id}")
                 .then().statusCode(404);
+    }
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON)
+                .addCookie(JWT_COOKIE_NAME, adminCookie).build();
+    }
+
+    private RequestSpecification authAsUser() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON)
+                .addCookie(JWT_COOKIE_NAME, userCookie).build();
+    }
+
+    private RequestSpecification authAsManager() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON)
+                .addCookie(JWT_COOKIE_NAME, managerCookie).build();
+    }
+
+    private RequestSpecification asAnonymous() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_PRODUCTS).setContentType(ContentType.JSON).build();
     }
 }

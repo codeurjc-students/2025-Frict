@@ -65,7 +65,7 @@ public class ReviewApiFunctionalITest {
 
         cleanDatabase();
 
-        // 1. DATA CREATION
+        // 1. Data creation
         Category otrosCategory = new Category("Otros", "icon", "banner", "Desc", "Desc");
         categoryRepository.saveAndFlush(otrosCategory);
 
@@ -90,7 +90,7 @@ public class ReviewApiFunctionalITest {
         testReview = new Review(reviewOwner, testProduct, 5, "Excellent product!", true);
         reviewRepository.saveAndFlush(testReview);
 
-        // 2. CACHE LOGIN COOKIES
+        // 2. Cache login cookies
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         ownerCookie = loginAndGetCookie(reviewOwner.getUsername(), "pass");
         otherUserCookie = loginAndGetCookie(otherUser.getUsername(), "pass");
@@ -122,27 +122,6 @@ public class ReviewApiFunctionalITest {
         });
     }
 
-    // --- REFACTORED AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_REVIEWS).setContentType(ContentType.JSON)
-                .addCookie(JWT_COOKIE_NAME, adminCookie).build();
-    }
-
-    private RequestSpecification authAsOwner() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_REVIEWS).setContentType(ContentType.JSON)
-                .addCookie(JWT_COOKIE_NAME, ownerCookie).build();
-    }
-
-    private RequestSpecification authAsOtherUser() {
-        return new RequestSpecBuilder().setBasePath(BASE_URL_REVIEWS).setContentType(ContentType.JSON)
-                .addCookie(JWT_COOKIE_NAME, otherUserCookie).build();
-    }
 
     // ==========================================
     // READ ENDPOINTS TESTS
@@ -150,7 +129,6 @@ public class ReviewApiFunctionalITest {
 
     @Test
     public void getAllReviewsByProductId_ReturnsList() {
-        // The mapping is @GetMapping("/")
         given().spec(authAsOtherUser())
                 .queryParam("productId", testProduct.getId())
                 .when().get("/")
@@ -164,7 +142,6 @@ public class ReviewApiFunctionalITest {
         given().spec(authAsOwner())
                 .when().get() // Base path maps to @GetMapping without slashes
                 .then().statusCode(200)
-                // Assuming PageResponse uses "items" for the list based on your PageResponse.java
                 .body("items", notNullValue())
                 .body("items.size()", greaterThan(0))
                 .body("items[0].creatorId", equalTo(reviewOwner.getId().intValue()));
@@ -203,7 +180,7 @@ public class ReviewApiFunctionalITest {
         given().spec(authAsOtherUser())
                 .body(spoofedReview)
                 .when().post()
-                .then().statusCode(401); //
+                .then().statusCode(401);
     }
 
     // ==========================================
@@ -237,7 +214,7 @@ public class ReviewApiFunctionalITest {
         given().spec(authAsOtherUser())
                 .body(updateDto)
                 .when().put()
-                .then().statusCode(401); //
+                .then().statusCode(401);
     }
 
     // ==========================================
@@ -267,5 +244,30 @@ public class ReviewApiFunctionalITest {
                 .pathParam("id", testReview.getId())
                 .when().delete("/{id}")
                 .then().statusCode(401); //
+    }
+
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_REVIEWS).setContentType(ContentType.JSON)
+                .addCookie(JWT_COOKIE_NAME, adminCookie).build();
+    }
+
+    private RequestSpecification authAsOwner() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_REVIEWS).setContentType(ContentType.JSON)
+                .addCookie(JWT_COOKIE_NAME, ownerCookie).build();
+    }
+
+    private RequestSpecification authAsOtherUser() {
+        return new RequestSpecBuilder().setBasePath(BASE_URL_REVIEWS).setContentType(ContentType.JSON)
+                .addCookie(JWT_COOKIE_NAME, otherUserCookie).build();
     }
 }

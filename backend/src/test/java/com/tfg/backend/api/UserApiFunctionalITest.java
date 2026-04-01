@@ -73,7 +73,7 @@ public class UserApiFunctionalITest {
         RestAssured.baseURI = "https://localhost:" + port;
         RestAssured.useRelaxedHTTPSValidation();
 
-        // 1. BYPASS SECURITY FOR CLEANUP
+        // 1. Security bypass cleaning
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
@@ -82,23 +82,23 @@ public class UserApiFunctionalITest {
         cleanDatabase();
         SecurityContextHolder.clearContext();
 
-        // 2. DATA CREATION (Wrapped in a transaction to safely handle complex relationships)
+        // 2. Data creation (avoids transient object exceptions)
         transactionTemplate.executeWithoutResult(status -> {
-            // --- SHOP CREATION ---
+            // Shop creation
             Address shopAddress = new Address("ShopHQ", "Main Street", "1", "1A", "28000", "Madrid", "Spain");
             testShop = new Shop("API Test Shop", shopAddress, 5000.0);
             testShop.setReferenceCode("SHP-001");
             testShop = shopRepository.save(testShop);
 
-            // --- ADMIN CREATION ---
+            // Admin creation
             testAdmin = new User("Admin", "admin_usr", "admin@usr.com", passwordEncoder.encode("pass"), "ADMIN");
             testAdmin = userRepository.save(testAdmin);
 
-            // --- DRIVER CREATION (Used for available drivers endpoint) ---
+            // Driver creation (Used for available drivers endpoint)
             testDriver = new User("Driver", "driver_usr", "driver@usr.com", passwordEncoder.encode("pass"), "DRIVER");
             testDriver = userRepository.save(testDriver);
 
-            // --- STANDARD USER CREATION (With Address and Card) ---
+            // User creation (With Address and Card)
             testUser = new User("User", "user_usr", "user@usr.com", passwordEncoder.encode("pass"), "USER");
 
             Address userAddress = new Address("Home", "User St", "5", "B", "28005", "Madrid", "Spain");
@@ -117,7 +117,7 @@ public class UserApiFunctionalITest {
             testCardId = testUser.getCards().getFirst().getId();
         });
 
-        // 3. CACHE LOGIN COOKIES (Executed only once per test setup)
+        // 3. Cache login cookies
         adminCookie = loginAndGetCookie(testAdmin.getUsername(), "pass");
         userCookie = loginAndGetCookie(testUser.getUsername(), "pass");
     }
@@ -163,15 +163,6 @@ public class UserApiFunctionalITest {
         });
     }
 
-    // --- AUTHENTICATION HELPERS ---
-
-    private String loginAndGetCookie(String username, String password) {
-        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
-                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
-    }
-
-    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_USERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
-    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_USERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 
     // ==========================================
     // READ ENDPOINTS TESTS
@@ -382,7 +373,7 @@ public class UserApiFunctionalITest {
                 .when().put("/anon/{id}")
                 .then().statusCode(200)
                 .body("deleted", equalTo(true))
-                .body("email", containsString("deleteduser_")) //
+                .body("email", containsString("deleteduser_"))
                 .body("addresses.size()", equalTo(0)) // Ensures sensitive data is wiped
                 .body("cards.size()", equalTo(0));
     }
@@ -417,4 +408,17 @@ public class UserApiFunctionalITest {
                 .then().statusCode(200)
                 .body("imageInfo", notNullValue());
     }
+
+
+    // ==========================================
+    // AUTHENTICATION HELPERS
+    // ==========================================
+
+    private String loginAndGetCookie(String username, String password) {
+        return given().contentType(ContentType.JSON).body(new LoginRequest(username, password))
+                .when().post(BASE_URL_AUTH + "/login").getCookie(JWT_COOKIE_NAME);
+    }
+
+    private RequestSpecification authAsAdmin() { return new RequestSpecBuilder().setBasePath(BASE_URL_USERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, adminCookie).build(); }
+    private RequestSpecification authAsUser() { return new RequestSpecBuilder().setBasePath(BASE_URL_USERS).setContentType(ContentType.JSON).addCookie(JWT_COOKIE_NAME, userCookie).build(); }
 }
