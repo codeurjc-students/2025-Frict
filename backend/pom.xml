@@ -2,30 +2,46 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.3</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
-	<groupId>com.tfg</groupId>
-	<artifactId>2025-Frict</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>2025-Frict</name>
-	<description>Frict Backend</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.3</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.tfg</groupId>
+    <artifactId>2025-Frict</artifactId>
+    <version>0.1.0</version>
+    <name>2025-Frict</name>
+    <description>Frict Backend - Final Degree Project (TFG)</description>
+    <url>https://github.com/codeurjc-students/2025-Frict</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>MarJ03</id>
+            <name>Marcos Jiménez</name>
+            <roles>
+                <role>Author</role>
+                <role>Student</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/codeurjc-students/2025-Frict.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/codeurjc-students/2025-Frict.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/codeurjc-students/2025-Frict</url>
+    </scm>
+
 	<properties>
         <aws.java.sdk.version>2.39.5</aws.java.sdk.version> <!-- AWS SDK v2 version -->
         <sonar.organization>codeurjc-students</sonar.organization>
@@ -190,7 +206,7 @@
         </dependency>
     </dependencies>
 
-	<build>
+    <build>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -200,31 +216,34 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -244,12 +263,13 @@
                 </executions>
                 <configuration>
                     <excludes>
-                        <exclude>com/tfg/backend/DTO/**</exclude>
-                        <exclude>com/tfg/backend/utils/DatabaseInitializer.java</exclude>
+                        <exclude>com/tfg/backend/dto/**</exclude>
+                        <exclude>com/tfg/backend/utils/DatabaseInitializer.class</exclude>
+                        <exclude>com/tfg/backend/BackendApplication.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 
 </project>
