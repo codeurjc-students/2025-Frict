@@ -1,10 +1,8 @@
 package com.tfg.backend.unit;
 
-import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.service.*;
-import com.tfg.backend.utils.SaveResult;
 import com.tfg.backend.utils.StatDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,11 +28,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OrderServiceUTest {
 
-    @Mock private UserService userService;
-    @Mock private ShopService shopService;
-    @Mock private EmailService emailService;
-    @Mock private OrderItemService orderItemService;
-    @Mock private OrderRepository orderRepository;
+    @Mock
+    private UserService userService;
+    @Mock
+    private ShopService shopService;
+    @Mock
+    private EmailService emailService;
+    @Mock
+    private OrderItemService orderItemService;
+    @Mock
+    private OrderRepository orderRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -138,9 +141,13 @@ class OrderServiceUTest {
         }
 
         @Test
-        @DisplayName("Successfully distributes stock reduction across multiple shops and unlinks product")
-        void createOrder_Success_ReducesDistributedStock() {
+        @DisplayName("Successfully reduces stock ONLY from selected shop, updates budget and unlinks product")
+        void createOrder_Success_ReducesLocalStockAndUpdatesBudget() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            // Set selected shop id and initial budget
+            selectedShop.setId(10L);
+            selectedShop.setAssignedBudget(1000.0);
             when(shopService.findShopHelper(10L)).thenReturn(selectedShop);
 
             Product product = new Product();
@@ -154,33 +161,78 @@ class OrderServiceUTest {
             img.setImageInfo(baseImage);
             product.setImages(List.of(img));
 
-            // Stock split between two shops
-            ShopStock stockShopA = new ShopStock(selectedShop, product, 2);
-            ShopStock stockShopB = new ShopStock(new Shop(), product, 3);
-            product.setShopsStock(List.of(stockShopA, stockShopB));
+            // Stock split between local shop and another shop
+            Shop otherShop = new Shop();
+            otherShop.setId(99L);
+
+            // The local shop must have enough stock on its own
+            ShopStock localStock = new ShopStock(selectedShop, product, 5);
+            ShopStock remoteStock = new ShopStock(otherShop, product, 3);
+            product.setShopsStock(List.of(localStock, remoteStock));
 
             OrderItem cartItem = new OrderItem();
             cartItem.setProduct(product);
-            cartItem.setQuantity(4); // Takes 2 from A, 2 from B
+            cartItem.setQuantity(4); // Order 4 units
 
             when(orderItemService.findUserCartItemsList(1L)).thenReturn(List.of(cartItem));
 
-            Order newOrder = new Order();
-            newOrder.setReferenceCode("REF-123");
-            when(orderRepository.save(any(Order.class))).thenReturn(newOrder);
+            Order savedOrderMock = new Order();
+            savedOrderMock.setReferenceCode("REF-123");
+            savedOrderMock.setTotalCost(2000.0);
+            when(orderRepository.save(any(Order.class))).thenReturn(savedOrderMock);
 
+            // ACT
             orderService.createOrder(100L, 200L);
 
-            // Verify stock reduction logic
-            assertEquals(0, stockShopA.getUnits());
-            assertEquals(1, stockShopB.getUnits());
+            // ASSERTIONS
+            // 1. Verify stock reduction logic (strictly local)
+            assertEquals(1, localStock.getUnits()); // 5 - 4 = 1
+            assertEquals(3, remoteStock.getUnits()); // Other shops should not modify their stock
 
-            // Verify snapshotting
+            // 2. Verify budget update (Initial budget 1000 + order cost)
+            assertTrue(selectedShop.getAssignedBudget() > 1000.0, "El presupuesto de la tienda debería haber aumentado tras la venta");
+
+            // 3. Verify snapshotting
             assertNull(cartItem.getProduct());
             assertEquals("Phone", cartItem.getProductName());
             assertEquals(500.0, cartItem.getProductPrice());
 
             verify(emailService).sendOrderConfirmation(anyString(), anyString(), eq("REF-123"), anyList(), anyDouble());
+        }
+
+
+        @Test
+        @DisplayName("Throws exception when local shop does not have enough stock")
+        void createOrder_ThrowsException_WhenLocalStockInsufficient() {
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            selectedShop.setId(10L);
+            when(shopService.findShopHelper(10L)).thenReturn(selectedShop);
+
+            Product product = new Product();
+            product.setName("Phone");
+
+            Shop otherShop = new Shop();
+            otherShop.setId(99L);
+
+            // Selected shop has 1 unit, another shop has 10 units
+            ShopStock localStock = new ShopStock(selectedShop, product, 1);
+            ShopStock remoteStock = new ShopStock(otherShop, product, 10);
+            product.setShopsStock(List.of(localStock, remoteStock));
+
+            OrderItem cartItem = new OrderItem();
+            cartItem.setProduct(product);
+            cartItem.setQuantity(4); // Order 4 units, but selected shop only has 1 unit
+
+            when(orderItemService.findUserCartItemsList(1L)).thenReturn(List.of(cartItem));
+
+            // Check ResponseStatusException is thrown
+            ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+                orderService.createOrder(100L, 200L);
+            });
+
+            assertEquals(HttpStatus.METHOD_NOT_ALLOWED, exception.getStatusCode());
+            assertNotNull(exception.getReason());
+            assertTrue(exception.getReason().contains("No hay suficiente stock"));
         }
     }
 
