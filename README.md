@@ -33,14 +33,18 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 ![Driver Home Page](/docs/images/v0.1/driver-home.png)
 
 &nbsp;
+
 #### Client Subsystem Walkthrough Video:
 
-https://raw.githubusercontent.com/codeurjc-students/2025-Frict/docs/images/v0.1/frict-client.mp4
-
+<video src="docs/images/v0.1/frict-client.mp4" controls title="Frict Client" style="max-width: 100%;">
+  This video element is not supported in your browser.
+</video>
 
 #### Management Subsystem Walkthrough Video:
 
-https://raw.githubusercontent.com/codeurjc-students/2025-Frict/docs/images/v0.1/frict-management.mp4
+<video src="docs/images/v0.1/frict-management.mp4" controls title="Frict Management" style="max-width: 100%;">
+  This video element is not supported in your browser.
+</video>
 
 &nbsp;
 
