@@ -1,4 +1,4 @@
-# 2025-Frict
+# Frict
 
 ## 📍 Introduction
 FRICT (Flexible Responsive Inventory Control Tool) is a powerful omnichannel platform designed to unify sales and inventory management across both physical and digital storefronts.
@@ -13,26 +13,50 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 * **Customer-Centric Commerce**: Offers an intuitive online shopping environment where users can easily purchase products, track their orders in real-time, and contribute to the community through a transparent rating system.
 
-Feature sketches:
+&nbsp;
+#### Featured in-app screenshots (v0.1):
 
-![Home Page Sketch](/docs/sketches/shop/home.png)
+![Client Home Page](/docs/images/v0.1/client-home.png)
 
-![Product Details Page Sketch](/docs/sketches/shop/productInfo.png)
+![Product Details Page](/docs/images/v0.1/product-details.png)
 
-![Cart Page Sketch](/docs/sketches/shop/cart.png)
+![Profile Page](/docs/images/v0.1/profile.png)
 
-![Order Details Page Sketch](/docs/sketches/shop/orderDetails.png)
+![Admin Home Page](/docs/images/v0.1/admin-home.png)
 
-![Order Delivery Page Sketch](/docs/sketches/management/delivery.png)
+![Admin Categories Page](/docs/images/v0.1/admin-categories.png)
 
-![Home Page Sketch](/docs/sketches/management/home.png)
+![Admin Users Page](/docs/images/v0.1/admin-users.png)
 
-![Product Details Page Sketch](/docs/sketches/management/productInfo.png)
+![Manager Shop Page](/docs/images/v0.1/manager-shop.png)
 
-![Reports Page Sketch](/docs/sketches/management/reports.png)
+![Driver Home Page](/docs/images/v0.1/driver-home.png)
+
+&nbsp;
+#### Client Subsystem Walkthrough Video:
+
+https://raw.githubusercontent.com/codeurjc-students/2025-Frict/docs/images/v0.1/frict-client.mp4
 
 
-> ℹ️ NOTE: This software has not been implemented yet. At the moment, only functional and technical objectives will be defined.
+#### Management Subsystem Walkthrough Video:
+
+https://raw.githubusercontent.com/codeurjc-students/2025-Frict/docs/images/v0.1/frict-management.mp4
+
+&nbsp;
+
+
+
+> ℹ️ NOTE: This software is yet under active development to upgrade its functionalities and general stability. Therefore, it may contain bugs.
+
+&nbsp;
+
+## ⏩ Project Next Steps
+
+- Users last connection logic
+- In-app notifications
+- Real-time truck positioning
+- Upgraded recommendations system
+- PDF invoices and resumes
 
 &nbsp;
 

@@ -119,7 +119,7 @@ public class DatabaseInitializer {
         if (userRepository.count() > 0) return;
         log.info(">>> Initializing Users...");
 
-        User user1 = new User("Usuario", "user", "ladocav244@pazard.com", passwordEncoder.encode("pass"), "USER");
+        User user1 = new User("Usuario", "user", "pegog27508@fengnu.com", passwordEncoder.encode("pass"), "USER");
         PaymentCard paymentCard = new PaymentCard("Tarjeta personal", "Carlos López", "1234567890123456", "123", YearMonth.of(2027, 3));
         PaymentCard paymentCard2 = new PaymentCard("Tarjeta trabajo", "María Sánchez", "2345678901234567", "234", YearMonth.of(2028, 5));
         Address address = new Address("Casa","Av. de la Reina Sofía", "54", "", "28919", "Leganés", "España");
