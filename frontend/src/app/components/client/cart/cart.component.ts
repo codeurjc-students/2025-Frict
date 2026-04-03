@@ -1,4 +1,4 @@
-import {Component, computed, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {OrderService} from '../../../services/order.service';
@@ -14,11 +14,9 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
 import {Tooltip} from 'primeng/tooltip';
-import {getStockTagInfo} from '../../../utils/tagManager.util';
 import {AuthService} from '../../../services/auth.service';
 import {ShopService} from '../../../services/shop.service';
 import {Shop} from '../../../models/shop.model';
-import {Tag} from 'primeng/tag';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 
 @Component({

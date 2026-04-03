@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import {Component, computed, input} from '@angular/core';
 import {Tag} from 'primeng/tag';
 import {Product} from '../../../models/product.model';
 import {getStockTagInfo} from '../../../utils/tagManager.util';

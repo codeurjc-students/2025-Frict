@@ -1,15 +1,13 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Setter
@@ -35,7 +33,7 @@ public class User {
     private LocalDateTime otpExpiration;
 
 	@ElementCollection(fetch = FetchType.EAGER) //Mandatory for JWT to work properly
-	private Set<String> roles;
+	private Set<String> roles = new HashSet<>();
 
     @Column(nullable = false)
     private String email;
@@ -78,11 +76,10 @@ public class User {
 
     //For MANAGER role users: Allows them to manage this shops
     @OneToMany(mappedBy = "assignedManager")
-    private List<Shop> assignedShops;
+    private List<Shop> assignedShops = new ArrayList<>();
 
     //For USER role users: Allows them to choose the shop in which to place their orders
     @ManyToOne
-    @JoinColumn(name = "selected_shop_id")
     private Shop selectedShop;
 
     //For DRIVER role users: Allows them to manage this truck assigned orders
@@ -100,7 +97,7 @@ public class User {
         this.name = name;
         this.username = username;
         this.encodedPassword = encodedPassword;
-        this.roles = Set.of(roles);
+        this.roles = new HashSet<>(Arrays.asList(roles));
         this.email = email;
     }
 
@@ -116,5 +113,12 @@ public class User {
 
         // Input and stored OTP match, and stored OTP has not expired yet
         return this.otpCode.equals(inputCode) && LocalDateTime.now().isBefore(this.otpExpiration);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.userImage == null) {
+            this.userImage = GlobalDefaults.getDefaultUserImage();
+        }
     }
 }

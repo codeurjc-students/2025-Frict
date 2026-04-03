@@ -1,4 +1,4 @@
-import {computed, effect, Injectable, signal, WritableSignal} from '@angular/core';
+import {computed, Injectable, signal, WritableSignal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {LoginInfo} from '../models/loginInfo.model';
 import {catchError, map, Observable, of, switchMap, tap} from 'rxjs';

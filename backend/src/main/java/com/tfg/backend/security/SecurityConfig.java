@@ -2,7 +2,7 @@ package com.tfg.backend.security;
 
 import com.tfg.backend.security.jwt.JwtRequestFilter;
 import com.tfg.backend.security.jwt.UnauthorizedHandlerJwt;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,142 +26,123 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-	@Autowired
-	private JwtRequestFilter jwtRequestFilter;
+    private final JwtRequestFilter jwtRequestFilter;
+    private final RepositoryUserDetailsService userDetailsService;
+    private final UnauthorizedHandlerJwt unauthorizedHandlerJwt;
 
-	@Autowired
-	RepositoryUserDetailsService userDetailsService;
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-	@Autowired
-	private UnauthorizedHandlerJwt unauthorizedHandlerJwt;
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-		return authConfig.getAuthenticationManager();
-	}
-
-	@Bean
-	public DaoAuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
-		authProvider.setUserDetailsService(userDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder());
-
-		return authProvider;
-	}
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
 
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
-
         http
-                // Explicit CORS configuration
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Diseble CSRF for API REST
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Allow popups to communicate with the application (Google)
                 .headers(headers -> headers
                         .crossOriginOpenerPolicy(coop ->
                                 coop.policy(CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN_ALLOW_POPUPS)
                         )
                 )
-
-                // Set session as stateless
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Routes
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(authorize -> authorize
-                        // AuthRestController
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/google").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/recovery").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset").permitAll()
+
+                        // --- 1. AUTHENTICATION (AuthRestController) ---
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/recovery", "/api/v1/auth/verification", "/api/v1/auth/reset").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh", "/api/v1/auth/logout").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/google", "/api/v1/auth/signup").permitAll() // Públicos por lógica de negocio, aunque marcados como (User)
                         .requestMatchers(HttpMethod.PUT, "/api/v1/auth/reset/*").hasRole("ADMIN")
 
-                        // CategoryRestController
-                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/*").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/*").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/*").hasAnyRole("MANAGER", "ADMIN")
+                        // --- 2. CATEGORIES (CategoryRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll() // (All)
+                        .requestMatchers("/api/v1/categories/**").hasRole("ADMIN") // (Admin) para POST, PUT, DELETE e imágenes
 
-                        // OrderRestController
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*").hasAnyRole("USER", "MANAGER", "DRIVER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasAnyRole("USER", "MANAGER", "DRIVER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart/summary").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart").hasRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/cart").hasRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/cart/*").hasRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cart/*").hasRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/cart/*").hasRole("USER")
+                        // --- 3. PRODUCTS (ProductRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/filter", "/api/v1/products/{id}", "/api/v1/products/stock/*").permitAll() // (All)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/favourites/**").hasRole("USER") // (User)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/favourites/*").hasRole("USER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/favourites/*").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/available/*").hasRole("MANAGER") // (Manager)
+                        .requestMatchers("/api/v1/products/**").hasRole("ADMIN") // (Admin) for CRUD, images and activations
 
-                        // ProductRestController
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/filter").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/favourites").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/favourites/*").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/stock/*").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products/favourites/*").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/favourites/*").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/products/*").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products/active/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products/active/").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products/*/images").hasAnyRole("MANAGER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/*/images/*").hasAnyRole("MANAGER", "ADMIN")
+                        // --- 4. ORDERS & CART (OrderRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart/**").hasRole("USER") // (User)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/cart/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cart/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/cart/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("USER") // (User) Create order
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cancel/*").hasRole("USER") // (User) Cancel order
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}").hasAnyRole("USER", "MANAGER", "DRIVER", "ADMIN") // (User, etc.)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/*").hasRole("ADMIN") // (Admin) User orders
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasRole("ADMIN") // (Admin) Clear finished orders
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager) Update order status
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/assign/truck/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager) Assign truck
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/").hasAnyRole("ADMIN", "MANAGER", "DRIVER") // Internal roles endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("USER") // Client exclusive endpoint
 
+                        // --- 5. REVIEWS (ReviewRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Product reviews
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyRole("USER", "ADMIN") // (All/User) Reviews for logged user and for admin
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/user/*").hasRole("ADMIN") // (Admin)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reviews").hasRole("USER") // (User)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/reviews").hasRole("USER") // (User)
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/reviews/*").hasAnyRole("USER", "ADMIN", "MANAGER") // (Admin, User)
 
-                        // ReviewRestController
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/reviews").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/reviews").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/reviews/*").hasAnyRole("USER", "MANAGER", "ADMIN")
+                        // --- 6. SHOPS (ShopRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/list").hasAnyRole("USER", "ADMIN") // (User)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/truck/*").hasRole("DRIVER") // (Driver)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/stock/*").permitAll() // (All)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/shops").hasRole("ADMIN") // (Admin) Create shop
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/shops/*", "/api/v1/shops/image/*").hasRole("ADMIN") // (Admin) Delete shop
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/shops/*/assign/manager/*").hasRole("ADMIN") // (Admin) Assign manager
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/").hasRole("ADMIN") // All shops
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops").hasRole("MANAGER") // Shops assigned to manager
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/{id}").hasAnyRole("ADMIN", "MANAGER", "USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/shops/{id}", "/api/v1/shops/image/*").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/shops/active/*", "/api/v1/shops/*/active/", "/api/v1/shops/restock/*", "/api/v1/shops/*/assign/stock/*", "/api/v1/shops/*/assign/truck/*").hasRole("MANAGER") // (Manager)
 
-                        // UserRestController
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/session").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/image/*").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/avatar").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/data").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/addresses").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/addresses").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/addresses/*").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/cards").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/cards").hasAnyRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/cards/*").hasAnyRole("USER")
+                        // --- 7. TRUCKS (TruckRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/shop/*").permitAll() // (All)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/user/*").hasRole("DRIVER") // (Driver)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/", "/api/v1/trucks/available/").hasAnyRole("ADMIN", "MANAGER") // (Admin) All vs (Admin, Manager) Available
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/{id}", "/api/v1/trucks/shop/*/list").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/trucks").hasRole("ADMIN") // (Admin)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/**").hasRole("ADMIN") // (Admin) CRUD and assignments
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/trucks/*").hasRole("ADMIN") // (Admin)
 
-                        // Public endpoints
-                        .anyRequest().permitAll()
+                        // --- 8. USERS (UserRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/session", "/api/v1/users/me", "/api/v1/users/username", "/api/v1/users/email").permitAll() // (All)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/", "/api/v1/users/drivers/available/", "/api/v1/users/role/", "/api/v1/users/stats").hasRole("ADMIN") // (Admin)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/ban/**", "/api/v1/users/anon/**").hasRole("ADMIN") // (Admin)
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/", "/api/v1/users/*").hasRole("ADMIN") // (Admin)
+                        .requestMatchers("/api/v1/users/**").authenticated() // (User) Addresses, cards, images and own personal data
+
+                        // --- 9. STATS (StatRestController) ---
+                        .requestMatchers("/api/v1/stats/orders").hasAnyRole("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver)
+                        .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
+
+                        .anyRequest().denyAll() // Block any URL that is not contained in this list
                 )
-
-                // Exception handling
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt))
-
-                // Authentication provider
                 .authenticationProvider(authenticationProvider())
-
-                // JWT filter before user/pass conventional filters
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // Disable unused
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable);
 
@@ -171,19 +152,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Explicit allowed origins
         configuration.setAllowedOrigins(List.of("https://localhost:4202"));
-
-        // Allowed methods
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Allowed headers
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-        // Allow credentials
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

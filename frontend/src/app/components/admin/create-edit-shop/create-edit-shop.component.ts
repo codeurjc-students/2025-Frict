@@ -1,22 +1,32 @@
-import { Component, OnInit, AfterViewInit, signal, Inject, PLATFORM_ID, ViewChild, DestroyRef, inject } from '@angular/core';
-import { NgIf, isPlatformBrowser } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {debounceTime, switchMap, filter, catchError, of} from 'rxjs';
+import {
+  AfterViewInit,
+  Component,
+  DestroyRef,
+  Inject,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+  ViewChild
+} from '@angular/core';
+import {isPlatformBrowser, NgIf} from '@angular/common';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {catchError, debounceTime, filter, of, switchMap} from 'rxjs';
 
-import { InputText } from 'primeng/inputtext';
-import { InputNumber } from 'primeng/inputnumber';
-import { Button } from 'primeng/button';
-import { FileUpload } from 'primeng/fileupload';
-import { MessageService } from 'primeng/api';
-import { DomSanitizer } from '@angular/platform-browser';
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { ShopService } from '../../../services/shop.service';
-import { Shop } from '../../../models/shop.model';
-import { LocalImage } from '../../../models/localImage.model';
+import {InputText} from 'primeng/inputtext';
+import {InputNumber} from 'primeng/inputnumber';
+import {Button} from 'primeng/button';
+import {FileUpload} from 'primeng/fileupload';
+import {MessageService} from 'primeng/api';
+import {DomSanitizer} from '@angular/platform-browser';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {ShopService} from '../../../services/shop.service';
+import {Shop} from '../../../models/shop.model';
+import {LocalImage} from '../../../models/localImage.model';
 import * as L from 'leaflet';
-import { LocationService } from '../../../services/location.service';
+import {LocationService} from '../../../services/location.service';
 
 @Component({
   selector: 'app-create-edit-shop',

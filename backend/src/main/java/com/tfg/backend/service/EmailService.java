@@ -3,8 +3,9 @@ package com.tfg.backend.service;
 import com.tfg.backend.model.OrderItem;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -16,13 +17,11 @@ import java.util.List;
 
 @Service
 @Slf4j //Custom logs enablement
+@RequiredArgsConstructor
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
-
-    @Autowired
-    private TemplateEngine templateEngine;
+    private final JavaMailSender mailSender;
+    private final TemplateEngine templateEngine;
 
     // @Async allows that this function can be executed concurrently
     @Async
@@ -81,7 +80,11 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             // Send
-            mailSender.send(message);
+            try {
+                mailSender.send(message);
+            } catch (MailException e) { // Captura ambas
+                log.error("Error al enviar el correo: {}", e.getMessage());
+            }
             log.info("OTP de recuperación enviado a {}", to);
 
         } catch (MessagingException e) {

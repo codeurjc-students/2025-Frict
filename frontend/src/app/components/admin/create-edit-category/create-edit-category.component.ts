@@ -1,24 +1,24 @@
-import { Component, OnInit, signal, ViewChild, inject } from '@angular/core';
+import {Component, inject, OnInit, signal, ViewChild} from '@angular/core';
 import {NgClass, NgIf} from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { DomSanitizer } from '@angular/platform-browser';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
-import { InputText } from 'primeng/inputtext';
-import { Button } from 'primeng/button';
-import { FileUpload } from 'primeng/fileupload';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {DomSanitizer} from '@angular/platform-browser';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {forkJoin, of} from 'rxjs';
+import {finalize, map} from 'rxjs/operators';
+import {InputText} from 'primeng/inputtext';
+import {Button} from 'primeng/button';
+import {FileUpload} from 'primeng/fileupload';
 import {MessageService, PrimeTemplate, TreeNode} from 'primeng/api';
-import { OrganizationChart } from 'primeng/organizationchart';
-import { Select } from 'primeng/select';
-import { Editor } from 'primeng/editor';
-import { Textarea } from 'primeng/textarea';
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { LocalImage } from '../../../models/localImage.model';
-import { CategoryService } from '../../../services/category.service';
-import { Category } from '../../../models/category.model';
-import { UiService } from '../../../utils/ui.service';
+import {OrganizationChart} from 'primeng/organizationchart';
+import {Select} from 'primeng/select';
+import {Editor} from 'primeng/editor';
+import {Textarea} from 'primeng/textarea';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {LocalImage} from '../../../models/localImage.model';
+import {CategoryService} from '../../../services/category.service';
+import {Category} from '../../../models/category.model';
+import {UiService} from '../../../utils/ui.service';
 
 @Component({
   selector: 'app-create-edit-category',

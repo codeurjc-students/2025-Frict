@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -14,9 +15,8 @@ public class ProductImageInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String imageUrl; // http://localhost:9000/images/products/foto.jpg
-    private String s3Key;    // products/foto.jpg (relative route inside the bucket)
-    private String fileName; // archivo_original.jpg
+    @Embedded // Insert the 3 ImageInfo fields in this DB table
+    private ImageInfo imageInfo = new ImageInfo();
 
     @ManyToOne
     @JoinColumn(name = "product_id")
@@ -26,10 +26,36 @@ public class ProductImageInfo {
     public ProductImageInfo() {
     }
 
-    public ProductImageInfo(ImageInfo info, Product product) {
-        this.imageUrl = info.getImageUrl();
-        this.s3Key = info.getS3Key();
-        this.fileName = info.getFileName();
+    public ProductImageInfo(ImageInfo imageInfo, Product product) {
+        this.imageInfo = imageInfo;
         this.product = product;
+    }
+
+    // Un equals seguro para Entidades basado en la clave de negocio (S3 Key)
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProductImageInfo that = (ProductImageInfo) o;
+        return imageInfo != null && that.imageInfo != null &&
+                Objects.equals(imageInfo.getS3Key(), that.imageInfo.getS3Key());
+    }
+
+    @Override
+    public int hashCode() {
+        return imageInfo != null && imageInfo.getS3Key() != null ? imageInfo.getS3Key().hashCode() : 31;
+    }
+
+    // Métodos delegados (Opcional, para no romper tu código actual)
+    public String getImageUrl() {
+        return imageInfo != null ? imageInfo.getImageUrl() : null;
+    }
+
+    public String getS3Key() {
+        return imageInfo != null ? imageInfo.getS3Key() : null;
+    }
+
+    public String getFileName() {
+        return imageInfo != null ? imageInfo.getFileName() : null;
     }
 }

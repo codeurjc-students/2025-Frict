@@ -1,22 +1,22 @@
 package com.tfg.backend.utils;
 
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.hibernate.Session;
 import org.hibernate.Filter;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class ProductVisibilityAspect {
 
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     // Intercepts any method within repository package
     @Around("execution(* com.tfg.backend.repository..*(..))")

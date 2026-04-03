@@ -8,7 +8,7 @@ import {UserService} from '../../../services/user.service';
 import {OrderService} from '../../../services/order.service';
 import {ReviewService} from '../../../services/review.service';
 import {ShopService} from '../../../services/shop.service';
-import {TruckService} from '../../../services/truck.service'; // Asegúrate de tener este import
+import {TruckService} from '../../../services/truck.service';
 import {AuthService} from '../../../services/auth.service';
 
 import {Paginator, PaginatorState} from 'primeng/paginator';
@@ -28,11 +28,11 @@ import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Review} from '../../../models/review.model';
 import {Shop} from '../../../models/shop.model';
-import {Truck} from '../../../models/truck.model'; // Asegúrate de tener este import
+import {Truck} from '../../../models/truck.model';
 import {ThemeColor, UiService} from '../../../utils/ui.service';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {HttpErrorResponse} from '@angular/common/http';
-import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 
 @Component({
   selector: 'app-profile',

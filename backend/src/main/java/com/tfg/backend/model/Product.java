@@ -1,6 +1,7 @@
 package com.tfg.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -27,7 +28,6 @@ public class Product {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    @Setter(AccessLevel.NONE)
     private String referenceCode;
 
     private String name;
@@ -59,7 +59,7 @@ public class Product {
 
     //Controlled by the intermediate entities OrderItem and ShopStock
     //Only in cart items are deleted with product deletion
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -78,5 +78,15 @@ public class Product {
         this.description = description;
         this.currentPrice = price;
         this.supplyPrice = supplyPrice;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.images == null || this.images.isEmpty()) {
+            if (this.images == null) {
+                this.images = new ArrayList<>();
+            }
+            this.images.add(new ProductImageInfo(GlobalDefaults.getDefaultProductImage(), this));
+        }
     }
 }

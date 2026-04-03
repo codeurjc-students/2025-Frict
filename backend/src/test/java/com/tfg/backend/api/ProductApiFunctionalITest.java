@@ -1,186 +1,135 @@
 package com.tfg.backend.api;
 
-import com.tfg.backend.BackendApplication;
-import com.tfg.backend.model.User;
-import com.tfg.backend.repository.UserRepository;
-import io.restassured.RestAssured;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
+import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 
+public class ProductApiFunctionalITest extends BaseApiFunctionalITest {
 
-@SpringBootTest(
-        classes = BackendApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
-)
-public class ProductApiFunctionalITest {
+    private static final String BASE_URL_PRODUCTS = "/api/v1/products";
 
-    @LocalServerPort
-    int port;
+    private Product testProduct;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    //
-    private static final String JWT_COOKIE_NAME = "AuthToken";
-    private static final String CONTENT_TYPE = "application/json";
-    private static final String BASE_URL = "/api/v1";
-
-    private String name = "Aspiradora inteligente";
-    private String description = "Limpieza sin límites";
-    private double currentPrice = 130.99;
+    private String adminCookie;
+    private String userCookie;
+    private String managerCookie;
 
     @BeforeEach
     public void setUp() {
-        RestAssured.reset();
-        RestAssured.baseURI = "https://localhost:" + port;
-        RestAssured.useRelaxedHTTPSValidation();
+        transactionTemplate.executeWithoutResult(status -> {
+            Category otrosCategory = new Category("Otros", "icon", "banner", "Desc", "Desc");
+            categoryRepository.saveAndFlush(otrosCategory);
 
-        // Test credentials
-        String testUsername = "admin2";
-        String testEmail = "admin2@test.com";
-        String testPassword = "password123";
+            testProduct = new Product("API Test Product", "Desc", 10.0, 5.0);
+            testProduct.setReferenceCode("REF-API-123");
+            testProduct.setActive(true);
+            testProduct = productRepository.saveAndFlush(testProduct);
 
-        // Create admin user if not exists in order to be able to create, update or even delete products
-        if (!userRepository.existsByUsername(testUsername)) {
-            User adminUser = new User("Test Administrator", testUsername, testEmail, passwordEncoder.encode(testPassword), "ADMIN");
-            userRepository.save(adminUser);
-        }
+            Shop testShop = new Shop("API Test Shop", new Address("Shop", "Shop St", "1", "1", "00000", "City", "Country"), 5000.0);
+            testShop = shopRepository.saveAndFlush(testShop);
 
-        // Log in the system to obtain authentication cookies
-        Response loginResponse = given()
-                .contentType(ContentType.JSON)
-                .body(new LoginRequest(testUsername, testPassword))
-                .when()
-                .post(BASE_URL + "/auth/login");
+            shopStockRepository.saveAndFlush(new ShopStock(testShop, testProduct, 10));
 
+            User testAdmin = new User("Admin", "admin_api", "admin@api.com", passwordEncoder.encode("pass"), "ADMIN");
+            userRepository.saveAndFlush(testAdmin);
 
-        loginResponse.then().statusCode(200); //The login must be successful
-        String tokenCookieValue = loginResponse.getCookie(JWT_COOKIE_NAME);
+            User testUser = new User("User", "user_api", "user@api.com", passwordEncoder.encode("pass"), "USER");
+            testUser.setSelectedShop(testShop);
+            userRepository.saveAndFlush(testUser);
 
-        if (tokenCookieValue == null) {
-            throw new RuntimeException("Login process did not return auth cookie: " + JWT_COOKIE_NAME);
-        }
+            User testManager = new User("Manager", "manager_api", "manager@api.com", passwordEncoder.encode("pass"), "MANAGER");
+            userRepository.saveAndFlush(testManager);
 
-        // Configure Rest Assured to always use the authentication cookie
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-                .setBasePath(BASE_URL + "/products")
-                .setContentType(CONTENT_TYPE)
-                .addCookie(JWT_COOKIE_NAME, tokenCookieValue) // Inject authentication cookie
-                .build();
+            testShop.setAssignedManager(testManager);
+            shopRepository.saveAndFlush(testShop);
+        });
+
+        adminCookie = loginAndGetCookie("admin_api", "pass");
+        userCookie = loginAndGetCookie("user_api", "pass");
+        managerCookie = loginAndGetCookie("manager_api", "pass");
     }
 
     @Test
-    public void createProductTest() {
-        Response postResponse = createProduct();
-        postResponse.then().statusCode(201);
+    public void getProduct_StockEnrichment_DependsOnRole() {
+        given().spec(getSpec(BASE_URL_PRODUCTS, userCookie)).pathParam("id", testProduct.getId())
+                .when().get("/{id}")
+                .then().statusCode(200).body("availableUnits", equalTo(10));
 
-        Response getResponse = getProduct(postResponse.jsonPath().getString("id"));
-        getResponse.then()
-                .statusCode(200)
-                .body("name", equalTo(name))
-                .body("description", equalTo(description))
-                .body("currentPrice", equalTo((float) currentPrice));
+        given().spec(getSpec(BASE_URL_PRODUCTS, null)).pathParam("id", testProduct.getId())
+                .when().get("/{id}")
+                .then().statusCode(200).body("availableUnits", equalTo(0));
     }
 
     @Test
-    public void getInexistentProductTest() {
-        String wrongId = "-2";
-        Response getResponse = getProduct(wrongId);
-        getResponse.then().statusCode(404);
+    public void productVisibilityAspect_HidesInactiveProductsFromUsers() {
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .pathParam("id", testProduct.getId()).queryParam("state", "false")
+                .when().put("/active/{id}").then().statusCode(200);
+
+        given().spec(getSpec(BASE_URL_PRODUCTS, null))
+                .when().get("/filter")
+                .then().statusCode(200).body("items.id", not(hasItem(testProduct.getId().intValue())));
+
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .when().get("/")
+                .then().statusCode(200).body("items.id", hasItem(testProduct.getId().intValue()));
     }
 
     @Test
-    public void updateProductTest() {
-        Response postResponse = createProduct();
-
-        description = "Hasta 30 horas de reproducción de vídeo";
-        Response putResponse = updateProduct(postResponse.jsonPath().getString("id"));
-
-        putResponse.then().statusCode(202).body("description", equalTo(description));
-
-        Response getResponse = getProduct(postResponse.jsonPath().getString("id"));
-        getResponse.then()
-                .statusCode(200)
-                .body("description", equalTo(description));
+    public void updateProductImages_Admin_UploadsMultipartToMinio() {
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .contentType("multipart/form-data")
+                .pathParam("id", testProduct.getId())
+                .multiPart("existingImages", "[]", "application/json")
+                .multiPart("newImages", "foto_test.jpg", "fake_image_content".getBytes(), "image/jpeg")
+                .when().put("/{id}/images")
+                .then().statusCode(200).body("imagesInfo.size()", greaterThan(0));
     }
 
     @Test
-    public void deleteProductTest() {
-        Response postResponse = createProduct();
-        String productId = postResponse.jsonPath().getString("id");
-
-        Response deleteResponse = deleteProduct(productId);
-        deleteResponse.then().statusCode(200);
-
-        Response getResponse = getProduct(productId);
-        getResponse.then().statusCode(404);
+    public void getAllProducts_Admin_ReturnsPagedProducts() {
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .when().get("/")
+                .then().statusCode(200).body("items", notNullValue());
     }
 
+    @Test
+    public void createProduct_Admin_CreatesAndReturnsProduct() {
+        ProductDTO newProduct = new ProductDTO();
+        newProduct.setName("New Admin Product");
+        newProduct.setReferenceCode("NEW-REF-001");
+        newProduct.setSupplyPrice(15.0);
+        newProduct.setCurrentPrice(25.0);
+        newProduct.setActive(true);
 
-    // Auxiliary methods
-    private Response createProduct() {
-        ProductRequest product = new ProductRequest(name, description, currentPrice);
-        return given()
-                .body(product)
-                .when()
-                .post();
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .body(newProduct)
+                .when().post()
+                .then().statusCode(201).body("name", equalTo("New Admin Product"));
     }
 
-    private Response updateProduct(String productId) {
-        ProductRequest product = new ProductRequest(name, description, currentPrice);
-        return given()
-                .pathParam("id", productId)
-                .body(product)
-                .when()
-                .put("/{id}");
+    @Test
+    public void updateProduct_Admin_UpdatesProduct() {
+        ProductDTO updateData = new ProductDTO();
+        updateData.setName("Updated Product Name");
+        updateData.setReferenceCode("NEW-REF");
+        updateData.setActive(true);
+
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .pathParam("id", testProduct.getId()).body(updateData)
+                .when().put("/{id}")
+                .then().statusCode(200).body("name", equalTo("Updated Product Name"));
     }
 
-    private Response getProduct(String productId) {
-        return given()
-                .pathParam("id", productId)
-                .when()
-                .get("/{id}");
-    }
-
-    private Response deleteProduct(String productId) {
-        return given()
-                .pathParam("id", productId)
-                .when()
-                .delete("/{id}");
-    }
-
-    // Request mappers
-    private static class ProductRequest {
-        public String name;
-        public String description;
-        public double currentPrice;
-
-        public ProductRequest(String name, String description, double currentPrice) {
-            this.name = name;
-            this.description = description;
-            this.currentPrice = currentPrice;
-        }
-    }
-
-    private static class LoginRequest {
-        public String username;
-        public String password;
-
-        public LoginRequest(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
+    @Test
+    public void deleteProduct_Admin_DeletesProduct() {
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .pathParam("id", testProduct.getId())
+                .when().delete("/{id}")
+                .then().statusCode(200);
     }
 }

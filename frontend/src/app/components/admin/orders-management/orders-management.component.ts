@@ -1,11 +1,13 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
+import {Component, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {forkJoin, of} from 'rxjs';
 
 import {
-  CdkDrag, CdkDragDrop,
-  CdkDragPlaceholder, CdkDragPreview,
+  CdkDrag,
+  CdkDragDrop,
+  CdkDragPlaceholder,
+  CdkDragPreview,
   CdkDropList,
   CdkDropListGroup,
   moveItemInArray,

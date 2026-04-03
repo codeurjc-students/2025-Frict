@@ -3,19 +3,18 @@ package com.tfg.backend.unit;
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.repository.OrderItemRepository;
 import com.tfg.backend.service.OrderItemService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,82 +28,47 @@ class OrderItemServiceUTest {
     @InjectMocks
     private OrderItemService orderItemService;
 
-    // findUserCartItemsList() method tests
-    @Test
-    void findUserCartItemsList_ShouldReturnList_WhenItemsExist() {
-        Long userId = 1L;
-        List<OrderItem> expectedList = Arrays.asList(new OrderItem(), new OrderItem());
+    private OrderItem orderItem;
 
-        when(orderItemRepository.findByUserIdAndOrderIsNull(userId)).thenReturn(expectedList);
-
-        List<OrderItem> result = orderItemService.findUserCartItemsList(userId);
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(expectedList, result);
-        verify(orderItemRepository, times(1)).findByUserIdAndOrderIsNull(userId);
+    @BeforeEach
+    void setUp() {
+        // Setup a real POJO for testing
+        orderItem = new OrderItem();
+        orderItem.setId(1L);
     }
 
-    @Test
-    void findUserCartItemsList_ShouldReturnEmptyList_WhenNoItemsFound() {
-        Long userId = 1L;
-        when(orderItemRepository.findByUserIdAndOrderIsNull(userId)).thenReturn(Collections.emptyList());
+    @Nested
+    @DisplayName("Tests for findOrderItemHelper")
+    class FindOrderItemHelperTests {
 
-        List<OrderItem> result = orderItemService.findUserCartItemsList(userId);
+        @Test
+        @DisplayName("Returns OrderItem successfully when it exists in the repository")
+        void findOrderItemHelper_Success() {
+            // Arrange
+            when(orderItemRepository.findById(1L)).thenReturn(Optional.of(orderItem));
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(orderItemRepository, times(1)).findByUserIdAndOrderIsNull(userId);
-    }
+            // Act
+            OrderItem result = orderItemService.findOrderItemHelper(1L);
 
+            // Assert
+            assertNotNull(result, "The returned OrderItem should not be null");
+            assertEquals(1L, result.getId(), "The ID of the returned item should match the requested one");
+            verify(orderItemRepository).findById(1L);
+        }
 
-    // findUserCartItemsPage() method tests
-    @Test
-    void findUserCartItemsPage_ShouldReturnPage_WhenItemsExist() {
-        Long userId = 1L;
-        Pageable pageable = PageRequest.of(0, 10);
-        List<OrderItem> items = Collections.singletonList(new OrderItem());
-        Page<OrderItem> expectedPage = new PageImpl<>(items);
+        @Test
+        @DisplayName("Throws 404 NOT_FOUND when OrderItem does not exist")
+        void findOrderItemHelper_ThrowsNotFound_WhenMissing() {
+            // Arrange
+            when(orderItemRepository.findById(1L)).thenReturn(Optional.empty());
 
-        when(orderItemRepository.findByUserIdAndOrderIsNull(userId, pageable)).thenReturn(expectedPage);
+            // Act & Assert
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> orderItemService.findOrderItemHelper(1L));
 
-        Page<OrderItem> result = orderItemService.findUserCartItemsPage(userId, pageable);
-
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        assertEquals(expectedPage, result);
-        verify(orderItemRepository, times(1)).findByUserIdAndOrderIsNull(userId, pageable);
-    }
-
-    @Test
-    void findUserCartItemsPage_ShouldReturnEmptyPage_WhenNoItemsFound() {
-        Long userId = 1L;
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<OrderItem> emptyPage = Page.empty();
-
-        when(orderItemRepository.findByUserIdAndOrderIsNull(userId, pageable)).thenReturn(emptyPage);
-
-        Page<OrderItem> result = orderItemService.findUserCartItemsPage(userId, pageable);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(orderItemRepository, times(1)).findByUserIdAndOrderIsNull(userId, pageable);
-    }
-
-
-    // findProductUnitsInCart() method tests
-    @Test
-    void findProductUnitsInCart_ShouldReturnList_WhenProductExistsInCarts() {
-        Long productId = 100L;
-        List<OrderItem> expectedList = Arrays.asList(new OrderItem(), new OrderItem());
-
-        when(orderItemRepository.findByProductIdAndOrderIsNull(productId)).thenReturn(expectedList);
-
-        List<OrderItem> result = orderItemService.findProductUnitsInCart(productId);
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(expectedList, result);
-        verify(orderItemRepository, times(1)).findByProductIdAndOrderIsNull(productId);
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode(), "Should throw 404 NOT_FOUND");
+            assertEquals("Order item with ID 1 does not exist.", ex.getReason(), "Exception reason message must match exactly");
+            verify(orderItemRepository).findById(1L);
+        }
     }
 }

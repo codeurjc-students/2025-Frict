@@ -107,7 +107,7 @@
         <p class="text-surface-400 text-lg font-light">Revisa tu información personal y actividad reciente.</p>
       </div>
 
-      <div class="relative z-10 md:ml-auto">
+      <div *ngIf="!authService.isAdmin()" class="relative z-10 md:ml-auto">
         <p-button
           label="Eliminar cuenta"
           icon="pi pi-times"

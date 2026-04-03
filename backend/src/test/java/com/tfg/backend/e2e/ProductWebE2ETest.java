@@ -14,6 +14,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
                 "app.db.init=users, categories"
         }
 )
+@ActiveProfiles("test")
 @Slf4j
 public class ProductWebE2ETest {
 

@@ -1,6 +1,6 @@
 import {Component, OnInit, signal} from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 import {Button} from 'primeng/button';
 import {UIChart} from 'primeng/chart';
 import {DropdownModule} from 'primeng/dropdown';

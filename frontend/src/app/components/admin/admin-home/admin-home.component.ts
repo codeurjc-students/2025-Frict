@@ -1,19 +1,19 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import {Component, inject, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {RouterLink} from '@angular/router';
 
-import { Button } from 'primeng/button';
-import { ChartModule } from 'primeng/chart';
-import { TableModule } from 'primeng/table';
-import { Tag } from 'primeng/tag';
-import { Avatar } from 'primeng/avatar';
-import { Tooltip } from 'primeng/tooltip';
+import {Button} from 'primeng/button';
+import {ChartModule} from 'primeng/chart';
+import {TableModule} from 'primeng/table';
+import {Tag} from 'primeng/tag';
+import {Avatar} from 'primeng/avatar';
+import {Tooltip} from 'primeng/tooltip';
 
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { AuthService } from '../../../services/auth.service';
-import { StatService } from '../../../services/stat.service';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {AuthService} from '../../../services/auth.service';
+import {StatService} from '../../../services/stat.service';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
-import { LoginInfo } from '../../../models/loginInfo.model';
+import {LoginInfo} from '../../../models/loginInfo.model';
 import {OrderService} from '../../../services/order.service';
 import {Order} from '../../../models/order.model';
 import {catchError, forkJoin, of, switchMap} from 'rxjs';

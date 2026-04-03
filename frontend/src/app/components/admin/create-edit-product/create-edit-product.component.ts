@@ -1,27 +1,27 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import {Component, OnInit, signal} from '@angular/core';
+import {NgIf} from '@angular/common';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 
-import { InputText } from 'primeng/inputtext';
-import { InputNumber } from 'primeng/inputnumber';
-import { Button } from 'primeng/button';
-import { Editor } from 'primeng/editor';
-import { FileUpload } from 'primeng/fileupload';
-import { ToggleSwitch } from 'primeng/toggleswitch';
-import { MessageService, TreeNode } from 'primeng/api';
-import { TreeSelect } from 'primeng/treeselect';
-import { DomSanitizer } from '@angular/platform-browser';
+import {InputText} from 'primeng/inputtext';
+import {InputNumber} from 'primeng/inputnumber';
+import {Button} from 'primeng/button';
+import {Editor} from 'primeng/editor';
+import {FileUpload} from 'primeng/fileupload';
+import {ToggleSwitch} from 'primeng/toggleswitch';
+import {MessageService, TreeNode} from 'primeng/api';
+import {TreeSelect} from 'primeng/treeselect';
+import {DomSanitizer} from '@angular/platform-browser';
 
-import { ProductService } from '../../../services/product.service';
-import { CategoryService } from '../../../services/category.service';
-import { fixKeys, mapToCategories, mapToTreeNodes } from '../../../utils/nodeMapper.util';
-import { formatPrice } from '../../../utils/textFormat.util';
-import { Product } from '../../../models/product.model';
-import { ImageInfo } from '../../../models/imageInfo.model';
-import { LocalImage } from '../../../models/localImage.model';
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { forkJoin } from 'rxjs';
+import {ProductService} from '../../../services/product.service';
+import {CategoryService} from '../../../services/category.service';
+import {fixKeys, mapToCategories, mapToTreeNodes} from '../../../utils/nodeMapper.util';
+import {formatPrice} from '../../../utils/textFormat.util';
+import {Product} from '../../../models/product.model';
+import {ImageInfo} from '../../../models/imageInfo.model';
+import {LocalImage} from '../../../models/localImage.model';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {forkJoin} from 'rxjs';
 
 @Component({
   selector: 'app-create-edit-product',

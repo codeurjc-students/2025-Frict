@@ -1,6 +1,6 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable, signal} from '@angular/core';
-import {catchError, map, Observable, switchMap, tap, throwError} from 'rxjs';
+import {catchError, Observable, switchMap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {Product} from '../models/product.model';
 import {PageResponse} from '../models/pageResponse.model';
@@ -128,13 +128,13 @@ export class ProductService {
   public toggleGlobalActivation(id: string, state: boolean): Observable<Product> {
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Product>(this.apiUrl + `/active/${id}`, null, { params });
+    return this.http.put<Product>(this.apiUrl + `/active/${id}`, null, { params });
   }
 
   public toggleAllGlobalActivations(state: boolean): Observable<Boolean> {
     let params = new HttpParams();
     params = params.append('state', state);
-    return this.http.post<Boolean>(this.apiUrl + `/active/`, null, { params });
+    return this.http.put<Boolean>(this.apiUrl + `/active/`, null, { params });
   }
 
   public createProduct(productData: Product): Observable<Product> {

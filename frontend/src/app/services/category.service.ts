@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {map, Observable, tap} from 'rxjs';
+import {Observable} from 'rxjs';
 import {Category} from '../models/category.model';
 import {PageResponse} from '../models/pageResponse.model';
 

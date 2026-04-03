@@ -1,84 +1,48 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
-import com.tfg.backend.model.*;
-import com.tfg.backend.service.ShopService;
-import com.tfg.backend.service.StorageService;
+import com.tfg.backend.model.User;
+import com.tfg.backend.service.ShopUserOrchestrator;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "User Management", description = "System users data management")
+@RequiredArgsConstructor
 public class UserRestController {
-	
-	@Autowired
-	private UserService userService;
 
-    @Autowired
-    private ShopService shopService;
-
-    @Autowired
-    private StorageService storageService;
+	private final UserService userService;
+    private final ShopUserOrchestrator shopUserOrchestrator;
 
 
     @Operation(summary = "(All) Get current session information")
 	@GetMapping("/session")
 	public ResponseEntity<UserLoginDTO> getSessionInfo() {
-        Optional<UserLoginDTO> loginInfoOptional = userService.getLoginInfo();
-		if(loginInfoOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "No user logged in this session.");
-		}
-        return ResponseEntity.ok(loginInfoOptional.get());
+        UserLoginDTO loginInfoOptional = userService.getLoginInfo();
+        return ResponseEntity.ok(loginInfoOptional);
 	}
 
 
     @Operation(summary = "(Users) Set selected shop")
     @PutMapping("/shop")
     public ResponseEntity<Boolean> setSelectedShop(@RequestBody Map<String, Long> body) {
-
-        User loggedUser = userService.findLoggedUserHelper();
-        Long shopId = body.get("shopId");
-
-        if (shopId == null){
-            loggedUser.setSelectedShop(null);
-        }
-        else {
-            Optional<Shop> shopOptional = shopService.findById(shopId);
-            if(shopOptional.isEmpty()){
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop with ID " + shopId + " does not exist.");
-            }
-            Shop shop = shopOptional.get();
-            loggedUser.setSelectedShop(shop);
-        }
-
-        //Clear user cart to avoid products without stock in selected shop to be purchased
-        List<OrderItem> itemsToRemove = loggedUser.getItemsInCart();
-        if (!itemsToRemove.isEmpty()) {
-            loggedUser.getAllOrderItems().removeAll(itemsToRemove);
-        }
-
-        userService.save(loggedUser);
-        return ResponseEntity.ok(true);
+        boolean result = shopUserOrchestrator.setSelectedShop(body);
+        return ResponseEntity.ok(result);
     }
 
 
@@ -93,11 +57,7 @@ public class UserRestController {
     @Operation(summary = "(Admin) Get all available drivers (no truck assigned)")
     @GetMapping("/drivers/available/")
     public ResponseEntity<List<UserDTO>> getAvailableDrivers() {
-        List<UserDTO> dtos = userService.findAvailableDrivers()
-                .stream()
-                .map(UserDTO::new)
-                .toList();
-
+        List<UserDTO> dtos = userService.findAvailableDrivers().stream().map(UserDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
 
@@ -105,11 +65,7 @@ public class UserRestController {
     @Operation(summary = "(Admin) Get all users by role")
     @GetMapping("/role/")
     public ResponseEntity<List<UserDTO>> getAllUsersByRole(@RequestParam String role) {
-        List<User> allUsers = userService.findAllByRole(role);
-        List<UserDTO> dtos = new ArrayList<>();
-        for (User u : allUsers) {
-            dtos.add(new UserDTO(u));
-        }
+        List<UserDTO> dtos = userService.findAllByRole(role).stream().map(UserDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
 
@@ -125,33 +81,9 @@ public class UserRestController {
     //Needs the id as path variable to allow changing the profile image when the user is firstly created (registered)
     @Operation(summary = "(User) Update remote user image")
     @PutMapping("/image/{id}")
-    public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) throws IOException {
-        Optional<User> userOptional = userService.findById(id);
-        if(userOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
-        }
-        User loggedUser = userOptional.get();
-
-        // Clean previous image (if exists and it is not the default user image)
-        if (loggedUser.getUserImage() != null && !loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
-            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-        }
-
-        // Upload
-        if (!image.isEmpty()){
-            Map<String, String> res = storageService.uploadFile(image, "users");
-            ImageInfo userImageInfo = new ImageInfo(
-                    res.get("url"),
-                    res.get("key"),
-                    image.getOriginalFilename()
-            );
-            loggedUser.setUserImage(userImageInfo);
-        }
-        else {
-            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
-        }
-
-        return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
+    public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) {
+        User savedUser = userService.uploadUserImage(id, image);
+        return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
 
@@ -160,8 +92,7 @@ public class UserRestController {
     @Operation(summary = "(User) Anonymize logged user account")
     @PutMapping("/anonymize")
     public ResponseEntity<UserDTO> anonymizeLoggedUser() {
-        User loggedUser = userService.findLoggedUserHelper();
-        User savedUser = userService.save(userService.anonymizeUser(loggedUser));
+        User savedUser = userService.anonymizeLoggedUser();
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -169,35 +100,15 @@ public class UserRestController {
     @Operation(summary = "(User) Delete logged user image")
     @DeleteMapping("/image")
     public ResponseEntity<UserDTO> deleteUserImage() {
-        User loggedUser = userService.findLoggedUserHelper();
-
-        // Check if there is something to delete
-        if (!loggedUser.getUserImage().equals(GlobalDefaults.USER_IMAGE)) {
-            storageService.deleteFile(loggedUser.getUserImage().getS3Key());
-            loggedUser.setUserImage(GlobalDefaults.USER_IMAGE);
-            return ResponseEntity.ok(new UserDTO(userService.save(loggedUser)));
-        }
-        return ResponseEntity.ok(new UserDTO(loggedUser));
+        User savedUser = userService.deleteUserImage();
+        return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
 
     @Operation(summary = "(User) Update logged user data")
     @PutMapping("/data")
     public ResponseEntity<UserDTO> updateLoggedUserData(@RequestBody UserDTO userDTO){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        //Check if the username exists if it is not the same (lazy check)
-        if(!userDTO.getUsername().equals(loggedUser.getUsername()) && userService.existsByUsername(userDTO.getUsername())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Username is already taken.");
-        }
-
-        //Edit user data
-        loggedUser.setName(userDTO.getName());
-        loggedUser.setUsername(userDTO.getUsername());
-        loggedUser.setEmail(userDTO.getEmail());
-        loggedUser.setPhone(userDTO.getPhone());
-
-        User savedUser = userService.save(loggedUser);
+        User savedUser = userService.updateLoggedUserData(userDTO);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -205,11 +116,7 @@ public class UserRestController {
     @Operation(summary = "(User) Create logged user address")
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(@RequestBody AddressDTO addressDTO){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        Address address = new Address(addressDTO.getAlias(), addressDTO.getStreet(), addressDTO.getNumber(), addressDTO.getFloor(), addressDTO.getPostalCode(), addressDTO.getCity(), addressDTO.getCountry());
-        loggedUser.getAddresses().add(address);
-        User savedUser = userService.save(loggedUser);
+        User savedUser = userService.createAddress(addressDTO);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -224,23 +131,7 @@ public class UserRestController {
     @Operation(summary = "(User) Edit logged user address")
     @PutMapping("/addresses")
     public ResponseEntity<UserDTO> editAddress(@RequestBody AddressDTO addressDTO){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        Optional<Address> addressOptional = loggedUser.getAddresses().stream().filter(address -> address.getId().equals(addressDTO.getId())).findFirst();
-        if(addressOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Address with ID " + addressDTO.getId() + " does not exist.");
-        }
-        Address address = addressOptional.get();
-
-        address.setAlias(addressDTO.getAlias());
-        address.setStreet(addressDTO.getStreet());
-        address.setNumber(addressDTO.getNumber());
-        address.setFloor(addressDTO.getFloor());
-        address.setPostalCode(addressDTO.getPostalCode());
-        address.setCity(addressDTO.getCity());
-        address.setCountry(addressDTO.getCountry());
-
-        User savedUser = this.userService.save(loggedUser);
+        User savedUser = userService.editAddress(addressDTO);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -248,14 +139,7 @@ public class UserRestController {
     @Operation(summary = "(User) Delete logged user address by ID")
     @DeleteMapping("/addresses/{id}")
     public ResponseEntity<UserDTO> deleteAddress(@PathVariable Long id){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        boolean removed = loggedUser.getAddresses().removeIf(address -> address.getId().equals(id));
-        if(!removed){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Address with ID " + id + " not deleted as it does not exist.");
-        }
-
-        User savedUser = userService.save(loggedUser);
+        User savedUser = userService.deleteAddress(id);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -263,12 +147,7 @@ public class UserRestController {
     @Operation(summary = "(User) Create logged user card")
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(@RequestBody PaymentCardDTO cardDTO){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
-        PaymentCard card = new PaymentCard(cardDTO.getAlias(), cardDTO.getCardOwnerName(), cardDTO.getNumber(), cardDTO.getCvv(), YearMonth.parse(cardDTO.getDueDate(), formatter));
-        loggedUser.getCards().add(card);
-        User savedUser = userService.save(loggedUser);
+        User savedUser = userService.createPaymentCard(cardDTO);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -283,20 +162,7 @@ public class UserRestController {
     @Operation(summary = "(User) Update logged user card")
     @PutMapping("/cards")
     public ResponseEntity<UserDTO> editPaymentCard(@RequestBody PaymentCardDTO paymentCardDTO){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        Optional<PaymentCard> cardOptional = loggedUser.getCards().stream().filter(card -> card.getId().equals(paymentCardDTO.getId())).findFirst();
-        if(cardOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card with ID " + paymentCardDTO.getId() + " does not exist.");
-        }
-        PaymentCard card = cardOptional.get();
-
-        card.setAlias(paymentCardDTO.getAlias());
-        card.setCardOwnerName(paymentCardDTO.getCardOwnerName());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
-        card.setDueDate(YearMonth.parse(paymentCardDTO.getDueDate(), formatter));
-
-        User savedUser = this.userService.save(loggedUser);
+        User savedUser = userService.editPaymentCard(paymentCardDTO);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -304,14 +170,7 @@ public class UserRestController {
     @Operation(summary = "(User) Delete logged user card by ID")
     @DeleteMapping("/cards/{id}")
     public ResponseEntity<UserDTO> deletePaymentCard(@PathVariable Long id){
-        User loggedUser = userService.findLoggedUserHelper();
-
-        boolean removed = loggedUser.getCards().removeIf(card -> card.getId().equals(id));
-        if(!removed){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Address with ID " + id + " not deleted as it does not exist.");
-        }
-
-        User savedUser = userService.save(loggedUser);
+        User savedUser = userService.deletePaymentCard(id);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -334,27 +193,15 @@ public class UserRestController {
     @Operation(summary = "(Admin) Toggle all users ban (except admin)")
     @PutMapping("/ban/")
     public ResponseEntity<Boolean> toggleAllUsersBan(@RequestBody boolean banState){
-        List<User> allUsers = this.userService.findAll();
-        for (User u : allUsers) {
-            if (!u.getRoles().contains("ADMIN")){
-                u.setBanned(banState);
-            }
-        }
-        userService.saveAll(allUsers);
-        return ResponseEntity.ok(true);
+        boolean savedState = userService.toggleAllUsersBan(banState);
+        return ResponseEntity.ok(savedState);
     }
 
 
     @Operation(summary = "(Admin) Unban user by ID")
     @PutMapping("/ban/{id}")
     public ResponseEntity<UserDTO> toggleUserBanById(@PathVariable Long id, @RequestBody boolean banState){
-        Optional<User> userOptional = userService.findById(id);
-        if(userOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
-        }
-        User user = userOptional.get();
-        user.setBanned(banState);
-        User savedUser = userService.save(user);
+        User savedUser = userService.toggleUserBanById(id, banState);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -362,25 +209,15 @@ public class UserRestController {
     @Operation(summary = "(Admin) Anonymize all users (except admin)")
     @PutMapping("/anon/")
     public ResponseEntity<Boolean> anonAllUsers(){
-        List<User> allUsers = this.userService.findAll();
-        for (User u : allUsers) {
-            if (!u.getRoles().contains("ADMIN")){
-                User anonymizedUser = this.userService.anonymizeUser(u);
-                userService.save(anonymizedUser);
-            }
-        }
-        return ResponseEntity.ok(true);
+        boolean result = userService.anonAllUsers();
+        return ResponseEntity.ok(result);
     }
 
 
     @Operation(summary = "(Admin) Anonymize user by ID")
     @PutMapping("/anon/{id}")
     public ResponseEntity<UserDTO> anonUserById(@PathVariable Long id){
-        Optional<User> userOptional = userService.findById(id);
-        if(userOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
-        }
-        User savedUser = userService.save(userService.anonymizeUser(userOptional.get()));
+        User savedUser = userService.anonUserById(id);
         return ResponseEntity.ok(new UserDTO(savedUser));
     }
 
@@ -388,37 +225,23 @@ public class UserRestController {
     @Operation(summary = "(Admin) Delete all users (except admin)")
     @DeleteMapping("/")
     public ResponseEntity<Boolean> deleteAllUsers(){
-        List<User> allUsers = this.userService.findAll();
-        for (User u : allUsers) {
-            if (!u.getRoles().contains("ADMIN")){
-                userService.delete(u);
-            }
-        }
-        return ResponseEntity.ok(true);
+        boolean result = userService.deleteAllUsers();
+        return ResponseEntity.ok(result);
     }
 
 
     @Operation(summary = "(Admin) Delete user by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Boolean> deleteUserById(@PathVariable Long id){
-        Optional<User> userOptional = userService.findById(id);
-        if(userOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID " + id + " does not exist.");
-        }
-        userService.delete(userOptional.get());
-        return ResponseEntity.ok(true);
+        boolean result = userService.deleteUserById(id);
+        return ResponseEntity.ok(result);
     }
 
 
     @Operation(summary = "(Admin) Get users stats")
     @GetMapping("/stats")
     public ResponseEntity<List<StatDTO>> getUsersStats(){
-        List<StatDTO> stats = new ArrayList<>();
-        stats.add(new StatDTO("Totales", userService.count()));
-        stats.add(new StatDTO("Baneados", userService.countByIsBannedTrue()));
-        stats.add(new StatDTO("Anonimizados", userService.countByIsDeletedTrue()));
-        Long internalAccounts = userService.countByRole("ADMIN") + userService.countByRole("MANAGER") + userService.countByRole("DRIVER");
-        stats.add(new StatDTO("Cuentas Internas", internalAccounts));
-        return ResponseEntity.ok(stats);
+        List<StatDTO> usersStats = userService.getUsersStats();
+        return ResponseEntity.ok(usersStats);
     }
 }

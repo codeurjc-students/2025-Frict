@@ -1,5 +1,5 @@
 import {Component, computed, OnInit, signal} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule} from '@angular/common';
 import {Button} from 'primeng/button';
 import {Tag} from 'primeng/tag';
 import {TableModule} from 'primeng/table';

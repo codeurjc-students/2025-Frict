@@ -33,7 +33,7 @@ public class Category {
     private String longDescription;
 
     @Embedded
-    private ImageInfo categoryImage = GlobalDefaults.CATEGORY_IMAGE;
+    private ImageInfo categoryImage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
@@ -81,5 +81,12 @@ public class Category {
         }
 
         return totalUsage;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.categoryImage == null) {
+            this.categoryImage = GlobalDefaults.getDefaultCategoryImage();
+        }
     }
 }

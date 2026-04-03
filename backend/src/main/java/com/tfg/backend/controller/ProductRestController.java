@@ -1,94 +1,64 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
-import com.tfg.backend.model.*;
-import com.tfg.backend.service.*;
-import com.tfg.backend.utils.GlobalDefaults;
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.ShopStockDTO;
+import com.tfg.backend.model.Product;
+import com.tfg.backend.model.ProductImageInfo;
+import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
 @Tag(name = "Product Management", description = "Product data management")
+@RequiredArgsConstructor
 public class ProductRestController {
 
-    @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private CategoryService categoryService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private StorageService storageService;
-
-    @Autowired
-    private OrderItemService orderItemService;
-
-    @Autowired
-    private ShopService shopService;
-
+    private final ProductService productService;
 
     @Operation(summary = "(Admin) Get all products (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<ProductDTO>> getAllProducts(Pageable pageable) {
-        Page<Product> products = productService.findAll(pageable);
+        Page<Product> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
-
 
     @Operation(summary = "(All) Get products with applied filters (paged)")
     @GetMapping("/filter")
-    public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(Pageable pageable,
-                                                                        @RequestParam(value = "query", required = false) String searchTerm,
-                                                                        @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
-        Page<Product> products = productService.findByFilters(searchTerm, categoryIds, pageable);
+    public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(
+            Pageable pageable,
+            @RequestParam(value = "query", required = false) String searchTerm,
+            @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
+        Page<Product> products = productService.getFilteredProducts(searchTerm, categoryIds, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
     }
-
 
     @Operation(summary = "(User) Get logged user favourite products (paged)")
     @GetMapping("/favourites")
     public ResponseEntity<PageResponse<ProductDTO>> getUserFavouriteProducts(Pageable pageable) {
-        //Get logged user info if any (User class)
-        User loggedUser = userService.findLoggedUserHelper();
-
-        Page<Product> favouriteProducts = productService.findUserFavouriteProductsPage(loggedUser.getId(), pageable);
+        Page<Product> favouriteProducts = productService.getUserFavouriteProducts(pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(favouriteProducts, ProductDTO::new));
     }
-
 
     @Operation(summary = "(User) Check if a product is in logged user favourites")
     @GetMapping("/favourites/{id}")
     public ResponseEntity<Boolean> checkProductInFavourites(@PathVariable Long id) {
-
-        User loggedUser = userService.findLoggedUserHelper();
-        Product product = productService.findProductHelper(id);
-
-        boolean inFavourites = loggedUser.getFavouriteProducts().contains(product);
-
+        boolean inFavourites = productService.checkProductInFavourites(id);
         return ResponseEntity.ok(inFavourites);
     }
-
 
     @Operation(summary = "(All) Get product by ID")
     @GetMapping("/{id}")
@@ -97,211 +67,77 @@ public class ProductRestController {
         return ResponseEntity.ok(new ProductDTO(product));
     }
 
-
     @Operation(summary = "(All) Get product stock by ID")
     @GetMapping("/stock/{id}")
     public ResponseEntity<List<ShopStockDTO>> getProductStock(@PathVariable Long id) {
         Product product = productService.findProductHelper(id);
-
-        List<ShopStockDTO> dtos = new ArrayList<>();
-        for (ShopStock s : product.getShopsStock()) {
-            dtos.add(new ShopStockDTO(s));
-        }
+        List<ShopStockDTO> dtos = product.getShopsStock().stream().map(ShopStockDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
-
 
     @Operation(summary = "(Manager) Get eligible products by shop ID")
     @GetMapping("/available/{shopId}")
     public ResponseEntity<List<ProductDTO>> getEligibleProducts(@PathVariable Long shopId) {
-        List<ProductDTO> availableProducts = productService.findProductsNotAssignedToShop(shopId).stream().map(ProductDTO::new).toList();
+        List<ProductDTO> availableProducts = productService.findProductsNotAssignedToShop(shopId)
+                .stream().map(ProductDTO::new).toList();
         return ResponseEntity.ok(availableProducts);
     }
-
 
     @Operation(summary = "(User) Add product to logged user favourites")
     @PostMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> addProductToFavourites(@PathVariable Long id) {
-        //Get logged user info if any (User class)
-        User loggedUser = userService.findLoggedUserHelper();
-
-        //Find the product and, if exists, add it to user cart
-        Product product = productService.findProductHelper(id);
-
-        loggedUser.getFavouriteProducts().add(product);
-        userService.save(loggedUser);
-
-        return ResponseEntity.ok(new ProductDTO(product)); //Returns the added product (optional)
+        Product product = productService.addProductToFavourites(id);
+        return ResponseEntity.ok(new ProductDTO(product));
     }
-
 
     @Operation(summary = "(User) Delete product from logged user favourites")
     @DeleteMapping("/favourites/{id}")
     public ResponseEntity<ProductDTO> deleteProductFromFavourites(@PathVariable Long id) {
-        //Get logged user info if any (User class)
-        User loggedUser = userService.findLoggedUserHelper();
-
-        Product product = productService.findProductHelper(id);
-
-        Set<Product> favouriteProducts = loggedUser.getFavouriteProducts();
-        favouriteProducts.remove(product);
-        userService.save(loggedUser);
-        return ResponseEntity.ok().build();
+        Product product = productService.deleteProductFromFavourites(id);
+        return ResponseEntity.ok(new ProductDTO(product));
     }
-
 
     @Operation(summary = "(Admin) Create product")
     @PostMapping
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
-        Product product = new Product(productDTO.getName(), productDTO.getDescription(), productDTO.getCurrentPrice(), productDTO.getSupplyPrice());
-        Optional<Category> othersCategoryOptional = categoryService.findByName("Otros");
-        if(othersCategoryOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
-        }
-        Category othersCategory = othersCategoryOptional.get();
+        Product savedProduct = productService.createProduct(productDTO);
 
-        //If there are no categories selected, then add "Others" category
-        if (productDTO.getCategories().isEmpty()){
-            product.getCategories().clear();
-            product.getCategories().add(othersCategory);
-        }
-        //And if "Others" category is in a list with another categories, do not include it
-        else {
-            List<Category> categories = new ArrayList<>();
-            for (CategoryDTO c : productDTO.getCategories()) {
-                Optional<Category> categoryOptional = categoryService.findById(c.getId());
-                if(categoryOptional.isEmpty()){
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
-                }
-                //If category is a leaf node and it is not "Others" category, then add to the product
-                Category category = categoryOptional.get();
-                if (category.getChildren().isEmpty() && !Objects.equals(category.getId(), othersCategory.getId())){
-                    categories.add(category);
-                }
-            }
-            product.setCategories(categories);
-        }
-
-        Product savedProduct = productService.save(product);
-
-        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/products/{id}")
+        // 2. Creación de URI dinámica, independiente de si la API cambia de prefijo en el futuro
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
                 .buildAndExpand(savedProduct.getId())
                 .toUri();
 
         return ResponseEntity.created(location).body(new ProductDTO(savedProduct));
     }
 
-
     @Operation(summary = "(Admin) Update product by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
-        Product product = productService.findProductHelper(id);
-        Optional<Category> othersCategoryOptional = categoryService.findByName("Otros");
-        if(othersCategoryOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name \"Otros\" does not exist.");
-        }
-        Category othersCategory = othersCategoryOptional.get();
-
-        product.setName(productDTO.getName());
-        product.setDescription(productDTO.getDescription());
-        product.setSupplyPrice(productDTO.getSupplyPrice());
-        product.setCurrentPrice(productDTO.getCurrentPrice());
-        product.setActive(productDTO.isActive());
-
-        if (productDTO.getCategories().isEmpty()){
-            product.getCategories().clear();
-            product.getCategories().add(othersCategory);
-        }
-        else{
-            List<Category> categories = new ArrayList<>();
-            for (CategoryDTO c : productDTO.getCategories()) {
-                Optional<Category> categoryOptional = categoryService.findById(c.getId());
-                if(categoryOptional.isEmpty()){
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with ID " + c.getId() + " does not exist.");
-                }
-                //If category is a leaf node and it is not "Others" category, then add to the product
-                Category category = categoryOptional.get();
-                if (category.getChildren().isEmpty() && !Objects.equals(category.getId(), othersCategory.getId())){
-                    categories.add(category);
-                }
-            }
-            product.setCategories(categories);
-        }
-
-        Product updatedProduct = productService.update(product);
-        return ResponseEntity.accepted().body(new ProductDTO(updatedProduct));
+        Product updatedProduct = productService.updateProduct(id, productDTO);
+        return ResponseEntity.ok(new ProductDTO(updatedProduct));
     }
-
 
     @Operation(summary = "(Admin) Delete product by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long id) {
-        Product product = productService.findProductHelper(id);
-
-        //Delete the Product entities, as OrderItem entities will have a product snapshot with all necessary information
-        //Remove the relations not marked as CascadeType.ALL in Product
-        product.getCategories().clear();
-
-        List<OrderItem> items = orderItemService.findByProductIdAndOrderIsNotNull(product.getId());
-        for (OrderItem item : items) {
-            item.setProduct(null); //Unlink order items from the deleting product to be able to delete it. In case of cart items (null order), they will be deleted on cascade.
-        }
-        orderItemService.saveAll(items);
-
-        //Delete all images from MinIO
-        for (ProductImageInfo i : product.getImages()) {
-            if (!i.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
-                storageService.deleteFile(i.getS3Key());
-            }
-        }
-
-        productService.deleteById(id);
-        return ResponseEntity.ok(new ProductDTO(product));
+        Product deletedProduct = productService.deleteProduct(id);
+        return ResponseEntity.ok(new ProductDTO(deletedProduct));
     }
-
 
     @Operation(summary = "(Admin) Toggle product global activation by ID")
-    @PostMapping("/active/{id}")
+    @PutMapping("/active/{id}")
     public ResponseEntity<ProductDTO> toggleGlobalActivation(@PathVariable Long id, @RequestParam boolean state) {
-        Product product = productService.findProductHelper(id);
-        product.setActive(state);
-        //If the global product state is false, it must not be in any user cart
-        if (!state){
-            product.getOrderItems().removeIf(item -> {
-                if (item.getOrder() == null) {
-                    orderItemService.delete(item);
-                    return true;
-                }
-                return false;
-            });
-        }
-        Product savedProduct = productService.update(product);
-        return ResponseEntity.ok(new ProductDTO(savedProduct));
+        Product updatedProduct = productService.toggleGlobalActivation(id, state);
+        return ResponseEntity.ok(new ProductDTO(updatedProduct));
     }
-
 
     @Operation(summary = "(Admin) Toggle all products global activation")
-    @PostMapping("/active/")
+    @PutMapping("/active/")
     public ResponseEntity<Boolean> toggleAllGlobalActivations(@RequestParam boolean state) {
-        List<Product> products = productService.findAll();
-        for (Product product : products) {
-            product.setActive(state);
-            if (!state){
-                //Remove the products from user carts
-                product.getOrderItems().removeIf(item -> {
-                    if (item.getOrder() == null) {
-                        orderItemService.delete(item);
-                        return true;
-                    }
-                    return false;
-                });
-            }
-        }
-        productService.saveAll(products);
-        return ResponseEntity.ok(state); //State all toggles should have in frontend
+        boolean savedState = productService.toggleAllGlobalActivations(state);
+        return ResponseEntity.ok(savedState);
     }
-
 
     @Operation(summary = "(Admin) Update product images (remove unused, add new)")
     @PutMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -309,73 +145,15 @@ public class ProductRestController {
             @PathVariable Long id,
             @RequestPart("existingImages") List<ProductImageInfo> existingImages,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
-    ) throws IOException {
-
-        Product product = productService.findProductHelper(id);
-        List<ProductImageInfo> currentImages = product.getImages();
-
-        Set<String> keepS3Keys = (existingImages != null)
-                ? existingImages.stream()
-                .map(ProductImageInfo::getS3Key)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet())
-                : Collections.emptySet();
-
-        // 2. Iterar sobre las imágenes actuales del producto en BD
-        Iterator<ProductImageInfo> iterator = currentImages.iterator();
-        while (iterator.hasNext()) {
-            ProductImageInfo currentImg = iterator.next();
-            if (currentImg.getS3Key() != null && !keepS3Keys.contains(currentImg.getS3Key())) {
-                if (!currentImg.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
-                    storageService.deleteFile(currentImg.getS3Key());
-                }
-                iterator.remove();
-            }
-        }
-
-        // Add new images
-        if (newImages != null && !newImages.isEmpty()) {
-            for (MultipartFile file : newImages) {
-                Map<String, String> res = storageService.uploadFile(file, "products");
-
-                ProductImageInfo newImg = new ProductImageInfo();
-                newImg.setImageUrl(res.get("url"));
-                newImg.setS3Key(res.get("key"));
-                newImg.setFileName(file.getOriginalFilename());
-                newImg.setProduct(product);
-
-                currentImages.add(newImg);
-            }
-        }
-        else if (currentImages.isEmpty()) { //No current images + No new images -> Set default image
-            currentImages.add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
-        }
-
-        return ResponseEntity.ok(new ProductDTO(productService.update(product)));
+    ) {
+        Product updatedProduct = productService.updateProductImages(id, existingImages, newImages);
+        return ResponseEntity.ok(new ProductDTO(updatedProduct));
     }
-
 
     @Operation(summary = "(Admin) Delete remote product image by ID")
     @DeleteMapping("/{productId}/images/{imageId}")
     public ResponseEntity<ProductDTO> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
-        Product product = productService.findProductHelper(productId);
-
-        ProductImageInfo imageToRemove = product.getImages().stream()
-                .filter(img -> img.getId().equals(imageId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Image not found in this product."));
-
-        // 3. Delete from MinIO
-        if(!imageToRemove.getS3Key().equals(GlobalDefaults.PRODUCT_IMAGE.getS3Key())) {
-            storageService.deleteFile(imageToRemove.getS3Key());
-            product.getImages().remove(imageToRemove);
-        }
-
-        if(product.getImages().isEmpty()){
-            product.getImages().add(new ProductImageInfo(GlobalDefaults.PRODUCT_IMAGE, product));
-        }
-
-        Product savedProduct = productService.save(product);
-        return ResponseEntity.ok(new ProductDTO(savedProduct));
+        Product updatedProduct = productService.deleteImage(productId, imageId);
+        return ResponseEntity.ok(new ProductDTO(updatedProduct));
     }
 }
