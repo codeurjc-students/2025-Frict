@@ -54,7 +54,7 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 &nbsp;
 
-## ⏩ Project Next Steps
+## ⏩ Project Next Steps (Intermediate Functionality)
 
 - Users last connection logic
 - In-app notifications

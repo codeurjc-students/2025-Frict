@@ -15,6 +15,7 @@ In order to provide the main functionality, the application will be able to:
 ### Technical Objectives
 - Spring Boot REST API backend
 - JWT-based authentication
+- Google-based Authentication
 - Angular / Tailwind frontend
 - MySQL database
 - External API integrations

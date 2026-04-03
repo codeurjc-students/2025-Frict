@@ -6,6 +6,13 @@ on:
     branches:
       - main
 
+env:
+  RUNNER_DB_NAME: FrictTest
+  RUNNER_DB_PASSWORD: p4ssw0rd
+  RUNNER_MINIO_USER: admin
+  RUNNER_MINIO_PASSWORD: password123
+  RUNNER_MINIO_BUCKET_NAME: images
+
 jobs:
   build:
     name: Build and analyze
@@ -15,11 +22,11 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: FrictTest
-          MYSQL_ROOT_PASSWORD: p4ssw0rd
+          MYSQL_DATABASE: ${{ env.RUNNER_DB_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_DB_PASSWORD }}
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - uses: actions/checkout@v4
@@ -28,10 +35,9 @@ jobs:
 
       - name: Start MinIO and Create Bucket
         env:
-          AWS_ACCESS_KEY_ID: admin
-          AWS_SECRET_ACCESS_KEY: password123
+          AWS_ACCESS_KEY_ID: ${{ env.RUNNER_MINIO_USER }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.RUNNER_MINIO_PASSWORD }}
           AWS_REGION: us-east-1
-          MINIO_BUCKET_NAME: images
         run: |
           mkdir -p /tmp/minio_certs
           cp -r $(pwd)/docker/minio_https/certs/* /tmp/minio_certs/
@@ -41,13 +47,13 @@ jobs:
             -p 9001:9001 \
             --name minio \
             -v /tmp/minio_certs:/root/.minio/certs \
-            -e MINIO_ROOT_USER=$AWS_ACCESS_KEY_ID \
-            -e MINIO_ROOT_PASSWORD=$AWS_SECRET_ACCESS_KEY \
+            -e MINIO_ROOT_USER=${{ env.RUNNER_MINIO_USER }} \
+            -e MINIO_ROOT_PASSWORD=${{ env.RUNNER_MINIO_PASSWORD }} \
             minio/minio server /data --console-address ":9001"
 
           sleep 5
 
-          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://$MINIO_BUCKET_NAME
+          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
 
 
       - name: Set up JDK 21
@@ -90,10 +96,4 @@ jobs:
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          RUNNER_DB_NAME: FrictTest
-          RUNNER_DB_PASSWORD: p4ssw0rd
-          RUNNER_MINIO_USER: admin
-          RUNNER_MINIO_PASSWORD: password123
-          RUNNER_MINIO_BUCKET_NAME: images
-
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test

@@ -2,121 +2,130 @@
 
 **Login Page**
 
-Allows users to identify with their credentials, in order to access their information or access other restricted pages.
+Access the application using your credentials or your Google account, or start the password recovery process if you have forgotten it.
 
-![Login Page Sketch](/docs/sketches/shop/login.png)
+![Login Page](/docs/images/v0.1/login.png)
 
 &nbsp;
 
 
 **Sign Up Page**
 
-Lets new users to register their data in the application.
+Create a new user account to start placing or tracking orders, checking prices, or posting product reviews.
 
-![Sign Up Page Sketch](/docs/sketches/shop/register.png)
-
-&nbsp;
-
-
-**Forgotten Password, Forgotten Password Confirmation and Change Password Pages**
-
-Provides users a way to recover their password by introducing their email address.
-
-![Forgotten Password Page Sketch](/docs/sketches/shop/recoverPassword.png)
-
-![Forgotten Password Confirmation Page Sketch](/docs/sketches/shop/recoverPasswordConfirmation.png)
-
-![Change Password Page Sketch](/docs/sketches/shop/changePassword.png)
+![Signup Page](/docs/images/v0.1/signup.png)
 
 &nbsp;
 
 
-**Home Page**
+**Recover Password, Sent OTP and Reset Password Pages**
 
-Default page when first entering the application. Provides users useful information about the main discounts, and other products they might find interesting. 
+Regain access to your account by entering a one-time password (OTP) sent to your registered email address. Once verified, update your application password.
 
-![Home Page Sketch](/docs/sketches/shop/home.png)
+![Recover Password Page](/docs/images/v0.1/recover-password.png)
+
+![Sent OTP Page](/docs/images/v0.1/sent-otp.png)
+
+![Reset Password Page](/docs/images/v0.1/reset-password.png)
+
+&nbsp;
+
+
+**Client Home Page**
+
+Application home page. Browse main product categories, as well as a list of featured products, recommendations based on your previous searches, or current bestsellers.
+
+![Home Page](/docs/images/v0.1/client-home.png)
 
 &nbsp;
 
 
 **Product Details Page**
 
-Shows detailed information about a product.
+View detailed product information, including photos, specifications, user reviews, stock availability, and related products. You can also post a product review to inform other users about its quality.
 
-![Product Details Page Sketch](/docs/sketches/shop/productInfo.png)
+![Product Details Page](/docs/images/v0.1/productInfo.png)
 
 &nbsp;
 
 
 **Search Result Page**
 
-Shows a list of the products that matches with the text written on the search bar.
+Search and filter products by name or related fields. For each item, check availability (including stores where it is on sale, total stock, and local stock at a selected location), as well as price, discounts, and customer ratings.
 
-![Search Result Page Sketch](/docs/sketches/shop/searchResult.png)
+![Search Result Page](/docs/images/v0.1/search.png)
 
 &nbsp;
 
 
 **Cart Page**
 
-Displays all selected products to be bought together as part of the next order.
+View the items added to your cart so far, your favourite products, and the current order total price.
 
-![Cart Page Sketch](/docs/sketches/shop/cart.png)
+![Cart Page](/docs/images/v0.1/cart.png)
 
 &nbsp;
 
 
 **Order Confirmation Page**
 
-Informs the user that the purchase has been made successfully.
+Verify that your order was placed successfully and review your order reference code.
 
-![Order Confirmation Page Sketch](/docs/sketches/shop/orderConfirmation.png)
+![Order Confirmation Page](/docs/images/v0.1/order-confirmation.png)
 
 &nbsp;
 
 
 **Profile Page**
 
-Shows users personal information, as well as their placed orders and published reviews.
+Review your personal information stored in the application, and check your most recent orders and reviews.
 
-![Profile Page Sketch](/docs/sketches/shop/profile.png)
-
-&nbsp;
-
-
-**Modify Profile Page**
-
-Allows users to modify their personal information stored in the application, as well as to delete their account if desired.
-
-![Modify Profile Page Sketch](/docs/sketches/shop/modifyProfile.png)
+![Profile Page](/docs/images/v0.1/profile.png)
 
 &nbsp;
 
 
-**Orders Page**
+**Edit Information Menu**
 
-Contains all the orders that have been placed by the user account from its creation to this moment.
+Update the personal information used within the application. This data includes your full name, your username and email address (which must be unique), and your contact phone number.
 
-![Orders Page Sketch](/docs/sketches/shop/orders.png)
+![Edit Information Menu](/docs/images/v0.1/edit-information-menu.png)
+
+&nbsp;
+
+
+**Create/Edit Address Menu**
+
+Create or update your different shipping addresses information.
+
+![Create/Edit Address Menu](/docs/images/v0.1/create-edit-address-menu.png)
+
+&nbsp;
+
+
+**Create/Edit Card Menu**
+
+Create or update your different payment methods information.
+
+![Create/Edit Card Menu](/docs/images/v0.1/create-edit-card-menu.png)
 
 &nbsp;
 
 
 **Order Details Page**
 
-Contains detailed tracking information about the selected order, as well as an approximate position of the assigned truck that carries that order.
+Maintain detailed tracking of your order status and any updates provided by managers and administrators. For orders out for delivery, you can view the approximate geographic location of the delivery truck.
 
-![Order Details Page Sketch](/docs/sketches/shop/orderDetails.png)
+![Order Details Page](/docs/images/v0.1/order-details.png)
 
 &nbsp;
 
 
 **Error Page**
 
-It is automatically displayed when an error occurred, and allows the user to return to the homw page to continue shopping.
+Review the error details and restart the loading process to resolve the issue.
 
-![Error Page Sketch](/docs/sketches/shop/error.png)
+![Error Page](/docs/images/v0.1/error.png)
 
 &nbsp;
 
