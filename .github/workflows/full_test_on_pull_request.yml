@@ -31,7 +31,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: Frict
+          MYSQL_DATABASE: FrictTest
           MYSQL_ROOT_PASSWORD: ${{ env.DATABASE_PASSWORD }}
         ports:
           - 3306:3306
