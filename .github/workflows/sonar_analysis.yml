@@ -1,5 +1,12 @@
 name: Code analysis with Sonarqube
 
+env:
+  RUNNER_DB_NAME: FrictTest
+  RUNNER_DB_PASSWORD: p4ssw0rd
+  RUNNER_MINIO_USER: admin
+  RUNNER_MINIO_PASSWORD: password123
+  RUNNER_MINIO_BUCKET_NAME: images
+
 on:
   workflow_dispatch:
   push:
@@ -15,8 +22,8 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: Frict
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.RUNNER_DB_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_DB_PASSWORD }}
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -28,8 +35,8 @@ jobs:
 
       - name: Start MinIO and Create Bucket
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.MINIO_ROOT_USER }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ env.RUNNER_MINIO_USER }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.RUNNER_MINIO_PASSWORD }}
           AWS_REGION: us-east-1
         run: |
           mkdir -p /tmp/minio_certs
@@ -40,13 +47,13 @@ jobs:
             -p 9001:9001 \
             --name minio \
             -v /tmp/minio_certs:/root/.minio/certs \
-            -e MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }} \
-            -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }} \
+            -e MINIO_ROOT_USER=${{ env.RUNNER_MINIO_USER }} \
+            -e MINIO_ROOT_PASSWORD=${{ env.RUNNER_MINIO_PASSWORD }} \
             minio/minio server /data --console-address ":9001"
 
           sleep 5
 
-          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ secrets.MINIO_BUCKET_NAME }}
+          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
 
 
       - name: Set up JDK 21
@@ -89,15 +96,4 @@ jobs:
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-          SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
-          SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
-          SENDER_MAIL_PASSWORD: ${{ secrets.SENDER_MAIL_PASSWORD }}
-          GOOGLE_AUTH_CLIENT_ID: ${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
-
-          MINIO_URL: "https://localhost:9000"
-          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ROOT_USER }}
-          MINIO_SECRET_KEY: ${{ secrets.MINIO_ROOT_PASSWORD }}
-          MINIO_SSL_INSECURE: "true"
-
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=codeurjc-students_2025-Frict -Dspring.profiles.active=test

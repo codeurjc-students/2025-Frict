@@ -11,6 +11,7 @@ env:
   RUNNER_DB_PASSWORD: p4ssw0rd
   RUNNER_MINIO_USER: admin
   RUNNER_MINIO_PASSWORD: password123
+  RUNNER_MINIO_BUCKET_NAME: images
 
 jobs:
   full-stack-test:
@@ -49,7 +50,7 @@ jobs:
             minio/minio server /data --console-address ":9001"
           
           sleep 5
-          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://images
+          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
