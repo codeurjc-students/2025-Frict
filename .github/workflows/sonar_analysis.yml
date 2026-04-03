@@ -1,17 +1,17 @@
 name: Code analysis with Sonarqube
 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
 env:
   RUNNER_DB_NAME: FrictTest
   RUNNER_DB_PASSWORD: p4ssw0rd
   RUNNER_MINIO_USER: admin
   RUNNER_MINIO_PASSWORD: password123
   RUNNER_MINIO_BUCKET_NAME: images
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   build:
