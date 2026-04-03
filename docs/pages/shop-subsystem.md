@@ -24,7 +24,7 @@ Regain access to your account by entering a one-time password (OTP) sent to your
 
 ![Recover Password Page](/docs/images/v0.1/recover-password.png)
 
-![Sent OTP Page](/docs/images/v0.1/sent-otp.png)
+![Sent OTP Page](/docs/images/v0.1/otp-sent.png)
 
 ![Reset Password Page](/docs/images/v0.1/reset-password.png)
 
@@ -44,7 +44,7 @@ Application home page. Browse main product categories, as well as a list of feat
 
 View detailed product information, including photos, specifications, user reviews, stock availability, and related products. You can also post a product review to inform other users about its quality.
 
-![Product Details Page](/docs/images/v0.1/productInfo.png)
+![Product Details Page](/docs/images/v0.1/product-details.png)
 
 &nbsp;
 
