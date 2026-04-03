@@ -89,7 +89,6 @@ jobs:
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           SENDER_MAIL_PORT: ${{ secrets.SENDER_MAIL_PORT }}
           SENDER_MAIL_ADDRESS: ${{ secrets.SENDER_MAIL_ADDRESS }}
