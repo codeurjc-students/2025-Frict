@@ -1,127 +1,181 @@
 ## 📑 Management subsystem detailed pages
 
-**Home Page**
+**Home Management Page**
 
-Provides managers and administrators relevant data to quickly check inventory status and possible issues.
+Display the application's global state (budget, pending orders, available trucks, and assigned stores) based on user roles, along with performance statistics (sales, deliveries) personalized for each user.
 
-![Home Page Sketch](/docs/sketches/management/home.png)
-
-&nbsp;
-
-
-**All Products Page**
-
-Shows all available products being sold in all registered shops (or in an specific shop in case of manager permissions).
-
-![All Products Page Sketch](/docs/sketches/management/products.png)
+![Home Management Page](/docs/images/v0.1/admin-home.png)
 
 &nbsp;
 
 
-**Product Details Page**
+**Products Management Page**
 
-Shows all information registered about a product, as well as relevant statistics and updating / deleting options.
+Display featured information for all application products, including their categorization, shops with stock and historical sales data for each one of them.
 
-![Product Details Page Sketch](/docs/sketches/management/productInfo.png)
-
-&nbsp;
-
-
-**Modify Product Page**
-
-Allows management roles to change the information about a product that is displayed to users.
-
-![Modify Product Page Sketch](/docs/sketches/management/modifyProduct.png)
+![Products Management Page](/docs/images/v0.1/admin-products.png)
 
 &nbsp;
 
 
-**All Shops Page**
+**Create-Edit Product Page**
 
-Orders and lists all registered and tracked shops in the system.
+Manage product details across three key areas: public info (name, description, and media), system management (global visibility), and commercial data (cost and retail prices).
 
-![All Shops Page Sketch](/docs/sketches/management/shops.png)
+![Create-Edit Product Page](/docs/images/v0.1/create-edit-product.png)
+
+&nbsp;
+
+
+**Categories Management Page**
+
+View the complete n-ary category hierarchy, including detailed info for every category and subcategory: descriptions, total products assigned, and their parent and child relationships.
+
+![Categories Management Page](/docs/images/v0.1/admin-categories.png)
+
+&nbsp;
+
+
+**Create-Edit Category Page**
+
+Reorganize the selected category subtree and its descendants, along with all associated public data, such as name, banner, icon or image
+
+![Create-Edit Category Page](/docs/images/v0.1/create-edit-category.png)
+
+&nbsp;
+
+
+**Shops Management Page**
+
+View the geographic coordinates and information for all your assigned stores, including all associated notifications and alerts.
+
+![Shops Management Page](/docs/images/v0.1/admin-shops.png)
 
 &nbsp;
 
 
 **Shop Details Page**
 
-Contains relevant information and restocking options of a specific shop.
+Handle product availability, stock replenishment, and assigned delivery vehicles for the selected store.
 
-![Shop Details Page Sketch](/docs/sketches/management/shopInfo.png)
-
-&nbsp;
-
-
-**Modify Shop Page**
-
-Allows management roles to change the information displayed about a shop.
-
-![Modify Shop Page Sketch](/docs/sketches/management/modifyShop.png)
+![Shop Details Page](/docs/images/v0.1/manager-shop.png)
 
 &nbsp;
 
 
-**All Orders Page**
+**Create-Edit Shop Page**
 
-Keeps track of all orders confirmed in all assigned shops (or in an specific shop in case of manager permissions).
+Edit store details and management data: modify the name, assigned budget, and coordinates via assisted geographic positioning.
 
-![All Orders Page Sketch](/docs/sketches/management/orders.png)
-
-&nbsp;
-
-
-**All Trucks Page**
-
-Lists all registered trucks in the system.
-
-![All Trucks Page Sketch](/docs/sketches/management/trucks.png)
+![Create-Edit Shop Page](/docs/images/v0.1/create-edit-shop.png)
 
 &nbsp;
 
 
-**Truck Information Page**
+**Orders Management Page**
 
-Displays general information about a truck, as well as its approximate location.
+Handle order statuses for all linked orders via an interactive Kanban board.
 
-![Truck Information Page Sketch](/docs/sketches/management/truckInfo.png)
+![Orders Management Page](/docs/images/v0.1/admin-orders.png)
 
 &nbsp;
 
 
-**Modify Truck Page**
+**Order Details Menu**
 
-Allows administrators to modify general truck information and truck-shops assignments.
+Check order specifications, post status updates, track truck and destination positioning, and handle vehicle assignments for the selected order.
 
-![Modify Truck Page Sketch](/docs/sketches/management/modifyTruck.png)
+![Orders Details Menu](/docs/images/v0.1/order-information-menu.png)
+
+&nbsp;
+
+
+**Trucks Management Page**
+
+Monitor the location, status, and key details for every delivery truck in the fleet.
+
+![Trucks Management Page](/docs/images/v0.1/admin-trucks.png)
+
+&nbsp;
+
+
+**Truck-Driver Assignment Menu**
+
+Assign or unassign a driver to the selected delivery truck.
+
+![Truck-Driver Assignment Menu](/docs/images/v0.1/driver-assignment-menu.png)
+
+&nbsp;
+
+
+**Truck History Updates Menu**
+
+View or post status updates for the selected truck.
+
+![Truck History Updates Menu](/docs/images/v0.1/truck-history-menu.png)
+
+&nbsp;
+
+
+**Create-Edit Truck Page**
+
+Set up key delivery truck details: license plate, capacity, initial coordinates via assisted positioning, and assigned store.
+
+![Create-Edit Truck Page](/docs/images/v0.1/create-edit-truck.png)
+
+&nbsp;
+
+
+**Users Management Page**
+
+Manage user access and internal accounts, handle bans, and control account data retention via anonymization or permanent deletion.
+
+![Users Management Page](/docs/images/v0.1/admin-users.png)
+
+&nbsp;
+
+
+**User Orders Menu**
+
+Consult the selected user's order history and manage the deletion of past canceled or completed orders.
+
+![User Orders Menu](/docs/images/v0.1/user-orders-menu.png)
+
+&nbsp;
+
+
+**User Reviews Menu**
+
+Review the selected user's posts and remove inappropriate or offensive reviews.
+
+![User Reviews Menu](/docs/images/v0.1/user-reviews-menu.png)
+
+&nbsp;
+
+
+**Internal Account Creation Menu**
+
+Review the selected user's posts and remove inappropriate or offensive reviews.
+
+![Internal Account Creation Menu](/docs/images/v0.1/internal-account-creation-menu.png)
 
 &nbsp;
 
 
 **Reports Page**
 
-Contains charts and resumes, useful to analyze trucks, shops or products indexes evolution.
+Access historical organizational insights, such as past orders, budget trends, and delivery truck performance.
 
-![Reports Page Sketch](/docs/sketches/management/reports.png)
-
-&nbsp;
-
-
-**Users Page**
-
-Shows all registered users, and allows administrators to restrict their access temporarily.
-
-![Users Page Sketch](/docs/sketches/management/users.png)
+_Coming soon..._
 
 &nbsp;
 
 
 **Order Delivery Page**
 
-Allows delivery drivers to update the status on the order currently assigned to their truck.
+Handle pickups and deliveries at destination, including customer reference code verification.
 
-![Order Delivery Page Sketch](/docs/sketches/management/delivery.png)
+_Coming soon..._
 
 &nbsp;
 
