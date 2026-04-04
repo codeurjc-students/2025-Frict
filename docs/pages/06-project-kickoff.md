@@ -101,8 +101,8 @@ The application will be implemented following an incremental model with 7 differ
 ### Screens and navigation
 > ℹ️ NOTE: Both online shop and management subsystems have login, register and recover password screens in common, so that the user will be redirected to one of the subsystems depending on the permissions level provided.
 
-#### Online shop subsystem
-- [All detailed views](/docs/pages/shop-subsystem-sketches.md)
+#### Shop subsystem
+- [All detailed views](/docs/pages/06-shop-subsystem-sketches.md)
 - Screen flow diagram:
 
 ![Shop subsystem screens diagram](/docs/images/sketches/shop/Frict-shop.png)
@@ -110,7 +110,7 @@ The application will be implemented following an incremental model with 7 differ
 
 
 #### Management subsystem
-- [All detailed views](/docs/pages/management-subsystem-sketches.md)
+- [All detailed views](/docs/pages/06-management-subsystem-sketches.md)
 - Screen flow diagram:
 
 ![Management subsystem screens diagram](/docs/images/sketches/management/Frict-management.png)

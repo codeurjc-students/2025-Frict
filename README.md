@@ -36,17 +36,17 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 #### Client Subsystem Walkthrough Video:
 
-- 🎥 [Frict Client](https://github.com/codeurjc-students/2025-Frict/blob/docs/update-readme-1/docs/images/v0.1/Frict-Client.mp4)
+- 🎥 [Frict Client](https://drive.google.com/file/d/1WN6dweSRKxQMpdlhnbIMXCex2Wc-6Yd3/view?usp=sharing)
 
 #### Management Subsystem Walkthrough Video:
 
-- 🎥 [Frict Management](https://github.com/codeurjc-students/2025-Frict/blob/docs/update-readme-1/docs/images/v0.1/Frict-Management.mp4)
+- 🎥 [Frict Management](https://drive.google.com/file/d/1_kL5ZykifSWLnz6QAOWpVEkjU00rx7pG/view?usp=sharing)
 
 &nbsp;
 
 
 
-> ℹ️ NOTE: This software is yet under active development to upgrade its functionalities and general stability. Therefore, it may contain bugs.
+> ℹ️ NOTE: This software is yet under active development to expand its features, upgrade the existing ones and improve general stability.
 
 &nbsp;
 
