@@ -62,14 +62,13 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 ## ↩️ Index
 
-1. [Objectives](docs/pages/01-objectives.md)
-2. [Methodology](docs/pages/02-methodology.md)
-3. [Features](docs/pages/03-functionalities.md)
-4. [Analysis](docs/pages/04-analysis.md)
-5. [Tracking](docs/pages/05-progress-tracking.md)
-6. [Authors](docs/pages/06-authors.md)
-7. [Development Guide](docs/pages/07-development-guide.md)
-8. [License](#-license)
+1. [Features](docs/pages/01-features.md)
+2. [Detailed Features](docs/pages/02-detailed-features.md)
+3. [Execution](docs/pages/03-execution.md)
+4. [Development Guide](docs/pages/04-development-guide.md)
+5. [Project Tracking](docs/pages/05-progress-tracking.md)
+6. [Project Kickoff](docs/pages/06-project-kickoff.md)
+7. [Authors](docs/pages/06-authors.md)
 
 &nbsp;
 

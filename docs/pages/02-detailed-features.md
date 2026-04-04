@@ -1,8 +1,8 @@
-## 💻 Functionalities / Features
+## 💻 Application Features
 
-### Basic functionalities
+### Basic features
 #### Shop Subsystem
-| Ready? | Basic functionality                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+| Ready? | Basic feature description                       | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|-------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
 | ✅      | Create user account / Sign up with Google       | ✅         |                 |               |                 |               |
 | ✅      | Reset password via OTP to account email         | ✅         | ✅               | ✅             | ✅               | ✅             |
@@ -22,7 +22,7 @@
 | ✅      | Check system availability                       | ✅         | ✅               | ✅             | ✅               | ✅             |
 
 #### Organization Management Subsystem
-| Ready? | Basic functionality                                   | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+| Ready? | Basic feature description                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|-------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
 | ✅      | Check overall application status (by role)            |           |                 | ✅             | ✅               | ✅             |
 | ✅      | Create/Modify/Delete any product globally             |           |                 |               |                 | ✅             |
@@ -54,8 +54,8 @@
 | ✅      | Hard delete any user account                          |           |                 |               |                 | ✅             |
 
 
-### Intermediate functionalities
-| Ready? | Intermediate functionality                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+### Intermediate features
+| Ready? | Intermediate feature description                       | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|--------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
 | ✅      | Search products by name                                | ✅         | ✅               | ✅             | ✅               | ✅             |
 | ✅      | Filter products by associated categories               | ✅         | ✅               | ✅             | ✅               | ✅             |
@@ -68,8 +68,8 @@
 | 🔄     | Download PDF invoices and resumes                      |           | ✅               | ✅             | ✅               | ✅             |
 
 
-### Advanced functionalities
-| Ready? | Advanced functionality                                    | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+### Advanced features
+| Ready? | Advanced feature description                              | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|-----------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
 | 🔄     | Check shops, trucks and/or addresses approximate location |           | ✅               | ✅             | ✅               | ✅             |
 | 🔄     | View stored use data displayed in charts                  |           |                 | ✅             |                 | ✅             |
@@ -80,6 +80,6 @@
 
 &nbsp;
 
-[◀️](/docs/pages/02-methodology.md) **Page 3. Functionalities** [▶️](/docs/pages/04-analysis.md)
+[◀️](/docs/pages/01-features.md) **Page 2. Detailed Features** [▶️](/docs/pages/03-execution.md)
 
 [⏪ Return to Index](/README.md)

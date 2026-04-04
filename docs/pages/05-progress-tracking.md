@@ -5,6 +5,6 @@
 
 &nbsp;
 
-[◀️](/docs/pages/04-analysis.md) **Page 5. Progress tracking** [▶️](/docs/pages/06-authors.md)
+[◀️](/docs/pages/04-development-guide.md) **Page 5. Progress tracking** [▶️](/docs/pages/06-project-kickoff.md)
 
 [⏪ Return to Index](/README.md)

@@ -337,6 +337,6 @@ https://localhost:443/api/products/1 #Deletes all the information associated wit
 
 &nbsp;
 
-[◀️](/docs/pages/06-authors.md) **Page 7. Development guide**
+[◀️](/docs/pages/03-execution.md) **Page 4. Development Guide** [▶️](/docs/pages/05-progress-tracking.md)
 
 [⏪ Return to Index](/README.md)
