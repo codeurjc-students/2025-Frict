@@ -127,11 +127,11 @@ The application will be tested using 3 different types of tests, each one assuri
 
 Using **SonarQube Cloud** and **JaCoCo** plugin for Maven, a first **overall project state** is presented. In this first analysis, the most remarkable aspects are the security issues (most of them caused by the use of test default passwords).
 
-![SonarQube Overall Analysis](/docs/images/sonarqube_overall.png)
+![SonarQube Overall Analysis](/docs/images/initial/sonarqube_overall.png)
 
 Also, regarding **code quality and test coverage**, DatabaseInitializer class is again the worst rated because of the aspect described above.
 
-![SonarQube Code Analysis](/docs/images/sonarqube_code.png)
+![SonarQube Code Analysis](/docs/images/initial/sonarqube_code.png)
 
 &nbsp;
 

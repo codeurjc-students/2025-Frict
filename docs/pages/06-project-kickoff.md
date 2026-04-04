@@ -48,7 +48,7 @@ The application will be implemented following an incremental model with 7 differ
 | Phase 7 | Project Presentation                         | 15 June 2026      | ....            | ....            |
 
 ### Gantt diagram
-![Gantt diagram](../images/other/gantt.png)
+![Gantt diagram](../images/initial/gantt.png)
 
 &nbsp;
 
@@ -117,7 +117,7 @@ The application will be implemented following an incremental model with 7 differ
 &nbsp;
 
 ### Entities
-![Database schema diagram](../images/other/schema.png)
+![Database schema diagram](../images/initial/schema.png)
 
 ### Permissions
 In order to separate customers and staff functionalities and to prevent internal data from being accessed by any user, each functionality will only be available to its corresponding user roles, which will be:
