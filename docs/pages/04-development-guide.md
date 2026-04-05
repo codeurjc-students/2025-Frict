@@ -12,128 +12,131 @@
 
 &nbsp;
 
+
+
 ### 📍 Introduction
 
-This website follows an SPA (Single-Page Application) architecture, where each of the pages will be composed by combining different independent pages. This way, a faster and smoother experience is achieved by reloading only the necessary components during each user interaction.
+This website follows a Single-Page Application (SPA) architecture, where the user interface is dynamically updated by combining different independent components rather than loading entire new pages. This ensures a faster, smoother, and more fluid user experience during each interaction.
 
-Regarding the main components of the system, we have:
-- **Client**: Angular project that will make and receive REST requests to obtain the content to be displayed.
-- **Server**: Spring Boot project with Maven that will contain the REST API for data management.
-- **Database**: MySQL component with a dynamic schema, created within the Spring Boot entities and annotations.
+The system is built upon a strictly decoupled Client-Server model, ensuring high scalability and maintainability by reducing dependencies. The core architecture relies on the following components:
 
-This distribution allows the frontend and backend to be completely separated, so that each works independently. In this way, better scalability and maintainability are achieved by reducing dependencies between them.
+* **Client (Frontend):** An Angular-based SPA that communicates with the server via REST API requests to fetch and render dynamic content.
+* **Server (Backend):** A robust Spring Boot application managing the REST API. It strictly adheres to the **Model-View-Controller (MVC)** architecture, keeping controllers completely isolated from any business logic. Furthermore, it implements the **Facade design pattern** through Orchestrators to efficiently manage complex, multi-service transactions.
+* **Database:** A relational MySQL database with a dynamic schema managed automatically via Spring Data JPA entities and annotations.
+* **Object Storage:** MinIO, an AWS S3-compatible storage server, dedicated to handling and serving multimedia assets (such as user and product images) efficiently.
 
-The main content of this section is briefly detailed on the table below.
+To ensure data protection and safe access, the system utilizes **Spring Security** integrated with **JWT (JSON Web Tokens)** for internal session management and **OAuth2** for third-party authentication. Additionally, the API is built with production readiness in mind: it is fully documented using **Swagger (OpenAPI)** to ensure the documentation is always synchronized with the codebase, and relies on **Spring Boot Actuator** to provide real-time health checks and system monitoring.
 
-| Feature             | Description                                                                                                                 |
-|---------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| Type of website     | SPA web application with MVC architecture                                                                                   |
-| Main technologies   | Spring Framework (Java), Angular (TypeScript + HTML), MySQL (SQL), JSON, Docker                                             |
-| Tools               | IntelliJ IDEA, MySQL Workbench, Git, Postman                                                                                |
-| Quality assurance   | Unit, Integration and E2E testing using JUnit, Mockito, Rest Assured and Selenium. Static code analysis via Sonarqube Cloud |
-| Deployment          | Containerization with Docker, cloud-integrated deployment on Amazon Web Services                                            |
-| Development process | Iterative and incremental through the use of feature branches, issues and pull requests before merging                      |
+| Feature | Technologies & Patterns |
+| :--- | :--- |
+| **Architecture & Patterns** | SPA, Strict MVC, Facade Pattern (Service Orchestrators). |
+| **Backend Technologies** | Java, Spring Boot, Spring Security (JWT & OAuth2), Spring Data JPA, Lombok. |
+| **Frontend Technologies** | Angular 19 (Standalone Components, Signals), TypeScript, HTML, Tailwind CSS. |
+| **API & Monitoring** | Swagger (OpenAPI), Spring Boot Actuator. |
+| **Data & Storage** | MySQL, MinIO (S3-compatible Object Storage). |
+| **Testing & QA** | JUnit, Mockito, REST Assured, Jasmine, Selenium, JaCoCo, SonarQube Cloud. |
+| **Tools & IDEs** | IntelliJ IDEA, MySQL Workbench, Git. |
+| **Deployment** | Docker Compose, Amazon Web Services (AWS). |
+| **Development Process** | Feature branches, Pull Requests, GitHub Actions (Strict CI validation). |
 
 &nbsp;
+
+
 
 ### 📋 Technologies Stack
 
 #### 💾 Backend
 
-- [**Spring Boot**](https://spring.io/projects/spring-boot): 
-Facilitates the creation and execution of REST services by reducing initial configuration and providing a ready-to-use productive environment.
+- [**Spring Boot**](https://spring.io/projects/spring-boot): Facilitates the creation and execution of REST services by reducing initial configuration and providing a ready-to-use productive environment.
+- [**Spring Data JPA**](https://spring.io/projects/spring-data): Simplifies database access and management through repositories and automatic queries, streamlining relational data persistence.
+- [**Spring Security**](https://spring.io/projects/spring-security): Handles authentication and authorization using JWT for internal sessions and OAuth2 for external integrations, ensuring endpoints are strictly protected.
+- [**Java**](https://www.java.com/en/): Used as the main programming language, offers a robust object-oriented structure and high performance.
+- [**Maven**](https://maven.apache.org/): Simplifies project building, packaging, testing, and dependency management.
+- [**Lombok**](https://projectlombok.org/): Reduces boilerplate Java code (such as getters, setters, and constructors) through annotations, keeping the backend codebase clean and maintainable.
+- [**Swagger (OpenAPI)**](https://swagger.io/): Automatically generates interactive and up-to-date API documentation directly from the codebase.
+- [**Spring Boot Actuator**](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html): Provides built-in endpoints for real-time application monitoring and health checks.
+- [**MySQL**](https://www.mysql.com/): Relational database engine that provides reliable data persistence and dynamic schema management.
+- [**MinIO**](https://min.io/): High-performance, S3-compatible object storage server used for efficiently handling and serving multimedia assets.
+- [**JWT (JSON Web Token)**](https://www.jwt.io/introduction#what-is-json-web-token): Provides stateless authentication, a secure method for transferring information between the Angular client and the Spring Boot server through digitally signed tokens.
 
-
-- [**Spring Data**](https://spring.io/projects/spring-data): 
-Simplifies database access and management through repositories and automatic queries, streamlining data persistence.
-
-
-- [**Spring Security**](https://spring.io/projects/spring-security): 
-Handles authentication and authorization, ensuring that resources and endpoints are protected against unauthorized access.
-
-
-- [**Java**](https://www.java.com/en/): 
-Used as the main programming language, offers object-oriented structure and portability.
-
-
-- [**Maven**](https://maven.apache.org/): 
-Simplifies project building, packaging, testing, and dependency management.
-
-
-- [**MySQL**](https://www.mysql.com/): 
-Relational database engine that provides reliable data persistence.
-
-  
 #### 📺 Frontend
 
-- [**Angular**](https://angular.dev/): Manages the user interface and client-side logic, allowing dynamic rendering of components and seamless navigation in the SPA.
+- [**Angular**](https://angular.dev/): Manages the user interface and client-side logic. Utilizes modern features such as Standalone Components and Signals to deliver a highly reactive, optimized, and seamless SPA experience.
+- [**TypeScript**](https://www.typescriptlang.org/): Provides strict type safety and powerful tooling support, preventing runtime errors and drastically improving frontend maintainability.
+- [**Tailwind CSS**](https://tailwindcss.com/): A utility-first CSS framework used for rapid UI development and highly customizable styling.
+- [**JSON**](https://www.json.org/): Serves as the standard, lightweight format for exchanging data between the Angular client and the Spring Boot server.
 
+#### 🧪 Testing & QA
 
-- [**TypeScript**](https://www.typescriptlang.org/): Provides type safety and tooling support, helping to prevent errors and improve maintainability of the frontend code.
+- [**JUnit**](https://junit.org/) & [**Mockito**](https://site.mockito.org/): Core frameworks used for implementing isolated unit and integration tests.
+- [**REST Assured**](https://rest-assured.io/): Specifically utilized to automate and validate the behavior of the REST API endpoints.
+- [**Jasmine**](https://jasmine.github.io/): Behavior-driven development framework used to execute robust client-side tests for the Angular application.
+- [**Selenium**](https://www.selenium.dev/): Automates web browsers to execute comprehensive End-to-End (E2E) testing.
+- [**JaCoCo**](https://www.jacoco.org/) & [**SonarQube Cloud**](https://sonarcloud.io/): Provide detailed code coverage and continuous static code analysis to maintain high-quality standards.
 
+#### 🚀 DevOps
 
-- [**JSON**](https://www.json.org/json-en.html): Serves as the standard format for exchanging data between the Angular frontend and the Spring Boot backend.
-
-#### 🔬 DevOps
-
-- [**Docker**](https://www.docker.com/): Packages the application and its dependencies into isolated containers, ensuring consistent execution across environments.
-
-
-- [**GitHub Actions**](https://github.com/features/actions): Automates workflows such as building, testing, and deploying the application through continuous integration and continuous delivery (CI/CD).
-
-
-- [**Docker Compose**](https://docs.docker.com/compose/): Orchestrates multiple Docker containers, allowing easy setup and management of the full application stack.
+- [**Docker**](https://www.docker.com/): Packages the application into isolated containers, ensuring consistent execution.
+- [**Docker Compose**](https://docs.docker.com/compose/): Orchestrates multiple containers, allowing easy setup of the full application stack.
+- [**GitHub Actions**](https://github.com/features/actions): Automates CI/CD workflows, enforcing strict Pull Request validation.
+- [**Amazon Web Services (AWS)**](https://aws.amazon.com/): Cloud computing platform used for the robust and scalable deployment of the final application.
 
 &nbsp;
+
+
 
 ### 🔧 Tools
 
-- [**IntelliJ IDEA**](https://www.jetbrains.com/idea/): Provides a powerful IDE for efficient backend development, debugging, and integration with Spring Boot.
-
-
-- [**MySQL Workbench**](https://www.mysql.com/products/workbench/): Facilitates database design, visualization, and query execution for managing the MySQL schema.
-
-
-- [**Git**](https://git-scm.com/): Enables version control, collaboration, and tracking of code changes across the development team.
-
-
-- [**Postman**](https://www.postman.com/home): Allows testing and validation of REST APIs through automated and manual requests.
+- [**IntelliJ IDEA**](https://www.jetbrains.com/idea/): Powerful IDE for backend development and deep integration with the Spring ecosystem.
+- [**MySQL Workbench**](https://www.mysql.com/products/workbench/): Facilitates database design and visual modeling for managing the MySQL schema.
+- [**Git**](https://git-scm.com/): Enables strict version control and collaboration across the development lifecycle.
 
 &nbsp;
+
+
 
 ### 🏢 Architecture
 
 - **Deployment**: Integrated cloud deployment using [Amazon Web Services](https://aws.amazon.com/es/).
 
-
 - **API REST**: Follows [OpenAPI](https://www.openapis.org/) description standard, and turned into HTML in order to be visualized directly from GitHub without running the application.
 
 &nbsp;
 
+
+
 ### ☑️ Quality Assurance
 
-#### ⌛ Testing
+To ensure a robust and bug-free environment, the application undergoes a rigorous Quality Assurance (QA) process. A strict Continuous Integration (CI) pipeline enforces these standards, blocking any pull request that does not pass the automated test suite.
 
-The application will be tested using 3 different types of tests, each one assuring that all commits and pull requests meet the established requirements.
-- **Unit tests**: Proof that the functionality provided by a method, class or even a component works as expected.
+#### ⌛ Automated Testing
 
+The platform's reliability is validated through multiple automated testing layers:
 
-- **Integration tests**: Check that the connections and communications between the different components in the system are working properly. 
+- **Unit & Integration Testing:** Powered by **JUnit** and **Mockito**, isolating backend business logic and verifying proper database communication.
+- **API Testing:** Using **REST Assured** to validate HTTP responses, JSON payloads, and security constraints.
+- **Client-Side Testing:** **Jasmine** is utilized to test the Angular Standalone components and signals logic.
+- **End-to-End (E2E) Testing:** **Selenium** automates browser interactions to validate the complete system flow.
 
+#### 📊 Static Code Analysis & Results
 
-- **E2E or System tests**: Revise whether the whole system, or some of its entire components, meet the necessary objectives for which it was designed.
+Code quality, vulnerabilities, and test coverage are continuously monitored using **SonarQube Cloud** integrated with the **JaCoCo** Maven plugin. Analyzing the initial project scans provides valuable insights into the architecture's health and the current technical debt.
 
-#### 📊 Static code analysis
-
-Using **SonarQube Cloud** and **JaCoCo** plugin for Maven, a first **overall project state** is presented. In this first analysis, the most remarkable aspects are the security issues (most of them caused by the use of test default passwords).
+**Overall Project Health:**
+As shown in the dashboard below, the project achieves an excellent **Maintainability rating of A**, alongside an exceptionally low code **duplication rate of 0.3%**. The global code **coverage stands at a solid 65.7%**. While the Quality Gate currently flags the Security (E) and Reliability (D) ratings, this is a strictly controlled scenario. The 8 reported security issues are intentional, arising from the hardcoded default passwords and mock credentials required to instantly populate the local seed data upon container startup.
 
 ![SonarQube Overall Analysis](/docs/images/initial/sonarqube_overall.png)
 
-Also, regarding **code quality and test coverage**, DatabaseInitializer class is again the worst rated because of the aspect described above.
+**Risk & Technical Debt Distribution:**
+The bubble chart below correlates Technical Debt (X-axis) with Code Coverage (Y-axis). The visual distribution confirms a highly healthy core system: the vast majority of the application's components (represented by the cluster of green bubbles) successfully maintain zero technical debt with varying levels of high test coverage.
+
+The single, prominent outlier — the red bubble indicating over 5 hours of technical debt and near-zero coverage — corresponds exclusively to the `DatabaseInitializer.java` class. Because this class acts solely as a static data injector for local testing environments, it inherently triggers security rules and is intentionally excluded from the standard unit testing scope.
 
 ![SonarQube Code Analysis](/docs/images/initial/sonarqube_code.png)
 
 &nbsp;
+
+
 
 ### 📅 Development Process
 
@@ -220,6 +223,8 @@ Project testing and static code analysis is automated by using CI/CD pipelines a
 - JaCoCo coverage tool is used during the analysis, so SonarQube can show coverage metrics
 
 &nbsp;
+
+
 
 ### 🏁 Code Environment and Execution
 

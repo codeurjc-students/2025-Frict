@@ -1,0 +1,294 @@
+@startuml
+' === CONFIGURACIÓN GLOBAL ===
+skinparam linetype ortho
+skinparam defaultFontColor #000000
+
+' Forzar separación extra para que las líneas no se monten
+skinparam nodesep 80
+skinparam ranksep 100
+skinparam padding 5
+
+' Estilo de tablas
+skinparam class {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+  FontColor #000000
+}
+
+' Estilo de paquetes para que los bordes no molesten
+skinparam package {
+  BorderColor #AAAAAA
+  BorderThickness 1
+}
+
+skinparam ArrowColor #222222
+hide circle
+
+' === DEFINICIÓN DE ENTIDADES CON COLORES CLAROS ===
+
+package "Users and Authentication" #LightSkyBlue {
+  entity "user" as user #E1F5FE {
+    * id : BIGINT
+    --
+    is_banned : BIT(1)
+    is_deleted : BIT(1)
+    is_logged : BIT(1)
+    last_connection : DATETIME(6)
+    otp_expiration : DATETIME(6)
+    selected_shop_id : BIGINT
+    email : VARCHAR(255)
+    encoded_password : VARCHAR(255)
+    file_name : VARCHAR(255)
+    image_url : VARCHAR(255)
+    name : VARCHAR(255)
+    otp_code : VARCHAR(255)
+    phone : VARCHAR(255)
+    s3_key : VARCHAR(255)
+    username : VARCHAR(255)
+  }
+
+  entity "payment_cards" as payment_cards #E1F5FE {
+    * id : BIGINT
+    --
+    due_date : DATE
+    user_id : BIGINT
+    alias : VARCHAR(255)
+    card_owner_name : VARCHAR(255)
+    cvv : VARCHAR(255)
+    number : VARCHAR(255)
+  }
+
+  entity "user_roles" as user_roles #E1F5FE {
+    user_id : BIGINT
+    roles : VARCHAR(255)
+  }
+}
+
+package "Location" #Lavender {
+  entity "addresses" as addresses #E6E6FA {
+    * id : BIGINT
+    --
+    latitude : DOUBLE
+    longitude : DOUBLE
+    user_id : BIGINT
+    alias : VARCHAR(255)
+    city : VARCHAR(255)
+    country : VARCHAR(255)
+    floor : VARCHAR(255)
+    number : VARCHAR(255)
+    postal_code : VARCHAR(255)
+    street : VARCHAR(255)
+  }
+}
+
+package "Products" #LightPink {
+  entity "products" as products #FFF1F2 {
+    * id : BIGINT
+    --
+    current_price : DOUBLE
+    is_active : BIT(1)
+    previous_price : DOUBLE
+    supply_price : DOUBLE
+    description : VARCHAR(5000)
+    name : VARCHAR(255)
+    reference_code : VARCHAR(255)
+  }
+
+  entity "categories" as categories #FFF1F2 {
+    * id : BIGINT
+    --
+    parent_id : BIGINT
+    banner_text : VARCHAR(255)
+    file_name : VARCHAR(255)
+    icon : VARCHAR(255)
+    image_url : VARCHAR(255)
+    long_description : VARCHAR(255)
+    name : VARCHAR(255)
+    s3_key : VARCHAR(255)
+    short_description : VARCHAR(255)
+  }
+
+  entity "products_categories" as products_categories #FFF1F2 {
+    categories_id : BIGINT
+    products_id : BIGINT
+  }
+
+  entity "product_image_info" as product_image_info #FFF1F2 {
+    * id : BIGINT
+    --
+    product_id : BIGINT
+    file_name : VARCHAR(255)
+    image_url : VARCHAR(255)
+    s3_key : VARCHAR(255)
+  }
+}
+
+package "Reviews" #LightCyan {
+  entity "reviews" as reviews #E0F7FA {
+    * id : BIGINT
+    --
+    rating : INT
+    recommended : BIT(1)
+    created_at : DATETIME(6)
+    product_id : BIGINT
+    user_id : BIGINT
+    text : VARCHAR(255)
+  }
+
+  entity "user_favourite_products" as user_favourite_products #E0F7FA {
+    favourite_products_id : BIGINT
+    users_as_favourite_id : BIGINT
+  }
+}
+
+package "Shops" #LightYellow {
+  entity "shops" as shops #FFFDE7 {
+    * id : BIGINT
+    --
+    assigned_budget : DOUBLE
+    address_id : BIGINT
+    assigned_manager_id : BIGINT
+    file_name : VARCHAR(255)
+    image_url : VARCHAR(255)
+    name : VARCHAR(255)
+    reference_code : VARCHAR(255)
+    s3_key : VARCHAR(255)
+  }
+
+  entity "shops_stocks" as shops_stocks #FFFDE7 {
+    * id : BIGINT
+    --
+    active : BIT(1)
+    units : INT
+    product_id : BIGINT
+    shop_id : BIGINT
+  }
+}
+
+package "Orders" #LightGreen {
+  entity "orders" as orders #E8F5E9 {
+    * id : BIGINT
+    --
+    estimated_completion_time : INT
+    shipping_cost : DOUBLE
+    subtotal_cost : DOUBLE
+    total_cost : DOUBLE
+    total_discount : DOUBLE
+    total_items : INT
+    assigned_shop_id : BIGINT
+    assigned_truck_id : BIGINT
+    created_at : DATETIME(6)
+    full_sending_address_id : BIGINT
+    user_id : BIGINT
+    card_number_ending : VARCHAR(255)
+    reference_code : VARCHAR(255)
+  }
+
+  entity "order_items" as order_items #E8F5E9 {
+    * id : BIGINT
+    --
+    product_price_snapshot : DOUBLE
+    quantity : INT
+    order_id : BIGINT
+    product_id : BIGINT
+    user_id : BIGINT
+    product_image_snapshot : VARCHAR(255)
+    product_name_snapshot : VARCHAR(255)
+  }
+
+  entity "orders_history" as orders_history #E8F5E9 {
+    * history_id : BIGINT
+    --
+    order_id : BIGINT
+  }
+
+  entity "order_status_log" as order_status_log #E8F5E9 {
+    * id : BIGINT
+    --
+    status : ENUM
+  }
+
+  entity "order_updates" as order_updates #E8F5E9 {
+    date : DATETIME(6)
+    status_id : BIGINT
+    description : VARCHAR(255)
+  }
+}
+
+package "Trucks" #Bisque {
+  entity "trucks" as trucks #FFF3E0 {
+    * id : BIGINT
+    --
+    max_order_capacity : INT
+    address_id : BIGINT
+    assigned_shop_id : BIGINT
+    driver_id : BIGINT
+    plate_number : VARCHAR(255)
+    reference_code : VARCHAR(255)
+  }
+
+  entity "trucks_history" as trucks_history #FFF3E0 {
+    * history_id : BIGINT
+    --
+    truck_id : BIGINT
+  }
+
+  entity "truck_status_log" as truck_status_log #FFF3E0 {
+    * id : BIGINT
+    --
+    status : ENUM
+  }
+
+  entity "truck_updates" as truck_updates #FFF3E0 {
+    date : DATETIME(6)
+    status_id : BIGINT
+    description : VARCHAR(255)
+  }
+}
+
+' === RELACIONES ===
+
+' Core -> Dependencias directas
+user ||--o{ payment_cards : "user_id"
+user ||--o{ user_roles : "user_id"
+
+' Core -> Relaciones externas
+user ||---o{ addresses : "user_id"
+user ||---o{ reviews : "user_id"
+user ||---o{ user_favourite_products : "users_as_favourite_id"
+user ||---o{ order_items : "user_id"
+user ||---o{ orders : "user_id"
+user ||---o{ trucks : "driver_id"
+user ||---o{ shops : "assigned_manager_id"
+
+' Catálogo
+categories ||--o{ categories : "parent_id"
+products ||--o{ products_categories : "products_id"
+categories ||--o{ products_categories : "categories_id"
+products ||--o{ product_image_info : "product_id"
+products ||---o{ shops_stocks : "product_id"
+products ||---o{ order_items : "product_id"
+products ||---o{ reviews : "product_id"
+products ||---o{ user_favourite_products : "favourite_products_id"
+
+' Operaciones/Tiendas
+shops ||--o{ shops_stocks : "shop_id"
+shops ||---o{ trucks : "assigned_shop_id"
+shops ||---o{ orders : "assigned_shop_id"
+addresses ||---o{ shops : "address_id"
+addresses ||---o{ trucks : "address_id"
+addresses ||---o{ orders : "full_sending_address_id"
+
+' Pedidos
+orders ||--o{ order_items : "order_id"
+orders ||--o{ orders_history : "order_id"
+trucks ||---o{ orders : "assigned_truck_id"
+order_status_log ||--o{ order_updates : "status_id"
+orders_history ||--o{ order_updates : "updates"
+
+' Logística
+trucks ||--o{ trucks_history : "truck_id"
+truck_status_log ||--o{ truck_updates : "status_id"
+trucks_history ||--o{ truck_updates : "updates"
+
+@enduml
