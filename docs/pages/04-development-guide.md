@@ -97,11 +97,53 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 
 ### 🏢 Architecture
 
-- **Deployment**: Integrated cloud deployment using [Amazon Web Services](https://aws.amazon.com/es/).
+The application's architecture is designed for high scalability and clear separation of concerns, following a modular approach across all its layers.
 
-- **API REST**: Follows [OpenAPI](https://www.openapis.org/) description standard, and turned into HTML in order to be visualized directly from GitHub without running the application.
+#### 🏛️ Domain Model
 
-&nbsp;
+The foundation of the system is built upon a well-defined relational model and a modular package structure that isolates core functionalities into specific business domains.
+
+* **Database Schema:** A relational structure is used to handle complex relationships between entities.
+
+![Database Schema](../diagrams/v0.1/db-diagram.png)
+
+* **Package Diagram:** Depending on their responsibilities, all entities can be sorted in different packages.
+
+![Package Diagram](../diagrams/v0.1/package-diagram.png)
+
+#### 📡 REST API & Documentation
+
+Communication between the frontend client and the backend server is handled entirely via a standardized RESTful API, utilizing Angular proxies to enable relative routing on the client side.
+
+The API strictly adheres to the **OpenAPI** (Swagger) specification, which serves as a comprehensive and interactive contract for the system's endpoints. This standardization ensures that frontend components and external consumers have a reliable, self-documenting interface to interact with. Once the Docker stack is operational (Check [**Execution**](/docs/pages/03-execution.md) section), developers can dynamically explore, test, and validate API requests in real-time through the built-in **Swagger UI** accessible at `https://localhost/swagger-ui/index.html`.
+
+> ℹ️ **NOTE:** For quick reference without needing to spin up the application environment, a static HTML-rendered version of the API documentation is readily available [here](../openapi.json).
+
+#### ⚙️ Server-Side Architecture (Backend)
+
+The backend is built with **Spring Boot**, implementing a robust multi-layered MVC architecture. This design guarantees a strict separation of concerns, isolating core business logic from HTTP request handling and database interactions. The architecture is broadly divided into:
+
+* **API Layer:** REST controllers that act as the entry points, receiving and delegating HTTP requests.
+* **Business Layer:** A combination of services and orchestrators (implementing the Facade Pattern to manage circular references) that manage core business rules, service communication, and complex transactional integrity.
+* **Data Access Layer:** Utilizes the Repository Pattern (via Spring Data JPA) to abstract database operations and map them directly to the domain entities.
+
+![Backend Architecture](../diagrams/v0.1/backend.png)
+
+#### 💻 Client-Side Architecture (Frontend)
+
+The frontend is a modern **Angular** application built with Standalone Components to maximize code reusability, maintainability, and performance. Rather than detailing individual views, the architecture is logically structured into high-level functional areas that consume centralized API services:
+
+* **Role-Specific Modules:** Distinct environments tailored to the user's role. This includes dedicated management interfaces for administrators and staff (Admin Module), as well as a streamlined shopping and checkout experience for regular customers (Client Module).
+* **Shared Architecture:** A core foundation of common UI elements (navigation, authentication flows, loading states) and centralized services that manage application state and backend communication across the entire platform.
+
+##### Management Components
+![Management Components Architecture](../diagrams/v0.1/frontend-admin.png)
+
+##### Client Components
+![Client Components Architecture](../diagrams/v0.1/frontend-client.png)
+
+##### Common Components
+![Common Components Architecture](../diagrams/v0.1/frontend-common.png)
 
 
 
