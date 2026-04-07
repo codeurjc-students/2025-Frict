@@ -1,4 +1,4 @@
-name: frict-prod
+name: frict-latest
 
 services:
   # ----------------------------------------------------------------
@@ -6,7 +6,7 @@ services:
   # ----------------------------------------------------------------
   cert-gen:
     image: alpine/openssl
-    container_name: cert-gen-prod
+    container_name: cert-gen-latest
     volumes:
       - minio_certs:/certs
     working_dir: /certs
@@ -22,17 +22,17 @@ services:
   # ----------------------------------------------------------------
   mysql:
     image: mysql:8.0
-    container_name: db-prod
+    container_name: db-latest
     restart: unless-stopped
     ports:
       - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: Frict
-      MYSQL_USER: prod_user
-      MYSQL_PASSWORD: prod_password
+      MYSQL_USER: user_latest
+      MYSQL_PASSWORD: password_latest
     volumes:
-      - mysql_data_prod:/var/lib/mysql
+      - mysql_data_latest:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
@@ -45,7 +45,7 @@ services:
   # ----------------------------------------------------------------
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: minio_https_prod
+    container_name: minio_https_latest
     restart: unless-stopped
     ports:
       - "9000:9000"
@@ -72,26 +72,30 @@ services:
   # 4. APPLICATION (Spring Boot + Angular)
   # ----------------------------------------------------------------
   app:
-    image: mjpulido/frict:${IMAGE_TAG:-0.1}
-    container_name: app-prod
+    image: mjpulido/frict:${IMAGE_TAG}
+    container_name: app-latest
     restart: unless-stopped
     ports:
       - "443:8443"
 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: prod_user
-      SPRING_DATASOURCE_PASSWORD: prod_password
+      # --- Database ---
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+      DATASOURCE_USERNAME: user_latest
+      DATASOURCE_PASSWORD: password_latest
 
-      MINIO_ENDPOINT: https://minio:9000
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: password123
-      MINIO_BUCKET_NAME: images
-      MINIO_SSL_INSECURE: "true"
+      # --- MinIO ---
+      S3_ENDPOINT: https://minio:9000
+      S3_PUBLIC_URL: https://localhost:9000
+      S3_ACCESS_KEY: admin
+      S3_SECRET_KEY: password123
+      S3_BUCKET_NAME: images
 
-      SERVER_SSL_KEY_STORE: /app/keystore.p12
-      SERVER_SSL_KEY_STORE_PASSWORD: password
+      # --- Security (test values) ---
+      JWT_SECRET: dev_jwt_secret_key_for_testing_purposes_only
+      CARDS_DB_KEY: dev_cards_encryption_key_12345
 
+      # --- Email and Auth (real variables required) ---
       SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}
       SENDER_MAIL_ADDRESS: ${SENDER_MAIL_ADDRESS}
       SENDER_MAIL_PASSWORD: ${SENDER_MAIL_PASSWORD}
@@ -104,6 +108,6 @@ services:
         condition: service_healthy
 
 volumes:
-  mysql_data_prod:
+  mysql_data_latest:
   minio_data_https:
-  minio_certs: # Shared volume for certificates persistence
+  minio_certs:
