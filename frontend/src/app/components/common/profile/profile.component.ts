@@ -60,7 +60,7 @@ export class ProfileComponent implements OnInit {
 
   protected uiService = inject(UiService);
 
-  constructor(public authService: AuthService, // Cambiado a public para usar sus signals en el HTML
+  constructor(public authService: AuthService,
               private userService: UserService,
               private orderService: OrderService,
               private reviewService: ReviewService,

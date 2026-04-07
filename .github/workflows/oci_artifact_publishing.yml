@@ -39,6 +39,7 @@ jobs:
             TAG="${BRANCH}-${TIME}-${SHA}"
             echo "is_release=false" >> $GITHUB_OUTPUT
           else
+            # Default for push to main (e.g. merging a PR)
             TAG="dev"
             echo "is_release=false" >> $GITHUB_OUTPUT
           fi
@@ -59,19 +60,19 @@ jobs:
             ${{ steps.vars.outputs.is_release == 'true' && format('{0}:latest', env.IMAGE_NAME) || '' }}
 
       # --- 3. COMPOSE FILE TAG NAME RENDERING ---
-      # To change the ${IMAGE_TAG:-0.1} part in Compose file with the release tag or the "dev" tag
+      # Change the ${IMAGE_TAG} placeholder in Compose file with the calculated tag (release tag, "dev", or manual tag)
       - name: Compose file image tag rendering
         run: |
-          sed -i "s|\${IMAGE_TAG:-0.1}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }}
+          sed -i "s|\${IMAGE_TAG}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }}
 
-      # --- 4. PUBLISH SPECIFIC COMPOSE FILE (1.0, dev, or commit) ---
+      # --- 4. PUBLISH SPECIFIC COMPOSE FILE (release, dev, or manual) ---
       # Publishes the docker-compose.yml file with the name "<image-version>-compose"
       - name: Publish Compose Artifact
         run: |
           yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.artifact_tag }}
 
       # --- 5. PUBLISH LATEST COMPOSE FILE (releases only) ---
-      # Also renders the ${IMAGE_TAG:-0.1} part again in Compose file with the tag "latest", instead of the release tag
+      # Renders the specific tag again in the Compose file with the tag "latest", then publishes
       - name: Publish Latest Compose Artifact (Re-rendered)
         if: steps.vars.outputs.is_release == 'true'
         run: |

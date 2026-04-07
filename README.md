@@ -36,25 +36,21 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 #### Client Subsystem Walkthrough Video:
 
-<video src="docs/images/v0.1/frict-client.mp4" controls title="Frict Client" style="max-width: 100%;">
-  This video element is not supported in your browser.
-</video>
+- 🎥 [Frict Client](https://drive.google.com/file/d/1WN6dweSRKxQMpdlhnbIMXCex2Wc-6Yd3/view?usp=sharing)
 
 #### Management Subsystem Walkthrough Video:
 
-<video src="docs/images/v0.1/frict-management.mp4" controls title="Frict Management" style="max-width: 100%;">
-  This video element is not supported in your browser.
-</video>
+- 🎥 [Frict Management](https://drive.google.com/file/d/1_kL5ZykifSWLnz6QAOWpVEkjU00rx7pG/view?usp=sharing)
 
 &nbsp;
 
 
 
-> ℹ️ NOTE: This software is yet under active development to upgrade its functionalities and general stability. Therefore, it may contain bugs.
+> ℹ️ NOTE: This software is yet under active development to expand its features, upgrade the existing ones and improve general stability.
 
 &nbsp;
 
-## ⏩ Project Next Steps
+## ⏩ Project Next Steps (Intermediate Functionality)
 
 - Users last connection logic
 - In-app notifications
@@ -66,14 +62,13 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 ## ↩️ Index
 
-1. [Objectives](docs/pages/01-objectives.md)
-2. [Methodology](docs/pages/02-methodology.md)
-3. [Features](docs/pages/03-functionalities.md)
-4. [Analysis](docs/pages/04-analysis.md)
-5. [Tracking](docs/pages/05-progress-tracking.md)
-6. [Authors](docs/pages/06-authors.md)
-7. [Development Guide](docs/pages/07-development-guide.md)
-8. [License](#-license)
+1. [Features](docs/pages/01-features.md)
+2. [Detailed Features](docs/pages/02-detailed-features.md)
+3. [Execution](docs/pages/03-execution.md)
+4. [Development Guide](docs/pages/04-development-guide.md)
+5. [Project Tracking](docs/pages/05-progress-tracking.md)
+6. [Project Kickoff](docs/pages/06-project-kickoff.md)
+7. [Authors](docs/pages/06-authors.md)
 
 &nbsp;
 
