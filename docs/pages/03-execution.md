@@ -1,6 +1,6 @@
 ## 🏁 App execution
 
-Due to the application's extensive dependency list, we utilize Docker Compose for execution. This allows for the concurrent management of the application and its required services, including the MySQL database and MinIO image storage.
+Due to the application's extensive dependency list, Docker Compose is used for execution. This allows for the concurrent management of the application and its required services, including the MySQL database and MinIO image storage.
 
 ### Prerequisites
 
@@ -34,6 +34,8 @@ SENDER_MAIL_PASSWORD=your_email_app_password
 
 > ℹ️ **NOTE:** This environment variables are directly responsible for the application's email delivery and third-party authentication functionalities. In order for this feature to work properly, you must provide valid credentials and connection details from a real SMTP server.
 
+&nbsp;
+
 #### 2. Deploy the stack
 
 Execute the composition directly from the remote registry using a terminal window located in the same folder as your `.env` file. Docker Compose will automatically read it, fetch the required images, and orchestrate all containers simultaneously in detached mode (running in the background):
@@ -46,19 +48,26 @@ docker compose -f oci://mjpulido/frict:dev-compose up -d
 docker compose -f oci://mjpulido/frict up -d
 ```
 
-**Managing the Stack (Stop / Restart):**
+##### Managing the Stack (Stop / Restart):
 * **To stop the application:** You can safely stop the services to free up system resources without losing any data. You can do this via the Docker Desktop interface or by running the same command replacing `up -d` with `down` (e.g., `docker compose -f oci://mjpulido/frict down`).
+
+
 * **To launch it again:** Use **exactly the same `up -d` command** shown above. Docker is smart enough to detect that the images and configuration are already on your system, so it will bypass the download phase and start the services almost instantaneously.
 
+&nbsp;
 
 #### 3. Access the Application
 
 Because the stack uses self-signed HTTPS certificates generated automatically upon startup, your browser will initially flag the connection as insecure. To access the platform properly:
 
 * **Trust the MinIO Certificate (image service):** First, navigate to the MinIO endpoint at `https://localhost:9000`. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
+
+
 * **Launch the Main App:** Once the MinIO certificate is accepted in your session, navigate to the main application at **`https://localhost`** (which maps to port 443). Also, bypass the security warning if necessary.
 
-#### 4. Access Credentials
+&nbsp;
+
+#### 4. Login Credentials
 
 The application comes pre-configured with a set of example accounts to test the different organizational roles. You can use the following credentials to log in (using the login page):
 
@@ -71,16 +80,30 @@ The application comes pre-configured with a set of example accounts to test the 
 
 > ℹ️ **NOTE:** For Google-based external signup and login, and unless an administrator had created an internal account using your email, the system will automatically create or log you in using a Registered User account. Please ensure the GOOGLE_AUTH_CLIENT_ID is correctly configured in your `.env` file for this feature to work correctly.
 
-### 5. Default Data
+&nbsp;
+
+#### 5. Default Data
 
 Upon startup, the application's database is automatically populated with a comprehensive set of seed data to facilitate immediate testing and demonstration, using `DatabaseInitializer` class. This environment includes:
 
 * **Users:** Four predefined accounts representing each system role (Standard User, Admin, Manager, and Driver). The customer and admin accounts are fully populated with mock personal data, including geolocated addresses and saved payment cards.
+
+
 * **Categories:** A tech-oriented hierarchical catalog featuring main groups like Computers, Components, Peripherals, and Smart Home, alongside promotional tag-categories such as "Top Sellers" and "Recommended".
+
+
 * **Products:** A catalog of 30 distinct electronic items (e.g., gaming laptops, smartphones, graphics cards, and routers), complete with realistic pricing, simulated discounts, and category assignments.
+
+
 * **Shops:** Two sample physical locations ("Madrid-Recoletos" and "Alicante") featuring specific operational budgets, precise geographical coordinates, and pre-assigned staff.
+
+
 * **Orders:** Two sample purchases placed by the default users at the sample shops. They contain multiple products and demonstrate the system's ability to track different fulfillment statuses.
+
+
 * **Stock:** The main store ("Madrid-Recoletos") is automatically pre-stocked with varying quantities of all 30 products from the global catalog, showcasing local inventory management.
+
+
 * **Reviews:** Sample user feedback on the products, including a verified 5-star positive review and an unverified 2-star negative review, illustrating how global product ratings are calculated.
 
 ---

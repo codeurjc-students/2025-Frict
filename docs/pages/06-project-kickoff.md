@@ -30,11 +30,11 @@ In order to provide the main functionality, the application will be able to:
 
 ## 📝 Methodology
 The application will be implemented following an incremental model with 7 different phases:
-- Phase 1: Main features definition, main frontend design and screens navigation flow
-- Phase 2: Minimal services, tests and Continuous Integration (CI)
-- Phases 3, 4 and 5: Basic, Intermediate and Advanced functionalities implementation
-- Phase 6: First Report draft
-- Phase 7: Project presentation
+- **Phase 1**: Main features definition, main frontend design and screens navigation flow
+- **Phase 2**: Minimal services, tests and Continuous Integration (CI)
+- **Phases 3, 4 and 5**: Basic, Intermediate and Advanced functionalities implementation
+- **Phase 6**: First Report draft
+- **Phase 7**: Project presentation
 
 ### Project schedule
 | Phase   | Description                                  | Deadline          | Start Date      | End Date        |
@@ -96,7 +96,7 @@ The application will be implemented following an incremental model with 7 differ
 
 &nbsp;
 
-## 📊 Analysis
+## 📊 Initial Analysis
 
 ### Screens and navigation
 > ℹ️ NOTE: Both online shop and management subsystems have login, register and recover password screens in common, so that the user will be redirected to one of the subsystems depending on the permissions level provided.

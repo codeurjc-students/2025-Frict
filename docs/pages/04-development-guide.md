@@ -1,4 +1,4 @@
-## 📡 Development guide
+## 🧭 Development guide
 
 ### 🔎 Index
 
@@ -21,8 +21,14 @@ This website follows a Single-Page Application (SPA) architecture, where the use
 The system is built upon a strictly decoupled Client-Server model, ensuring high scalability and maintainability by reducing dependencies. The core architecture relies on the following components:
 
 * **Client (Frontend):** An Angular-based SPA that communicates with the server via REST API requests to fetch and render dynamic content.
+
+
 * **Server (Backend):** A robust Spring Boot application managing the REST API. It strictly adheres to the **Model-View-Controller (MVC)** architecture, keeping controllers completely isolated from any business logic. Furthermore, it implements the **Facade design pattern** through Orchestrators to efficiently manage complex, multi-service transactions.
+
+
 * **Database:** A relational MySQL database with a dynamic schema managed automatically via Spring Data JPA entities and annotations.
+
+
 * **Object Storage:** MinIO, an AWS S3-compatible storage server, dedicated to handling and serving multimedia assets (such as user and product images) efficiently.
 
 To ensure data protection and safe access, the system utilizes **Spring Security** integrated with **JWT (JSON Web Tokens)** for internal session management and **OAuth2** for third-party authentication. Additionally, the API is built with production readiness in mind: it is fully documented using **Swagger (OpenAPI)** to ensure the documentation is always synchronized with the codebase, and relies on **Spring Boot Actuator** to provide real-time health checks and system monitoring.
@@ -48,36 +54,80 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 #### 💾 Backend
 
 - [**Spring Boot**](https://spring.io/projects/spring-boot): Facilitates the creation and execution of REST services by reducing initial configuration and providing a ready-to-use productive environment.
+
+
 - [**Spring Data JPA**](https://spring.io/projects/spring-data): Simplifies database access and management through repositories and automatic queries, streamlining relational data persistence.
+
+
 - [**Spring Security**](https://spring.io/projects/spring-security): Handles authentication and authorization using JWT for internal sessions and OAuth2 for external integrations, ensuring endpoints are strictly protected.
+
+
 - [**Java**](https://www.java.com/en/): Used as the main programming language, offers a robust object-oriented structure and high performance.
+
+
 - [**Maven**](https://maven.apache.org/): Simplifies project building, packaging, testing, and dependency management.
+
+
 - [**Lombok**](https://projectlombok.org/): Reduces boilerplate Java code (such as getters, setters, and constructors) through annotations, keeping the backend codebase clean and maintainable.
+
+
 - [**Spring Boot Actuator**](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html): Provides built-in endpoints for real-time application monitoring and health checks.
+
+
 - [**MySQL**](https://www.mysql.com/): Relational database engine that provides reliable data persistence and dynamic schema management.
+
+
 - [**MinIO**](https://min.io/): High-performance, S3-compatible object storage server used for efficiently handling and serving multimedia assets.
+
+
 - [**JWT (JSON Web Token)**](https://www.jwt.io/introduction#what-is-json-web-token): Provides stateless authentication, a secure method for transferring information between the Angular client and the Spring Boot server through digitally signed tokens.
+
+&nbsp;
 
 #### 📺 Frontend
 
 - [**Angular**](https://angular.dev/): Manages the user interface and client-side logic. Utilizes modern features such as Standalone Components and Signals to deliver a highly reactive, optimized, and seamless SPA experience.
+
+
 - [**TypeScript**](https://www.typescriptlang.org/): Provides strict type safety and powerful tooling support, preventing runtime errors and drastically improving frontend maintainability.
+
+
 - [**Tailwind CSS**](https://tailwindcss.com/): A utility-first CSS framework used for rapid UI development and highly customizable styling.
+
+
 - [**JSON**](https://www.json.org/): Serves as the standard, lightweight format for exchanging data between the Angular client and the Spring Boot server.
+
+&nbsp;
 
 #### 🧪 Testing & QA
 
 - [**JUnit**](https://junit.org/) & [**Mockito**](https://site.mockito.org/): Core frameworks used for implementing isolated unit and integration tests.
+
+
 - [**REST Assured**](https://rest-assured.io/): Specifically utilized to automate and validate the behavior of the REST API endpoints.
+
+
 - [**Jasmine**](https://jasmine.github.io/): Behavior-driven development framework used to execute robust client-side tests for the Angular application.
+
+
 - [**Selenium**](https://www.selenium.dev/): Automates web browsers to execute comprehensive End-to-End (E2E) testing.
+
+
 - [**JaCoCo**](https://www.jacoco.org/) & [**SonarQube Cloud**](https://sonarcloud.io/): Provide detailed code coverage and continuous static code analysis to maintain high-quality standards.
+
+&nbsp;
 
 #### 🚀 DevOps
 
 - [**Docker**](https://www.docker.com/): Packages the application into isolated containers, ensuring consistent execution.
+
+
 - [**Docker Compose**](https://docs.docker.com/compose/): Orchestrates multiple containers, allowing easy setup of the full application stack.
+
+
 - [**GitHub Actions**](https://github.com/features/actions): Automates CI/CD workflows, enforcing strict Pull Request validation.
+
+
 - [**Amazon Web Services (AWS)**](https://aws.amazon.com/): Cloud computing platform used for the robust and scalable deployment of the final application.
 
 &nbsp;
@@ -87,8 +137,14 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 ### 🔧 Tools
 
 - [**IntelliJ IDEA**](https://www.jetbrains.com/idea/): Powerful IDE for backend development and deep integration with the Spring ecosystem.
+
+
 - [**MySQL Workbench**](https://www.mysql.com/products/workbench/): Facilitates database design and visual modeling for managing the MySQL schema.
+
+
 - [**Git**](https://git-scm.com/): Enables strict version control and collaboration across the development lifecycle.
+
+
 - [**Swagger (OpenAPI)**](https://swagger.io/): Automatically generates interactive and up-to-date API documentation directly from the codebase.
 
 
@@ -112,13 +168,17 @@ The foundation of the system is built upon a well-defined relational model and a
 
 ![Package Diagram](../diagrams/v0.1/package-diagram.png)
 
-#### 📡 REST API & Documentation
+&nbsp;
+
+#### 📃 REST API & Documentation
 
 Communication between the frontend client and the backend server is handled entirely via a standardized RESTful API, utilizing Angular proxies to enable relative routing on the client side.
 
 The API strictly adheres to the **OpenAPI** (Swagger) specification, which serves as a comprehensive and interactive contract for the system's endpoints. This standardization ensures that frontend components and external consumers have a reliable, self-documenting interface to interact with. Once the Docker stack is operational (Check [**Execution**](/docs/pages/03-execution.md) section), developers can dynamically explore, test, and validate API requests in real-time through the built-in **Swagger UI** accessible at `https://localhost/swagger-ui/index.html`.
 
 > ℹ️ **NOTE:** For quick reference without needing to spin up the application environment, a static HTML-rendered version of the API documentation is readily available [here](../openapi.json).
+
+&nbsp;
 
 #### ⚙️ Server-Side Architecture (Backend)
 
@@ -129,6 +189,8 @@ The backend is built with **Spring Boot**, implementing a robust multi-layered M
 * **Data Access Layer:** Utilizes the Repository Pattern (via Spring Data JPA) to abstract database operations and map them directly to the domain entities.
 
 ![Backend Architecture](../diagrams/v0.1/backend.png)
+
+&nbsp;
 
 #### 💻 Client-Side Architecture (Frontend)
 
@@ -163,6 +225,8 @@ The platform's reliability is validated through multiple automated testing layer
 - **Client-Side Testing:** **Jasmine** is utilized to test the Angular Standalone components and signals logic.
 - **End-to-End (E2E) Testing:** **Selenium** automates browser interactions to validate the complete system flow.
 
+&nbsp;
+
 #### 📊 Static Code Analysis & Results
 
 Code quality, vulnerabilities, and test coverage are continuously monitored using **SonarQube Cloud** integrated with the **JaCoCo** Maven plugin. Analyzing the initial project scans provides valuable insights into the architecture's health and the current technical debt.
@@ -194,6 +258,8 @@ The application's deployment strategy is designed for portability, automation, a
 * **Artifact Distribution:** The packaging process is fully automated via GitHub Actions workflows. The compiled Docker images and OCI artifacts are distributed publicly through DockerHub. You can access and pull the application artifacts directly from:
 **[Frict DockerHub](https://hub.docker.com/r/mjpulido/frict)**
 
+&nbsp;
+
 #### Future Roadmap: AWS & Continuous Deployment (CD)
 
 In upcoming development phases, the deployment architecture will evolve to a fully automated cloud-based model. The infrastructure will be provisioned and deployed on **Amazon Web Services (AWS)** to guarantee high availability, security, and performance.
@@ -224,6 +290,7 @@ In order to keep control of the pending tasks in each iteration, the project wil
   - Priorities: _Low, Medium, High, Very High_.
   - Task size: _XS, S, M, L, XL_.
 
+&nbsp;
 
 #### 📀 Git
 
@@ -244,6 +311,8 @@ Each branch contains will enclose the code changes made to implement a single fu
 
 
 3. Pull request to the main branch after feature implementation is completed. Before merging, client and server unit, integration and system tests will be automatically triggered.
+
+&nbsp;
 
 #### 🚧 Continuous Integration (CI) and Automated Publishing
 
@@ -282,6 +351,7 @@ This workflow automates the containerization, versioning, and distribution of th
 - **Build & Registry Push:** Safely builds the Docker image and pushes it to the public Docker Hub registry (`mjpulido/frict`).
 - **Compose OCI Artifacts:** Automatically parses the `docker-compose.yml` file to inject the exact generated image tag, and publishes the Compose file itself as an OCI artifact (e.g., `dev-compose` or `latest-compose`). This enables users to seamlessly deploy the entire stack remotely using the `docker compose -f oci://...` command without needing to download any files.
 
+&nbsp;
 
 #### 🏷️ Versioning
 
@@ -315,6 +385,7 @@ In order to be able to run this project locally, ensure you have the following t
 - **Docker** (for deploying the MinIO object storage container)
 - **MySQL Server & MySQL Workbench** (for local database management)
 
+&nbsp;
 
 #### Step-by-Step Execution
 
@@ -397,12 +468,13 @@ Once both servers are running, open your preferred web browser and navigate to:
 
 > ℹ️ NOTE: Because the application uses self-signed certificates for development, your browser will display security warnings. Click on "Advanced" and select "Proceed to localhost" in both URLs to allow image servicing and access the platform.
 
+&nbsp;
 
 #### Running Tests
 
 Automated tests can be executed separately for the backend and frontend components.
 
-**Backend Testing**
+##### Backend Testing
 ```bash
 # Access backend project
 cd backend
@@ -412,7 +484,9 @@ cd backend
 ```
 > ℹ️ **NOTE:** End-to-End (E2E) tests, such as `ProductWebE2ETest`, automate real browser interactions. Therefore, the Angular frontend development server using test Angular proxy (`ng serve -configuration testing`) must be running in a separate terminal before executing the backend tests for them to complete successfully.
 
-**Frontend Testing**
+&nbsp;
+
+##### Frontend Testing
 ```bash
 # Access frontend project
 cd frontend
@@ -420,7 +494,7 @@ cd frontend
 # Run all client tests
 ng test --watch=false
 ```
-
+&nbsp;
 
 #### Using API Endpoints
 
@@ -430,9 +504,17 @@ Once the Spring Boot application is running, follow these steps to test any endp
 
 1. Open your web browser and navigate to the Swagger UI panel:
 **`https://localhost/swagger-ui/index.html`**
+
+
 2. Scroll through the interface to explore the available controllers and expand the endpoint you wish to test (e.g., `GET /api/products/all`).
+
+
 3. Click the **"Try it out"** button located in the top right corner of the expanded endpoint block.
+
+
 4. Fill in any required parameters or modify the request body (Swagger automatically generates the correct JSON structure for you to edit).
+
+
 5. Click the **"Execute"** button to send the request to the local server. You will immediately see the server's response, status code, and headers directly below.
 
 &nbsp;

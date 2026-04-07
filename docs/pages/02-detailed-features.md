@@ -1,6 +1,6 @@
 ## 💻 Application Features
 
-### Basic features
+### 🟢 Basic features
 #### Shop Subsystem
 | Ready? | Basic feature description                       | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|-------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
@@ -20,6 +20,8 @@
 | ✅      | Create/Edit/Remove a payment card               |           | ✅               |               |                 |               |
 | ✅      | Create/Edit/Delete a personal product review    |           | ✅               |               |                 |               |
 | ✅      | Check system availability                       | ✅         | ✅               | ✅             | ✅               | ✅             |
+
+&nbsp;
 
 #### Organization Management Subsystem
 | Ready? | Basic feature description                             | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
@@ -53,8 +55,9 @@
 | ✅      | Soft delete any user account (anonymization)          |           |                 |               |                 | ✅             |
 | ✅      | Hard delete any user account                          |           |                 |               |                 | ✅             |
 
+&nbsp;
 
-### Intermediate features
+### 🟡 Intermediate features
 | Ready? | Intermediate feature description                       | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|--------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
 | ✅      | Search products by name                                | ✅         | ✅               | ✅             | ✅               | ✅             |
@@ -67,8 +70,9 @@
 | 🔄     | View product recommendations based on user preferences |           | ✅               |               |                 |               |
 | 🔄     | Download PDF invoices and resumes                      |           | ✅               | ✅             | ✅               | ✅             |
 
+&nbsp;
 
-### Advanced features
+### 🔴 Advanced features
 | Ready? | Advanced feature description                              | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|-----------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
 | 🔄     | Check shops, trucks and/or addresses approximate location |           | ✅               | ✅             | ✅               | ✅             |
