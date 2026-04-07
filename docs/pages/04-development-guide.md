@@ -183,6 +183,28 @@ The single, prominent outlier — the red bubble indicating over 5 hours of tech
 
 
 
+### 📡 Architecture Deployment
+
+#### Packaging & Distribution
+
+The application's deployment strategy is designed for portability, automation, and a seamless transition to cloud environments.
+
+* **Single Docker Image:** The entire application is packaged into a unified Docker image. This encapsulates both the compiled Angular client (frontend) and the Spring Boot server (backend), eliminating version mismatches and drastically simplifying the distribution process.
+* **Compose Orchestration:** The execution of the application container, alongside its required external services (MySQL and MinIO), is coordinated locally using **Docker Compose**.
+* **Artifact Distribution:** The packaging process is fully automated via GitHub Actions workflows. The compiled Docker images and OCI artifacts are distributed publicly through DockerHub. You can access and pull the application artifacts directly from:
+**[Frict DockerHub](https://hub.docker.com/r/mjpulido/frict)**
+
+#### Future Roadmap: AWS & Continuous Deployment (CD)
+
+In upcoming development phases, the deployment architecture will evolve to a fully automated cloud-based model. The infrastructure will be provisioned and deployed on **Amazon Web Services (AWS)** to guarantee high availability, security, and performance.
+
+Furthermore, the current Continuous Integration (CI) pipeline will be expanded to include **Continuous Deployment (CD)**. This will establish a fully automated end-to-end delivery cycle, where new releases and code changes pushed to the main branch are automatically tested, built, and seamlessly deployed directly to the AWS production environment without manual intervention.
+
+
+&nbsp;
+
+
+
 ### 📅 Development Process
 
 The project is being developed using an iterative and incremental process, which follows the Agile principles and applies some of the good coding practices described by XP (Extreme Programming) and Kanban methodologies, such as:
@@ -196,19 +218,18 @@ The project is being developed using an iterative and incremental process, which
 In order to keep control of the pending tasks in each iteration, the project will include:
 
 - **GitHub Issues**: Contains the main information about a task, such as its title, description, priority, deadline or even associated branch.
- 
 
 - **GitHub Project**: Contains each one of the issues to be completed during the iteration, divided by columns depending on its progress.
   - Columns: _To Do, In Progress, Under Review, Done_.
   - Priorities: _Low, Medium, High, Very High_.
   - Task size: _XS, S, M, L, XL_.
 
-#### 📀 Git Version control
+
+#### 📀 Git
 
 **Main branch**
 
 Remains stable and always available for deployment.
-
 
 **Branching strategy** 
 
@@ -224,9 +245,9 @@ Each branch contains will enclose the code changes made to implement a single fu
 
 3. Pull request to the main branch after feature implementation is completed. Before merging, client and server unit, integration and system tests will be automatically triggered.
 
-#### 🚧 Continuous Integration (CI)
+#### 🚧 Continuous Integration (CI) and Automated Publishing
 
-Project testing and static code analysis is automated by using CI/CD pipelines and GitHub Actions workflows. 
+Project testing, static code analysis and artifact publishing is automated by using CI/CD pipelines and GitHub Actions workflows. 
 
 #### Unit Testing On Commit (unit_test_on_commit.yml)
 
@@ -260,6 +281,23 @@ This workflow automates the containerization, versioning, and distribution of th
   - A custom tag combining the branch name, timestamp, and commit SHA for manual executions.
 - **Build & Registry Push:** Safely builds the Docker image and pushes it to the public Docker Hub registry (`mjpulido/frict`).
 - **Compose OCI Artifacts:** Automatically parses the `docker-compose.yml` file to inject the exact generated image tag, and publishes the Compose file itself as an OCI artifact (e.g., `dev-compose` or `latest-compose`). This enables users to seamlessly deploy the entire stack remotely using the `docker compose -f oci://...` command without needing to download any files.
+
+
+#### 🏷️ Versioning
+
+The application follows a strictly automated versioning and release procedure powered by GitHub Actions. This ensures consistency between the source code repository and the distributed artifacts.
+
+**Release Procedure:**
+* **Automated Releases:** Whenever a new Release is formally published via the GitHub repository, the `oci_artifact_publishing.yml` workflow is automatically triggered. It handles the entire build process and publishes both the Docker image and the Compose OCI artifact matching the specific release version tag (e.g., `v0.1`).
+* **Latest Tagging:** During this formal release cycle, the workflow automatically updates the global `latest` and `latest-compose` tags to point to this newly published version. This guarantees that users downloading the default image always receive the most stable production build.
+* **Continuous Development:** Routine merges to the `main` branch automatically build and update the `dev` tag, providing a continuously updated environment for testing without interfering with production releases.
+* **Manual Artifact Publishing:** Developers can manually execute the workflow via `workflow_dispatch` if immediate artifact generation is required. This triggers a custom build that dynamically tags the image and Compose file using a combination of the branch name, timestamp, and commit SHA for precise tracking and isolated testing.
+
+**Version History:**
+
+| Version    | Release Date | High-Level Features & Changelog                                     |
+|:-----------|:-------------|:--------------------------------------------------------------------|
+| **v0.1**   | 07/04/2026  | Main core systems enablement and basic app features implementation. |
 
 &nbsp;
 
