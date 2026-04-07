@@ -53,7 +53,6 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 - [**Java**](https://www.java.com/en/): Used as the main programming language, offers a robust object-oriented structure and high performance.
 - [**Maven**](https://maven.apache.org/): Simplifies project building, packaging, testing, and dependency management.
 - [**Lombok**](https://projectlombok.org/): Reduces boilerplate Java code (such as getters, setters, and constructors) through annotations, keeping the backend codebase clean and maintainable.
-- [**Swagger (OpenAPI)**](https://swagger.io/): Automatically generates interactive and up-to-date API documentation directly from the codebase.
 - [**Spring Boot Actuator**](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html): Provides built-in endpoints for real-time application monitoring and health checks.
 - [**MySQL**](https://www.mysql.com/): Relational database engine that provides reliable data persistence and dynamic schema management.
 - [**MinIO**](https://min.io/): High-performance, S3-compatible object storage server used for efficiently handling and serving multimedia assets.
@@ -90,6 +89,8 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 - [**IntelliJ IDEA**](https://www.jetbrains.com/idea/): Powerful IDE for backend development and deep integration with the Spring ecosystem.
 - [**MySQL Workbench**](https://www.mysql.com/products/workbench/): Facilitates database design and visual modeling for managing the MySQL schema.
 - [**Git**](https://git-scm.com/): Enables strict version control and collaboration across the development lifecycle.
+- [**Swagger (OpenAPI)**](https://swagger.io/): Automatically generates interactive and up-to-date API documentation directly from the codebase.
+
 
 &nbsp;
 
@@ -144,6 +145,8 @@ The frontend is a modern **Angular** application built with Standalone Component
 
 ##### Common Components
 ![Common Components Architecture](../diagrams/v0.1/frontend-common.png)
+
+&nbsp;
 
 
 
@@ -228,159 +231,171 @@ Project testing and static code analysis is automated by using CI/CD pipelines a
 #### Unit Testing On Commit (unit_test_on_commit.yml)
 
 - Runs all **unit tests** with **every commit** made in a feature branch, or manually
-
-
 - Tests server and client separately to optimize workflow duration
-
-
 - Does not run any component during the tests
 
 #### Full System Testing On Pull Request (full_test_on_pull_request.yml)
 
 - Runs **before merging a pull request** from a feature branch to the main branch, or manually
-
-
 - Runs all **unit, integration and e2e tests**
-
-
 - Backend component is started before integration tests
-
-
 - Frontend component is started before e2e UI test
 
 #### SonarQube Static Code Analysis (sonar_analysis.yml)
 
 - Runs only manually (due to its complexity and duration)
-
-
 - Runs all unit, integration and e2e tests
-
-
 - Backend and frontend components are started before the analysis
-
-
 - Auxiliar MySQL Docker container is built before the analysis
-
-
 - JaCoCo coverage tool is used during the analysis, so SonarQube can show coverage metrics
+
+#### Docker Image and OCI Artifact Publishing (oci_artifact_publishing.yml)
+
+This workflow automates the containerization, versioning, and distribution of the application to Docker Hub.
+
+- **Triggers:** Runs automatically when code is pushed or merged into the `main` branch, when a new GitHub Release is published, or manually via workflow dispatch.
+- **Smart Tagging:** Dynamically resolves and assigns image tags based on the trigger context:
+  - `dev` for standard pushes/merges into the main branch.
+  - The specific release tag (e.g., `v1.0.0`) alongside the `latest` tag when a formal release is published.
+  - A custom tag combining the branch name, timestamp, and commit SHA for manual executions.
+- **Build & Registry Push:** Safely builds the Docker image and pushes it to the public Docker Hub registry (`mjpulido/frict`).
+- **Compose OCI Artifacts:** Automatically parses the `docker-compose.yml` file to inject the exact generated image tag, and publishes the Compose file itself as an OCI artifact (e.g., `dev-compose` or `latest-compose`). This enables users to seamlessly deploy the entire stack remotely using the `docker compose -f oci://...` command without needing to download any files.
 
 &nbsp;
 
 
 
-### 🏁 Code Environment and Execution
+### 🏁 Development Environment Setup
 
-#### Initial requirements
-In order to be able to run this project, you must have installed:
-- Git
-- Node.js (includes npm, Node Package Manager)
-- Maven for Windows
-- Docker
-- Angular CLI
-
-#### Command-based execution
-
-1. Open a new terminal window.
+#### Initial Requirements
+In order to be able to run this project locally, ensure you have the following tools installed on your system:
+- **Git**
+- **Node.js** (includes npm)
+- **Angular CLI**
+- **Java JDK** (version compatible with your Spring Boot setup)
+- **Maven** (optional, as the repository includes the Maven Wrapper)
+- **Docker** (for deploying the MinIO object storage container)
+- **MySQL Server & MySQL Workbench** (for local database management)
 
 
-2. Download and access the project repository
+#### Step-by-Step Execution
 
-```
-# Install all necessary files
+**1. Download and access the project repository**
+Open a new terminal window and clone the repository:
+```bash
+# Clone the repository
 git clone https://github.com/codeurjc-students/2025-2025-Frict.git Frict
 
 # Access the project folder
 cd Frict
 ```
 
-3. Set up the MySQL database
+**2. Set up the MySQL Database**
+The application requires a relational database to store its data. We will use MySQL Workbench to create it:
+1. Open **MySQL Workbench** and connect to your local MySQL Server instance.
+2. Open a new SQL tab and execute the following command to create the schema:
+   ```sql
+   CREATE SCHEMA `Frict` ;
+   ```
+3. Take note of your local MySQL connection URL (usually `jdbc:mysql://localhost:3306/Frict`), username, and password, as you will need them for the environment configuration.
 
-```
-# Create a Docker container with a ready-to-use MySQL database and start it
-docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=rootpass -e MYSQL_DATABASE=Frict -e MYSQL_USER=appuser -e MYSQL_PASSWORD=apppass -p 3306:3306 mysql:8.0
-```
-> ℹ️ NOTE: In this case, database credentials are the default ones:
-> - Root password: _rootpass_
-> - User: _appuser_
-> - Password: _apppass_
-> 
-> This credentials could be modified as desired, considerably increasing database security.
-
-4. Modify `application.properties` file
-
-If you decided to change the database credentials in the previous step, these credentials must be also updated in `application.properties` file within Spring backend. 
-
-```
-spring.datasource.username=appuser # Set your custom username
-spring.datasource.password=apppass # Set your custom password
+**3. Deploy the MinIO Object Storage**
+The system uses MinIO for handling image uploads. Spin up a local container using Docker:
+```bash
+docker run -d --name minio \
+  -p 9000:9000 -p 9001:9001 \
+  -e MINIO_ROOT_USER=admin \
+  -e MINIO_ROOT_PASSWORD=adminpass \
+  minio/minio server /data --console-address ":9001"
 ```
 
-5. Run the backend component
+**4. Configure the Environment Variables (`.env`)**
+Thanks to the `spring.config.import` property, Spring Boot natively parses `.env` files. Create a file named `.env` inside the `backend` folder and populate it with the following required variables:
+
+```env
+# Database Credentials
+DATASOURCE_URL=jdbc:mysql://localhost:3306/Frict
+DATASOURCE_PASSWORD=your_mysql_password
+
+# Security Keys
+JWT_SECRET=your_super_secret_jwt_key_here
+CARDS_DB_KEY=your_encryption_key_for_cards
+
+# MinIO Storage Settings
+S3_ENDPOINT=http://localhost:9000
+S3_PUBLIC_URL=http://localhost:9000
+S3_ACCESS_KEY=admin
+S3_SECRET_KEY=adminpass
+S3_BUCKET_NAME=frict-bucket
+
+# Email & Auth Setup
+SENDER_MAIL_PORT=587
+SENDER_MAIL_ADDRESS=your_email@example.com
+SENDER_MAIL_PASSWORD=your_app_password
+GOOGLE_AUTH_CLIENT_ID=your_google_client_id
 ```
-cd backend #Access backend project
-mvnw spring-boot:run #Start the Spring application
+> ℹ️ **NOTE:** If you run the application directly via your IDE's "Run" button instead of Maven, you might need to install an EnvFile plugin (like the one available in IntelliJ IDEA) to inject these variables during execution.
+
+**5. Run the Backend Component**
+Open a terminal in the backend directory and launch the Spring Boot application using the Maven Wrapper:
+```bash
+cd backend
+./mvnw spring-boot:run
 ```
+> ℹ️ NOTE: If you are on Windows, use `mvnw.cmd spring-boot:run`).
 
-6. Run the frontend component
-```
-cd frontend #Access frontend project
-npm install #Installs all necessary dependencies to run the Angular project
-ng serve --proxy-config proxy.conf.json #Starts the Angular project using default proxy
-```
-
-7. Open application in browser
-
-Go to https://localhost:4202 in your preferred web browser to access the main page of the application.
-
-#### Running tests
-Current tests can be run either for the backend component:
-```
-cd backend #Access backend project
-mvn test #Run all tests
-```
-
-Or for the backend component:
-```
-cd frontend #Access frontend project
-ng test --watch=false #Run all tests
-```
-> ℹ️ NOTE: ProductSystemUITest class requires the frontend component to be up before running its tests for them to be completed successfully. 
-
-
-#### Using API endpoints
-Fully implemented API endpoints are available when backend component is running. Current available endpoints are described below.
-```
-#Get a product by its id (GET)
-https://localhost:443/api/products/1 #Gets information about product with id 1
-
-#Get all available products (GET)
-https://localhost:443/api/products/all
-
-#Create a new product (POST)
-https://localhost:443/api/products #Creates a product using provided information
-
-#Update an existing product (PUT)
-https://localhost:443/api/products/1 #Updates the product with id 1 information using the new data provided
-
-#Delete an existing product (DELETE)
-https://localhost:443/api/products/1 #Deletes all the information associated with the product with id 1
+**6. Run the Frontend Component**
+Open a new terminal window in the frontend directory, install the required dependencies, and launch the Angular development server:
+```bash
+cd frontend
+npm install
+ng serve --proxy-config proxy.conf.json
 ```
 
-> ℹ️ NOTE: Product creation and update requires the product data to be provided in the request body. This body should match the following structure:
-> 
->{
-> 
-> "referenceCode": "4A5",
-> 
-> "name": "Android tablet",
->
-> "description": "Entertainment with a bigger screen",
-> 
-> "price": 130.0
-> 
-> }
+**7. Open the application in your browser**
+Once both servers are running, open your preferred web browser and navigate to:
+- **`https://localhost:4202`** (web client)
+- **`https://localhost:9000`** (MinIO image service)
 
-> ℹ️ NOTE: To make this process easier and faster, complete fully-functional endpoints list is available at frict.postman_collection.json file, which could be easily imported by Postman.
+> ℹ️ NOTE: Because the application uses self-signed certificates for development, your browser will display security warnings. Click on "Advanced" and select "Proceed to localhost" in both URLs to allow image servicing and access the platform.
+
+
+#### Running Tests
+
+Automated tests can be executed separately for the backend and frontend components.
+
+**Backend Testing**
+```bash
+# Access backend project
+cd backend
+
+# Run all server tests
+./mvnw test
+```
+> ℹ️ **NOTE:** End-to-End (E2E) tests, such as `ProductWebE2ETest`, automate real browser interactions. Therefore, the Angular frontend development server using test Angular proxy (`ng serve -configuration testing`) must be running in a separate terminal before executing the backend tests for them to complete successfully.
+
+**Frontend Testing**
+```bash
+# Access frontend project
+cd frontend
+
+# Run all client tests
+ng test --watch=false
+```
+
+
+#### Using API Endpoints
+
+Since the backend integrates the **OpenAPI** standard and Swagger UI, there is no need to manually craft HTTP requests or memorize JSON payload structures. The entire API is dynamically documented and fully interactive directly from your browser.
+
+Once the Spring Boot application is running, follow these steps to test any endpoint:
+
+1. Open your web browser and navigate to the Swagger UI panel:
+**`https://localhost/swagger-ui/index.html`**
+2. Scroll through the interface to explore the available controllers and expand the endpoint you wish to test (e.g., `GET /api/products/all`).
+3. Click the **"Try it out"** button located in the top right corner of the expanded endpoint block.
+4. Fill in any required parameters or modify the request body (Swagger automatically generates the correct JSON structure for you to edit).
+5. Click the **"Execute"** button to send the request to the local server. You will immediately see the server's response, status code, and headers directly below.
 
 &nbsp;
 
