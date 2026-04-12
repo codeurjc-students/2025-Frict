@@ -41,7 +41,22 @@ services:
       start_period: 30s
 
   # ----------------------------------------------------------------
-  # 3. MINIO HTTPS SERVICE
+  # 3. DATABASE SERVICE (MONGODB)
+  # ----------------------------------------------------------------
+  mongodb:
+    image: mongo:latest
+    container_name: frict-mongo-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    volumes:
+      - mongodb_data_dev:/data/db
+
+  # ----------------------------------------------------------------
+  # 4. MINIO HTTPS SERVICE
   # ----------------------------------------------------------------
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -69,7 +84,7 @@ services:
       retries: 5
 
   # ----------------------------------------------------------------
-  # 4. APPLICATION (Spring Boot + Angular)
+  # 5. APPLICATION (Spring Boot + Angular)
   # ----------------------------------------------------------------
   app:
     image: mjpulido/frict:dev
@@ -84,10 +99,13 @@ services:
       - "443:8443"
 
     environment:
-      # --- Database ---
+      # --- MySQL Database ---
       DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
       DATASOURCE_USERNAME: user_dev
       DATASOURCE_PASSWORD: password_dev
+
+      # --- MongoDB Database ---
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin
 
       # --- MinIO (Mapped to S3 variables) ---
       S3_ENDPOINT: https://minio:9000
@@ -98,7 +116,7 @@ services:
 
       # --- Security (Fixed test values) ---
       JWT_SECRET: dev_jwt_secret_key_for_testing_purposes_only
-      CARDS_DB_KEY: dev_cards_encryption_key_12345
+      CARDS_DB_KEY: 1234567890123456
 
       # --- Email and Auth (External variables required) ---
       SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}
@@ -111,8 +129,11 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      mongodb:
+        condition: service_started
 
 volumes:
   mysql_data_dev:
   minio_data_https:
   minio_certs:
+  mongodb_data_dev:
