@@ -18,6 +18,7 @@ import {Select} from 'primeng/select';
 import { Popover } from 'primeng/popover';
 import {NotificationService} from '../../../services/notification.service';
 import { HttpClient } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
@@ -37,7 +38,8 @@ import { HttpClient } from '@angular/common/http';
     NgTemplateOutlet,
     NgClass,
     Select,
-    Popover
+    Popover,
+    DatePipe
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'

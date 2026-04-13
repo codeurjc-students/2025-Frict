@@ -120,7 +120,7 @@
                       <div class="flex flex-col gap-1.5 flex-1 min-w-0">
                         <span class="font-semibold text-white text-sm line-clamp-1" [title]="notif.subject">{{ notif.subject }}</span>
                         <span class="text-surface-300 text-xs line-clamp-2" [title]="notif.description">{{ notif.description }}</span>
-                        <span class="text-surface-500 text-[10px] mt-0.5"><i class="pi pi-clock text-[9px] mr-1"></i>{{ notif.timestamp }}</span>
+                        <span class="text-surface-500 text-[10px] mt-0.5"><i class="pi pi-clock text-[9px] mr-1"></i>{{ notif.timestamp | date:'dd/MM/yyyy HH:mm' }}</span>
                       </div>
 
                       <p-button (click)="notificationService.markAsRead(notif.id); $event.stopPropagation()"
