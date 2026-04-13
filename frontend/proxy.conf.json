@@ -3,7 +3,8 @@
     "target": "https://localhost:443",
     "secure": false,
     "logLevel": "debug",
-    "changeOrigin": true
+    "changeOrigin": true,
+    "ws": true
   },
   "/actuator/**": {
     "target": "https://localhost:443",

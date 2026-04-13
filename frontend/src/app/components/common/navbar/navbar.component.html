@@ -79,12 +79,71 @@
           </p-select>
         </div>
 
-        <p-button (click)="menu.toggle($event)" iconPos="left" styleClass="h-11 !text-white !bg-transparent !border-none hover:!bg-white/20">
-          <ng-template pTemplate="content">
-            <i class="pi pi-bell text-xl"></i>
-          </ng-template>
-        </p-button>
-        <p-menu #menu [model]="items" [popup]="true" styleClass="!bg-surface-800 !border-surface-700 !mt-2" appendTo="body"/>
+        <div class="relative flex items-center">
+
+          <p-button (click)="notifPopover.toggle($event)" iconPos="left" styleClass="h-11 !text-white !bg-transparent !border-none hover:!bg-white/20 relative">
+            <ng-template pTemplate="content">
+              <i class="pi pi-bell text-xl"></i>
+              @if (notificationService.unreadCount() > 0) {
+                <span class="absolute top-1 right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold h-4 min-w-[16px] rounded-full px-1 border border-surface-800">
+                  {{ notificationService.unreadCount() }}
+                </span>
+              }
+            </ng-template>
+          </p-button>
+
+          <button (click)="dispararPrueba()" class="bg-red-500 text-white px-2 py-1 rounded text-xs mr-4">
+            Probar WS
+          </button>
+
+          <div #ancla class="absolute top-full right-0 w-0 h-0"></div>
+
+          <p-popover #notifPopover
+                     [appendTo]="ancla"
+                     styleClass="!bg-surface-800 !border !border-surface-600 !shadow-xl w-80 !rounded-lg mt-2 !absolute !top-0 !right-0 !left-auto">
+
+            <div class="flex flex-col">
+              <div class="p-3 border-b border-surface-700 flex justify-between items-center bg-surface-800 rounded-t-lg">
+                <span class="font-bold text-white text-base">Notificaciones</span>
+                <span class="text-xs text-surface-400 font-medium">{{ notificationService.unreadCount() }} nuevas</span>
+              </div>
+
+              <div class="max-h-[350px] overflow-y-auto bg-surface-800">
+                @if (notificationService.unreadCount() === 0) {
+                  <div class="p-8 text-center text-surface-400 flex flex-col items-center justify-center gap-3">
+                    <i class="pi pi-check-circle text-4xl opacity-40"></i>
+                    <span class="text-sm font-medium">No tienes notificaciones nuevas</span>
+                  </div>
+                } @else {
+                  @for (notif of notificationService.unreadNotifications(); track notif.id) {
+                    <div class="p-4 border-b border-surface-700/50 hover:bg-surface-700 transition-colors flex justify-between items-start gap-3 group">
+                      <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+                        <span class="font-semibold text-white text-sm line-clamp-1" [title]="notif.subject">{{ notif.subject }}</span>
+                        <span class="text-surface-300 text-xs line-clamp-2" [title]="notif.description">{{ notif.description }}</span>
+                        <span class="text-surface-500 text-[10px] mt-0.5"><i class="pi pi-clock text-[9px] mr-1"></i>{{ notif.timestamp }}</span>
+                      </div>
+
+                      <p-button (click)="notificationService.markAsRead(notif.id); $event.stopPropagation()"
+                                icon="pi pi-check"
+                                [rounded]="true" [text]="true"
+                                styleClass="!p-0 !w-8 !h-8 !text-surface-400 hover:!text-green-400 hover:!bg-green-400/10 transition-colors shrink-0"
+                                title="Marcar como leída">
+                      </p-button>
+                    </div>
+                  }
+                }
+              </div>
+
+              <div class="p-2 border-t border-surface-700 bg-surface-800 rounded-b-lg">
+                <p-button label="Ver todas"
+                          (click)="notifPopover.hide()"
+                          routerLink="/alerts"
+                          styleClass="w-full !bg-transparent hover:!bg-surface-700 !text-primary-400 border-none !text-sm !font-semibold h-10 transition-colors">
+                </p-button>
+              </div>
+            </div>
+          </p-popover>
+        </div>
 
         <div *ngIf="!authService.isAdmin() && !authService.isManager() && !authService.isDriver()">
           <p-button iconPos="left" styleClass="!bg-primary-500/90 hover:!bg-primary/70 border-none h-11 !text-white rounded-lg px-3" routerLink="/cart">

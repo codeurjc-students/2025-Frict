@@ -138,6 +138,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/stats/orders").hasAnyRole("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver)
                         .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyRole("ADMIN", "MANAGER") // (Admin, Manager)
 
+                        // --- 10. WEBSOCKETS ---
+                        .requestMatchers("/api/v1/ws/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/notifications/test").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read").authenticated()
+                        
                         .anyRequest().denyAll() // Block any URL that is not contained in this list
                 )
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt))
