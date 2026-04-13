@@ -52,8 +52,21 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=password123
+    command: >
+      sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+      chmod 400 /data/keyfile &&
+      chown 999:999 /data/keyfile &&
+      exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all"
     volumes:
       - mongodb_data_dev:/data/db
+    healthcheck:
+      test: >
+        mongosh --username admin --password password123 --authenticationDatabase admin 
+        --eval "rs.status().ok || rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok" --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # ----------------------------------------------------------------
   # 4. MINIO HTTPS SERVICE
@@ -105,7 +118,7 @@ services:
       DATASOURCE_PASSWORD: password_dev
 
       # --- MongoDB Database ---
-      MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin&replicaSet=rs0
 
       # --- MinIO (Mapped to S3 variables) ---
       S3_ENDPOINT: https://minio:9000
@@ -130,7 +143,7 @@ services:
       minio:
         condition: service_healthy
       mongodb:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   mysql_data_dev:

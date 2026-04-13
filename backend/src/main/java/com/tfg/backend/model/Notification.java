@@ -26,15 +26,20 @@ public class Notification {
     private String subject;
     private String description;
 
+    // EL NUEVO CAMPO
+    private NotificationType type;
+
     @Indexed(expireAfter = "30d")
     private Instant timestamp;
 
     private boolean isRead;
 
-    public Notification(String username, String subject, String description) {
+    // Constructor actualizado
+    public Notification(String username, String subject, String description, NotificationType type) {
         this.username = username;
         this.subject = subject;
         this.description = description;
+        this.type = type;
         this.timestamp = Instant.now();
         this.isRead = false;
     }

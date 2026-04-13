@@ -2,6 +2,7 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.model.Notification;
 import com.tfg.backend.dto.NotificationDTO;
+import com.tfg.backend.model.NotificationType;
 import com.tfg.backend.repository.NotificationRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tfg.backend.utils.NotificationWebSocketHandler;
@@ -27,10 +28,10 @@ public class NotificationService {
         return this.notificationRepository.findByUsernameAndIsReadFalseOrderByTimestampDesc(username);
     }
 
-    public void createAndSendNotification(String username, String subject, String description) {
+    public void createAndSendNotification(String username, String subject, String description, NotificationType type) {
 
         // 1. Save in MongoDB
-        Notification notification = new Notification(username, subject, description);
+        Notification notification = new Notification(username, subject, description, type);
         Notification savedNotification = notificationRepository.save(notification);
 
         // 2. Map to NotificationDTO
@@ -39,7 +40,8 @@ public class NotificationService {
                 savedNotification.getSubject(),
                 savedNotification.getDescription(),
                 savedNotification.getTimestamp(),
-                savedNotification.isRead()
+                savedNotification.isRead(),
+                savedNotification.getType()
         );
 
         // 3. Emit via WebSocket

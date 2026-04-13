@@ -46,6 +46,7 @@ public class UserService {
     public boolean isBannedByEmail(String email) { return userRepository.existsByEmailAndIsBannedTrue(email); }
     public boolean isDeletedByEmail(String email) { return userRepository.existsByEmailAndIsDeletedTrue(email); }
     public List<User> findAllByRole(String role){ return userRepository.findByRolesContaining(role); }
+    public List<String> getAllAdminUsernames() { return userRepository.findUsernamesByRole("ADMIN"); } //Usernames only
 
     public List<User> findAvailableDrivers() {
         return userRepository.findByRolesContainingAndAssignedTruckIsNull("DRIVER");

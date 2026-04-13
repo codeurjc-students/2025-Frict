@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.NotificationDTO;
 import com.tfg.backend.model.Notification;
+import com.tfg.backend.model.NotificationType;
 import com.tfg.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,8 @@ public class NotificationRestController {
         notificationService.createAndSendNotification(
                 username,
                 "Prueba correcta",
-                "Spring y Angular se están comunicando correctamente mediante WebSockets."
+                "Spring y Angular se están comunicando correctamente mediante WebSockets.",
+                NotificationType.USER
         );
 
         return ResponseEntity.ok(Map.of("message", "Notificación disparada al usuario: " + username));
@@ -42,7 +44,7 @@ public class NotificationRestController {
 
         // Map to DTO
         List<NotificationDTO> dtos = unread.stream()
-                .map(n -> new NotificationDTO(n.getId(), n.getSubject(), n.getDescription(), n.getTimestamp(), n.isRead()))
+                .map(n -> new NotificationDTO(n.getId(), n.getSubject(), n.getDescription(), n.getTimestamp(), n.isRead(), n.getType()))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);

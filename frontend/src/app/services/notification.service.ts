@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Notification } from '../models/notification.model';
 import { HttpClient } from '@angular/common/http';
@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
@@ -29,6 +29,10 @@ export class NotificationService {
         this.disconnect();
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.disconnect();
   }
 
   private loadInitialHistory() {

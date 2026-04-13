@@ -2,6 +2,8 @@ package com.tfg.backend.repository;
 
 import com.tfg.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,4 +30,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Long countByIsDeletedTrue();
 
     List<User> findByRolesContaining(String role);
+
+    @Query("SELECT u.username FROM User u JOIN u.roles r WHERE r = :role")
+    List<String> findUsernamesByRole(@Param("role") String role);
 }
