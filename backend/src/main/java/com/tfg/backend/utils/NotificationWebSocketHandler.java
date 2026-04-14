@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
@@ -25,18 +26,26 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
         String username = (String) session.getAttributes().get("userId");
 
         if (username != null) {
-            userSessions.computeIfAbsent(username, k -> new CopyOnWriteArraySet<>()).add(session);
-            log.info("✅ WebSocket opened and saved for user: " + username);
+            // 1. Envolvemos la sesión cruda para protegerla de colisiones (TEXT_PARTIAL_WRITING)
+            WebSocketSession safeSession = new ConcurrentWebSocketSessionDecorator (
+                    session,
+                    10000, // Tiempo límite si hay atasco (10s)
+                    65536  // Tamaño de la cola de espera (64KB)
+            );
+
+            // 2. Guardamos la sesión PROTEGIDA en tu estructura de múltiples dispositivos
+            userSessions.computeIfAbsent(username, k -> new CopyOnWriteArraySet<>()).add(safeSession);
+
+            log.info("✅ WebSocket opened and saved securely for user: " + username);
         } else {
             try {
-                log.warn("❌ Closing WS seccion: userId not found in attributes.");
+                log.warn("❌ Closing WS session: userId not found in attributes.");
                 session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthenticated"));
             } catch (IOException e) {
                 log.error("Error logging out", e);
             }
         }
     }
-
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String username = (String) session.getAttributes().get("userId");
@@ -58,7 +67,9 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
             for (WebSocketSession session : sessions) {
                 if (session.isOpen()) {
                     try {
-                        session.sendMessage(new TextMessage(messageJson));
+                        synchronized (session) {
+                            session.sendMessage(new TextMessage(messageJson));
+                        }
                     } catch (IOException e) {
                         log.error("Error sending message via WS to user: " + username, e);
                     }

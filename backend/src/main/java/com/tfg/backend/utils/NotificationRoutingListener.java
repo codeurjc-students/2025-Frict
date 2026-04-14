@@ -56,6 +56,18 @@ public class NotificationRoutingListener {
             notifySafe(List.of(event.getManagerUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
             notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
         }
+        else if (event.getAction() == EventAction.CREATED) {
+            String subject = "¡Nuevo Pedido Recibido!";
+            String description = "El usuario " + event.getActorUsername() + " ha realizado el pedido #" + orderId + ".";
+
+            log.info("Enrutando notificación de PEDIDO CREADO por el usuario: {}", event.getActorUsername());
+
+            // 1. Avisamos al Manager de la tienda seleccionada
+            notifySafe(List.of(event.getManagerUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
+
+            // 2. Avisamos a la cúpula (todos los admins)
+            notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
+        }
     }
 
     // ==========================================

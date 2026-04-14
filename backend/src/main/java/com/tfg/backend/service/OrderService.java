@@ -6,6 +6,7 @@ import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.utils.SaveResult;
 import com.tfg.backend.utils.StatDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ public class OrderService {
     private final OrderItemService orderItemService;
     private final ProductService productService;
     private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // --- READ-ONLY METHODS ---
 
@@ -137,13 +139,31 @@ public class OrderService {
         newOrder.setFullSendingAddress(address);
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
 
-        //Add the
         double orderTotal = newOrder.getTotalCost();
         selectedShop.setAssignedBudget(selectedShop.getAssignedBudget() + orderTotal);
 
         Order savedOrder = orderRepository.save(newOrder);
 
+        String managerUsername = selectedShop.getAssignedManager() != null ?
+                selectedShop.getAssignedManager().getUsername() : null;
+
+        // Asumiendo que el ID de Order es Long, lo pasamos a String para el evento
+        OrderEvent orderEvent = new OrderEvent(
+                String.valueOf(savedOrder.getId()),
+                null,                      // No hay estado anterior
+                "PENDING",                 // O savedOrder.getStatus() si tienes un campo de estado
+                managerUsername,           // Texto plano extraído
+                null,                      // Aún no hay conductor asignado
+                loggedUser.getUsername(),  // Quién hace la acción
+                "USER",                    // Rol del actor
+                EventAction.CREATED        // ¡Nueva Acción!
+        );
+        eventPublisher.publishEvent(orderEvent);
+
         emailService.sendOrderConfirmation(loggedUser.getEmail(), loggedUser.getName(), savedOrder.getReferenceCode(), savedOrder.getItems(), savedOrder.getTotalCost());
+
+
+
         return savedOrder;
     }
 
