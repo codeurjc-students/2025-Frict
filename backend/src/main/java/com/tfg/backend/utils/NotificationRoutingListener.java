@@ -9,7 +9,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 @Slf4j
@@ -17,104 +18,106 @@ import java.util.List;
 public class NotificationRoutingListener {
 
     private final NotificationService notificationService;
-    private final UserService userService; // Necesario para buscar la lista global de ADMINS
+    private final UserService userService;
 
     // ==========================================
-    // 1. MANEJADOR DE PEDIDOS (ORDER)
+    // 1. ORDER NOTIFICATIONS HANDLER
     // ==========================================
     @Async
     @EventListener
     public void handleOrderEvent(OrderEvent event) {
         String orderId = event.getOrderId();
-        List<String> allAdmins = userService.getAllAdminUsernames();
 
-        if (event.getAction() == EventAction.STATUS_CHANGED) {
-            String subject = "Order #" + orderId + " Status Updated";
-            String description = "Status changed from " + event.getOldStatus() + " to " + event.getNewStatus();
+        // Set involved audience: customer, manager, driver (if any) and all admins
+        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
+        if (event.getManagerUsername() != null) involvedUsers.add(event.getManagerUsername());
+        if (event.getDriverUsername() != null) involvedUsers.add(event.getDriverUsername());
+        if (event.getCustomerUsername() != null) involvedUsers.add(event.getCustomerUsername());
 
-            log.info("Routing ORDER STATUS notification triggered by: {}", event.getActorRole());
+        // Set message
+        String subject = "";
+        String description = "";
 
-            switch (event.getActorRole()) {
-                case "MANAGER":
-                    notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
-                    notifySafe(List.of(event.getDriverUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
-                    break;
-                case "ADMIN":
-                    notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
-                    notifySafe(List.of(event.getManagerUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
-                    notifySafe(List.of(event.getDriverUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
-                    break;
-                default:
-                    notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
-                    notifySafe(List.of(event.getManagerUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
-                    break;
+        switch (event.getAction()){
+            case CREATED -> {
+                subject = "Nuevo pedido recibido";
+                description = "El usuario " + event.getActorUsername() + " ha realizado el pedido #" + orderId + ".";
+            }
+            case ASSIGNED -> {
+                subject = "Nuevo pedido asignado";
+                description = "El pedido #" + orderId + " ha sido asignado a tu camión.";
+            }
+            case STATUS_CHANGED -> {
+                subject = "Estado de pedido #" + orderId + " actualizado";
+                description = "El estado ha pasado de " + event.getOldStatus() + " a " + event.getNewStatus() + ".";
+            }
+            case NEW_COMMENT -> {
+                subject = "Nuevo comentario en pedido #" + orderId;
+                description = "El pedido #" + orderId + " tiene una nueva actualización.";
+            }
+            case DELETED -> {
+                subject = "Pedido histórico #" + orderId + " eliminado";
+                description = "El pedido ha sido eliminado del historial de compras.";
             }
         }
-        else if (event.getAction() == EventAction.ASSIGNED) {
-            String subject = "New Order Assigned";
-            String description = "Order #" + orderId + " has been assigned to your store.";
-            notifySafe(List.of(event.getManagerUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
-            notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
-        }
-        else if (event.getAction() == EventAction.CREATED) {
-            String subject = "¡Nuevo Pedido Recibido!";
-            String description = "El usuario " + event.getActorUsername() + " ha realizado el pedido #" + orderId + ".";
 
-            log.info("Enrutando notificación de PEDIDO CREADO por el usuario: {}", event.getActorUsername());
-
-            // 1. Avisamos al Manager de la tienda seleccionada
-            notifySafe(List.of(event.getManagerUsername()), subject, description, NotificationType.ORDER, event.getActorUsername());
-
-            // 2. Avisamos a la cúpula (todos los admins)
-            notifySafe(allAdmins, subject, description, NotificationType.ORDER, event.getActorUsername());
+        // Notify users
+        if (!subject.isEmpty()) {
+            notifySafe(involvedUsers, subject, description, NotificationType.ORDER, event.getActorUsername());
         }
     }
 
     // ==========================================
-    // 2. MANEJADOR DE CAMIONES (TRUCK)
+    // 2. TRUCK NOTIFICATIONS HANDLER
     // ==========================================
     @Async
     @EventListener
     public void handleTruckEvent(TruckEvent event) {
-        List<String> allAdmins = userService.getAllAdminUsernames();
+        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
+        if (event.getDriverUsername() != null) involvedUsers.add(event.getDriverUsername());
+        if (event.getTargetStoreManagerUsername() != null) involvedUsers.add(event.getTargetStoreManagerUsername());
+
+        String subject = "";
+        String description = "";
 
         if (event.getAction() == EventAction.ASSIGNED) {
-            String subject = "Truck Assignment";
-            String description = "You have been assigned to Truck " + event.getLicensePlate();
-
-            notifySafe(List.of(event.getDriverUsername()), subject, description, NotificationType.TRUCK, event.getActorUsername());
-            notifySafe(allAdmins, subject, description, NotificationType.TRUCK, event.getActorUsername());
+            subject = "Truck Assignment";
+            description = "You have been assigned to Truck " + event.getLicensePlate();
         }
         else if (event.getAction() == EventAction.STATUS_CHANGED) {
-            String subject = "Truck Alert: " + event.getLicensePlate();
-            String description = "Truck status has been updated.";
+            subject = "Truck Alert: " + event.getLicensePlate();
+            description = "Truck status has been updated.";
+        }
 
-            notifySafe(List.of(event.getDriverUsername()), subject, description, NotificationType.TRUCK, event.getActorUsername());
-            notifySafe(List.of(event.getTargetStoreManagerUsername()), subject, description, NotificationType.TRUCK, event.getActorUsername());
+        if (!subject.isEmpty()) {
+            notifySafe(involvedUsers, subject, description, NotificationType.TRUCK, event.getActorUsername());
         }
     }
 
     // ==========================================
-    // 3. MANEJADOR DE TIENDAS (STORE)
+    // 3. SHOPS NOTIFICATIONS HANDLER
     // ==========================================
     @Async
     @EventListener
     public void handleStoreEvent(ShopEvent event) {
+        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
+        if (event.getNewManagerUsername() != null) involvedUsers.add(event.getNewManagerUsername());
+
         if (event.getAction() == EventAction.ASSIGNED) {
             String subject = "Store Management Assignment";
             String description = "You are now the manager of " + event.getShopName();
-
-            notifySafe(List.of(event.getNewManagerUsername()), subject, description, NotificationType.SHOP, event.getActorUsername());
+            notifySafe(involvedUsers, subject, description, NotificationType.SHOP, event.getActorUsername());
         }
     }
 
     // ==========================================
-    // MÉTODO AUXILIAR DE ENVÍO SEGURO
+    // SAFE NOTIFICATION SENDING METHOD
     // ==========================================
-    private void notifySafe(List<String> recipients, String subject, String description, NotificationType type, String excludedUser) {
-        if (recipients == null || recipients.isEmpty()) return;
+    private void notifySafe(Iterable<String> recipients, String subject, String description, NotificationType type, String excludedUser) {
+        if (recipients == null) return;
 
         for (String recipient : recipients) {
+            // If the recipient is the excluded user (actor), ignore them
             if (recipient != null && !recipient.isBlank() && !recipient.equals(excludedUser)) {
                 notificationService.createAndSendNotification(recipient, subject, description, type);
             }

@@ -5,5 +5,6 @@ public enum EventAction {
     UPDATED,
     DELETED,
     STATUS_CHANGED,
+    NEW_COMMENT,
     ASSIGNED
 }

@@ -6,12 +6,16 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class OrderEvent {
+    private final EventAction action;
+
+    private final String actorUsername; //For sending exclusions
+    private final String actorRole; //For sending policies
+
     private final String orderId;
     private final String oldStatus;
     private final String newStatus;
-    private final String managerUsername;    // Destinatario potencial
-    private final String driverUsername;     // Destinatario potencial
-    private final String actorUsername;      // Quién hizo la acción (para excluirlo)
-    private final String actorRole;          // Rol del actor (para aplicar reglas)
-    private final EventAction action;
+
+    private final String customerUsername;
+    private final String managerUsername;
+    private final String driverUsername;
 }

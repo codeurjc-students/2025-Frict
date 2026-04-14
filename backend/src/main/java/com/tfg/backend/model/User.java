@@ -89,6 +89,8 @@ public class User {
 	public User() {
 	}
 
+    public String getRole(){ return roles.stream().findFirst().orElse(null); }
+
     public boolean hasRole(String roleName) {
         return roles != null && roles.contains(roleName);
     }
