@@ -1,6 +1,5 @@
-package com.tfg.backend.repository;
+package com.tfg.backend.notification;
 
-import com.tfg.backend.notification.Notification;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 

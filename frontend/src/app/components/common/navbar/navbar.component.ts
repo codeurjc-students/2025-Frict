@@ -70,7 +70,7 @@ export class NavbarComponent implements OnInit {
   ];
 
   public scopeOptions = computed(() => {
-    const hasShop = this.authService.hasShopSelected(); // Usamos la señal de tu authService
+    const hasShop = this.authService.hasShopSelected();
     return this.baseScopeOptions.map(opt => ({
       ...opt,
       disabled: opt.value === 'LOCAL' && !hasShop
@@ -100,7 +100,7 @@ export class NavbarComponent implements OnInit {
   toggleSubmenu(categoryId: number, isRouteActive: boolean) {
     const currentState = this.shouldExpand(categoryId, isRouteActive);
 
-    // Actualizamos el mapa invirtiendo el estado actual
+    // Invert current state
     this.manualToggleState.update(map => {
       const newMap = new Map(map);
       newMap.set(categoryId, !currentState);

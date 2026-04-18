@@ -26,7 +26,6 @@ public class Notification {
     private String subject;
     private String description;
 
-    // EL NUEVO CAMPO
     private NotificationType type;
 
     @Indexed(expireAfter = "30d")
@@ -34,7 +33,6 @@ public class Notification {
 
     private boolean isRead;
 
-    // Constructor actualizado
     public Notification(String username, String subject, String description, NotificationType type) {
         this.username = username;
         this.subject = subject;

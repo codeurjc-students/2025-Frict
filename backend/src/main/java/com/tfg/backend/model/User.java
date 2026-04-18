@@ -57,9 +57,6 @@ public class User {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    @Column(nullable = false)
-    private boolean isLogged = false;
-
     private LocalDateTime lastConnection = null;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

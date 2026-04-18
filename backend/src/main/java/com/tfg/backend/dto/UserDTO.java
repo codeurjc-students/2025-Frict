@@ -27,7 +27,6 @@ public class UserDTO {
     private ImageInfo imageInfo;
     private boolean banned;
     private boolean deleted;
-    private boolean logged;
 
     //Stats data
     private int ordersCount;
@@ -49,7 +48,6 @@ public class UserDTO {
         this.phone = user.getPhone();
         this.banned = user.isBanned();
         this.deleted = user.isDeleted();
-        this.logged = user.isLogged();
         this.lastConnection = user.getLastConnection();
         if (user.getSelectedShop() != null){
             this.selectedShopId = user.getSelectedShop().getId();

@@ -36,7 +36,7 @@ public class NotificationChangeStreamListener implements MessageListener<ChangeS
                 webSocketHandler.sendMessageToUser(destinatarioReal, jsonMessage);
 
             } catch (Exception e) {
-                log.error("Error al retransmitir cambio de MongoDB a WebSocket", e);
+                log.error("Error while transmitting change from MongoDB to WebSocket: ", e);
             }
         }
     }
