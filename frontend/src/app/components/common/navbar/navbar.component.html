@@ -195,36 +195,37 @@
 
       <div class="overflow-y-auto w-full">
         <ul class="list-none px-4 pb-4 m-0">
+          <ng-container *ngIf="authService.isUser()">
+            <li class="lg:hidden mt-2 mb-2 px-4">
+              <span class="font-medium uppercase tracking-wider text-surface-200 text-sm">Stock</span>
+            </li>
 
-          <li class="lg:hidden mt-2 mb-2 px-4">
-            <span class="font-medium uppercase tracking-wider text-surface-200 text-sm">Stock</span>
-          </li>
+            <li class="lg:hidden">
+              <a class="flex items-center p-4 rounded-border transition-colors duration-150"
+                 [ngClass]="productService.searchScope() === 'GLOBAL'
+               ? 'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default'
+               : 'text-surface-100 hover:bg-surface-700 cursor-pointer'"
+                 (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null">
+                <i class="pi pi-globe mr-3 text-lg"></i>
+                <span class="font-medium">Global</span>
+              </a>
+            </li>
 
-          <li class="lg:hidden">
-            <a class="flex items-center p-4 rounded-border transition-colors duration-150"
-               [ngClass]="productService.searchScope() === 'GLOBAL'
-       ? 'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default'
-       : 'text-surface-100 hover:bg-surface-700 cursor-pointer'"
-               (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null">
-              <i class="pi pi-globe mr-3 text-lg"></i>
-              <span class="font-medium">Global</span>
-            </a>
-          </li>
-
-          <li class="lg:hidden mb-4">
-            <a class="flex items-center p-4 rounded-border transition-colors duration-150"
-               [ngClass]="{
-       'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default': productService.searchScope() === 'LOCAL',
-       'text-surface-100 hover:bg-surface-700 cursor-pointer': productService.searchScope() !== 'LOCAL' && authService.hasShopSelected(),
-       'text-surface-500 opacity-50 cursor-not-allowed': !authService.hasShopSelected()
-     }"
-               (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null">
-              <i class="pi pi-map-marker mr-3 text-lg"></i>
-              <span class="font-medium">Tienda seleccionada</span>
-              <i *ngIf="!authService.hasShopSelected()" class="pi pi-lock ml-auto text-sm text-surface-500"></i>
-            </a>
-            <hr class="mx-4 mt-2 border-t border-0 border-surface-600" />
-          </li>
+            <li class="lg:hidden mb-4">
+              <a class="flex items-center p-4 rounded-border transition-colors duration-150"
+                 [ngClass]="{
+         'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default': productService.searchScope() === 'LOCAL',
+         'text-surface-100 hover:bg-surface-700 cursor-pointer': productService.searchScope() !== 'LOCAL' && authService.hasShopSelected(),
+         'text-surface-500 opacity-50 cursor-not-allowed': !authService.hasShopSelected()
+       }"
+                 (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null">
+                <i class="pi pi-map-marker mr-3 text-lg"></i>
+                <span class="font-medium">Tienda seleccionada</span>
+                <i *ngIf="!authService.hasShopSelected()" class="pi pi-lock ml-auto text-sm text-surface-500"></i>
+              </a>
+              <hr class="mx-4 mt-2 border-t border-0 border-surface-600" />
+            </li>
+          </ng-container>
 
           <li>
             <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"

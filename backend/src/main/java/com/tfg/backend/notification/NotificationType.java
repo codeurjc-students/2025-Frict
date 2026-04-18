@@ -5,5 +5,6 @@ public enum NotificationType {
     TRUCK,
     SHOP,
     ORDER,
-    PRODUCT
+    PRODUCT,
+    REVIEW
 }

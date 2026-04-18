@@ -3,9 +3,12 @@ package com.tfg.backend.service;
 import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
+import com.tfg.backend.model.ReviewEvent;
 import com.tfg.backend.model.User;
+import com.tfg.backend.notification.EventAction;
 import com.tfg.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,6 +29,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserService userService;
     private final ProductService productService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     // --- READ-ONLY METHODS ---
@@ -71,6 +76,12 @@ public class ReviewService {
         Product product = productService.findProductHelper(dto.getProductId());
 
         Review newReview = new Review(loggedUser, product, dto.getRating(), dto.getText(), dto.isRecommended());
+
+        //Send notifications
+        List<String> managerUsernames = product.getShopsStock().stream().map(stock -> stock.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).distinct().toList();
+        ReviewEvent reviewEvent = new ReviewEvent(EventAction.CREATED, null, String.valueOf(product.getId()), managerUsernames);
+        eventPublisher.publishEvent(reviewEvent);
+
         return reviewRepository.save(newReview);
     }
 
@@ -88,6 +99,12 @@ public class ReviewService {
         review.setRating(dto.getRating());
         review.setRecommended(dto.isRecommended());
 
+        //Send notifications
+        Product reviewedProduct = review.getProduct();
+        List<String> managerUsernames = reviewedProduct.getShopsStock().stream().map(stock -> stock.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).distinct().toList();
+        ReviewEvent reviewEvent = new ReviewEvent(EventAction.UPDATED, null, String.valueOf(reviewedProduct.getId()), managerUsernames);
+        eventPublisher.publishEvent(reviewEvent);
+
         return review; //Updated automatically
     }
 
@@ -99,6 +116,12 @@ public class ReviewService {
         if (!loggedUser.getRoles().contains("ADMIN") && !loggedUser.getId().equals(review.getUser().getId())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not an administrator or the creator of this review.");
         }
+
+        //Send notifications
+        Product reviewedProduct = review.getProduct();
+        List<String> managerUsernames = reviewedProduct.getShopsStock().stream().map(stock -> stock.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).distinct().toList();
+        ReviewEvent reviewEvent = new ReviewEvent(EventAction.DELETED, null, String.valueOf(reviewedProduct.getId()), managerUsernames);
+        eventPublisher.publishEvent(reviewEvent);
 
         reviewRepository.delete(review);
         return review;

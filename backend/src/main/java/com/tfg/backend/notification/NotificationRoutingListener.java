@@ -1,5 +1,6 @@
 package com.tfg.backend.notification;
 
+import com.tfg.backend.model.ReviewEvent;
 import com.tfg.backend.service.NotificationService;
 import com.tfg.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -298,6 +299,71 @@ public class NotificationRoutingListener {
         // 3. Dispatch notifications
         if (!subject.isEmpty()) {
             notifySafe(involvedUsers, subject, description, NotificationType.USER);
+        }
+    }
+
+
+    // ==========================================
+    // 6. REVIEW NOTIFICATIONS HANDLER
+    // ==========================================
+    @Async
+    @EventListener
+    public void handleReviewEvent(ReviewEvent event) {
+        String reviewId = event.getReviewId();
+        String productId = event.getProductId();
+        Long pIdLong;
+
+        // Necesitamos el productId para buscar a los clientes interesados
+        if (productId == null) {
+            log.error("ReviewEvent missing productId. Cannot determine audience.");
+            return;
+        }
+
+        try {
+            pIdLong = Long.valueOf(productId);
+        } catch (NumberFormatException e) {
+            log.error("Error parsing productId {} to Long.", productId, e);
+            return;
+        }
+
+        // 1. Involved audience: admins, managers from the event, users with product as favourite, and users with the product in cart.
+        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
+
+        // Add managers calculated in the service and passed via the event
+        if (event.getManagerUsernames() != null && !event.getManagerUsernames().isEmpty()) {
+            involvedUsers.addAll(event.getManagerUsernames());
+        }
+
+        // Add users who have it as favorite
+        List<String> favoritedCustomers = userService.getUsernamesByFavoritedProduct(pIdLong);
+        if (favoritedCustomers != null) involvedUsers.addAll(favoritedCustomers);
+
+        // Add users who have it in their cart (OrderItems)
+        List<String> cartCustomers = userService.getUsernamesWithProductInCart(pIdLong);
+        if (cartCustomers != null) involvedUsers.addAll(cartCustomers);
+
+        // 2. Build message content
+        String subject = "";
+        String description = "";
+
+        switch (event.getAction()) {
+            case CREATED -> {
+                subject = "Nueva reseña publicada";
+                description = "El usuario " + getSafeActorUsername() + " ha dejado una nueva reseña en un producto de tu interés.";
+            }
+            case UPDATED -> {
+                subject = "Reseña actualizada";
+                description = "El usuario " + getSafeActorUsername() + " ha modificado su reseña para el producto #" + productId + ".";
+            }
+            case DELETED -> {
+                subject = "Reseña eliminada";
+                description = "Una reseña asociada al producto #" + productId + " ha sido eliminada.";
+            }
+        }
+
+        // 3. Dispatch notifications
+        if (!subject.isEmpty()) {
+            notifySafe(involvedUsers, subject, description, NotificationType.REVIEW);
         }
     }
 
