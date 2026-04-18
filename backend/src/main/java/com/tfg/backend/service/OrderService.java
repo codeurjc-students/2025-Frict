@@ -83,7 +83,7 @@ public class OrderService {
 
         //Get notification data
         String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
-        String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+        String driverUsername;
 
         if (state) {
             Truck truck = truckService.findTruckHelper(truckId);
@@ -98,12 +98,16 @@ public class OrderService {
             }
             order.setAssignedTruck(truck);
 
+            driverUsername = Optional.of(truck).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+
         } else {
+            driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+
             order.setAssignedTruck(null);
         }
 
         // Send notifications
-        OrderEvent orderEvent = new OrderEvent(EventAction.ASSIGNED, null, String.valueOf(order.getId()), null, null, null, managerUsername, driverUsername);
+        OrderEvent orderEvent = new OrderEvent(EventAction.ASSIGNED, String.valueOf(order.getId()), null, null, null, managerUsername, driverUsername);
         eventPublisher.publishEvent(orderEvent);
 
         return order; // Saved automatically
@@ -158,7 +162,7 @@ public class OrderService {
 
         // Send in-app notifications
         String managerUsername = Optional.ofNullable(savedOrder.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
-        OrderEvent orderEvent = new OrderEvent(EventAction.CREATED, loggedUser.getUsername(), String.valueOf(savedOrder.getId()), null, null, loggedUser.getUsername(), managerUsername, null);
+        OrderEvent orderEvent = new OrderEvent(EventAction.CREATED, String.valueOf(savedOrder.getId()), null, null, loggedUser.getUsername(), managerUsername, null);
         eventPublisher.publishEvent(orderEvent);
 
         // Send email confirmation
@@ -178,7 +182,7 @@ public class OrderService {
             order.addStatusUpdate(comment);
 
             // Send in-app notifications (user is set in listener, as it is not directly used here)
-            OrderEvent orderEvent = new OrderEvent(EventAction.NEW_COMMENT, null, String.valueOf(order.getId()), null, null, order.getUser().getUsername(), managerUsername, driverUsername);
+            OrderEvent orderEvent = new OrderEvent(EventAction.NEW_COMMENT, String.valueOf(order.getId()), null, null, order.getUser().getUsername(), managerUsername, driverUsername);
             eventPublisher.publishEvent(orderEvent);
 
         } else {
@@ -193,7 +197,7 @@ public class OrderService {
             order.changeOrderStatus(orderStatus, comment);
 
             // Send notifications
-            OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, null, String.valueOf(order.getId()), currentStatus.getDescription(), orderStatus.getDescription(), order.getUser().getUsername(), managerUsername, driverUsername);
+            OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), orderStatus.getDescription(), order.getUser().getUsername(), managerUsername, driverUsername);
             eventPublisher.publishEvent(orderEvent);
         }
         return order;
@@ -224,7 +228,7 @@ public class OrderService {
         // Send notifications
         String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
         String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
-        OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, loggedUser.getUsername(), String.valueOf(order.getId()), currentStatus.getDescription(), OrderStatus.CANCELLED.getDescription(), loggedUser.getUsername(), managerUsername, driverUsername);
+        OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), OrderStatus.CANCELLED.getDescription(), loggedUser.getUsername(), managerUsername, driverUsername);
         eventPublisher.publishEvent(orderEvent);
 
         return order; // Saved automatically
@@ -250,7 +254,7 @@ public class OrderService {
         orderRepository.delete(order);
 
         // Send in-app notifications (user is set in listener, as it is not directly used here)
-        OrderEvent orderEvent = new OrderEvent(EventAction.DELETED, null, String.valueOf(order.getId()), null, null, order.getUser().getUsername(), managerUsername, driverUsername);
+        OrderEvent orderEvent = new OrderEvent(EventAction.DELETED, String.valueOf(order.getId()), null, null, order.getUser().getUsername(), managerUsername, driverUsername);
         eventPublisher.publishEvent(orderEvent);
 
         return order;

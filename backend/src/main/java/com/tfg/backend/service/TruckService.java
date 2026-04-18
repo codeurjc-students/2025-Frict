@@ -78,7 +78,7 @@ public class TruckService {
 
         //Send in-app notifications
         String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
-        TruckEvent truckEvent = new TruckEvent(EventAction.ASSIGNED, null, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+        TruckEvent truckEvent = new TruckEvent(EventAction.ASSIGNED, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
         eventPublisher.publishEvent(truckEvent);
 
         return truck;
@@ -96,14 +96,14 @@ public class TruckService {
         if (truckStatus == truck.getHistory().getLast().getStatus()) {
             truck.addStatusUpdate(comment);
 
-            truckEvent = new TruckEvent(EventAction.NEW_COMMENT, null, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+            truckEvent = new TruckEvent(EventAction.NEW_COMMENT, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
 
         } else {
             TruckStatus currentStatus = truck.getCurrentStatus();
 
             truck.changeTruckStatus(truckStatus, comment);
 
-            truckEvent = new TruckEvent(EventAction.STATUS_CHANGED, null, String.valueOf(truck.getId()), currentStatus.getDescription(), truckStatus.getDescription(), null, managerUsername, driverUsername);
+            truckEvent = new TruckEvent(EventAction.STATUS_CHANGED, String.valueOf(truck.getId()), currentStatus.getDescription(), truckStatus.getDescription(), null, managerUsername, driverUsername);
         }
 
         eventPublisher.publishEvent(truckEvent);
@@ -119,7 +119,7 @@ public class TruckService {
 
         //Send in-app notifications
         String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
-        TruckEvent truckEvent = new TruckEvent(EventAction.CREATED, null, String.valueOf(truck.getId()), null, null, null, managerUsername, null);
+        TruckEvent truckEvent = new TruckEvent(EventAction.CREATED, String.valueOf(truck.getId()), null, null, null, managerUsername, null);
         eventPublisher.publishEvent(truckEvent);
 
         return truckRepository.save(truck);
@@ -138,7 +138,7 @@ public class TruckService {
         //Send in-app notifications
         String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
         String driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
-        TruckEvent truckEvent = new TruckEvent(EventAction.UPDATED, null, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+        TruckEvent truckEvent = new TruckEvent(EventAction.UPDATED, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
         eventPublisher.publishEvent(truckEvent);
 
         return truck;
@@ -178,7 +178,7 @@ public class TruckService {
         truckRepository.delete(truck);
 
         //Send in-app notifications
-        TruckEvent truckEvent = new TruckEvent(EventAction.DELETED, null, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+        TruckEvent truckEvent = new TruckEvent(EventAction.DELETED, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
         eventPublisher.publishEvent(truckEvent);
 
         return truck;

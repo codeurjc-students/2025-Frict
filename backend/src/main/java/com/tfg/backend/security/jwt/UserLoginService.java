@@ -6,6 +6,8 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.User;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.UserEvent;
 import com.tfg.backend.security.GoogleTokenDTO;
 import com.tfg.backend.service.EmailService;
 import com.tfg.backend.service.UserService;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -47,6 +50,7 @@ public class UserLoginService {
 	private final UserService userService;
 	private final EmailService emailService;
 	private final PasswordEncoder passwordEncoder;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Value("${google.auth.clientId}")
 	private String googleClientId;
@@ -197,6 +201,11 @@ public class UserLoginService {
 		}
 
 		user.setEncodedPassword(passwordEncoder.encode(newPassword));
+
+		//Send notifications
+		UserEvent userEvent = new UserEvent(EventAction.UPDATED, user.getUsername());
+		eventPublisher.publishEvent(userEvent);
+
 		// Saved automatically
 	}
 

@@ -2,14 +2,18 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.UserEvent;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.StatDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // --- READ-ONLY METHODS ---
 
@@ -47,6 +52,41 @@ public class UserService {
     public boolean isDeletedByEmail(String email) { return userRepository.existsByEmailAndIsDeletedTrue(email); }
     public List<User> findAllByRole(String role){ return userRepository.findByRolesContaining(role); }
     public List<String> getAllAdminUsernames() { return userRepository.findUsernamesByRole("ADMIN"); } //Usernames only
+
+    //Notifications logic (3 methods)
+    public List<String> getUsernamesBySelectedShop(Long shopId) {
+        if (shopId == null) return List.of();
+        return userRepository.findUsernamesBySelectedShopId(shopId);
+    }
+
+    public String getLoggedUserUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        return authentication.getName();
+    }
+
+    public String getLoggedUserRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).findFirst().orElse(null);
+    }
+
+    public List<String> getUsernamesByFavoritedProduct(Long productId) {
+        if (productId == null) return List.of();
+        return userRepository.findUsernamesByFavouriteProductId(productId);
+    }
+
+    public List<String> getUsernamesWithProductInCart(Long productId) {
+        if (productId == null) return List.of();
+        return userRepository.findUsernamesByProductInCart(productId);
+    }
+
+
+
 
     public List<User> findAvailableDrivers() {
         return userRepository.findByRolesContainingAndAssignedTruckIsNull("DRIVER");
@@ -105,6 +145,11 @@ public class UserService {
 
         String role = (dto.getRole() == null || dto.getRole().isEmpty()) ? "USER" : dto.getRole();
         User newUser = new User(dto.getName(), dto.getUsername(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), role);
+
+        //Send notifications
+        UserEvent userEvent = new UserEvent(EventAction.CREATED, newUser.getUsername());
+        eventPublisher.publishEvent(userEvent);
+
         return userRepository.save(newUser);
     }
 
@@ -240,8 +285,14 @@ public class UserService {
         for (User u : allUsers) {
             if (!u.getRoles().contains("ADMIN")){
                 u.setBanned(banState);
+                //Send notification
+                UserEvent userEvent = new UserEvent(EventAction.NEW_COMMENT, u.getUsername());
+                eventPublisher.publishEvent(userEvent);
             }
         }
+
+
+
         return banState;
     }
 
@@ -249,12 +300,21 @@ public class UserService {
     public User toggleUserBanById(Long id, boolean banState){
         User user = this.findUserHelper(id);
         user.setBanned(banState);
+        //Send notification
+        UserEvent userEvent = new UserEvent(EventAction.NEW_COMMENT, user.getUsername());
+        eventPublisher.publishEvent(userEvent);
+
         return user;
     }
 
     @Transactional
     public User anonymizeLoggedUser(){
         User loggedUser = this.findLoggedUserHelper();
+
+        //Send notifications
+        UserEvent userEvent = new UserEvent(EventAction.STATUS_CHANGED, loggedUser.getUsername());
+        eventPublisher.publishEvent(userEvent);
+
         return this.anonymizeUser(loggedUser);
     }
 
@@ -263,6 +323,10 @@ public class UserService {
         List<User> allUsers = this.findAll();
         for (User u : allUsers) {
             if (!u.getRoles().contains("ADMIN")){
+                //Send notifications
+                UserEvent userEvent = new UserEvent(EventAction.STATUS_CHANGED, u.getUsername());
+                eventPublisher.publishEvent(userEvent);
+
                 this.anonymizeUser(u);
             }
         }
@@ -272,6 +336,11 @@ public class UserService {
     @Transactional
     public User anonUserById(Long id){
         User user = this.findUserHelper(id);
+
+        //Send notifications
+        UserEvent userEvent = new UserEvent(EventAction.STATUS_CHANGED, user.getUsername());
+        eventPublisher.publishEvent(userEvent);
+
         return this.anonymizeUser(user);
     }
 
@@ -280,6 +349,10 @@ public class UserService {
         List<User> allUsers = this.findAll();
         for (User u : allUsers) {
             if (!u.hasRole("ADMIN")) {
+                //Send notifications
+                UserEvent userEvent = new UserEvent(EventAction.DELETED, u.getUsername());
+                eventPublisher.publishEvent(userEvent);
+
                 this.deleteUserById(u.getId());
             }
         }
@@ -304,6 +377,10 @@ public class UserService {
             truck.setAssignedDriver(null);
             user.setAssignedTruck(null);
         }
+
+        //Send notifications
+        UserEvent userEvent = new UserEvent(EventAction.DELETED, user.getUsername());
+        eventPublisher.publishEvent(userEvent);
 
         // 3. Cascade delete (cart items, favourite items, orders, reviews, addresses and cards)
         userRepository.delete(user);

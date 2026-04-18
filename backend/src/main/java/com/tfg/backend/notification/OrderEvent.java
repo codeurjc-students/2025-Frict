@@ -8,8 +8,6 @@ import lombok.Getter;
 public class OrderEvent {
     private final EventAction action;
 
-    private final String actorUsername; //For sending exclusions
-
     private final String orderId;
     private final String oldStatus;
     private final String newStatus;
