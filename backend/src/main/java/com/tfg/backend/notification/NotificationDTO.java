@@ -1,6 +1,5 @@
-package com.tfg.backend.dto;
+package com.tfg.backend.notification;
 
-import com.tfg.backend.model.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

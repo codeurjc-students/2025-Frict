@@ -1,6 +1,5 @@
-package com.tfg.backend.utils;
+package com.tfg.backend.notification;
 
-import com.tfg.backend.model.Notification;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;

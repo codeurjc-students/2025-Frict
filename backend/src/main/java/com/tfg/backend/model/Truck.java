@@ -46,6 +46,7 @@ public class Truck {
     @JoinColumn(name = "driver_id")
     private User assignedDriver;
 
+
     public Truck() {
         this.history.add(new TruckStatusLog(TruckStatus.AVAILABLE, "Camión preparado para el reparto."));
     }
@@ -56,6 +57,10 @@ public class Truck {
         this.history.add(new TruckStatusLog(TruckStatus.AVAILABLE, "Camión preparado para el reparto."));
         this.address = address;
         this.maxOrderCapacity = maxOrderCapacity;
+    }
+
+    public TruckStatus getCurrentStatus(){
+        return this.getHistory().getLast().getStatus();
     }
 
     //Adds an update to the current status. It does not change the current order status

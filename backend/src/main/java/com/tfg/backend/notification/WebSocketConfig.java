@@ -1,4 +1,4 @@
-package com.tfg.backend.utils; // Ajusta a tu paquete
+package com.tfg.backend.notification; // Ajusta a tu paquete
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;

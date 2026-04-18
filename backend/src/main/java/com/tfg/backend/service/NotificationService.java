@@ -1,11 +1,11 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.Notification;
-import com.tfg.backend.dto.NotificationDTO;
-import com.tfg.backend.model.NotificationType;
+import com.tfg.backend.notification.Notification;
+import com.tfg.backend.notification.NotificationDTO;
+import com.tfg.backend.notification.NotificationType;
 import com.tfg.backend.repository.NotificationRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tfg.backend.utils.NotificationWebSocketHandler;
+import com.tfg.backend.notification.NotificationWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

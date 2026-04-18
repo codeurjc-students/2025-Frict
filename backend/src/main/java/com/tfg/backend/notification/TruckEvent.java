@@ -1,17 +1,16 @@
-package com.tfg.backend.model;
+package com.tfg.backend.notification;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class OrderEvent {
+public class TruckEvent {
     private final EventAction action;
 
     private final String actorUsername; //For sending exclusions
-    private final String actorRole; //For sending policies
 
-    private final String orderId;
+    private final String truckId;
     private final String oldStatus;
     private final String newStatus;
 

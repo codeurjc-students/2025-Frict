@@ -1,4 +1,4 @@
-package com.tfg.backend.model;
+package com.tfg.backend.notification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,8 +1,6 @@
-package com.tfg.backend.utils; // Ajusta tu paquete
+package com.tfg.backend.notification; // Ajusta tu paquete
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;

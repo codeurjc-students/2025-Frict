@@ -1,6 +1,5 @@
-package com.tfg.backend.utils;
+package com.tfg.backend.notification;
 
-import com.tfg.backend.model.*;
 import com.tfg.backend.service.NotificationService;
 import com.tfg.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +33,11 @@ public class NotificationRoutingListener {
         if (event.getDriverUsername() != null) involvedUsers.add(event.getDriverUsername());
         if (event.getCustomerUsername() != null) involvedUsers.add(event.getCustomerUsername());
 
+        String excludedUser = event.getActorUsername();
+        if (excludedUser == null){
+            excludedUser = userService.findLoggedUserHelper().getUsername();
+        }
+
         // Set message
         String subject = "";
         String description = "";
@@ -45,7 +49,7 @@ public class NotificationRoutingListener {
             }
             case ASSIGNED -> {
                 subject = "Nuevo pedido asignado";
-                description = "El pedido #" + orderId + " ha sido asignado a tu camión.";
+                description = "El camión asignado al pedido " + orderId + "ha cambiado.";
             }
             case STATUS_CHANGED -> {
                 subject = "Estado de pedido #" + orderId + " actualizado";
@@ -63,7 +67,7 @@ public class NotificationRoutingListener {
 
         // Notify users
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.ORDER, event.getActorUsername());
+            notifySafe(involvedUsers, subject, description, NotificationType.ORDER, excludedUser);
         }
     }
 
@@ -73,24 +77,51 @@ public class NotificationRoutingListener {
     @Async
     @EventListener
     public void handleTruckEvent(TruckEvent event) {
+
+        // Set involved audience: driver, target store manager (if any) and all admins
         Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
         if (event.getDriverUsername() != null) involvedUsers.add(event.getDriverUsername());
-        if (event.getTargetStoreManagerUsername() != null) involvedUsers.add(event.getTargetStoreManagerUsername());
+        if (event.getManagerUsername() != null) involvedUsers.add(event.getManagerUsername());
 
+        String excludedUser = event.getActorUsername();
+        if (excludedUser == null){
+            excludedUser = userService.findLoggedUserHelper().getUsername();
+        }
+
+        // Set message
         String subject = "";
         String description = "";
 
-        if (event.getAction() == EventAction.ASSIGNED) {
-            subject = "Truck Assignment";
-            description = "You have been assigned to Truck " + event.getLicensePlate();
-        }
-        else if (event.getAction() == EventAction.STATUS_CHANGED) {
-            subject = "Truck Alert: " + event.getLicensePlate();
-            description = "Truck status has been updated.";
+        switch (event.getAction()){
+            case CREATED -> {
+                subject = "Nuevo camión registrado";
+                description = "El administrador " + event.getActorUsername() + " ha registrado el camión " + event.getTruckId() + ".";
+            }
+            case ASSIGNED -> {
+                subject = "Nuevo camión asignado";
+                description = "El conductor asociado al camión " + event.getTruckId() + " ha cambiado.";
+            }
+            case STATUS_CHANGED -> {
+                subject = "Estado de camión " + event.getTruckId() + " actualizado";
+                description = "El estado ha pasado de " + event.getOldStatus() + " a " + event.getNewStatus() + ".";
+            }
+            case NEW_COMMENT -> {
+                subject = "Nuevo comentario en camión " + event.getTruckId();
+                description = "El camión " + event.getTruckId() + " tiene una nueva actualización.";
+            }
+            case UPDATED -> {
+                subject = "Actualización del camión " + event.getTruckId();
+                description = "Los datos del camión " + event.getTruckId() + " han cambiado.";
+            }
+            case DELETED -> {
+                subject = "Camión " + event.getTruckId() + " eliminado";
+                description = "El camión " + event.getTruckId() + " ha sido eliminado de la flota.";
+            }
         }
 
+        // Notify users
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.TRUCK, event.getActorUsername());
+            notifySafe(involvedUsers, subject, description, NotificationType.TRUCK, excludedUser);
         }
     }
 
@@ -119,6 +150,7 @@ public class NotificationRoutingListener {
         for (String recipient : recipients) {
             // If the recipient is the excluded user (actor), ignore them
             if (recipient != null && !recipient.isBlank() && !recipient.equals(excludedUser)) {
+                log.info("Sending notification to: {}", recipient);
                 notificationService.createAndSendNotification(recipient, subject, description, type);
             }
         }
