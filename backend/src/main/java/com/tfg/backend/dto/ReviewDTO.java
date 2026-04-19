@@ -1,6 +1,7 @@
 package com.tfg.backend.dto;
 
 import com.tfg.backend.model.Review;
+import com.tfg.backend.notification.ConnectionDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,12 +12,17 @@ import java.time.LocalDateTime;
 @Setter
 public class ReviewDTO {
 
-    private Long id; //Review id
+    private Long id; // Review id
     private Long productId;
     private Long creatorId;
     private String productName;
+
+    // User flattened fields
+    private String creatorUsername; // Added to map the connection in Mongo
     private String creatorName;
     private String creatorImage;
+    private ConnectionDTO creatorConnection; // Added to store presence data
+
     private String text;
     private int rating;
     private String createdAt;
@@ -30,12 +36,19 @@ public class ReviewDTO {
         this.productId = r.getProduct().getId();
         this.creatorId = r.getUser().getId();
         this.productName = r.getProduct().getName();
+
+        this.creatorUsername = r.getUser().getUsername();
         this.creatorName = r.getUser().getName();
-        this.creatorImage = r.getUser().getUserImage().getImageUrl();
+        // Null check for image just in case
+        if (r.getUser().getUserImage() != null) {
+            this.creatorImage = r.getUser().getUserImage().getImageUrl();
+        }
+
         this.text = r.getText();
         this.rating = r.getRating();
         this.createdAt = this.formatRelativeTime(r.getCreatedAt());
         this.recommended = r.isRecommended();
+        // creatorConnection remains null until enriched by the controller
     }
 
     private String formatRelativeTime(LocalDateTime dateTime) {

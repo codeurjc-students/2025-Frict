@@ -122,9 +122,23 @@
 
             <td *ngIf="authService.isAdmin()">
               @if (shop.assignedManager) {
-                <div class="flex items-center gap-2">
-                  <p-avatar [image]="shop.assignedManager.imageInfo.imageUrl" shape="circle" />
-                  <div>{{ shop.assignedManager.name }}</div>
+                <div class="flex items-center gap-3">
+                  <div class="relative flex">
+                    <p-avatar [image]="shop.assignedManager.imageInfo?.imageUrl"
+                              shape="circle"
+                              styleClass="w-8 h-8 border border-slate-200" />
+
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white rounded-full transition-colors"
+                          [ngClass]="shop.assignedManager.connection?.online ? 'bg-green-500' : 'bg-slate-400'"
+                          tooltipPosition="top">
+                    </span>
+                  </div>
+
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-slate-700">
+                      {{ shop.assignedManager.name }}
+                    </span>
+                  </div>
                 </div>
               } @else {
                 <div class="text-surface-500 italic text-sm">

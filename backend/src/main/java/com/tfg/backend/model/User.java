@@ -57,8 +57,6 @@ public class User {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    private LocalDateTime lastConnection = null;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> allOrderItems = new ArrayList<>(); //Necessary in order to be able to see the user cart
 

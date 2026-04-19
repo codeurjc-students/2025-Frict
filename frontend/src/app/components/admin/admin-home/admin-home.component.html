@@ -266,8 +266,17 @@
               <td class="py-3 pl-5 text-sm text-slate-600 font-medium">{{ order.createdAt }}</td>
               <td class="py-3 text-sm font-bold text-slate-800">
                 <div class="flex items-center gap-2">
-                  <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
-                  {{ order.user.name }}
+                  <div class="relative flex">
+                    <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
+
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 border border-white rounded-full"
+                          [ngClass]="order.user.connection?.online ? 'bg-green-500' : 'bg-slate-400'"
+                          [pTooltip]="order.user.connection?.online ? 'Online' : 'Offline'"
+                          tooltipPosition="top">
+                    </span>
+                  </div>
+
+                  <span>{{ order.user.name }}</span>
                 </div>
               </td>
               <td *ngIf="authService.isDriver()" class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ formatAddress(order.sendingAddress) }}</td>

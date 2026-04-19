@@ -418,6 +418,7 @@ public class UserService {
         return user;
     }
 
+
     public List<StatDTO> getUsersStats(){
         List<StatDTO> stats = new ArrayList<>();
         stats.add(new StatDTO("Totales", userRepository.count()));

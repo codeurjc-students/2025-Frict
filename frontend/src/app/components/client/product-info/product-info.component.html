@@ -159,7 +159,14 @@
           <div *ngFor="let review of productReviews" class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm hover:border-surface-300 transition-colors">
             <div class="flex justify-between items-start mb-4">
               <div class="flex items-center gap-3">
-                <p-avatar [image]="review.creatorImage" shape="circle" size="normal"></p-avatar>
+                <div class="relative flex">
+                  <p-avatar [image]="review.creatorImage" shape="circle" size="normal"></p-avatar>
+
+                  <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white rounded-full transition-colors"
+                        [ngClass]="review.creatorConnection?.online ? 'bg-green-500' : 'bg-slate-400'">
+                  </span>
+                </div>
+
                 <div>
                   <p class="font-bold text-surface-900 text-sm">{{ review.creatorName }}</p>
                   <div class="flex items-center gap-2 text-xs text-surface-500">
