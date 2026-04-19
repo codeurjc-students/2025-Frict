@@ -1,7 +1,6 @@
 package com.tfg.backend.notification;
 
 import com.tfg.backend.model.ReviewEvent;
-import com.tfg.backend.service.NotificationService;
 import com.tfg.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

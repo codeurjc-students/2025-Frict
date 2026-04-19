@@ -1,6 +1,5 @@
 package com.tfg.backend.notification;
 
-import com.tfg.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
