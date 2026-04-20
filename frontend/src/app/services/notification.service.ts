@@ -1,7 +1,9 @@
 import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Notification } from '../models/notification.model';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { PageResponse } from '../models/pageResponse.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +16,7 @@ export class NotificationService implements OnDestroy {
   private notificationsSignal = signal<Notification[]>([]);
 
   public unreadNotifications = computed(() =>
-    this.notificationsSignal().filter(n => !n.isRead)
+    this.notificationsSignal().filter(n => !n.read)
   );
 
   public unreadCount = computed(() => this.unreadNotifications().length);
@@ -64,13 +66,28 @@ export class NotificationService implements OnDestroy {
     };
   }
 
+  public getNotificationsPage(page: number, size: number): Observable<PageResponse<Notification>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<PageResponse<Notification>>('/api/v1/notifications/', { params });
+  }
+
+  public markAllAsReadRest(): Observable<boolean> {
+    return this.http.put<boolean>('/api/v1/notifications/read-all', {});
+  }
+
+  public deleteNotificationReq(id: string): Observable<boolean> {
+    return this.http.delete<boolean>(`/api/v1/notifications/${id}`);
+  }
+
   public markAsRead(id: string) {
     const previousState = this.notificationsSignal().find(n => n.id === id);
     if (!previousState) return;
 
     // 1. Optimistic Interface updating
     this.notificationsSignal.update(list =>
-      list.map(n => n.id === id ? { ...n, isRead: true } : n)
+      list.map(n => n.id === id ? { ...n, read: true } : n)
     );
 
     // 2. Persist changes in MongoDB
@@ -79,7 +96,7 @@ export class NotificationService implements OnDestroy {
         console.error('Error marking the notification as read in DB', err);
         //Revert not read state if error
         this.notificationsSignal.update(list =>
-          list.map(n => n.id === id ? { ...n, isRead: previousState.isRead } : n)
+          list.map(n => n.id === id ? { ...n, read: previousState.read } : n)
         );
       }
     });

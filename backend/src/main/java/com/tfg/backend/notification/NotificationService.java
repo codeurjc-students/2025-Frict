@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,14 +32,7 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
 
         // 2. Map to NotificationDTO
-        NotificationDTO payloadDto = new NotificationDTO(
-                savedNotification.getId(),
-                savedNotification.getSubject(),
-                savedNotification.getDescription(),
-                savedNotification.getTimestamp(),
-                savedNotification.isRead(),
-                savedNotification.getType()
-        );
+        NotificationDTO payloadDto = new NotificationDTO(savedNotification);
 
         // 3. Emit via WebSocket
         try {
@@ -55,6 +50,10 @@ public class NotificationService {
         }
     }
 
+
+    public Page<Notification> getUserNotificationsPage(String username, Pageable pageable) {
+        return notificationRepository.findByUsernameOrderByTimestampDesc(username, pageable);
+    }
 
     public void markAsRead(String notificationId, String username) {
         // 1. Find the notification
@@ -75,4 +74,18 @@ public class NotificationService {
         notification.setRead(true);
         notificationRepository.save(notification);
     }
+
+    public void markAllAsRead(String username) {
+        List<Notification> unread = notificationRepository.findByUsernameAndIsReadFalseOrderByTimestampDesc(username);
+        if (!unread.isEmpty()) {
+            unread.forEach(n -> n.setRead(true));
+            notificationRepository.saveAll(unread);
+        }
+    }
+
+    public void deleteNotification(String id, String username) {
+        // El repositorio se encarga de verificar que coincida el id y el username por seguridad
+        notificationRepository.deleteByIdAndUsername(id, username);
+    }
+
 }

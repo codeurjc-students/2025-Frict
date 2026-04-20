@@ -67,7 +67,12 @@ export const routes: Routes = [
             path: 'profile',
             loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
             data: { roles: ['USER'], title: 'Perfil', icon: 'client', breadcrumb: 'Perfil' }
-          }
+          },
+          {
+            path: 'notifications',
+            loadComponent: () => import('./components/common/notifications/notifications.component').then(m => m.NotificationsComponent),
+            data: { roles: ['USER'], title: 'Notificaciones', icon: 'client', breadcrumb: 'Notificaciones' }
+          },
         ]
       }
     ]
@@ -167,7 +172,12 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
         data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Perfil', icon: 'admin', breadcrumb: 'Perfil' }
-      }
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./components/common/notifications/notifications.component').then(m => m.NotificationsComponent),
+        data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Notificaciones', icon: 'admin', breadcrumb: 'Notificaciones' }
+      },
     ]
   },
 

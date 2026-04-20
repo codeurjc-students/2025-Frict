@@ -3,5 +3,5 @@ export interface Notification {
   subject: string;
   description: string;
   timestamp: string;
-  isRead: boolean;
+  read: boolean;
 }

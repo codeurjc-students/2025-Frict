@@ -256,6 +256,7 @@
                 <configuration>
                     <excludes>
                         <exclude>com/tfg/backend/dto/**</exclude>
+                        <exclude>com/tfg/backend/notification/**</exclude>
                         <exclude>com/tfg/backend/utils/DatabaseInitializer.class</exclude>
                         <exclude>com/tfg/backend/BackendApplication.class</exclude>
                     </excludes>

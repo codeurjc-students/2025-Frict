@@ -1,6 +1,10 @@
 package com.tfg.backend.notification;
 
+import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.utils.PageFormatter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +25,27 @@ public class NotificationRestController {
         String username = authentication.getName();
 
         notificationService.createAndSendNotification(
-                username,
-                "Prueba correcta",
-                "Spring y Angular se están comunicando correctamente mediante WebSockets.",
-                NotificationType.USER
+            username,
+            "Prueba correcta",
+            "Spring y Angular se están comunicando correctamente mediante WebSockets.",
+            NotificationType.USER
         );
 
         return ResponseEntity.ok(Map.of("message", "Notificación disparada al usuario: " + username));
     }
+
+
+    @GetMapping("/")
+    public ResponseEntity<PageResponse<NotificationDTO>> getNotificationsPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            Authentication authentication) {
+
+        String username = authentication.getName();
+        Page<Notification> notificationsPage = notificationService.getUserNotificationsPage(username, PageRequest.of(page, size));
+        return ResponseEntity.ok(PageFormatter.toPageResponse(notificationsPage, NotificationDTO::new));
+    }
+
 
     @GetMapping("/unread")
     public ResponseEntity<List<NotificationDTO>> getUnreadNotifications(Authentication authentication) {
@@ -39,10 +56,7 @@ public class NotificationRestController {
                 .findByUsernameAndIsReadFalseOrderByTimestampDesc(username);
 
         // Map to DTO
-        List<NotificationDTO> dtos = unread.stream()
-                .map(n -> new NotificationDTO(n.getId(), n.getSubject(), n.getDescription(), n.getTimestamp(), n.isRead(), n.getType()))
-                .collect(Collectors.toList());
-
+        List<NotificationDTO> dtos = unread.stream().map(NotificationDTO::new).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
@@ -56,5 +70,17 @@ public class NotificationRestController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(false);
         }
+    }
+
+    @PutMapping("/read-all")
+    public ResponseEntity<Boolean> markAllAsRead(Authentication authentication) {
+        notificationService.markAllAsRead(authentication.getName());
+        return ResponseEntity.ok(true);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Boolean> deleteNotification(@PathVariable("id") String id, Authentication authentication) {
+        notificationService.deleteNotification(id, authentication.getName());
+        return ResponseEntity.ok(true);
     }
 }

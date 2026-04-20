@@ -63,24 +63,6 @@
 
             </div>
           </div>
-
-          <div *ngIf="selectedViewMode === 'alerts'" class="absolute inset-0 z-[20] bg-surface-50 p-6 overflow-y-auto custom-scrollbar animate-fade-in">
-            <div class="flex flex-col gap-3 max-w-2xl mx-auto">
-              @for(alert of truckAlerts(); track $index) {
-                <div class="group flex items-center gap-4 p-4 rounded-xl border border-surface-200 bg-white hover:border-surface-300 hover:shadow-md transition-all cursor-pointer">
-                  <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-                       [ngClass]="{'bg-red-50 text-red-500': alert.severity === 'high', 'bg-primary-50 text-primary-500': alert.severity === 'medium', 'bg-blue-50 text-blue-500': alert.severity === 'info'}">
-                    <i [class]="alert.icon" class="text-lg"></i>
-                  </div>
-                  <div class="flex-grow min-w-0">
-                    <p class="text-sm font-bold text-surface-800 truncate">Vehículo {{ alert.reference }}</p>
-                    <p class="text-sm text-surface-500 mt-0.5">{{ alert.message }}</p>
-                  </div>
-                  <i class="pi pi-chevron-right text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                </div>
-              }
-            </div>
-          </div>
         </div>
       </div>
     </div>

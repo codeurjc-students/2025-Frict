@@ -65,8 +65,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   viewModeOptions = [
     { label: 'Mapa', value: 'map', icon: 'pi pi-map' },
-    { label: 'Distribución', value: 'chart', icon: 'pi pi-chart-pie' },
-    { label: 'Notificaciones', value: 'alerts', icon: 'pi pi-bell' }
+    { label: 'Distribución', value: 'chart', icon: 'pi pi-chart-pie' }
   ];
   selectedViewMode: string = 'map';
 

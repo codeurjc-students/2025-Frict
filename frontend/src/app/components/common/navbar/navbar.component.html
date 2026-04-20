@@ -137,7 +137,7 @@
               <div class="p-2 border-t border-surface-700 bg-surface-800 rounded-b-lg">
                 <p-button label="Ver todas"
                           (click)="notifPopover.hide()"
-                          routerLink="/alerts"
+                          [routerLink]="authService.isUser() ? '/notifications' : '/admin/notifications'"
                           styleClass="w-full !bg-transparent hover:!bg-surface-700 !text-primary-400 border-none !text-sm !font-semibold h-10 transition-colors">
                 </p-button>
               </div>
@@ -299,7 +299,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/alerts" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
+                  <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" [routerLink]="authService.isUser() ? '/notifications' : '/admin/notifications'" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                     <i class="pi pi-bell mr-3"></i>
                     <span class="font-medium">Notificaciones</span>
                     @if (notificationService.unreadCount() > 0) {
