@@ -25,17 +25,17 @@ import { NotificationService } from '../../../services/notification.service';
 })
 export class NotificationsComponent implements OnInit {
 
-  // Paginación y Datos
+  // Pagination and Data
   notificationsPage: PageResponse<Notification> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
   first = 0;
   rows = 5;
 
-  // Estados
+  // Status
   loading: boolean = true;
   error: boolean = false;
   listLoading: boolean = false;
 
-  // Selección
+  // Selection
   selectedNotification = signal<Notification | null>(null);
 
   constructor(
@@ -91,10 +91,10 @@ export class NotificationsComponent implements OnInit {
   }
 
   markAllAsRead() {
-    this.notificationService.markAllAsReadRest().subscribe({
+    this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        this.loadNotifications();
 
+        this.loadNotifications();
         this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Todas las notificaciones marcadas como leídas.' });
       },
       error: () => {
@@ -104,7 +104,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   deleteNotification(id: string) {
-    this.notificationService.deleteNotificationReq(id).subscribe({
+    this.notificationService.deleteNotification(id).subscribe({
       next: () => {
         if (this.selectedNotification()?.id === id) {
           this.selectedNotification.set(null);
@@ -119,21 +119,23 @@ export class NotificationsComponent implements OnInit {
   }
 
   // --- VISUAL HELPERS ---
-  getSeverityBySubject(subject: string): { color: string, icon: string, tag: 'info' | 'success' | 'warn' | 'danger' } {
-    const s = subject.toLowerCase();
-
-    if (s.includes('error') || s.includes('fallo') || s.includes('crítico') || s.includes('cancelado')) {
-      return { color: 'bg-red-50 text-red-600 border-red-200', icon: 'pi pi-exclamation-circle', tag: 'danger' };
+  getVisualsByType(type: string): { color: string, icon: string, tag: 'info' | 'success' | 'warn' | 'danger' | 'secondary' } {
+    switch (type?.toLowerCase()) {
+      case 'usuario':
+        return { color: 'bg-cyan-50 text-cyan-600 border-cyan-200', icon: 'pi pi-user', tag: 'info' };
+      case 'camión':
+        return { color: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'pi pi-truck', tag: 'secondary' };
+      case 'tienda':
+        return { color: 'bg-purple-50 text-purple-600 border-purple-200', icon: 'pi pi-building', tag: 'info' };
+      case 'pedido':
+        return { color: 'bg-emerald-50 text-emerald-600 border-emerald-200', icon: 'pi pi-shopping-cart', tag: 'success' };
+      case 'producto':
+        return { color: 'bg-indigo-50 text-indigo-600 border-indigo-200', icon: 'pi pi-box', tag: 'info' };
+      case 'reseña':
+        return { color: 'bg-amber-50 text-amber-600 border-amber-200', icon: 'pi pi-star', tag: 'warn' };
+      default:
+        return { color: 'bg-blue-50 text-blue-600 border-blue-200', icon: 'pi pi-bell', tag: 'info' };
     }
-    if (s.includes('éxito') || s.includes('completado') || s.includes('asignado')) {
-      return { color: 'bg-green-50 text-green-600 border-green-200', icon: 'pi pi-check-circle', tag: 'success' };
-    }
-    if (s.includes('alerta') || s.includes('aviso') || s.includes('retraso') || s.includes('mantenimiento')) {
-      return { color: 'bg-yellow-50 text-yellow-600 border-yellow-200', icon: 'pi pi-exclamation-triangle', tag: 'warn' };
-    }
-
-    // Por defecto (Info)
-    return { color: 'bg-blue-50 text-blue-600 border-blue-200', icon: 'pi pi-info-circle', tag: 'info' };
   }
 
   getUnreadInPageCount(): number {

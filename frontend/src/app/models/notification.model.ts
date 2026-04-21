@@ -4,4 +4,6 @@ export interface Notification {
   description: string;
   timestamp: string;
   read: boolean;
+
+  type: string;
 }

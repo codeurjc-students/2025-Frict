@@ -2,7 +2,8 @@ import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angula
 import { AuthService } from './auth.service';
 import { Notification } from '../models/notification.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { PageResponse } from '../models/pageResponse.model';
 
 @Injectable({
@@ -73,11 +74,22 @@ export class NotificationService implements OnDestroy {
     return this.http.get<PageResponse<Notification>>('/api/v1/notifications/', { params });
   }
 
-  public markAllAsReadRest(): Observable<boolean> {
-    return this.http.put<boolean>('/api/v1/notifications/read-all', {});
+  public markAllAsRead(): Observable<boolean> {
+    const previousState = this.notificationsSignal();
+
+    this.notificationsSignal.update(list =>
+      list.map(n => ({ ...n, read: true }))
+    );
+
+    return this.http.put<boolean>('/api/v1/notifications/read-all', {}).pipe(
+      catchError((err) => {
+        this.notificationsSignal.set(previousState);
+        return throwError(() => err);
+      })
+    );
   }
 
-  public deleteNotificationReq(id: string): Observable<boolean> {
+  public deleteNotification(id: string): Observable<boolean> {
     return this.http.delete<boolean>(`/api/v1/notifications/${id}`);
   }
 
