@@ -30,10 +30,12 @@ import {ShopStock} from '../../../models/shopStock.model';
 import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
 import {Image} from 'primeng/image';
-import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
 import {Shop} from '../../../models/shop.model';
 import {ShopService} from '../../../services/shop.service';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {Tag} from 'primeng/tag';
 
 
 @Component({
@@ -60,8 +62,9 @@ import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
     Textarea,
     TableModule,
     Image,
-    BreadcrumbComponent,
-    StockTagComponent
+    StockTagComponent,
+    BreadcrumbReloadComponent,
+    Tag
   ],
   templateUrl: './product-info.component.html'
 })
@@ -112,7 +115,8 @@ export class ProductInfoComponent implements OnInit {
               protected authService: AuthService,
               private route: ActivatedRoute,
               private router: Router,
-              private messageService: MessageService) {}
+              private messageService: MessageService,
+              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
     this.route.params.subscribe(() => { //If a related product is clicked when visualizing a product, the page should refresh the information
@@ -168,6 +172,7 @@ export class ProductInfoComponent implements OnInit {
       this.productService.getProductById(id).subscribe({
         next: (product) => {
           this.product = product;
+          this.breadcrumbService.setNodesForUrl(this.router.url, [{label: product.categories[0].name, routerLink: `/category/${product.categories[0].id}`}, {label: product.name}]);
 
           if (product.imagesInfo && Array.isArray(product.imagesInfo)) {
             this.images = product.imagesInfo.map((imgInfo) => ({

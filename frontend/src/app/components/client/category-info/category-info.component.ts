@@ -11,7 +11,7 @@ import {Product} from '../../../models/product.model';
 import {CategoryService} from '../../../services/category.service';
 import {ProductService} from '../../../services/product.service';
 import {Category} from '../../../models/category.model';
-import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-category-info',
@@ -24,7 +24,7 @@ import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component'
     RatingModule,
     FormsModule,
     ProductCardComponent,
-    BreadcrumbComponent
+    BreadcrumbReloadComponent
   ],
   templateUrl: './category-info.component.html',
   styleUrl: './category-info.component.css'

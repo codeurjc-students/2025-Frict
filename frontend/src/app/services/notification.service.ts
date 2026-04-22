@@ -1,10 +1,10 @@
 import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angular/core';
-import { AuthService } from './auth.service';
 import { Notification } from '../models/notification.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { PageResponse } from '../models/pageResponse.model';
+import {AuthService} from './auth.service';
 
 @Injectable({
   providedIn: 'root'

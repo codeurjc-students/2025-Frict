@@ -1,25 +1,29 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-
-// PrimeNG
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
-import { PaginatorModule, PaginatorState } from 'primeng/paginator';
-import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
-
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
+import {DatePipe, NgClass, NgForOf, NgIf, UpperCasePipe} from '@angular/common';
+import { LoadingScreenComponent } from '../loading-screen/loading-screen.component';
 import { PageResponse } from '../../../models/pageResponse.model';
 import { Notification } from '../../../models/notification.model';
 import { NotificationService } from '../../../services/notification.service';
+import {Button} from 'primeng/button';
+import {Paginator, PaginatorState} from 'primeng/paginator';
+import {Tag} from 'primeng/tag';
+import {MessageService} from 'primeng/api';
+import {Tooltip} from 'primeng/tooltip';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, LoadingScreenComponent,
-    ButtonModule, TagModule, PaginatorModule, TooltipModule
+    LoadingScreenComponent,
+    NgClass,
+    Button,
+    Paginator,
+    Tag,
+    Tooltip,
+    DatePipe,
+    UpperCasePipe,
+    NgIf,
+    NgForOf,
   ],
   templateUrl: './notifications.component.html'
 })

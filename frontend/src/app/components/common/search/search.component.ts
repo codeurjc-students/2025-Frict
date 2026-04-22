@@ -14,6 +14,7 @@ import {Tree} from 'primeng/tree';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
 import {mapToTreeNodes} from '../../../utils/nodeMapper.util';
+import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 
 interface SortOption {
   name: string;
@@ -33,7 +34,8 @@ interface SortOption {
     Button,
     Drawer,
     PrimeTemplate,
-    Tree
+    Tree,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './search.component.html',
   styleUrl: './search.component.css'

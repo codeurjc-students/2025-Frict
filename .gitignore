@@ -2,3 +2,4 @@
 backend/.env
 AGENTS.md
 docker/build_commands.txt
+frontend/frontend.iml

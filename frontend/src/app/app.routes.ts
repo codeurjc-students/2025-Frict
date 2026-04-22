@@ -20,12 +20,12 @@ export const routes: Routes = [
       {
         path: 'category/:id',
         loadComponent: () => import('./components/client/category-info/category-info.component').then(m => m.CategoryInfoComponent),
-        data: { title: 'Categoría', icon: 'client', breadcrumb: 'Categoría' }
+        data: { title: 'Categoría', icon: 'client', breadcrumb: 'Categorías' }
       },
       {
         path: 'product/:id',
         loadComponent: () => import('./components/client/product-info/product-info.component').then(m => m.ProductInfoComponent),
-        data: { title: 'Producto', icon: 'client', breadcrumb: 'Producto' }
+        data: { title: 'Producto', icon: 'client', breadcrumb: 'Productos' }
       },
       {
         path: 'search',
@@ -42,7 +42,7 @@ export const routes: Routes = [
           {
             path: 'order/:id',
             loadComponent: () => import('./components/common/order-details/order-details.component').then(m => m.OrderDetailsComponent),
-            data: { roles: ['USER'], title: 'Detalles del pedido', icon: 'client', breadcrumb: 'Pedido' }
+            data: { roles: ['USER'], title: 'Detalles del pedido', icon: 'client', breadcrumb: 'Pedidos' }
           },
 
           {

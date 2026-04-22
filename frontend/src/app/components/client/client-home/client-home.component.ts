@@ -11,6 +11,7 @@ import {LoadingSectionComponent} from '../../common/loading-section/loading-sect
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
 import {FormsModule} from '@angular/forms';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 interface ServiceUI {
   icon: string;
@@ -28,7 +29,8 @@ interface ServiceUI {
     Carousel,
     ProductCardComponent,
     LoadingSectionComponent,
-    FormsModule
+    FormsModule,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './client-home.component.html',
   styleUrls: ['./client-home.component.css']
@@ -70,7 +72,7 @@ export class ClientHomeComponent implements OnInit {
     this.loadCategories();
   }
 
-  private loadCategories(){
+  protected loadCategories(){
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list;
