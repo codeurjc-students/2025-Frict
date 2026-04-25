@@ -79,6 +79,9 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
   loadCategories() {
+    this.loading = true;
+    this.error = false;
+
     const processResponse = (items: Category[], isFullList: boolean) => {
       // Total usages count: sum of children usages
       const totalUsages = items.reduce((acc, curr) => acc + (curr.timesUsed || 0), 0);

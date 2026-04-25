@@ -103,6 +103,30 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     }
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Leaflet map cleaning
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+      this.marker = undefined;
+    }
+
+    // 2. Creation mode: Clean TS memory
+    if (!this.truckId()) {
+      this.truckForm.reset({
+        address: {
+          latitude: 0,
+          longitude: 0
+        }
+      });
+    }
+    // 3. Make requests
+    this.loadData();
+  }
+
   private setupAddressListener() {
     this.truckForm.get('address')?.valueChanges.pipe(
       filter(() => this.isGeocodingActive),

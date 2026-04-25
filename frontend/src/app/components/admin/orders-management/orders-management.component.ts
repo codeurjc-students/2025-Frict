@@ -112,6 +112,26 @@ export class OrdersManagementComponent implements OnInit {
     this.loadOrdersPage();
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Leaflet map cleaning
+    if (this.orderMap) {
+      this.orderMap.remove();
+      this.orderMap = undefined;
+    }
+
+    // 2. State and dialogs cleaning
+    this.displayOrderDialog = false;
+    this.displayStatusDialog = false;
+    this.selectedOrder = null;
+    this.pendingDropData = null;
+
+    // 3. Make data requests
+    this.loadOrdersPage();
+  }
+
   getCurrentStatus(order: Order): string {
     if (!order || !order.history || order.history.length === 0) return 'Pedido Realizado';
     return order.history[order.history.length - 1].status;

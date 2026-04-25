@@ -1,11 +1,11 @@
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error && shop" class="min-h-screen font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-6 flex flex-col gap-8">
 
-    <app-breadcrumb-reload></app-breadcrumb-reload>
+    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
     <div class="relative w-full h-64 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
       <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + shop.imageInfo.imageUrl + ')'"></div>

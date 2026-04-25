@@ -92,10 +92,6 @@
             </ng-template>
           </p-button>
 
-          <button (click)="dispararPrueba()" class="bg-red-500 text-white px-2 py-1 rounded text-xs mr-4">
-            Probar WS
-          </button>
-
           <div #ancla class="absolute top-full right-0 w-0 h-0"></div>
 
           <p-popover #notifPopover
@@ -134,12 +130,20 @@
                 }
               </div>
 
-              <div class="p-2 border-t border-surface-700 bg-surface-800 rounded-b-lg">
+              <div class="p-2 border-t border-surface-700 bg-surface-800 rounded-b-lg flex gap-2">
+
                 <p-button label="Ver todas"
                           (click)="notifPopover.hide()"
                           [routerLink]="authService.isUser() ? '/notifications' : '/admin/notifications'"
+                          class="flex-1"
                           styleClass="w-full !bg-transparent hover:!bg-surface-700 !text-primary-400 border-none !text-sm !font-semibold h-10 transition-colors">
                 </p-button>
+
+                <p-button icon="pi pi-wave-pulse"
+                          (click)="triggerTest()"
+                          styleClass="!bg-transparent hover:!bg-surface-700 !text-primary-400 border-none !text-sm !font-semibold h-10 transition-colors shrink-0">
+                </p-button>
+
               </div>
             </div>
           </p-popover>

@@ -1,11 +1,11 @@
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="getLoginInfo()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload (onReload)="initData()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (onReload)="getLoginInfo()"></app-breadcrumb-reload>
 
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pt-6">
 
@@ -40,7 +40,6 @@
       <div class="flex items-center gap-3">
         <ng-container *ngIf="authService.isDriver()">
           <ng-container *ngIf="driverTruck()">
-            <p-button label="Ver Mi Ruta" icon="pi pi-map" severity="secondary" [outlined]="true" [rounded]="true" size="small"></p-button>
             <p-button label="Escanear QR" icon="pi pi-qrcode" severity="info" [rounded]="true" size="small"></p-button>
           </ng-container>
         </ng-container>

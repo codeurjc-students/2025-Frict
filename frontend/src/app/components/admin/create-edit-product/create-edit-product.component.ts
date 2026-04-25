@@ -83,12 +83,30 @@ export class CreateEditProductComponent implements OnInit {
 
   protected readonly formatPrice = formatPrice;
 
+  public reloadAll() {
+    //If is creation mode, clear TS memory
+    if (!this.productId()) {
+      this.productForm.reset({
+        active: true,
+        supplyPrice: 0,
+        currentPrice: 0
+      });
+      this.selectedCategories = [];
+      this.existingImages.set([]);
+      this.newImages.set([]);
+    }
+    this.loadData();
+  }
+
   ngOnInit() {
     this.productId.set(this.route.snapshot.paramMap.get('id'));
     this.loadData();
   }
 
   loadData() {
+    this.loading = true;
+    this.error = false;
+
     const productId = this.productId();
     const currentUrl = this.router.url;
 

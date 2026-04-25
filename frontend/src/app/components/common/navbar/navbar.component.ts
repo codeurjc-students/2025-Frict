@@ -176,8 +176,8 @@ export class NavbarComponent implements OnInit {
     return false;
   }
 
-  dispararPrueba() {
-    this.http.post('/api/v1/notifications/test', {}).subscribe({
+  triggerTest() {
+    this.notificationService.triggerTest().subscribe({
       next: () => console.log('Test request sent to server'),
       error: (err) => console.error('Error in test:', err)
     });

@@ -1,11 +1,11 @@
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload></app-breadcrumb-reload>
+    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
     <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div class="mt-2">

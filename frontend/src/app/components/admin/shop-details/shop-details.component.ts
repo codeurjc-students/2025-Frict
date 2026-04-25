@@ -104,6 +104,26 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Clean Leaflet map
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+
+    // 2. Reset state
+    this.selectedStock = undefined;
+    this.selectedProduct = undefined;
+    this.selectedTruck = undefined;
+    this.restockQuantity = 0;
+
+    // 3. Send requests
+    this.loadData();
+  }
+
   // --- DATA LOAD MANAGEMENT ---
   loadData() {
     const id = this.route.snapshot.paramMap.get('id');

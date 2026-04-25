@@ -1,7 +1,11 @@
-<div class="min-h-screen font-sans text-slate-800">
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload></app-breadcrumb-reload>
+    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
     <div class="mt-6 mb-8">
       <h1 class="text-3xl font-bold text-primary-600">Gestor de usuarios</h1>

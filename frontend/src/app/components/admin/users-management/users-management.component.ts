@@ -26,12 +26,13 @@ import {formatPrice} from '../../../utils/textFormat.util';
 import {ConfirmPopup} from 'primeng/confirmpopup';
 import {Stat} from '../../../models/stat.model';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 
 @Component({
   selector: 'app-users-management',
   standalone: true,
   imports: [
-    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select, ConfirmPopup, BreadcrumbReloadComponent
+    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select, ConfirmPopup, BreadcrumbReloadComponent, LoadingScreenComponent
   ],
   templateUrl: './users-management.component.html',
   styleUrl: 'users-management.component.css'
@@ -132,6 +133,20 @@ export class UsersManagementComponent implements OnInit {
     this.initChartOptions();
     this.loadUsers();
     this.loadStats();
+  }
+
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    this.visibleOrdersDialog = false;
+    this.visibleReviewsDialog = false;
+    this.visibleNewInternalUserDialog = false;
+    this.visibleChangePasswordDialog = false;
+
+    this.selectedUser = null;
+
+    this.loadUsers();
   }
 
   cancelUserCreation() {

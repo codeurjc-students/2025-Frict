@@ -115,6 +115,36 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     }
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Clear Leaflet map
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+      this.marker = undefined;
+    }
+
+    // 2. Clear TS memory in Create mode
+    if (!this.shopId()) {
+      this.shopForm.reset({
+        assignedBudget: 0,
+        address: {
+          latitude: 0,
+          longitude: 0
+        }
+      });
+
+      this.newImage.set(null);
+      this.existingImage.set(null);
+      if (this.fileUploader) {
+        this.fileUploader.clear();
+      }
+    }
+    this.loadData();
+  }
+
   private setupAddressListener() {
     this.shopForm.get('address')?.valueChanges.pipe(
       filter(() => this.isGeocodingActive),

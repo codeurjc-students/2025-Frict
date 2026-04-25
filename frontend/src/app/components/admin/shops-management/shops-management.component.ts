@@ -149,6 +149,18 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     });
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+    this.cancelAssignment();
+    this.loadShops();
+  }
+
   loadShops() {
     let request$;
     if (this.authService.isAdmin()) {

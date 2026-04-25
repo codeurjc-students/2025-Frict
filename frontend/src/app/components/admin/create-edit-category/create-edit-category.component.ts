@@ -91,6 +91,30 @@ export class CreateEditCategoryComponent implements OnInit {
     this.loadData(id, parentIdParam);
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // Creation mode: Empty TS memory
+    if (!this.categoryId()) {
+      this.categoryForm.reset({
+        icon: 'pi pi-folder',
+      });
+
+      this.newImage.set(null);
+      this.existingImage.set(null);
+      this.oldImage.set(null);
+      if (this.fileUploader) {
+        this.fileUploader.clear();
+      }
+
+      this.orgChartNodes.set([]);
+    }
+
+    const parentIdParam = this.route.snapshot.queryParamMap.get('parentId');
+    this.loadData(this.categoryId(), parentIdParam);
+  }
+
   loadData(currentId: string | null, urlParentId: string | null) {
     const allCategoriesRequest = this.categoryService.getAllCategories().pipe(
       map((response: any) => Array.isArray(response) ? response : (response.items || []))

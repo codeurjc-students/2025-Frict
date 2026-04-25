@@ -120,4 +120,8 @@ export class NotificationService implements OnDestroy {
     }
     this.notificationsSignal.set([]);
   }
+
+  public triggerTest(): Observable<any> {
+    return this.http.post('/api/v1/notifications/test', {});
+  }
 }

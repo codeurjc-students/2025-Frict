@@ -1,12 +1,12 @@
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadCategories()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8 flex flex-col gap-8">
 
     <div class="gap-2">
-      <app-breadcrumb-reload></app-breadcrumb-reload>
+      <app-breadcrumb-reload (onReload)="loadCategories()"></app-breadcrumb-reload>
 
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="mt-2">

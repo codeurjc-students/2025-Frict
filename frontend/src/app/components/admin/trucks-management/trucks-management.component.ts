@@ -114,6 +114,26 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     }
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Leaflet map cleaning
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+
+    // 2. Modals closing and selections cleaning
+    this.displayHistoryDialog = false;
+    this.displayAssignmentDialog = false;
+    this.selectedTruck = null;
+    this.selectedDriver = undefined;
+
+    // 3. Send requests
+    this.loadTrucks();
+  }
+
   loadTrucks() {
     if (this.isInitialLoad) {
       this.loading = true;
