@@ -6,6 +6,7 @@ import { filter } from 'rxjs';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Button } from 'primeng/button';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-breadcrumb-reload',
@@ -18,13 +19,13 @@ export class BreadcrumbReloadComponent implements OnInit {
 
   @Output() onReload = new EventEmitter<void>();
 
-  // 1. Iniciamos la variable home vacía o con un valor por defecto
   home: MenuItem = { label: 'Inicio', routerLink: '/' };
 
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
   public breadcrumbService = inject(BreadcrumbService);
+  public authService = inject(AuthService);
 
   ngOnInit(): void {
     this.configureHomeNode();
@@ -46,10 +47,10 @@ export class BreadcrumbReloadComponent implements OnInit {
   }
 
   private configureHomeNode(): void {
-    const isAdminArea = this.router.url.startsWith('/admin');
+    const isStaff = this.authService.isAdmin() || this.authService.isManager() || this.authService.isDriver();
     this.home = {
       label: 'Inicio',
-      routerLink: isAdminArea ? '/admin' : '/'
+      routerLink: isStaff ? '/admin' : '/'
     };
   }
 

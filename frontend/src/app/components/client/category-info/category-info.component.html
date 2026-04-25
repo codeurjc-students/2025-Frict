@@ -1,5 +1,8 @@
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadMainCategory()"></app-loading-screen>
+</div>
 
-<div class="min-h-screen pb-12 font-sans text-surface-900">
+<div *ngIf="!loading && !error" class="min-h-screen pb-12 font-sans text-surface-900">
 
   <header class="bg-gray-100 border-b border-surface-200">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto">
@@ -7,14 +10,30 @@
 
         <div class="flex-1 text-center md:text-left flex flex-col">
 
-          <div class="text-sm md:pt-8">
-            <app-breadcrumb-reload></app-breadcrumb-reload>
-          </div>
+          <app-breadcrumb-reload (onReload)="loadMainCategory()"></app-breadcrumb-reload>
 
           <div class="py-8">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight mb-4 ">
-              <i [class]="mainCategory.icon + ' mr-3'" style="font-size: 2rem"></i> {{ mainCategory.name }}
-            </h1>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 mb-4">
+
+              <h1 class="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight">
+                <i [class]="(mainCategory.icon || 'pi pi-tag') + ' mr-3'" style="font-size: 2rem"></i> {{ mainCategory.name }}
+              </h1>
+
+              <p-button
+                label="Ver todos los productos"
+                icon="pi pi-arrow-right"
+                iconPos="right"
+                [routerLink]="['/search']"
+                [queryParams]="{ categories: mainCategory.id }"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                styleClass="!font-bold shadow-sm">
+              </p-button>
+
+            </div>
+
             <p class="text-surface-600 text-sm md:text-base leading-relaxed max-w-2xl">
               {{ mainCategory.shortDescription }}
             </p>
@@ -45,11 +64,8 @@
       <div class="flex gap-12 overflow-x-auto hide-scrollbar pb-4 sm:flex-wrap sm:justify-center">
 
         @for (sub of mainCategory.children; track sub.id) {
-          @let hasChildren = sub.children && sub.children.length > 0;
-
           <div
-            [routerLink]="hasChildren ? ['/category', sub.id] : ['/search']"
-            [queryParams]="hasChildren ? null : { categories: sub.id }"
+            [routerLink]="['/category', sub.id]"
             class="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group">
 
             <div class="w-20 h-20 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-600 group-hover:border-primary-500 group-hover:text-primary-600 transition-all duration-300">
@@ -73,7 +89,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div *ngFor="let p of topSalesProducts">
-          <app-product-card [product]="p" [elementId]="'recommendedProduct-' + p.id"/>
+          <app-product-card [product]="p" [elementId]="'recommendedProduct-' + p.id" [navState]="{ from: 'category', categoryName: mainCategory.name, categoryId: mainCategory.id }"/>
         </div>
       </div>
     </section>
@@ -86,8 +102,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         @for (cat of similarCategories; track cat.id) {
-          @let hasChildren = cat.children && cat.children.length > 0;
-          <div [routerLink]="hasChildren ? ['/category', cat.id] : ['/search']" [queryParams]="hasChildren ? null : { categories: cat.id }" class="relative h-64 rounded-xl overflow-hidden cursor-pointer group">
+          <div [routerLink]="['/category', cat.id]" class="relative h-64 rounded-xl overflow-hidden cursor-pointer group">
             <img [src]="cat.imageInfo.imageUrl" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
               <h3 class="text-white font-bold text-lg leading-tight mb-1">{{ cat.name }}</h3>
@@ -99,23 +114,6 @@
             </div>
           </div>
         }
-      </div>
-    </section>
-
-    <section>
-      <div class="flex items-center gap-3 mb-6">
-        <div class="w-1.5 h-8 bg-cyan-500 rounded-full"></div>
-        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Nuestra selección (provisional)</h2>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div *ngFor="let use of useCases" class="bg-white p-4 rounded-xl border border-surface-200 shadow-sm hover:border-primary-400 cursor-pointer transition-colors flex flex-col items-center text-center gap-3">
-          <div class="w-12 h-12 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center">
-            <i [class]="use.icon + ' text-xl'"></i>
-          </div>
-          <span class="font-bold text-surface-700 text-sm">{{ use.title }}</span>
-          <span class="text-xs text-primary-600 font-medium">Ver selección <i class="pi pi-arrow-right text-[10px]"></i></span>
-        </div>
       </div>
     </section>
   </div>

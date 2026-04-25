@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {ActivatedRoute, RouterModule} from '@angular/router';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 
 // PrimeNG Imports
 import {ButtonModule} from 'primeng/button';
@@ -13,6 +13,8 @@ import {Order} from '../../../models/order.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-order-details',
@@ -25,15 +27,10 @@ import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
     CardModule,
     TagModule,
     DividerModule,
-    LoadingScreenComponent
+    LoadingScreenComponent,
+    BreadcrumbReloadComponent
   ],
-  templateUrl: './order-details.component.html',
-  styles: [`
-    :host ::ng-deep .custom-timeline .p-timeline-event-content,
-    :host ::ng-deep .custom-timeline .p-timeline-event-opposite {
-      line-height: 1;
-    }
-  `]
+  templateUrl: './order-details.component.html'
 })
 export class OrderDetailsComponent implements OnInit {
 
@@ -52,7 +49,9 @@ export class OrderDetailsComponent implements OnInit {
   ];
 
   constructor(private orderService: OrderService,
-              private route: ActivatedRoute) {}
+              private route: ActivatedRoute,
+              private router: Router,
+              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
     this.orderId = this.route.snapshot.paramMap.get('id');
@@ -60,9 +59,19 @@ export class OrderDetailsComponent implements OnInit {
   }
 
   loadOrder() {
+    this.loading = true;
+    this.error = false;
+
     if (this.orderId) {
       this.orderService.getOrderById(this.orderId).subscribe({
         next: (order) => {
+          const currentUrl = this.router.url;
+
+          this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+            { label: 'Perfil', routerLink: '/profile' },
+            { label: 'Pedido ' + order.referenceCode }
+          ]);
+
           this.order = order;
           this.loadIcons();
           this.loading = false;

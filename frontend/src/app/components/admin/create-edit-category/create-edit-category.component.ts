@@ -19,13 +19,15 @@ import {LocalImage} from '../../../models/localImage.model';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
 import {UiService} from '../../../utils/ui.service';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-create-edit-category',
   standalone: true,
   imports: [
     Button, ReactiveFormsModule, InputText, FileUpload, NgIf, FormsModule,
-    RouterLink, LoadingScreenComponent, OrganizationChart, Editor, Textarea, Select, PrimeTemplate, NgClass
+    RouterLink, LoadingScreenComponent, OrganizationChart, Editor, Textarea, Select, PrimeTemplate, NgClass, BreadcrumbReloadComponent
   ],
   templateUrl: './create-edit-category.component.html',
   styleUrl: './create-edit-category.component.css'
@@ -42,6 +44,7 @@ export class CreateEditCategoryComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private sanitizer = inject(DomSanitizer);
   private uiService = inject(UiService);
+  private breadcrumbService = inject(BreadcrumbService);
 
   // Signals
   orgChartNodes = signal<TreeNode[]>([]);
@@ -103,6 +106,8 @@ export class CreateEditCategoryComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const { allCategoriesTree, currentCategory } = response;
+          const currentUrl = this.router.url;
+
           let flattened = this.flattenCategories(allCategoriesTree);
 
           // Exclude itself and children from being the parent
@@ -114,6 +119,11 @@ export class CreateEditCategoryComponent implements OnInit {
 
           // Edit mode
           if (currentCategory) {
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+              { label: 'Gestor de Categorías', routerLink: '/admin/categories' },
+              { label: currentCategory.name, routerLink: `/category/${currentCategory.id}`, state: { from: 'categories-management' } }
+            ]);
+
             this.oldImage.set(currentCategory.imageInfo?.imageUrl || null);
             this.existingImage.set(currentCategory.imageInfo?.imageUrl || null);
             this.categoryForm.patchValue({
@@ -127,6 +137,10 @@ export class CreateEditCategoryComponent implements OnInit {
           }
           // Create mode
           else if (urlParentId) {
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+              { label: 'Gestor de Categorías', routerLink: '/admin/categories' }
+            ]);
+
             const parentExists = this.flatCategoriesList().some(c => c.id == urlParentId);
             if (parentExists) {
               this.categoryForm.patchValue({ parentId: Number(urlParentId) });

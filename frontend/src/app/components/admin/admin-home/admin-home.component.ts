@@ -20,6 +20,7 @@ import {catchError, forkJoin, of, switchMap} from 'rxjs';
 import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {StyleClass} from 'primeng/styleclass';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 interface SystemAlert {
   title: string;
@@ -34,7 +35,7 @@ interface SystemAlert {
   standalone: true,
   imports: [
     CommonModule, RouterLink, LoadingScreenComponent,
-    Button, ChartModule, TableModule, Tag, Avatar, Tooltip, StyleClass
+    Button, ChartModule, TableModule, Tag, Avatar, Tooltip, StyleClass, BreadcrumbReloadComponent
   ],
   templateUrl: './admin-home.component.html'
 })

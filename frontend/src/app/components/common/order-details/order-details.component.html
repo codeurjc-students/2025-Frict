@@ -1,9 +1,11 @@
 
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadOrder()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
+
+  <app-breadcrumb-reload (onReload)="loadOrder()"></app-breadcrumb-reload>
 
   <div class="mt-6 mb-4">
     <a routerLink="/profile" class="inline-flex items-center gap-2 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer font-bold text-sm">

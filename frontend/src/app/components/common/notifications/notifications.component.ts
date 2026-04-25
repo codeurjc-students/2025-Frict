@@ -9,6 +9,8 @@ import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Tag} from 'primeng/tag';
 import {MessageService} from 'primeng/api';
 import {Tooltip} from 'primeng/tooltip';
+import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-notifications',
@@ -24,6 +26,7 @@ import {Tooltip} from 'primeng/tooltip';
     UpperCasePipe,
     NgIf,
     NgForOf,
+    BreadcrumbReloadComponent,
   ],
   templateUrl: './notifications.component.html'
 })
@@ -44,14 +47,26 @@ export class NotificationsComponent implements OnInit {
 
   constructor(
     private messageService: MessageService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private breadcrumbService: BreadcrumbService
   ) {}
 
   ngOnInit() {
     this.loadNotifications();
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    this.selectedNotification.set(null);
+    this.first = 0;
+
+    this.loadNotifications();
+  }
+
   loadNotifications() {
+
     if (!this.loading) this.listLoading = true;
 
     this.notificationService.getNotificationsPage(this.first / this.rows, this.rows).subscribe({

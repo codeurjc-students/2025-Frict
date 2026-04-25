@@ -22,6 +22,8 @@ import {ImageInfo} from '../../../models/imageInfo.model';
 import {LocalImage} from '../../../models/localImage.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {forkJoin} from 'rxjs';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-create-edit-product',
@@ -38,7 +40,8 @@ import {forkJoin} from 'rxjs';
     TreeSelect,
     FormsModule,
     RouterLink,
-    LoadingScreenComponent
+    LoadingScreenComponent,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './create-edit-product.component.html',
   styleUrl: 'create-edit-product.component.css'
@@ -51,7 +54,8 @@ export class CreateEditProductComponent implements OnInit {
               private route: ActivatedRoute,
               private productService: ProductService,
               private categoryService: CategoryService,
-              private sanitizer: DomSanitizer) {
+              private sanitizer: DomSanitizer,
+              private breadcrumbService: BreadcrumbService) {
 
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -86,6 +90,7 @@ export class CreateEditProductComponent implements OnInit {
 
   loadData() {
     const productId = this.productId();
+    const currentUrl = this.router.url;
 
     if (productId) {
       // EDIT
@@ -94,6 +99,11 @@ export class CreateEditProductComponent implements OnInit {
         product: this.productService.getProductById(productId)
       }).subscribe({
         next: ({ list, product }) => {
+          this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+            { label: 'Gestor de Productos', routerLink: '/admin/products' },
+            { label: product.name, routerLink: `/product/${product.id}`, state: { from: 'products-management' } }
+          ]);
+
           const cleanCategories = this.removeOthersCategoryFromTree(list || []);
           this.categories = mapToTreeNodes(cleanCategories);
 
@@ -117,6 +127,9 @@ export class CreateEditProductComponent implements OnInit {
         }
       });
     } else {
+      this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+        { label: 'Gestor de Productos', routerLink: '/admin/products' }
+      ]);
       // CREATE
       this.categoryService.getAllCategories().subscribe({
         next: (list) => {

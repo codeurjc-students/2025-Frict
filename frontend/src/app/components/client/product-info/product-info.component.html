@@ -1,11 +1,11 @@
 
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="resetError()"></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadProduct()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-16 relative">
 
-  <app-breadcrumb-reload></app-breadcrumb-reload>
+  <app-breadcrumb-reload (onReload)="loadProduct()"></app-breadcrumb-reload>
 
   <header class="mb-4 mt-4 border-surface-200 py-4">
     <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">

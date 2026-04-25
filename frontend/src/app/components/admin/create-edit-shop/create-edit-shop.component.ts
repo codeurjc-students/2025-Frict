@@ -27,6 +27,8 @@ import {Shop} from '../../../models/shop.model';
 import {LocalImage} from '../../../models/localImage.model';
 import * as L from 'leaflet';
 import {LocationService} from '../../../services/location.service';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-create-edit-shop',
@@ -40,7 +42,8 @@ import {LocationService} from '../../../services/location.service';
     NgIf,
     FormsModule,
     RouterLink,
-    LoadingScreenComponent
+    LoadingScreenComponent,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './create-edit-shop.component.html',
   styleUrl: './create-edit-shop.component.css'
@@ -55,6 +58,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
               private shopService: ShopService,
               private sanitizer: DomSanitizer,
               private locationService: LocationService,
+              private breadcrumbService: BreadcrumbService,
               @Inject(PLATFORM_ID) private platformId: Object) {
 
     this.shopForm = this.fb.group({
@@ -152,9 +156,16 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     this.isGeocodingActive = false;
 
     const shopId = this.shopId();
+    const currentUrl = this.router.url;
+
     if (shopId) {
       this.shopService.getShopById(shopId).subscribe({
         next: (shop) => {
+          this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+            { label: 'Gestor de Tiendas', routerLink: '/admin/shops' },
+            { label: shop.name, routerLink: `/admin/shop/${shop.id}` }
+          ]);
+
           this.shop.set(shop);
           this.existingImage.set(shop.imageInfo.imageUrl);
 
@@ -180,6 +191,11 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
         }
       });
     } else {
+
+      this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+        { label: 'Gestor de Tiendas', routerLink: '/admin/shops' }
+      ]);
+
       this.loading = false;
       // Also wait for load finishing to start geocoding
       setTimeout(() => {

@@ -41,7 +41,6 @@ export class NotificationService implements OnDestroy {
   private loadInitialHistory() {
     this.http.get<Notification[]>('/api/v1/notifications/unread').subscribe({
       next: (history) => {
-        console.log("Hola");
         this.notificationsSignal.set(history);
       },
       error: (err) => console.error('Error loading notifications history', err)

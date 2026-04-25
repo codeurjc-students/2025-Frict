@@ -18,6 +18,8 @@ import {Truck} from '../../../models/truck.model';
 import {TruckService} from '../../../services/truck.service';
 import {Shop} from '../../../models/shop.model';
 import {ShopService} from '../../../services/shop.service';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-create-edit-truck',
@@ -31,7 +33,8 @@ import {ShopService} from '../../../services/shop.service';
     NgIf,
     FormsModule,
     RouterLink,
-    LoadingScreenComponent
+    LoadingScreenComponent,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './create-edit-truck.component.html'
 })
@@ -45,13 +48,14 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
               private truckService: TruckService,
               private locationService: LocationService,
               private shopService: ShopService,
+              private breadcrumbService: BreadcrumbService,
               @Inject(PLATFORM_ID) private platformId: Object) {
 
     this.truckForm = this.fb.group({
       plateNumber: ['', [Validators.required, Validators.minLength(4)]],
       referenceCode: [{ value: '', disabled: true }],
       maxOrderCapacity: [10, [Validators.required, Validators.min(1)]],
-      shopId: [''], // Campo opcional como solicitaste
+      shopId: [''],
 
       address: this.fb.group({
         alias: ['Última ubicación conocida', []],
@@ -75,7 +79,6 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   loading: boolean = true;
   error: boolean = false;
 
-  // Variables para la carga perezosa de Tiendas
   availableShops: Shop[] = [];
   shopsLoaded: boolean = false;
   loadingShops: boolean = false;
@@ -132,9 +135,16 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     this.isGeocodingActive = false;
 
     const currentId = this.truckId();
+    const currentUrl = this.router.url;
+
     if (currentId) {
       this.truckService.getTruckById(currentId).subscribe({
         next: (truck) => {
+          this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+            { label: 'Gestor de Camiones', routerLink: '/admin/trucks' },
+            { label: truck.referenceCode }
+          ]);
+
           this.truck.set(truck);
 
           this.truckForm.patchValue({
@@ -167,6 +177,10 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         }
       });
     } else {
+      this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+        { label: 'Gestor de Camiones', routerLink: '/admin/trucks' }
+      ]);
+
       this.loading = false;
       setTimeout(() => {
         this.syncAddressMemory();
@@ -283,7 +297,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         }
       },
       error: (err) => {
-        console.error('Error en geocodificación inversa:', err);
+        console.error('Reverse geocoding error:', err);
         this.isGeocodingActive = true;
         this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudo recuperar la dirección automática.' });
       }

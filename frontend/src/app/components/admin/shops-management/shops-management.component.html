@@ -4,10 +4,12 @@
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800">
 
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+
+    <app-breadcrumb-reload></app-breadcrumb-reload>
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
+      <div class="mt-2">
         <h1 class="text-3xl font-bold text-primary-600">Gestor de Tiendas</h1>
         <p *ngIf="authService.isAdmin()" class="text-slate-500">Administra las diferentes puntos de venta de la organización.</p>
         <p *ngIf="authService.isManager()" class="text-slate-500">Administra las tiendas a las que estás asignado.</p>

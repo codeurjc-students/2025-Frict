@@ -362,8 +362,7 @@
 
       @else {
         <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
-           [routerLink]="['/search']"
-           [queryParams]="{ categories: cat.id }"
+           [routerLink]="['/category', cat.id]"
            routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
            [routerLinkActiveOptions]="routerOptions"
            [style.padding-left.rem]="1 + (level * 1.5)">

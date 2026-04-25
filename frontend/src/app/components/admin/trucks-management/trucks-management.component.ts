@@ -30,12 +30,13 @@ import {formatAddress} from '../../../utils/textFormat.util';
 import {UserService} from '../../../services/user.service';
 import {Select} from 'primeng/select';
 import {RouterLink} from '@angular/router';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-trucks-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, LoadingScreenComponent, Button, SelectButton, UIChart, InputGroup, InputGroupAddon, InputText, TableModule, Avatar, Tag, ProgressBar, Paginator, Dialog, Select, Tooltip, Textarea, RouterLink
+    CommonModule, FormsModule, LoadingScreenComponent, Button, SelectButton, UIChart, InputGroup, InputGroupAddon, InputText, TableModule, Avatar, Tag, ProgressBar, Paginator, Dialog, Select, Tooltip, Textarea, RouterLink, BreadcrumbReloadComponent
   ],
   templateUrl: './trucks-management.component.html'
 })

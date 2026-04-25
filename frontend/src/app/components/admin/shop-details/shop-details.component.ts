@@ -27,6 +27,7 @@ import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {Message} from 'primeng/message';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-shop-details',
@@ -46,7 +47,8 @@ import {Message} from 'primeng/message';
     Tooltip,
     Dialog,
     Select,
-    Message
+    Message,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './shop-details.component.html',
   styleUrl: 'shop-details.component.css'

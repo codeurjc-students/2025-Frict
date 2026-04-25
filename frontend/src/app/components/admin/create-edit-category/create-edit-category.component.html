@@ -3,10 +3,12 @@
 </div>
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+
+    <app-breadcrumb-reload></app-breadcrumb-reload>
 
     <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
+      <div class="mt-2">
         <h1 class="text-3xl font-bold text-primary-600">
           {{ categoryId() ? 'Editar Categoría' : 'Nueva Categoría' }}
         </h1>
@@ -51,7 +53,7 @@
       </div>
 
       <p class="text-center text-xs text-slate-400 mt-4" *ngIf="!orgChartNodes() || orgChartNodes().length === 0">
-        Selecciona una categoría padre para visualizar la jerarquía.
+        Selecciona una categoría hija para visualizar la jerarquía.
       </p>
     </div>
 

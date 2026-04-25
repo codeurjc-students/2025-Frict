@@ -9,7 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 import {InputTextModule} from 'primeng/inputtext';
 import {CheckboxModule} from 'primeng/checkbox';
-import {formatCardDueDate, formatPrice} from '../../../utils/textFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {CartSummary} from '../../../models/cartSummary.model';
 import {OrderService} from '../../../services/order.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
@@ -22,6 +22,8 @@ import {InputMask} from 'primeng/inputmask';
 import {MessageService} from 'primeng/api';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {OrderItem} from '../../../models/orderItem.model';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 
 @Component({
   selector: 'app-order-summary',
@@ -38,7 +40,8 @@ import {OrderItem} from '../../../models/orderItem.model';
     CheckboxModule,
     LoadingScreenComponent,
     Paginator,
-    InputMask
+    InputMask,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './order-summary.component.html',
   standalone: true,
@@ -47,7 +50,6 @@ import {OrderItem} from '../../../models/orderItem.model';
 export class OrderSummaryComponent implements OnInit {
 
   protected readonly formatPrice = formatPrice;
-  protected readonly formatDueDate = formatCardDueDate;
 
   cartSummary!: CartSummary;
   cartItemsPage: PageResponse<OrderItem> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
@@ -76,9 +78,17 @@ export class OrderSummaryComponent implements OnInit {
   constructor(private orderService: OrderService,
               private userService: UserService,
               private messageService: MessageService,
-              private router: Router) {}
+              private router: Router,
+              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
+    this.getUserInfo();
+  }
+
+  protected reloadAll() {
+    this.selectedAddress = undefined;
+    this.selectedPaymentCard = undefined;
+    this.activeStep = 1;
     this.getUserInfo();
   }
 
@@ -107,6 +117,10 @@ export class OrderSummaryComponent implements OnInit {
   }
 
   protected getUserInfo(){
+    this.loading = true;
+    this.error = false;
+
+    this.breadcrumbService.insertPenultimateNodesForUrl(this.router.url, [{ label: "Carrito", routerLink: '/cart' }]);
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;

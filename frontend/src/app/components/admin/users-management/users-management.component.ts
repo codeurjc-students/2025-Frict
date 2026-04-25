@@ -25,12 +25,13 @@ import {OrderService} from '../../../services/order.service';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {ConfirmPopup} from 'primeng/confirmpopup';
 import {Stat} from '../../../models/stat.model';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-users-management',
   standalone: true,
   imports: [
-    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select, ConfirmPopup
+    CommonModule, Button, Tag, TableModule, Avatar, Tooltip, Paginator, UIChart, Dialog, FormsModule, InputText, ReactiveFormsModule, Select, ConfirmPopup, BreadcrumbReloadComponent
   ],
   templateUrl: './users-management.component.html',
   styleUrl: 'users-management.component.css'

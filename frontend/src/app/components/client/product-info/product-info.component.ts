@@ -159,21 +159,55 @@ export class ProductInfoComponent implements OnInit {
     this.newReview.recommended = b;
   }
 
-  protected resetError() {
+  protected loadProduct() {
     this.loading = true;
     this.error = false;
-    this.loadProduct();
-  }
 
-  protected loadProduct() {
     const id = this.route.snapshot.paramMap.get('id');
+    const navState = history.state;
 
     if (id) {
       this.productService.getProductById(id).subscribe({
         next: (product) => {
           this.product = product;
-          this.breadcrumbService.setNodesForUrl(this.router.url, [{label: product.categories[0].name, routerLink: `/category/${product.categories[0].id}`}, {label: product.name}]);
 
+          const currentUrl = this.router.url;
+
+          // 1. Dinamically set product name as last node
+          this.breadcrumbService.setNodesForUrl(currentUrl, [{ label: product.name }]);
+
+          // 2. Dinamically set the penultimate node from route state
+          if (navState.from === 'search') {
+            // From search page: Home > Search > Product Name
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+              { label: 'Búsqueda', routerLink: '/search' }
+            ]);
+
+          } else if (navState.from === 'category' && navState.categoryName) {
+            // From category page: Home > Category Name > Product Name
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+              { label: navState.categoryName, routerLink: `/category/${navState.categoryId}` }
+            ]);
+
+          } else if (navState.from === 'products-management') {
+            // From products management page: Home > Products Manager > Product Name
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+              { label: 'Gestor de productos', routerLink: `/admin/products` }
+            ]);
+
+          }
+          else {
+            // From index, or after refreshing the entire page (F5) (Home > First Category Name > Product Name)
+            if (product.categories && product.categories.length > 0) {
+              this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+                { label: product.categories[0].name, routerLink: `/category/${product.categories[0].id}` }
+              ]);
+            } else {
+              this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, []);
+            }
+          }
+
+          // --- RESTO DE TU LÓGICA INTACTA ---
           if (product.imagesInfo && Array.isArray(product.imagesInfo)) {
             this.images = product.imagesInfo.map((imgInfo) => ({
               itemImageSrc: imgInfo.imageUrl

@@ -16,13 +16,14 @@ import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {Tag} from 'primeng/tag';
 import {ConfirmationService, MessageService} from 'primeng/api';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 
 @Component({
   selector: 'app-products-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag,
+    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag, BreadcrumbReloadComponent,
   ],
   templateUrl: './products-management.component.html',
   styleUrl: 'products-management.component.css'

@@ -39,13 +39,14 @@ import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 
 import * as L from 'leaflet';
 import {ProgressBar} from 'primeng/progressbar';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-orders-management',
   standalone: true,
   imports: [
     CommonModule, FormsModule, CdkDropListGroup, CdkDropList, CdkDrag, Avatar, CdkDragPlaceholder, CdkDragPreview,
-    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select, ProgressBar
+    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select, ProgressBar, BreadcrumbReloadComponent
   ],
   templateUrl: './orders-management.component.html',
   styleUrl: './orders-management.component.css'

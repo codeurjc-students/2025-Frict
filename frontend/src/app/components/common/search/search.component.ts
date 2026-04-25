@@ -71,18 +71,42 @@ export class SearchComponent implements OnInit {
 
 
   ngOnInit(): void {
+    // Le decimos que SÍ es la carga inicial
+    this.getAllCategories(true);
+  }
+
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+    this.categories = [];
+    this.foundProducts.items = [];
+
+    this.getAllCategories(false);
+  }
+
+  protected getAllCategories(isInitialLoad: boolean = false) {
     this.categoryService.getAllCategories().subscribe({
       next: (response) => {
         const rawCategories = response || [];
         this.categories = mapToTreeNodes(rawCategories);
 
-        this.route.queryParamMap.subscribe(params => {
-          this.syncStateWithUrl(params);
-        });
+        if (isInitialLoad) {
+          this.route.queryParamMap.subscribe(params => {
+            this.syncStateWithUrl(params);
+          });
+        } else {
+          this.syncStateWithUrl(this.route.snapshot.queryParamMap);
+        }
       },
       error: (err) => {
         console.error('Error cargando categorías', err);
-        this.route.queryParamMap.subscribe(params => this.syncStateWithUrl(params));
+
+        if (isInitialLoad) {
+          this.route.queryParamMap.subscribe(params => this.syncStateWithUrl(params));
+        } else {
+          this.loading = false;
+          this.error = true;
+        }
       }
     });
   }

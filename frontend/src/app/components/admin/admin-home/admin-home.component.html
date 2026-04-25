@@ -3,9 +3,11 @@
 </div>
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-200">
+    <app-breadcrumb-reload (onReload)="initData()"></app-breadcrumb-reload>
+
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pt-6">
 
       <div class="relative">
         <div class="flex items-center gap-3 mb-2">
@@ -16,7 +18,7 @@
         </div>
 
         <p class="text-slate-500 text-sm flex items-center gap-2" *ngIf="!authService.isDriver() || driverTruck()">
-          <i class="pi text-blue-500" [ngClass]="authService.isDriver() ? 'pi-truck' : 'pi-map-marker'"></i>
+          <i class="pi text-primary-500" [ngClass]="authService.isDriver() ? 'pi-truck' : 'pi-map-marker'"></i>
           <span class="font-medium">
             <ng-container *ngIf="authService.isAdmin()">
               Información general de la organización ({{ globalKpis().totalShops }} tiendas asociadas)
@@ -36,20 +38,12 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <ng-container *ngIf="authService.isAdmin() || authService.isManager()">
-          <p-button label="Perfil" icon="pi pi-user" severity="secondary" routerLink="/admin/profile" [outlined]="true" [rounded]="true"></p-button>
-        </ng-container>
-
         <ng-container *ngIf="authService.isDriver()">
           <ng-container *ngIf="driverTruck()">
             <p-button label="Ver Mi Ruta" icon="pi pi-map" severity="secondary" [outlined]="true" [rounded]="true" size="small"></p-button>
             <p-button label="Escanear QR" icon="pi pi-qrcode" severity="info" [rounded]="true" size="small"></p-button>
           </ng-container>
         </ng-container>
-
-        <div class="w-px h-8 bg-slate-200 mx-2 hidden md:block"></div>
-
-        <p-button icon="pi pi-refresh" [text]="true" severity="secondary" pTooltip="Refrescar datos" (onClick)="initData()"></p-button>
       </div>
     </div>
 
@@ -104,7 +98,7 @@
             <h2 class="text-lg font-bold text-slate-800">Evolución de Ingresos</h2>
             <p class="text-sm text-slate-500">Rendimiento de los últimos 7 días</p>
           </div>
-            <p-button icon="pi pi-arrow-right" routerLink="/admin/reports" [text]="true" label="Todos los informes" iconPos="right" severity="secondary" size="small"></p-button>
+            <p-button icon="pi pi-arrow-right" routerLink="/admin/reports" [text]="true" label="Todos los informes" iconPos="right" size="small"></p-button>
           </div>
 
           <div class="flex-1 min-h-0 w-full">
@@ -243,9 +237,9 @@
       <div *ngIf="!authService.isDriver() || driverTruck()" class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
         <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <i class="pi pi-list text-slate-400"></i> {{ authService.isDriver() ? 'Mis Próximas Entregas' : 'Pedidos Recientes' }}
+            <i class="pi pi-list text-primary-400"></i> {{ authService.isDriver() ? 'Mis Próximas Entregas' : 'Pedidos Recientes' }}
           </h2>
-          <p-button *ngIf="authService.isAdmin() || authService.isManager()" icon="pi pi-arrow-right" routerLink="/admin/orders" [text]="true" label="Todos los pedidos" iconPos="right" severity="secondary" size="small"></p-button>
+          <p-button *ngIf="authService.isAdmin() || authService.isManager()" icon="pi pi-arrow-right" routerLink="/admin/orders" [text]="true" label="Todos los pedidos" iconPos="right" size="small"></p-button>
 
         </div>
 

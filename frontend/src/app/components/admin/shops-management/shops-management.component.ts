@@ -25,13 +25,14 @@ import {UserService} from '../../../services/user.service';
 import {Avatar} from 'primeng/avatar';
 import {AuthService} from '../../../services/auth.service';
 import {Alert} from '../../../utils/ui.service';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-shops-management',
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent, Dialog, Select, Avatar
+    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent, Dialog, Select, Avatar, BreadcrumbReloadComponent
   ],
   templateUrl: './shops-management.component.html',
   styleUrl: 'shops-management.component.css'

@@ -1,6 +1,9 @@
-<app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..."></app-loading-screen>
+<app-loading-screen [loading]="loading" [error]="error" errorText="Cargando información de perfil..." (tryReload)="loadUser()"></app-loading-screen>
 
 <div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
+
+  <app-breadcrumb-reload (onReload)="loadUser()"></app-breadcrumb-reload>
+
   <section class="mt-6 mb-12 relative">
     <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 border border-surface-700">
 
