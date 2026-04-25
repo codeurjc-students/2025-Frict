@@ -132,12 +132,10 @@ export class ClientHomeComponent implements OnInit {
   }
 
   public reload() {
-    // 1. Reseteamos los estados de error
     this.featuredError = false;
     this.recommendedError = false;
     this.topSalesError = false;
 
-    // 2. Activamos los estados de carga
     this.featuredLoading = true;
     this.recommendedLoading = true;
     this.topSalesLoading = true;
@@ -147,7 +145,6 @@ export class ClientHomeComponent implements OnInit {
     this.topSalesProducts = [];
     this.categories = [];
 
-    // 4. Volvemos a pedir los datos
     this.loadCategories();
   }
 }

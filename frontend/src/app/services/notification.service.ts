@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angular/core';
 import { Notification } from '../models/notification.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import {map, Observable, throwError} from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { PageResponse } from '../models/pageResponse.model';
 import {AuthService} from './auth.service';
@@ -64,6 +64,12 @@ export class NotificationService implements OnDestroy {
     this.socket.onerror = (error) => {
       console.error('Error in notifications websocket:', error);
     };
+  }
+
+  public getRecentNotifications(count: number = 5): Observable<Notification[]> {
+    return this.getNotificationsPage(0, count).pipe(
+      map(response => response.items)
+    );
   }
 
   public getNotificationsPage(page: number, size: number): Observable<PageResponse<Notification>> {

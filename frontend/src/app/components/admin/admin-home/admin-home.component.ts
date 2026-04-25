@@ -8,6 +8,7 @@ import {TableModule} from 'primeng/table';
 import {Tag} from 'primeng/tag';
 import {Avatar} from 'primeng/avatar';
 import {Tooltip} from 'primeng/tooltip';
+import {Notification} from '../../../models/notification.model'
 
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {AuthService} from '../../../services/auth.service';
@@ -21,14 +22,7 @@ import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {StyleClass} from 'primeng/styleclass';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
-
-interface SystemAlert {
-  title: string;
-  description: string;
-  severity: 'high' | 'medium' | 'info';
-  icon: string;
-  entity: 'product' | 'truck' | 'shop' | 'order' | 'route';
-}
+import {NotificationService} from '../../../services/notification.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -42,6 +36,7 @@ interface SystemAlert {
 export class AdminHomeComponent implements OnInit {
 
   loading = true;
+  loadingNotifications = true;
   error = false;
   currentDate = new Date();
 
@@ -67,7 +62,7 @@ export class AdminHomeComponent implements OnInit {
   driverHistoryChartData = signal<any>({});
 
   recentOrders = signal<Order[]>([]);
-  systemAlerts = signal<SystemAlert[]>([]);
+  recentNotifications = signal<Notification[]>([]);
 
   loginInfo!: LoginInfo;
 
@@ -76,7 +71,8 @@ export class AdminHomeComponent implements OnInit {
   constructor(protected authService: AuthService,
               private orderService: OrderService,
               private shopService: ShopService,
-              private truckService: TruckService) {}
+              private truckService: TruckService,
+              private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.getLoginInfo();
@@ -85,13 +81,14 @@ export class AdminHomeComponent implements OnInit {
 
   getLoginInfo() {
     this.loading = true;
+    this.loadingNotifications = true;
     this.authService.getLoginInfo().subscribe({
       next: (info) => {
         this.loginInfo = info;
         this.initData();
       },
       error: (err) => {
-        console.error('Error obteniendo la información de sesión', err);
+        console.error('Error obtaining session info: ', err);
         this.error = true;
         this.loading = false;
       }
@@ -106,7 +103,7 @@ export class AdminHomeComponent implements OnInit {
       this.loadKpis();
       this.loadSalesChartMock();
       this.loadRecentOrdersByRole();
-      this.loadSystemAlertsMock();
+      this.loadRecentNotifications();
     } else if (this.authService.isDriver()) {
       this.loadContactInformation();
     }
@@ -236,7 +233,7 @@ export class AdminHomeComponent implements OnInit {
 
         // Scenario 2: Truck, but no shop
         if (!shop) {
-          this.loadSystemAlertsMock();
+          this.loadRecentNotifications();
           this.loading = false;
         }
         // Scenario 3: Truck and Shop
@@ -259,7 +256,7 @@ export class AdminHomeComponent implements OnInit {
 
         this.loadDriverHistoryMock();
         this.loadRecentOrdersByRole();
-        this.loadSystemAlertsMock();
+        this.loadRecentNotifications();
         this.loading = false;
       },
       error: (err) => {
@@ -298,19 +295,14 @@ export class AdminHomeComponent implements OnInit {
   }
 
   // Alerts table (mock)
-  private loadSystemAlertsMock() {
-    if (this.authService.isAdmin() || this.authService.isManager()) {
-      this.systemAlerts.set([
-        { title: 'Stock Crítico', description: 'El producto "Caja de Herramientas V2" tiene menos de 5 unidades.', severity: 'high', icon: 'pi pi-box', entity: 'product' },
-        { title: 'Retraso de Flota', description: 'El camión TRK-003 reporta un retraso de 45 min en su ruta actual.', severity: 'medium', icon: 'pi pi-truck', entity: 'truck' },
-        { title: 'Pico de Pedidos', description: 'La tienda ha recibido 50 pedidos en la última hora.', severity: 'info', icon: 'pi pi-shop', entity: 'shop' }
-      ]);
-    } else {
-      this.systemAlerts.set([
-        { title: 'Tráfico Denso', description: 'Retención de 15 mins en la M-30 dirección Sur.', severity: 'medium', icon: 'pi pi-map-marker', entity: 'route' },
-        { title: 'Revisión Programada', description: 'Recuerda llevar el vehículo al taller al finalizar la jornada.', severity: 'info', icon: 'pi pi-wrench', entity: 'truck' }
-      ]);
-    }
+  private loadRecentNotifications() {
+    this.notificationService.getRecentNotifications(3).subscribe({
+      next: (notifications) => {
+        this.recentNotifications.set(notifications);
+        this.loadingNotifications = false;
+      },
+      error: () => this.loadingNotifications = false
+    });
   }
 
   // 3. Modificado para generar datos de barras apiladas separados en 4 estados
@@ -375,10 +367,23 @@ export class AdminHomeComponent implements OnInit {
     });
   }
 
-  getAlertColors(severity: string) {
-    if (severity === 'high') return 'bg-red-50 text-red-500 border-red-100';
-    if (severity === 'medium') return 'bg-orange-50 text-orange-500 border-orange-100';
-    return 'bg-blue-50 text-blue-500 border-blue-100';
+  getVisualsByType(type: string): { color: string, icon: string, tag: 'info' | 'success' | 'warn' | 'danger' | 'secondary' } {
+    switch (type?.toLowerCase()) {
+      case 'usuario':
+        return { color: 'bg-cyan-50 text-cyan-600 border-cyan-200', icon: 'pi pi-user', tag: 'info' };
+      case 'camión':
+        return { color: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'pi pi-truck', tag: 'secondary' };
+      case 'tienda':
+        return { color: 'bg-purple-50 text-purple-600 border-purple-200', icon: 'pi pi-building', tag: 'info' };
+      case 'pedido':
+        return { color: 'bg-emerald-50 text-emerald-600 border-emerald-200', icon: 'pi pi-shopping-cart', tag: 'success' };
+      case 'producto':
+        return { color: 'bg-indigo-50 text-indigo-600 border-indigo-200', icon: 'pi pi-box', tag: 'info' };
+      case 'reseña':
+        return { color: 'bg-amber-50 text-amber-600 border-amber-200', icon: 'pi pi-star', tag: 'warn' };
+      default:
+        return { color: 'bg-blue-50 text-blue-600 border-blue-200', icon: 'pi pi-bell', tag: 'info' };
+    }
   }
 
   protected readonly formatPrice = formatPrice;
