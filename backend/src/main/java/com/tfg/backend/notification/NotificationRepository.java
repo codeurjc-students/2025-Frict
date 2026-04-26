@@ -8,6 +8,6 @@ import java.util.List;
 public interface NotificationRepository extends MongoRepository<Notification, String> {
     List<Notification> findByUsernameAndIsReadFalseOrderByTimestampDesc(String username);
     Page<Notification> findByUsernameOrderByTimestampDesc(String username, Pageable pageable);
-    Page<Notification> findByUsernameAndTypeOrderByTimestampDesc(String username, NotificationType type, Pageable pageable);
+    Page<Notification> findByUsernameAndTypeOrderByTimestampDesc(String username, EntityType type, Pageable pageable);
     void deleteByIdAndUsername(String id, String username);
 }

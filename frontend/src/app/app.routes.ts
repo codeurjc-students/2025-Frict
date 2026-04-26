@@ -178,6 +178,11 @@ export const routes: Routes = [
         loadComponent: () => import('./components/common/notifications/notifications.component').then(m => m.NotificationsComponent),
         data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Notificaciones', icon: 'admin', breadcrumb: 'Notificaciones' }
       },
+      {
+        path: 'delivery',
+        loadComponent: () => import('./components/admin/orders-delivery/orders-delivery.component').then(m => m.OrdersDeliveryComponent),
+        data: { roles: ['DRIVER'], title: 'Reparto', icon: 'admin', breadcrumb: 'Reparto de pedidos' }
+      },
     ]
   },
 

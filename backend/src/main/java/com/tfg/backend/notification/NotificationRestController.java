@@ -28,7 +28,7 @@ public class NotificationRestController {
             username,
             "Prueba correcta",
             "Spring y Angular se están comunicando correctamente mediante WebSockets.",
-            NotificationType.USER
+            EntityType.USER
         );
 
         return ResponseEntity.ok(Map.of("message", "Notificación disparada al usuario: " + username));
@@ -48,7 +48,7 @@ public class NotificationRestController {
 
         // Check if there is a defined type
         if (type != null && !type.trim().isEmpty()) {
-            NotificationType notifType = NotificationType.valueOf(type.toUpperCase());
+            EntityType notifType = EntityType.valueOf(type.toUpperCase());
             notificationsPage = notificationService.getNotificationsByTypePage(username, notifType, pageRequest);
         } else {
             notificationsPage = notificationService.getUserNotificationsPage(username, pageRequest);

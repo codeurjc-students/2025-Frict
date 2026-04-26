@@ -60,7 +60,7 @@ public class NotificationRoutingListener {
         }
 
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.ORDER);
+            notifySafe(involvedUsers, subject, description, EntityType.ORDER);
         }
     }
 
@@ -107,7 +107,7 @@ public class NotificationRoutingListener {
         }
 
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.TRUCK);
+            notifySafe(involvedUsers, subject, description, EntityType.TRUCK);
         }
     }
 
@@ -164,7 +164,7 @@ public class NotificationRoutingListener {
         }
 
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.SHOP);
+            notifySafe(involvedUsers, subject, description, EntityType.SHOP);
         }
     }
 
@@ -226,7 +226,7 @@ public class NotificationRoutingListener {
 
         // 3. Dispatch notifications
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.PRODUCT);
+            notifySafe(involvedUsers, subject, description, EntityType.PRODUCT);
         }
     }
 
@@ -297,7 +297,7 @@ public class NotificationRoutingListener {
 
         // 3. Dispatch notifications
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.USER);
+            notifySafe(involvedUsers, subject, description, EntityType.USER);
         }
     }
 
@@ -362,14 +362,14 @@ public class NotificationRoutingListener {
 
         // 3. Dispatch notifications
         if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, NotificationType.REVIEW);
+            notifySafe(involvedUsers, subject, description, EntityType.REVIEW);
         }
     }
 
     // ==========================================
     // UTILITY METHODS (DRY)
     // ==========================================
-    private void notifySafe(Iterable<String> recipients, String subject, String description, NotificationType type) {
+    private void notifySafe(Iterable<String> recipients, String subject, String description, EntityType type) {
         if (recipients == null) return;
         String excludedUser = userService.getLoggedUserUsername();
 

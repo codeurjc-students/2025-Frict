@@ -1,0 +1,315 @@
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error && !hasTruck" class="min-h-[80vh] flex items-center justify-center p-4">
+  <div class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 flex flex-col items-center max-w-lg text-center animate-fade-in">
+    <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-red-100">
+      <i class="pi pi-truck text-5xl text-red-400"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-slate-800 mb-3">Sin vehículo asignado</h2>
+    <p class="text-slate-500 mb-8 leading-relaxed">
+      Actualmente no tienes ningún camión de reparto activo o tus pedidos no están vinculados a un vehículo operativo. Por favor, contacta con tu supervisor para que te asigne uno y puedas comenzar tu jornada.
+    </p>
+    <p-button label="Comprobar actualizaciones" icon="pi pi-refresh" (onClick)="loadDeliveryData()" styleClass="!rounded-xl"></p-button>
+  </div>
+</div>
+
+<div *ngIf="!loading && !error && hasTruck" class="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+
+    <app-breadcrumb-reload (onReload)="loadDeliveryData()"></app-breadcrumb-reload>
+
+    <div class="mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex flex-col gap-1">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+          <i class="pi pi-map text-yellow-600"></i> Mi Ruta de Entrega
+        </h1>
+        <p class="text-slate-500 text-md">Visualiza los pedidos asignados y gestiona las entregas.</p>
+      </div>
+
+      <div class="flex flex-col gap-2 w-full md:w-[400px] shrink-0">
+        <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
+
+        <p-select
+          [options]="ordersPage().items"
+          [ngModel]="selectedOrderId()"
+          (onChange)="onOrderSelectionChange($event.value)"
+          optionLabel="referenceCode"
+          optionValue="id"
+          placeholder="Selecciona un pedido..."
+          styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
+          appendTo="body">
+          <ng-template let-order pTemplate="item">
+            <div class="flex items-center justify-between w-full gap-4">
+              <span class="font-mono font-bold text-md">{{ order.referenceCode }}</span>
+              <p-tag [value]="getCurrentStatus(order)" [severity]="getStatusSeverity(getCurrentStatus(order))" styleClass="!text-[9px]"></p-tag>
+            </div>
+          </ng-template>
+        </p-select>
+
+        <p-paginator
+          (onPageChange)="onPageChange($event)"
+          [first]="first"
+          [rows]="rows"
+          [totalRecords]="ordersPage().totalItems"
+          [rowsPerPageOptions]="[5, 10, 15]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}-{last} de {totalRecords} pedidos"
+          styleClass="!bg-transparent !p-0 !border-0 text-xs">
+        </p-paginator>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-full min-h-[500px]">
+
+          <p-tabs [value]="activeTab" (valueChange)="onTabChange($event)">
+            <p-tablist>
+              <p-tab value="0"><i class="pi pi-box mr-2"></i>Contenido del Pedido</p-tab>
+              <p-tab value="1"><i class="pi pi-history mr-2"></i>Historial y Notas</p-tab>
+              <p-tab value="2"><i class="pi pi-map-marker mr-2"></i>Posición</p-tab>
+            </p-tablist>
+
+            <p-tabpanels>
+              <p-tabpanel value="0">
+                <p-table [value]="selectedOrder()?.orderItems || []" styleClass="p-datatable-sm" responsiveLayout="scroll">
+                  <ng-template pTemplate="header">
+                    <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                      <th class="py-4 pl-6 w-40 text-center">Identificador</th>
+                      <th class="py-4">Artículo</th>
+                      <th class="py-4 text-center w-24">Cantidad</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-item>
+                    <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                      <td class="py-4 pl-6 text-center">
+                        <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200" pTooltip="{{ item.id }}" tooltipPosition="top">
+                          {{ item.id }}
+                        </span>
+                      </td>
+
+                      <td class="py-4">
+                        <div class="flex items-center gap-3">
+                          <img [src]="item.productImageUrl || 'assets/no-image.png'" class="w-12 h-12 rounded-lg object-cover border border-slate-100 shadow-sm" [alt]="item.productName">
+                          <div class="flex flex-col">
+                            <span class="text-md font-bold text-slate-800">{{ item.productName }}</span>
+                            <span class="text-xs text-slate-400 font-medium">{{ item.productPrice | currency:'EUR' }} / ud.</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td class="py-4 text-center">
+                        <span class="bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-lg border border-blue-100">
+                          {{ item.quantity }}
+                        </span>
+                      </td>
+
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr><td colspan="3" class="text-center py-24 text-slate-400 italic">No hay productos en este pedido.</td></tr>
+                  </ng-template>
+                </p-table>
+              </p-tabpanel>
+
+              <p-tabpanel value="1">
+                <div class="p-6 flex flex-col gap-8">
+
+                  <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
+                    <textarea
+                      pTextarea
+                      [(ngModel)]="newComment"
+                      rows="2"
+                      class="w-full text-sm !rounded-lg !border-slate-200 focus:!border-blue-500"
+                      placeholder="Añadir una observación (Ej: Cliente ausente, atasco de tráfico...)"></textarea>
+                    <p-button
+                      icon="pi pi-send"
+                      (onClick)="sendComment()"
+                      [disabled]="!newComment.trim() || !selectedOrder()"
+                      styleClass="p-button-rounded p-button-secondary !w-10 !h-10 shrink-0"
+                      pTooltip="Añadir observación al pedido"
+                      tooltipPosition="top">
+                    </p-button>
+                  </div>
+
+                  <div *ngIf="selectedOrder()?.history?.length; else emptyHistory" class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-6">
+                    <div *ngFor="let log of selectedOrder()?.history" class="relative">
+
+                      <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
+                        <i class="text-xs" [ngClass]="log.icon || 'pi pi-info-circle'"></i>
+                      </div>
+
+                      <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-100">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-50">
+                          <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">{{ log.status }}</span>
+                        </div>
+
+                        <div class="flex flex-col gap-3">
+                          <div *ngFor="let update of log.updates" class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                            <div class="flex items-center gap-1.5 mb-1.5">
+                              <i class="pi pi-clock text-xs text-slate-400"></i>
+                              <span class="text-xs font-bold text-slate-500">{{ update.date }}</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed">{{ update.description }}</p>
+                          </div>
+
+                          <p *ngIf="!log.updates || log.updates.length === 0" class="text-xs text-slate-400 italic">No hay actualizaciones adicionales registradas para esta fase.</p>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                  <ng-template #emptyHistory>
+                    <div class="text-center py-10 text-slate-400 italic">No hay historial registrado para este pedido.</div>
+                  </ng-template>
+                </div>
+              </p-tabpanel>
+
+              <p-tabpanel value="2">
+                <div class="p-4 relative">
+                  <div *ngIf="markers.length === 0" class="absolute inset-0 z-10 bg-white/70 backdrop-blur-[2px] flex items-center justify-center rounded-xl">
+                    <span class="bg-slate-800 text-white px-4 py-2 rounded-full text-xs font-bold tracking-widest shadow-lg">NO HAY COORDENADAS VÁLIDAS</span>
+                  </div>
+
+                  <div id="delivery-map" class="w-full h-[400px] rounded-xl border border-slate-200 z-0 shadow-inner"></div>
+
+                  <div class="flex flex-wrap justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow"></div><span class="text-xs text-slate-600 font-bold">Tienda Base</span></div>
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow"></div><span class="text-xs text-slate-600 font-bold">Posición del Camión</span></div>
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-orange-500 border-2 border-white shadow"></div><span class="text-xs text-slate-600 font-bold">Destino de Entrega</span></div>
+                  </div>
+                </div>
+              </p-tabpanel>
+            </p-tabpanels>
+          </p-tabs>
+
+        </div>
+      </div>
+
+      <div class="lg:col-span-1 flex flex-col gap-6">
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col gap-6 h-fit">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Destino del envío</h3>
+
+          <div class="flex flex-col gap-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><i class="pi pi-user"></i></div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Destinatario</span>
+                <span class="text-md font-bold text-slate-800 truncate">{{ selectedOrder()?.user?.name || '--' }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><i class="pi pi-map-marker"></i></div>
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Ubicación de entrega</span>
+                <span class="text-sm text-slate-600 leading-relaxed">{{ selectedOrder() ? formatAddress(selectedOrder()!.sendingAddress) : '--' }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0"><i class="pi pi-info-circle"></i></div>
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Fase Logística</span>
+                <div class="mt-1">
+                  <p-tag *ngIf="selectedOrder()" [value]="getCurrentStatus(selectedOrder())" [severity]="getStatusSeverity(getCurrentStatus(selectedOrder()))" styleClass="!px-3 !py-1.5 !font-bold !rounded-lg"></p-tag>
+                  <span *ngIf="!selectedOrder()" class="text-slate-300 italic">Sin datos</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col justify-center items-center min-h-[160px] relative overflow-hidden">
+          <div class="absolute -right-6 -bottom-6 opacity-5 text-9xl pointer-events-none">
+            <i [class]="getCurrentStatus(selectedOrder()) === 'En Reparto' ? 'pi pi-qrcode' : 'pi pi-send'"></i>
+          </div>
+
+          <ng-container *ngIf="selectedOrder() as order">
+            <div *ngIf="getCurrentStatus(order) === 'Pedido Realizado' || getCurrentStatus(order) === 'Enviado'" class="w-full flex flex-col gap-3 z-10">
+              <p-button
+                [label]="'Marcar como Recogido'"
+                icon="pi pi-sign-in"
+                [disabled]="isCollectDisabled"
+                (onClick)="collectOrder()"
+                styleClass="p-button-lg w-full !py-5 !rounded-xl !font-bold shadow-md shadow-primary-100">
+              </p-button>
+              <p *ngIf="isCollectDisabled" class="text-[10px] text-center text-slate-400 font-medium italic">
+                Pendiente de preparación en almacén
+              </p>
+            </div>
+
+            <div *ngIf="getCurrentStatus(order) === 'En Reparto'" class="w-full z-10">
+              <p-button
+                label="Confirmar Entrega"
+                icon="pi pi-qrcode"
+                (onClick)="openScanner()"
+                styleClass="p-button-lg w-full !py-5 !rounded-xl !font-bold shadow-md shadow-primary-100">
+              </p-button>
+              <p class="text-[10px] text-center text-slate-500 mt-3 font-bold flex items-center justify-center gap-1">
+                <i class="pi pi-lock"></i> Se requiere escaneo del QR del cliente
+              </p>
+            </div>
+
+            <div *ngIf="getCurrentStatus(order) === 'Completado'" class="flex flex-col items-center gap-3 text-green-600 z-10">
+              <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center border-2 border-green-200">
+                <i class="pi pi-check-circle text-3xl"></i>
+              </div>
+              <span class="font-black uppercase tracking-widest text-sm">Entrega Finalizada</span>
+            </div>
+
+            <div *ngIf="getCurrentStatus(order) === 'Cancelado'" class="flex flex-col items-center gap-3 text-red-600 z-10">
+              <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center border-2 border-red-200">
+                <i class="pi pi-times-circle text-3xl"></i>
+              </div>
+              <span class="font-black uppercase tracking-widest text-sm">Pedido Cancelado</span>
+            </div>
+          </ng-container>
+
+          <span *ngIf="!selectedOrder()" class="text-slate-300 text-sm font-bold italic z-10">Esperando selección...</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p-dialog
+  [(visible)]="displayQrScanner"
+  [modal]="true"
+  [header]="'Validar código de entrega'"
+  [style]="{width: '440px'}"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="!rounded-3xl overflow-hidden shadow-2xl">
+
+  <div class="flex flex-col items-center gap-6 py-6 px-2">
+    <div class="w-full aspect-square bg-slate-900 rounded-3xl border-4 border-slate-100 flex flex-col items-center justify-center relative shadow-inner overflow-hidden">
+      <div *ngIf="scanning" class="flex flex-col items-center gap-4 text-white z-10">
+        <i class="pi pi-camera text-5xl opacity-40 animate-pulse"></i>
+        <div class="h-0.5 w-48 bg-blue-500 shadow-[0_0_15px_#3b82f6] animate-scan-line"></div>
+        <span class="text-sm font-bold tracking-widest">BUSCANDO QR...</span>
+      </div>
+
+      <button
+        (click)="onQrSuccess(selectedOrder()!.referenceCode)"
+        class="absolute bottom-6 bg-white/10 hover:bg-white/20 text-white/40 text-[9px] px-4 py-2 rounded-full transition-colors font-mono">
+        SIMULAR LECTURA ÉXITO (REF: {{ selectedOrder()?.referenceCode }})
+      </button>
+    </div>
+
+    <div class="text-center px-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+      <p class="text-sm font-medium text-slate-600">Por favor, encuadre el código QR que el cliente tiene disponible en su panel de usuario.</p>
+    </div>
+
+    <div class="flex justify-center w-full">
+      <p-button label="Cancelar y volver" severity="secondary" [text]="true" (onClick)="displayQrScanner = false" styleClass="!font-bold"></p-button>
+    </div>
+  </div>
+</p-dialog>

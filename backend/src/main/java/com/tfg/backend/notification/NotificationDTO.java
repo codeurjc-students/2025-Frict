@@ -14,7 +14,7 @@ public class NotificationDTO {
     private Instant timestamp;
     private boolean read;
     
-    private NotificationType type;
+    private EntityType type;
 
     public NotificationDTO(Notification n) {
         this.id = n.getId();

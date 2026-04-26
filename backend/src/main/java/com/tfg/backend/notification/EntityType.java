@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Arrays;
 
-public enum NotificationType {
+public enum EntityType {
     USER("Usuario"),
     TRUCK("Camión"),
     SHOP("Tienda"),
@@ -15,7 +15,7 @@ public enum NotificationType {
 
     private final String translation;
 
-    NotificationType(String translation) {
+    EntityType(String translation) {
         this.translation = translation;
     }
 
@@ -32,8 +32,8 @@ public enum NotificationType {
 
     // Allows the backend to understand both the original name and the translated name
     @JsonCreator
-    public static NotificationType fromTranslation(String value) {
-        return Arrays.stream(NotificationType.values())
+    public static EntityType fromTranslation(String value) {
+        return Arrays.stream(EntityType.values())
                 .filter(type -> type.translation.equalsIgnoreCase(value)
                         || type.name().equalsIgnoreCase(value))
                 .findFirst()

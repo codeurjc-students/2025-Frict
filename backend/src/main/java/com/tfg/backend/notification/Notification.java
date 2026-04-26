@@ -26,14 +26,14 @@ public class Notification {
     private String subject;
     private String description;
 
-    private NotificationType type;
+    private EntityType type;
 
     @Indexed(expireAfter = "30d")
     private Instant timestamp;
 
     private boolean isRead;
 
-    public Notification(String username, String subject, String description, NotificationType type) {
+    public Notification(String username, String subject, String description, EntityType type) {
         this.username = username;
         this.subject = subject;
         this.description = description;
