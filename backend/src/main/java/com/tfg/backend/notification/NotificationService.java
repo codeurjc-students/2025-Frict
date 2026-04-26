@@ -25,6 +25,10 @@ public class NotificationService {
         return this.notificationRepository.findByUsernameAndIsReadFalseOrderByTimestampDesc(username);
     }
 
+    public Page<Notification> getNotificationsByTypePage(String username, NotificationType type, Pageable pageable) {
+        return notificationRepository.findByUsernameAndTypeOrderByTimestampDesc(username, type, pageable);
+    }
+
     public void createAndSendNotification(String username, String subject, String description, NotificationType type) {
 
         // 1. Save in MongoDB

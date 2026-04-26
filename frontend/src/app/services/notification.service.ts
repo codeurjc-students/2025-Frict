@@ -66,16 +66,18 @@ export class NotificationService implements OnDestroy {
     };
   }
 
-  public getRecentNotifications(count: number = 5): Observable<Notification[]> {
-    return this.getNotificationsPage(0, count).pipe(
+  public getRecentNotifications(type: string, count: number = 5): Observable<Notification[]> {
+    return this.getNotificationsByTypePage(0, count, type).pipe(
       map(response => response.items)
     );
   }
 
-  public getNotificationsPage(page: number, size: number): Observable<PageResponse<Notification>> {
+  public getNotificationsByTypePage(page: number, size: number, type: string): Observable<PageResponse<Notification>> {
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('type', type.toUpperCase()); // Convertimos a mayúsculas para el Enum de Java
+
     return this.http.get<PageResponse<Notification>>('/api/v1/notifications/', { params });
   }
 

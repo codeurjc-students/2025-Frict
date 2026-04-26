@@ -239,7 +239,6 @@
             <i class="pi pi-list text-primary-400"></i> {{ authService.isDriver() ? 'Mis Próximas Entregas' : 'Pedidos Recientes' }}
           </h2>
           <p-button *ngIf="authService.isAdmin() || authService.isManager()" icon="pi pi-arrow-right" routerLink="/admin/orders" [text]="true" label="Todos los pedidos" iconPos="right" size="small"></p-button>
-
         </div>
 
         <p-table [value]="recentOrders()" styleClass="p-datatable-sm" responsiveLayout="scroll">
@@ -266,9 +265,8 @@
                           [ngClass]="order.user.connection?.online ? 'bg-green-500' : 'bg-slate-400'"
                           [pTooltip]="order.user.connection?.online ? 'Online' : 'Offline'"
                           tooltipPosition="top">
-                    </span>
+                </span>
                   </div>
-
                   <span>{{ order.user.name }}</span>
                 </div>
               </td>
@@ -282,7 +280,7 @@
         </p-table>
       </div>
 
-      <div *ngIf="authService.isDriver() && !driverTruck()" class="lg:col-span-2 flex flex-col items-center justify-center py-16 px-6 bg-white border border-slate-200 rounded-2xl shadow-sm text-center">
+      <div *ngIf="authService.isDriver() && !driverTruck()" class="lg:col-span-3 flex flex-col items-center justify-center py-16 px-6 bg-white border border-slate-200 rounded-2xl shadow-sm text-center">
         <div class="w-24 h-24 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center border-4 border-orange-100 mb-6">
           <i class="pi pi-truck" style="font-size: 2rem"></i>
         </div>
@@ -290,10 +288,9 @@
         <p class="text-slate-500 max-w-lg mb-8 leading-relaxed">
           Actualmente no tienes ningún vehículo vinculado a tu cuenta. Para poder acceder a tu hoja de ruta y comenzar a gestionar entregas, necesitas que un administrador te asigne uno.
         </p>
-        <p-button label="Contactar con Administración" icon="pi pi-envelope" styleClass="p-button-secondary rounded-xl font-bold"></p-button>
       </div>
 
-      <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-auto">
+      <div *ngIf="!authService.isDriver() || driverTruck()" class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-auto">
         <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
           <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
             <i class="pi pi-bell text-red-500 animate-pulse"></i> {{ authService.isDriver() ? 'Notificaciones de Camión' : 'Notificaciones del Sistema' }}
@@ -309,8 +306,8 @@
                 <div class="absolute top-3 right-3 w-2 h-2 bg-primary-500 rounded-full"></div>
               }
 
-              <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center border" [ngClass]="getVisualsByType(notif.type).color">
-                <i [class]="getVisualsByType(notif.type).icon"></i>
+              <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center border" [ngClass]="uiService.getVisualsByType(notif.type).color">
+                <i [class]="uiService.getVisualsByType(notif.type).icon"></i>
               </div>
 
               <div class="flex flex-col min-w-0 pr-4">
@@ -334,6 +331,5 @@
       </div>
 
     </div>
-
   </div>
 </div>

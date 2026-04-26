@@ -23,6 +23,7 @@ import {TruckService} from '../../../services/truck.service';
 import {StyleClass} from 'primeng/styleclass';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import {NotificationService} from '../../../services/notification.service';
+import {UiService} from '../../../utils/ui.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -72,7 +73,8 @@ export class AdminHomeComponent implements OnInit {
               private orderService: OrderService,
               private shopService: ShopService,
               private truckService: TruckService,
-              private notificationService: NotificationService) {}
+              private notificationService: NotificationService,
+              protected uiService: UiService) {}
 
   ngOnInit() {
     this.getLoginInfo();
@@ -294,18 +296,20 @@ export class AdminHomeComponent implements OnInit {
     });
   }
 
-  // Alerts table (mock)
   private loadRecentNotifications() {
-    this.notificationService.getRecentNotifications(3).subscribe({
+    this.loadingNotifications = true;
+    this.notificationService.getRecentNotifications('', 3).subscribe({
       next: (notifications) => {
         this.recentNotifications.set(notifications);
         this.loadingNotifications = false;
       },
-      error: () => this.loadingNotifications = false
+      error: () => {
+        this.loadingNotifications = false;
+      }
     });
   }
 
-  // 3. Modificado para generar datos de barras apiladas separados en 4 estados
+
   private loadDriverHistoryMock() {
     this.driverHistoryChartData.set({
       labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
@@ -365,25 +369,6 @@ export class AdminHomeComponent implements OnInit {
       plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: textColor, font: { weight: 'bold' }, padding: 20 } } },
       cutout: '65%'
     });
-  }
-
-  getVisualsByType(type: string): { color: string, icon: string, tag: 'info' | 'success' | 'warn' | 'danger' | 'secondary' } {
-    switch (type?.toLowerCase()) {
-      case 'usuario':
-        return { color: 'bg-cyan-50 text-cyan-600 border-cyan-200', icon: 'pi pi-user', tag: 'info' };
-      case 'camión':
-        return { color: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'pi pi-truck', tag: 'secondary' };
-      case 'tienda':
-        return { color: 'bg-purple-50 text-purple-600 border-purple-200', icon: 'pi pi-building', tag: 'info' };
-      case 'pedido':
-        return { color: 'bg-emerald-50 text-emerald-600 border-emerald-200', icon: 'pi pi-shopping-cart', tag: 'success' };
-      case 'producto':
-        return { color: 'bg-indigo-50 text-indigo-600 border-indigo-200', icon: 'pi pi-box', tag: 'info' };
-      case 'reseña':
-        return { color: 'bg-amber-50 text-amber-600 border-amber-200', icon: 'pi pi-star', tag: 'warn' };
-      default:
-        return { color: 'bg-blue-50 text-blue-600 border-blue-200', icon: 'pi pi-bell', tag: 'info' };
-    }
   }
 
   protected readonly formatPrice = formatPrice;

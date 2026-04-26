@@ -451,4 +451,24 @@ export class UiService {
       this.setFavicon(this.APP_USER_LOGO);
     }
   }
+
+  //Notifications
+  getVisualsByType(type: string): { color: string, icon: string, tag: 'info' | 'success' | 'warn' | 'danger' | 'secondary' } {
+    switch (type?.toLowerCase()) {
+      case 'usuario':
+        return { color: 'bg-cyan-50 text-cyan-600 border-cyan-200', icon: 'pi pi-user', tag: 'info' };
+      case 'camión':
+        return { color: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'pi pi-truck', tag: 'secondary' };
+      case 'tienda':
+        return { color: 'bg-purple-50 text-purple-600 border-purple-200', icon: 'pi pi-building', tag: 'info' };
+      case 'pedido':
+        return { color: 'bg-emerald-50 text-emerald-600 border-emerald-200', icon: 'pi pi-shopping-cart', tag: 'success' };
+      case 'producto':
+        return { color: 'bg-indigo-50 text-indigo-600 border-indigo-200', icon: 'pi pi-box', tag: 'info' };
+      case 'reseña':
+        return { color: 'bg-amber-50 text-amber-600 border-amber-200', icon: 'pi pi-star', tag: 'warn' };
+      default:
+        return { color: 'bg-blue-50 text-blue-600 border-blue-200', icon: 'pi pi-bell', tag: 'info' };
+    }
+  }
 }

@@ -39,10 +39,21 @@ public class NotificationRestController {
     public ResponseEntity<PageResponse<NotificationDTO>> getNotificationsPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String type,
             Authentication authentication) {
 
         String username = authentication.getName();
-        Page<Notification> notificationsPage = notificationService.getUserNotificationsPage(username, PageRequest.of(page, size));
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<Notification> notificationsPage;
+
+        // Check if there is a defined type
+        if (type != null && !type.trim().isEmpty()) {
+            NotificationType notifType = NotificationType.valueOf(type.toUpperCase());
+            notificationsPage = notificationService.getNotificationsByTypePage(username, notifType, pageRequest);
+        } else {
+            notificationsPage = notificationService.getUserNotificationsPage(username, pageRequest);
+        }
+
         return ResponseEntity.ok(PageFormatter.toPageResponse(notificationsPage, NotificationDTO::new));
     }
 
