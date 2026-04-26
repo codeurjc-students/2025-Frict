@@ -46,7 +46,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   private shopService = inject(ShopService);
   private messageService = inject(MessageService);
 
-  // La pantalla de carga solo estará activa en la inicialización
   loading = true;
   error = false;
   hasTruck = true;
@@ -66,6 +65,13 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   newComment: string = '';
   activeTab: string = '0';
 
+  // --- VARIABLES PARA LOS MODALES DE RECOGIDA Y CANCELACIÓN ---
+  displayCollectDialog = false;
+  collectComment = '';
+
+  displayCancelDialog = false;
+  cancelComment = '';
+
   private map: L.Map | undefined;
   protected markers: L.Marker[] = [];
 
@@ -77,11 +83,18 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     if (this.map) this.map.remove();
   }
 
-  // --- CADENA SECUENCIAL DE CARGA TOTAL ---
-
   loadDeliveryData() {
-    // Eliminado this.loading = true; para no destruir el mapa en re-cargas
+    this.loading = true;
     this.error = false;
+
+    this.activeTab = '0';
+
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+      this.markers = [];
+    }
+
     this.fetchDriverInfo();
   }
 
@@ -107,9 +120,8 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     this.truckService.getAssignedTruckByDriverId(driverId).subscribe({
       next: (truck) => {
         this.myTruck.set(truck);
-
         if (truck != null){
-          this.hasTruck = true; // Restauramos si antes dio error
+          this.hasTruck = true;
           this.fetchShop(truck.id);
         } else {
           this.hasTruck = false;
@@ -137,14 +149,11 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- CARGA LIGERA SÓLO DE PEDIDOS ---
   private fetchOrders() {
     const pageIndex = this.first / this.rows;
-
     this.orderService.getOrdersByRolePage(pageIndex, this.rows, 'createdAt,desc').subscribe({
       next: (page) => {
         this.ordersPage.set(page);
-
         if (page.items.length > 0) {
           if (!this.selectedOrderId() || !page.items.find(o => o.id === this.selectedOrderId())) {
             this.selectedOrderId.set(page.items[0].id);
@@ -152,9 +161,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
         } else {
           this.selectedOrderId.set(null);
         }
-
         this.loading = false;
-
         if (this.activeTab === '2') {
           this.updateMapPositions();
         }
@@ -167,18 +174,14 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- LÓGICA DE INTERFAZ ---
-
   onPageChange(event: PaginatorState) {
     this.first = event.first ?? 0;
     this.rows = event.rows ?? 5;
-    // Solo cargamos los pedidos, no hace falta recargar el camión o la tienda
     this.fetchOrders();
   }
 
   onTabChange(tabValue: string | number) {
     this.activeTab = tabValue.toString();
-
     if (this.activeTab === '2') {
       setTimeout(() => {
         if (!this.map) this.initMap();
@@ -190,13 +193,10 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
 
   onOrderSelectionChange(newOrderId: string) {
     this.selectedOrderId.set(newOrderId);
-    // Cambiar de pedido ya es instantáneo usando las Signals de Angular
     if (this.activeTab === '2') {
       this.updateMapPositions();
     }
   }
-
-  // --- LÓGICA DEL MAPA ---
 
   private initMap(): void {
     const mapEl = document.getElementById('delivery-map');
@@ -212,13 +212,12 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     this.markers = [];
     const bounds = L.latLngBounds([]);
 
-    // Cambiamos "color" por "iconUrl"
     const addCustomMarker = (lat: number, lng: number, iconUrl: string, popupText: string) => {
       const customIcon = L.icon({
         iconUrl: iconUrl,
-        iconSize: [32, 32], // Tamaño de la imagen (ajústalo si tus iconos son más grandes/pequeños)
-        iconAnchor: [16, 32], // El punto de la imagen que apunta a la coordenada (mitad del ancho, base del alto)
-        popupAnchor: [0, -32] // Desde dónde emerge el popup de texto (arriba del todo del icono)
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
       });
 
       const marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map!).bindPopup(`<strong>${popupText}</strong>`);
@@ -226,19 +225,16 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
       bounds.extend([lat, lng]);
     };
 
-    // 1. Tienda
     const shop = this.myShop();
     if (shop?.address?.latitude != null && shop?.address?.longitude != null) {
       addCustomMarker(shop.address.latitude, shop.address.longitude, '/shopIcon.png', 'Tienda Base');
     }
 
-    // 2. Camión
     const truck = this.myTruck();
     if (truck?.address?.latitude != null && truck?.address?.longitude != null) {
       addCustomMarker(truck.address.latitude, truck.address.longitude, '/truckIcon.png', 'Mi Camión (Pos. Actual)');
     }
 
-    // 3. Destino
     const order = this.selectedOrder();
     if (order?.sendingAddress?.latitude != null && order?.sendingAddress?.longitude != null) {
       addCustomMarker(order.sendingAddress.latitude, order.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido');
@@ -249,8 +245,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- LÓGICA DE ESTADOS Y ACCIONES ---
-
   getCurrentStatus(order: Order | null | undefined): string {
     if (!order || !order.history || order.history.length === 0) return 'Desconocido';
     return order.history[order.history.length - 1].status;
@@ -260,16 +254,46 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     return this.getCurrentStatus(this.selectedOrder()) === 'Pedido Realizado';
   }
 
+  // --- ACCIONES CON MODALES (RECOGER / CANCELAR) ---
+
+  openCollectDialog() {
+    this.collectComment = 'Pedido recogido para su entrega.';
+    this.displayCollectDialog = true;
+  }
+
   collectOrder() {
     const order = this.selectedOrder();
     if (!order) return;
-    const automaticComment = 'Pedido recogido para su entrega.';
-    this.orderService.commentAndOrUpdateOrderStatus(order.id, 'En Reparto', automaticComment).subscribe({
+
+    // Si el usuario deja el campo vacío, forzamos un valor por defecto para no enviar strings en blanco en este estado
+    const finalComment = this.collectComment.trim() || 'Pedido recogido para su entrega.';
+
+    this.orderService.commentAndOrUpdateOrderStatus(order.id, 'En Reparto', finalComment).subscribe({
       next: () => {
+        this.displayCollectDialog = false;
         this.messageService.add({ severity: 'success', summary: 'Recogido', detail: 'Pedido en fase de reparto.' });
-        this.fetchOrders(); // Recarga ligera en background
+        this.fetchOrders();
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al actualizar.' })
+    });
+  }
+
+  openCancelDialog() {
+    this.cancelComment = '';
+    this.displayCancelDialog = true;
+  }
+
+  cancelOrder() {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    this.orderService.commentAndOrUpdateOrderStatus(order.id, 'Cancelado', this.cancelComment.trim()).subscribe({
+      next: () => {
+        this.displayCancelDialog = false;
+        this.messageService.add({ severity: 'success', summary: 'Cancelado', detail: 'El pedido ha sido cancelado exitosamente.' });
+        this.fetchOrders();
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al cancelar el pedido.' })
     });
   }
 
@@ -282,7 +306,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Comentario enviado', detail: 'Observación registrada.' });
         this.newComment = '';
-        this.fetchOrders(); // Recarga ligera en background
+        this.fetchOrders();
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al enviar comentario.' })
     });
@@ -302,7 +326,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
         next: () => {
           this.displayQrScanner = false;
           this.messageService.add({ severity: 'success', summary: 'Entregado', detail: 'Entrega confirmada con éxito.' });
-          this.fetchOrders(); // Recarga ligera en background
+          this.fetchOrders();
         },
         error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo en la confirmación.' })
       });

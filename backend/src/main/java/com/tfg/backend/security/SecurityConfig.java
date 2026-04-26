@@ -91,7 +91,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}").hasAnyAuthority("USER", "MANAGER", "DRIVER", "ADMIN") // (User, etc.)
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/*").hasAuthority("ADMIN") // (Admin) User orders
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasAuthority("ADMIN") // (Admin) Clear finished orders
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager) Update order status
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver) Update order status
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/assign/truck/*").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager) Assign truck
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // Internal roles endpoint
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasAuthority("USER") // Client exclusive endpoint

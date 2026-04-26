@@ -91,7 +91,7 @@ public class OrderRestController {
         return ResponseEntity.created(location).body(toEnrichedDTO(savedOrder));
     }
 
-    @Operation(summary = "(Admin, Manager) Comment and/or update order status by ID")
+    @Operation(summary = "(Admin, Manager, Driver) Comment and/or update order status by ID")
     @PutMapping("/{id}")
     public ResponseEntity<OrderDTO> commentAndOrUpdateOrderStatus(@PathVariable Long id,
                                                                   @RequestParam OrderStatus orderStatus,
