@@ -16,12 +16,13 @@ import {RouterLink} from '@angular/router';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {PageResponse} from '../../../models/pageResponse.model';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-categories-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, Tag, TreeTableModule, UIChart, OrganizationChart, SelectButton, Tooltip, Button, RouterLink, LoadingScreenComponent, Paginator,
+    CommonModule, FormsModule, Tag, TreeTableModule, UIChart, OrganizationChart, SelectButton, Tooltip, Button, RouterLink, LoadingScreenComponent, Paginator, BreadcrumbReloadComponent,
   ],
   templateUrl: './categories-management.component.html',
   styleUrl: 'categories-management.component.css'
@@ -78,6 +79,9 @@ export class CategoriesManagementComponent implements OnInit {
   }
 
   loadCategories() {
+    this.loading = true;
+    this.error = false;
+
     const processResponse = (items: Category[], isFullList: boolean) => {
       // Total usages count: sum of children usages
       const totalUsages = items.reduce((acc, curr) => acc + (curr.timesUsed || 0), 0);

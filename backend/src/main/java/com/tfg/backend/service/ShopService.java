@@ -3,10 +3,14 @@ package com.tfg.backend.service;
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.ShopDTO;
 import com.tfg.backend.model.*;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.ShopEvent;
+import com.tfg.backend.notification.TruckEvent;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.StatDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,9 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,6 +31,7 @@ public class ShopService {
     private final ShopStockService shopStockService;
     private final ProductService productService;
     private final ShopRepository shopRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // --- READ-ONLY METHODS ---
 
@@ -54,6 +58,11 @@ public class ShopService {
         address.setLongitude(dto.getLongitude());
 
         Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
+
+        //Send notifications
+        ShopEvent shopEvent = new ShopEvent(EventAction.CREATED, String.valueOf(shop.getId()), false, null, null);
+        eventPublisher.publishEvent(shopEvent);
+
         return shopRepository.save(shop);
     }
 
@@ -70,12 +79,22 @@ public class ShopService {
         shop.setAddress(address);
         shop.setAssignedBudget(shopDTO.getAssignedBudget());
 
+        //Send notifications
+        String managerUsername = Optional.ofNullable(shop.getAssignedManager()).map(User::getUsername).orElse(null);
+        List<String> driverUsernames = Optional.ofNullable(shop.getAssignedTrucks()).orElse(Collections.emptyList()).stream().map(Truck::getAssignedDriver).filter(Objects::nonNull).map(User::getUsername).toList();
+        ShopEvent shopEvent = new ShopEvent(EventAction.UPDATED, String.valueOf(shop.getId()), true, managerUsername, driverUsernames);
+        eventPublisher.publishEvent(shopEvent);
+
         return shop;
     }
 
     @Transactional
     public Shop deleteShop(Long id){
         Shop shop = this.findShopHelper(id);
+
+        //Get notification data
+        String managerUsername = Optional.ofNullable(shop.getAssignedManager()).map(User::getUsername).orElse(null);
+        List<String> driverUsernames = Optional.ofNullable(shop.getAssignedTrucks()).orElse(Collections.emptyList()).stream().map(Truck::getAssignedDriver).filter(Objects::nonNull).map(User::getUsername).toList();
 
         new ArrayList<>(shop.getAssignedTrucks()).forEach(truck -> truck.setAssignedShop(null));
         shop.getAssignedTrucks().clear();
@@ -97,6 +116,10 @@ public class ShopService {
             imageService.deleteFile(shop.getImage().getS3Key());
         }
 
+        //Send notifications
+        ShopEvent shopEvent = new ShopEvent(EventAction.DELETED, String.valueOf(shop.getId()), true, managerUsername, driverUsernames);
+        eventPublisher.publishEvent(shopEvent);
+
         return shop;
     }
 
@@ -104,6 +127,11 @@ public class ShopService {
     public ShopStock toggleLocalActivation(Long id, boolean state){
         ShopStock stock = shopStockService.findShopStockHelper(id);
         stock.setActive(state);
+
+        //Send notifications
+        ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(stock.getShop().getId()), true, null, null);
+        eventPublisher.publishEvent(shopEvent);
+
         return stock;
     }
 
@@ -111,6 +139,10 @@ public class ShopService {
     public boolean toggleAllLocalActivations(Long shopId, boolean state){
         List<ShopStock> stocks = this.shopStockService.findAllByShopId(shopId);
         stocks.forEach(s -> s.setActive(state));
+
+        //Send notifications
+        ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(shopId), true, null, null);
+        eventPublisher.publishEvent(shopEvent);
         return state;
     }
 
@@ -131,6 +163,9 @@ public class ShopService {
         targetStock.setUnits(targetStock.getUnits() + units);
         restockingShop.setAssignedBudget(restockingShop.getAssignedBudget() - supplyCost);
 
+        //Send notifications
+        ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(targetStock.getId()), true, null, null);
+        eventPublisher.publishEvent(shopEvent);
         return targetStock;
     }
 
@@ -146,6 +181,12 @@ public class ShopService {
             targetStock = shopStockService.findShopStockHelper(stockId);
             this.shopStockService.deleteById(stockId);
         }
+
+        //Send notifications
+        ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(targetStock.getId()), false, null, null);
+        eventPublisher.publishEvent(shopEvent);
+
+
         return targetStock;
     }
 

@@ -69,7 +69,7 @@ public abstract class BaseApiFunctionalITest {
         // Bypass security to allow Hibernate to see all entities (bypassing @Filter for inactive products, etc.)
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("admin", "pass",
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        List.of(new SimpleGrantedAuthority("ADMIN")))
         );
 
         globalCleanDatabase();

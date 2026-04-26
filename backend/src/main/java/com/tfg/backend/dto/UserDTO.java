@@ -1,14 +1,13 @@
 package com.tfg.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tfg.backend.model.Address;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.PaymentCard;
 import com.tfg.backend.model.User;
+import com.tfg.backend.notification.ConnectionDTO;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -27,16 +26,14 @@ public class UserDTO {
     private ImageInfo imageInfo;
     private boolean banned;
     private boolean deleted;
-    private boolean logged;
 
     //Stats data
     private int ordersCount;
     private int favouriteProductsCount;
-
-    @JsonFormat(pattern = "dd/MM/yy HH:mm")
-    private LocalDateTime lastConnection;
-
     private Long selectedShopId;
+
+    //Connection data
+    private ConnectionDTO connection;
 
     public UserDTO() {
     }
@@ -49,8 +46,6 @@ public class UserDTO {
         this.phone = user.getPhone();
         this.banned = user.isBanned();
         this.deleted = user.isDeleted();
-        this.logged = user.isLogged();
-        this.lastConnection = user.getLastConnection();
         if (user.getSelectedShop() != null){
             this.selectedShopId = user.getSelectedShop().getId();
         }

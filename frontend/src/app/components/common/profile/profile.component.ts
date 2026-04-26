@@ -33,6 +33,7 @@ import {ThemeColor, UiService} from '../../../utils/ui.service';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {HttpErrorResponse} from '@angular/common/http';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
+import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-profile',
@@ -51,7 +52,8 @@ import {LoadingScreenComponent} from '../loading-screen/loading-screen.component
     Button,
     Rating,
     Tag,
-    Avatar
+    Avatar,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './profile.component.html',
   styles: []
@@ -209,6 +211,9 @@ export class ProfileComponent implements OnInit {
   }
 
   protected loadUser(){
+    this.loading = true;
+    this.error = false;
+
     this.userService.getLoggedUserInfo().subscribe({
       next: (user) => {
         this.user = user;

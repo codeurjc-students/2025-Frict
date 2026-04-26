@@ -18,11 +18,12 @@ import {AuthService} from '../../../services/auth.service';
 import {ShopService} from '../../../services/shop.service';
 import {Shop} from '../../../models/shop.model';
 import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip, StockTagComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip, StockTagComponent, BreadcrumbReloadComponent],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
@@ -75,6 +76,16 @@ export class CartComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    this.getSelectedShop();
+    this.getUserCartItemsPage();
+    this.getUserCartSummary();
+    this.getUserFavouriteProducts();
+  }
+
+  public reload() {
+    this.loading = true;
+    this.error = false;
 
     this.getSelectedShop();
     this.getUserCartItemsPage();

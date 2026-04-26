@@ -32,14 +32,23 @@ describe('ClientHomeComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         ClientHomeComponent,
-        BrowserAnimationsModule // Required for PrimeNG/Carousel usage
+        BrowserAnimationsModule
       ],
       providers: [
         { provide: ProductService, useValue: productServiceSpy },
         { provide: CategoryService, useValue: categoryServiceSpy },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => null } } } // Basic route mock
+          useValue: {
+            snapshot: {
+              paramMap: { get: () => null },
+              data: {},
+              url: []
+            },
+            root: { children: [] },
+            children: [],
+            firstChild: null
+          }
         },
         provideHttpClient(),
         provideHttpClientTesting()

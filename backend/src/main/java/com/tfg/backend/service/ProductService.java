@@ -3,10 +3,14 @@ package com.tfg.backend.service;
 import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.ProductDTO;
 import com.tfg.backend.model.*;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.ProductEvent;
+import com.tfg.backend.notification.TruckEvent;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -29,6 +33,7 @@ public class ProductService {
     private final CategoryService categoryService;
     private final ImageService imageService;
     private final OrderItemService orderItemService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // --- READ-ONLY METHODS ---
 
@@ -121,6 +126,12 @@ public class ProductService {
     public Product createProduct(ProductDTO dto){
         Product product = new Product(dto.getName(), dto.getDescription(), dto.getCurrentPrice(), dto.getSupplyPrice());
         product.setCategories(processCategories(dto.getCategories()));
+
+        //Send notifications
+        List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
+        ProductEvent productEvent = new ProductEvent(EventAction.CREATED, String.valueOf(product.getId()), managerUsernames);
+        eventPublisher.publishEvent(productEvent);
+
         return productRepository.save(product);
     }
 
@@ -135,6 +146,11 @@ public class ProductService {
         product.setActive(dto.isActive());
 
         product.setCategories(processCategories(dto.getCategories()));
+
+        //Send notifications
+        List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
+        ProductEvent productEvent = new ProductEvent(EventAction.UPDATED, String.valueOf(product.getId()), managerUsernames);
+        eventPublisher.publishEvent(productEvent);
 
         return product; // Saved automatically
     }
@@ -167,6 +183,11 @@ public class ProductService {
             }
         }
 
+        //Send notifications
+        List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
+        ProductEvent productEvent = new ProductEvent(EventAction.DELETED, String.valueOf(product.getId()), managerUsernames);
+        eventPublisher.publishEvent(productEvent);
+
         productRepository.delete(product);
         return product;
     }
@@ -185,6 +206,12 @@ public class ProductService {
                 return false;
             });
         }
+
+        //Send notifications
+        List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
+        ProductEvent productEvent = new ProductEvent(EventAction.STATUS_CHANGED, String.valueOf(product.getId()), managerUsernames);
+        eventPublisher.publishEvent(productEvent);
+
         return product; // Saved automatically
     }
 
@@ -203,6 +230,14 @@ public class ProductService {
                 });
             }
         }
+
+        //Send notifications
+        for (Product p :products) {
+            List<String> usernames = p.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
+            ProductEvent productEvent = new ProductEvent(EventAction.STATUS_CHANGED, null, usernames);
+            eventPublisher.publishEvent(productEvent);
+        }
+
         return state; // Products saved automatically
     }
 

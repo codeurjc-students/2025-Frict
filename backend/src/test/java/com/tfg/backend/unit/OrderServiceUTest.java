@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,8 @@ class OrderServiceUTest {
     private OrderItemService orderItemService;
     @Mock
     private OrderRepository orderRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher; //Necessary to avoid errors trying to send notifications, but not used
 
     @InjectMocks
     private OrderService orderService;

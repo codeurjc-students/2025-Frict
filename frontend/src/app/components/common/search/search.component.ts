@@ -14,6 +14,7 @@ import {Tree} from 'primeng/tree';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
 import {mapToTreeNodes} from '../../../utils/nodeMapper.util';
+import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 
 interface SortOption {
   name: string;
@@ -33,7 +34,8 @@ interface SortOption {
     Button,
     Drawer,
     PrimeTemplate,
-    Tree
+    Tree,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './search.component.html',
   styleUrl: './search.component.css'
@@ -69,18 +71,42 @@ export class SearchComponent implements OnInit {
 
 
   ngOnInit(): void {
+    // Le decimos que SÍ es la carga inicial
+    this.getAllCategories(true);
+  }
+
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+    this.categories = [];
+    this.foundProducts.items = [];
+
+    this.getAllCategories(false);
+  }
+
+  protected getAllCategories(isInitialLoad: boolean = false) {
     this.categoryService.getAllCategories().subscribe({
       next: (response) => {
         const rawCategories = response || [];
         this.categories = mapToTreeNodes(rawCategories);
 
-        this.route.queryParamMap.subscribe(params => {
-          this.syncStateWithUrl(params);
-        });
+        if (isInitialLoad) {
+          this.route.queryParamMap.subscribe(params => {
+            this.syncStateWithUrl(params);
+          });
+        } else {
+          this.syncStateWithUrl(this.route.snapshot.queryParamMap);
+        }
       },
       error: (err) => {
         console.error('Error cargando categorías', err);
-        this.route.queryParamMap.subscribe(params => this.syncStateWithUrl(params));
+
+        if (isInitialLoad) {
+          this.route.queryParamMap.subscribe(params => this.syncStateWithUrl(params));
+        } else {
+          this.loading = false;
+          this.error = true;
+        }
       }
     });
   }

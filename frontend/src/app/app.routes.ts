@@ -20,12 +20,12 @@ export const routes: Routes = [
       {
         path: 'category/:id',
         loadComponent: () => import('./components/client/category-info/category-info.component').then(m => m.CategoryInfoComponent),
-        data: { title: 'Categoría', icon: 'client', breadcrumb: 'Categoría' }
+        data: { title: 'Categoría', icon: 'client' }
       },
       {
         path: 'product/:id',
         loadComponent: () => import('./components/client/product-info/product-info.component').then(m => m.ProductInfoComponent),
-        data: { title: 'Producto', icon: 'client', breadcrumb: 'Producto' }
+        data: { title: 'Producto', icon: 'client' }
       },
       {
         path: 'search',
@@ -42,7 +42,7 @@ export const routes: Routes = [
           {
             path: 'order/:id',
             loadComponent: () => import('./components/common/order-details/order-details.component').then(m => m.OrderDetailsComponent),
-            data: { roles: ['USER'], title: 'Detalles del pedido', icon: 'client', breadcrumb: 'Pedido' }
+            data: { roles: ['USER'], title: 'Detalles del pedido', icon: 'client' }
           },
 
           {
@@ -54,7 +54,7 @@ export const routes: Routes = [
           {
             path: 'summary',
             loadComponent: () => import('./components/client/order-summary/order-summary.component').then(m => m.OrderSummaryComponent),
-            data: { roles: ['USER'], title: 'Resumen del pedido', icon: 'client', breadcrumb: 'Resumen' }
+            data: { roles: ['USER'], title: 'Resumen del pedido', icon: 'client', breadcrumb: 'Resumen del pedido' }
           },
 
           {
@@ -67,7 +67,12 @@ export const routes: Routes = [
             path: 'profile',
             loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
             data: { roles: ['USER'], title: 'Perfil', icon: 'client', breadcrumb: 'Perfil' }
-          }
+          },
+          {
+            path: 'notifications',
+            loadComponent: () => import('./components/common/notifications/notifications.component').then(m => m.NotificationsComponent),
+            data: { roles: ['USER'], title: 'Notificaciones', icon: 'client', breadcrumb: 'Notificaciones' }
+          },
         ]
       }
     ]
@@ -121,7 +126,7 @@ export const routes: Routes = [
       {
         path: 'shop/:id',
         loadComponent: () => import('./components/admin/shop-details/shop-details.component').then(m => m.ShopDetailsComponent),
-        data: { roles: ['ADMIN', 'MANAGER'], title: 'Administrar Tienda', icon: 'admin', breadcrumb: 'Administrar Tienda' }
+        data: { roles: ['MANAGER'], title: 'Administrar Tienda', icon: 'admin', breadcrumb: 'Administrar Tienda' }
       },
       {
         path: 'shops/new',
@@ -167,7 +172,12 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () => import('./components/common/profile/profile.component').then(m => m.ProfileComponent),
         data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Perfil', icon: 'admin', breadcrumb: 'Perfil' }
-      }
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./components/common/notifications/notifications.component').then(m => m.NotificationsComponent),
+        data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Notificaciones', icon: 'admin', breadcrumb: 'Notificaciones' }
+      },
     ]
   },
 

@@ -11,6 +11,7 @@ public class ShopStockDTO {
     private Long shopId;
     private String shopName;
     private String shopAddress;
+    private String shopImageUrl;
     private Long productId;
     private String productName;
     private String productReferenceCode;
@@ -27,6 +28,7 @@ public class ShopStockDTO {
         this.shopId = s.getShop().getId();
         this.shopName = s.getShop().getName();
         this.shopAddress = s.getShop().getAddress().toString();
+        this.shopImageUrl = s.getShop().getImage().getImageUrl();
         this.productId = s.getProduct().getId();
         this.productName = s.getProduct().getName();
         this.productReferenceCode = s.getProduct().getReferenceCode();

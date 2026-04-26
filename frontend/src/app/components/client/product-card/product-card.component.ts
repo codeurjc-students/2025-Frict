@@ -23,6 +23,8 @@ export class ProductCardComponent {
 
   @Input() elementId: string = 'product';
 
+  @Input() navState: Record<string, string> = {};
+
   constructor() {
   }
 

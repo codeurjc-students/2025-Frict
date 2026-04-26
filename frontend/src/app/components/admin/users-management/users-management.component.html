@@ -1,10 +1,15 @@
-<div class="min-h-screen font-sans text-slate-800">
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
-    <div class="mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-primary-600">Gestor de usuarios</h1>
-        <p class="text-slate-500">Administra las cuentas de los usuarios de la organización.</p>
-      </div>
+<div *ngIf="loading || error">
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
+</div>
+
+<div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+
+    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+
+    <div class="mt-6 mb-8">
+      <h1 class="text-3xl font-bold text-primary-600">Gestor de usuarios</h1>
+      <p class="text-slate-500">Administra las cuentas de los usuarios de la organización.</p>
     </div>
 
     <div class="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
@@ -127,7 +132,7 @@
       <div class="lg:col-span-3 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
         <h3 class="text-lg font-semibold text-slate-800 mb-4">Distribución de usuarios</h3>
         <div class="card flex justify-center">
-            <p-chart type="bar" [data]="data()" [options]="options()" class="w-full md:w-[40rem]" />
+          <p-chart type="bar" [data]="data()" [options]="options()" class="w-full md:w-[40rem]" />
         </div>
       </div>
     </div>
@@ -139,18 +144,21 @@
           <div class="flex items-center gap-6">
             <div class="relative ml-3">
               <p-avatar [image]="user.imageInfo.imageUrl" shape="circle"
-                        [styleClass]="user.logged ? '!w-20 !h-20 ring-2 ring-green-500 ring-offset-2 ring-offset-white' : '!w-15 !h-15'">
+                        [styleClass]="user.connection?.online ? '!w-20 !h-20 ring-2 ring-green-500 ring-offset-2 ring-offset-white' : '!w-15 !h-15'">
               </p-avatar>
             </div>
             <div>
               <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
                 {{ user.name }}
-                <p-tag [severity]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).severity" [value]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).message" [icon]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).icon" [rounded]="true" styleClass="text-xs"></p-tag>
+                <p-tag [severity]="getUserStatusTagInfo(user.connection?.online || false, user.banned, user.deleted).severity"
+                       [value]="getUserStatusTagInfo(user.connection?.online || false, user.banned, user.deleted).message"
+                       [icon]="getUserStatusTagInfo(user.connection?.online || false, user.banned, user.deleted).icon"
+                       [rounded]="true" styleClass="text-xs"></p-tag>
               </h2>
               <div class="flex flex-col lg:flex-row gap-4 text-slate-500 text-sm my-3">
                 <span class="flex items-center gap-1"><i class="pi pi-at"></i> {{ user.email }}</span>
                 <span class="flex items-center gap-1"><i class="pi pi-user"></i> {{ user.username }}</span>
-                <span class="flex items-center gap-1"><i class="pi pi-calendar"></i> Última vez: {{ user.lastConnection | date:'short' }}</span>
+                <span class="flex items-center gap-1"><i class="pi pi-calendar"></i> Última vez: {{ user.connection?.lastConnection || 'Nunca' }}</span>
               </div>
               <div class="mt-3 flex gap-2">
                 <p-tag [value]="getUserRoleTagInfo(user.roles.at(0) ?? '').message" [severity]="getUserRoleTagInfo(user.roles.at(0) ?? '').severity" [icon]="getUserRoleTagInfo(user.roles.at(0) ?? '').icon" rounded="true"></p-tag>
@@ -305,7 +313,10 @@
                   <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" styleClass="!w-10 !h-10"
                             [style]="{'background-color': '#f1f5f9', 'color': '#475569', 'border': '1px solid #e2e8f0'}">
                   </p-avatar>
-                  <span *ngIf="user.isOnline" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+
+                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-full"
+                        [ngClass]="user.connection?.online ? 'bg-green-500' : 'bg-slate-400'">
+                  </span>
                 </div>
                 <div class="flex flex-col">
                   <span class="font-medium text-slate-900 text-sm">{{ user.name }}</span>
@@ -319,7 +330,10 @@
               </div>
             </td>
             <td>
-                <p-tag [severity]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).severity" [value]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).message" [icon]="getUserStatusTagInfo(user.logged, user.banned, user.deleted).icon" [rounded]="true" styleClass="text-xs"></p-tag>
+              <p-tag [severity]="getUserStatusTagInfo(user.connection?.online || false, user.banned, user.deleted).severity"
+                     [value]="getUserStatusTagInfo(user.connection?.online || false, user.banned, user.deleted).message"
+                     [icon]="getUserStatusTagInfo(user.connection?.online || false, user.banned, user.deleted).icon"
+                     [rounded]="true" styleClass="text-xs"></p-tag>
             </td>
             <td>
               <div class="flex gap-4 text-sm">
@@ -332,7 +346,7 @@
               </div>
             </td>
             <td class="text-sm text-slate-500">
-              {{ user.lastConnection | date:'dd/MM/yy HH:mm' }}
+              {{ user.connection?.lastConnection || 'Nunca' }}
             </td>
           </tr>
         </ng-template>

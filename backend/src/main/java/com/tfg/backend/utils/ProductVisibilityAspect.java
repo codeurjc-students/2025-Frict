@@ -43,7 +43,7 @@ public class ProductVisibilityAspect {
 
         // Do not filter If user does have ADMIN or MANAGER role
         boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+                .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("MANAGER"));
 
         return !isAdmin;
     }

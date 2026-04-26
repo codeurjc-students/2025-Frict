@@ -27,6 +27,7 @@ import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {Message} from 'primeng/message';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-shop-details',
@@ -46,7 +47,8 @@ import {Message} from 'primeng/message';
     Tooltip,
     Dialog,
     Select,
-    Message
+    Message,
+    BreadcrumbReloadComponent
   ],
   templateUrl: './shop-details.component.html',
   styleUrl: 'shop-details.component.css'
@@ -100,6 +102,26 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       this.map.remove();
       this.map = undefined;
     }
+  }
+
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Clean Leaflet map
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+
+    // 2. Reset state
+    this.selectedStock = undefined;
+    this.selectedProduct = undefined;
+    this.selectedTruck = undefined;
+    this.restockQuantity = 0;
+
+    // 3. Send requests
+    this.loadData();
   }
 
   // --- DATA LOAD MANAGEMENT ---

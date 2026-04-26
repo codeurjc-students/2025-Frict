@@ -3,6 +3,7 @@ export interface ShopStock {
   shopId: string;
   shopName: string;
   shopAddress: string;
+  shopImageUrl: string;
 
   productId: string;
   productName: string;

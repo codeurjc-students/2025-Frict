@@ -5,7 +5,6 @@ import {Button} from 'primeng/button';
 import {Drawer} from 'primeng/drawer';
 import {MenuItem, PrimeTemplate} from 'primeng/api';
 import {FormsModule} from '@angular/forms';
-import {Menu} from 'primeng/menu';
 import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {OrderService} from '../../../services/order.service';
@@ -16,6 +15,10 @@ import {InputGroup} from 'primeng/inputgroup';
 import {InputText} from 'primeng/inputtext';
 import {ProductService, SearchScope} from '../../../services/product.service';
 import {Select} from 'primeng/select';
+import { Popover } from 'primeng/popover';
+import {NotificationService} from '../../../services/notification.service';
+import { HttpClient } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
@@ -29,13 +32,14 @@ import {Select} from 'primeng/select';
     Drawer,
     PrimeTemplate,
     FormsModule,
-    Menu,
     Avatar,
     InputGroup,
     InputText,
     NgTemplateOutlet,
     NgClass,
-    Select
+    Select,
+    Popover,
+    DatePipe
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
@@ -47,15 +51,16 @@ export class NavbarComponent implements OnInit {
     protected orderService: OrderService,
     private categoryService: CategoryService,
     protected productService: ProductService,
-    private router: Router
+    protected notificationService: NotificationService,
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   @ViewChild('drawerRef') drawerRef!: Drawer;
-  @ViewChild('menu') menu!: Menu;
+  @ViewChild('notifPopover') notifPopover!: Popover;
 
   visible: boolean = false;
   searchBarInput: string = '';
-  items: MenuItem[] | undefined;
   loggedUserInfo!: LoginInfo;
 
   //Shop mode (global to show all products, local to show only selected shop products)
@@ -65,7 +70,7 @@ export class NavbarComponent implements OnInit {
   ];
 
   public scopeOptions = computed(() => {
-    const hasShop = this.authService.hasShopSelected(); // Usamos la señal de tu authService
+    const hasShop = this.authService.hasShopSelected();
     return this.baseScopeOptions.map(opt => ({
       ...opt,
       disabled: opt.value === 'LOCAL' && !hasShop
@@ -95,7 +100,7 @@ export class NavbarComponent implements OnInit {
   toggleSubmenu(categoryId: number, isRouteActive: boolean) {
     const currentState = this.shouldExpand(categoryId, isRouteActive);
 
-    // Actualizamos el mapa invirtiendo el estado actual
+    // Invert current state
     this.manualToggleState.update(map => {
       const newMap = new Map(map);
       newMap.set(categoryId, !currentState);
@@ -134,11 +139,6 @@ export class NavbarComponent implements OnInit {
   public categories : Category[] = [];
 
   ngOnInit() {
-    this.items = [
-      { label: 'Notificación 1', icon: 'pi pi-bell' },
-      { label: 'Notificación 2', icon: 'pi pi-bell' }
-    ];
-
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list;
@@ -174,5 +174,11 @@ export class NavbarComponent implements OnInit {
     if (item.roles.includes('MANAGER') && this.authService.isManager()) return true;
     if (item.roles.includes('DRIVER') && this.authService.isDriver()) return true;
     return false;
+  }
+
+  triggerTest() {
+    this.notificationService.triggerTest().subscribe({
+      error: (err) => console.error('Error in test:', err)
+    });
   }
 }

@@ -30,12 +30,13 @@ import {formatAddress} from '../../../utils/textFormat.util';
 import {UserService} from '../../../services/user.service';
 import {Select} from 'primeng/select';
 import {RouterLink} from '@angular/router';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-trucks-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, LoadingScreenComponent, Button, SelectButton, UIChart, InputGroup, InputGroupAddon, InputText, TableModule, Avatar, Tag, ProgressBar, Paginator, Dialog, Select, Tooltip, Textarea, RouterLink
+    CommonModule, FormsModule, LoadingScreenComponent, Button, SelectButton, UIChart, InputGroup, InputGroupAddon, InputText, TableModule, Avatar, Tag, ProgressBar, Paginator, Dialog, Select, Tooltip, Textarea, RouterLink, BreadcrumbReloadComponent
   ],
   templateUrl: './trucks-management.component.html'
 })
@@ -65,8 +66,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   viewModeOptions = [
     { label: 'Mapa', value: 'map', icon: 'pi pi-map' },
-    { label: 'Distribución', value: 'chart', icon: 'pi pi-chart-pie' },
-    { label: 'Notificaciones', value: 'alerts', icon: 'pi pi-bell' }
+    { label: 'Distribución', value: 'chart', icon: 'pi pi-chart-pie' }
   ];
   selectedViewMode: string = 'map';
 
@@ -112,6 +112,26 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     if (this.map) {
       this.map.remove();
     }
+  }
+
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Leaflet map cleaning
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+
+    // 2. Modals closing and selections cleaning
+    this.displayHistoryDialog = false;
+    this.displayAssignmentDialog = false;
+    this.selectedTruck = null;
+    this.selectedDriver = undefined;
+
+    // 3. Send requests
+    this.loadTrucks();
   }
 
   loadTrucks() {

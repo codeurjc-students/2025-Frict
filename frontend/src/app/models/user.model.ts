@@ -1,6 +1,7 @@
 import {Address} from './address.model';
 import {PaymentCard} from './paymentCard.model';
 import {ImageInfo} from './imageInfo.model';
+import {Connection} from './connection.model';
 
 export interface User {
   id: string;
@@ -14,10 +15,9 @@ export interface User {
   imageInfo: ImageInfo;
   banned: boolean;
   deleted: boolean;
-  logged: boolean;
-  lastConnection: string;
   selectedShopId: string | null;
-
   ordersCount: number;
   favouriteProductsCount: number;
+
+  connection: Connection | null;
 }

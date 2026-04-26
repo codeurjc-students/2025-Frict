@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -35,6 +36,9 @@ class TruckServiceUTest {
 
     @Mock
     private TruckRepository truckRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher; //Necessary to avoid errors trying to send notifications, but not used
 
     @InjectMocks
     private TruckService truckService;

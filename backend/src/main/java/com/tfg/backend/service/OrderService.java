@@ -2,10 +2,13 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.model.*;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.OrderEvent;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.utils.SaveResult;
 import com.tfg.backend.utils.StatDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,6 +33,7 @@ public class OrderService {
     private final OrderItemService orderItemService;
     private final ProductService productService;
     private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // --- READ-ONLY METHODS ---
 
@@ -77,6 +81,10 @@ public class OrderService {
     public Order setAssignedTruck(Long orderId, Long truckId, boolean state){
         Order order = this.findOrderHelper(orderId);
 
+        //Get notification data
+        String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername;
+
         if (state) {
             Truck truck = truckService.findTruckHelper(truckId);
             if (!Objects.equals(order.getAssignedShop().getId(), truck.getAssignedShop().getId())){
@@ -89,9 +97,19 @@ public class OrderService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This truck capacity is full and cannot accept any more orders.");
             }
             order.setAssignedTruck(truck);
+
+            driverUsername = Optional.of(truck).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+
         } else {
+            driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+
             order.setAssignedTruck(null);
         }
+
+        // Send notifications
+        OrderEvent orderEvent = new OrderEvent(EventAction.ASSIGNED, String.valueOf(order.getId()), null, null, null, managerUsername, driverUsername);
+        eventPublisher.publishEvent(orderEvent);
+
         return order; // Saved automatically
     }
 
@@ -137,12 +155,17 @@ public class OrderService {
         newOrder.setFullSendingAddress(address);
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
 
-        //Add the
         double orderTotal = newOrder.getTotalCost();
         selectedShop.setAssignedBudget(selectedShop.getAssignedBudget() + orderTotal);
 
         Order savedOrder = orderRepository.save(newOrder);
 
+        // Send in-app notifications
+        String managerUsername = Optional.ofNullable(savedOrder.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        OrderEvent orderEvent = new OrderEvent(EventAction.CREATED, String.valueOf(savedOrder.getId()), null, null, loggedUser.getUsername(), managerUsername, null);
+        eventPublisher.publishEvent(orderEvent);
+
+        // Send email confirmation
         emailService.sendOrderConfirmation(loggedUser.getEmail(), loggedUser.getName(), savedOrder.getReferenceCode(), savedOrder.getItems(), savedOrder.getTotalCost());
         return savedOrder;
     }
@@ -151,8 +174,17 @@ public class OrderService {
     public Order commentAndOrUpdateOrderStatus(Long id, OrderStatus orderStatus, String comment) {
         Order order = this.findOrderHelper(id);
 
+        //Get notification data
+        String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+
         if (orderStatus == order.getCurrentStatus()) {
             order.addStatusUpdate(comment);
+
+            // Send in-app notifications (user is set in listener, as it is not directly used here)
+            OrderEvent orderEvent = new OrderEvent(EventAction.NEW_COMMENT, String.valueOf(order.getId()), null, null, order.getUser().getUsername(), managerUsername, driverUsername);
+            eventPublisher.publishEvent(orderEvent);
+
         } else {
             if (order.getCurrentStatus() == OrderStatus.CANCELLED || order.getCurrentStatus() == OrderStatus.COMPLETED){
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cancelled or completed orders cannot change status.");
@@ -160,7 +192,13 @@ public class OrderService {
             if(orderStatus.equals(OrderStatus.ON_DELIVERY) && order.getAssignedTruck() == null){
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "The order must have an associated delivery truck to be delivered.");
             }
+
+            OrderStatus currentStatus = order.getCurrentStatus();
             order.changeOrderStatus(orderStatus, comment);
+
+            // Send notifications
+            OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), orderStatus.getDescription(), order.getUser().getUsername(), managerUsername, driverUsername);
+            eventPublisher.publishEvent(orderEvent);
         }
         return order;
     }
@@ -183,12 +221,27 @@ public class OrderService {
         }
 
         String reason = loggedUser.getRoles().contains("DRIVER") ? "El pedido ha sido cancelado por el repartidor." : "Has cancelado este pedido.";
+
+        OrderStatus currentStatus = order.getCurrentStatus();
         order.changeOrderStatus(OrderStatus.CANCELLED, reason);
+
+        // Send notifications
+        String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+        OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), OrderStatus.CANCELLED.getDescription(), loggedUser.getUsername(), managerUsername, driverUsername);
+        eventPublisher.publishEvent(orderEvent);
+
         return order; // Saved automatically
     }
+
     @Transactional
     public Order deleteFinishedOrderById(Long id){
         Order order = this.findOrderHelper(id);
+
+        //Get notification data
+        String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+
         OrderStatus currentStatus = order.getCurrentStatus();
         if (currentStatus != OrderStatus.CANCELLED && currentStatus != OrderStatus.COMPLETED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only cancelled or completed orders can be deleted. Actual status: " + currentStatus);
@@ -199,6 +252,11 @@ public class OrderService {
         if (order.getUser() != null) order.getUser().getRegisteredOrders().remove(order);
 
         orderRepository.delete(order);
+
+        // Send in-app notifications (user is set in listener, as it is not directly used here)
+        OrderEvent orderEvent = new OrderEvent(EventAction.DELETED, String.valueOf(order.getId()), null, null, order.getUser().getUsername(), managerUsername, driverUsername);
+        eventPublisher.publishEvent(orderEvent);
+
         return order;
     }
 

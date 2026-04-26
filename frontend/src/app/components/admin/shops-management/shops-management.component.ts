@@ -24,46 +24,24 @@ import {Select} from 'primeng/select';
 import {UserService} from '../../../services/user.service';
 import {Avatar} from 'primeng/avatar';
 import {AuthService} from '../../../services/auth.service';
-import {Alert} from '../../../utils/ui.service';
+import {Notification} from '../../../models/notification.model';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {UiService} from '../../../utils/ui.service';
+import {NotificationService} from '../../../services/notification.service';
 
 @Component({
   selector: 'app-shops-management',
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent, Dialog, Select, Avatar
+    RouterLink, InputGroup, InputGroupAddon, Button, TableModule, Paginator, InputText, Tooltip, LoadingScreenComponent, Dialog, Select, Avatar, BreadcrumbReloadComponent
   ],
   templateUrl: './shops-management.component.html',
   styleUrl: 'shops-management.component.css'
 })
 export class ShopsManagementComponent implements OnInit, OnDestroy {
 
-  shopAlerts = signal<Alert[]>([
-    {
-      reference: 'Tienda de Ejemplo 1',
-      message: 'Stock crítico (-15%)',
-      severity: 'high',
-      icon: 'pi pi-exclamation-triangle'
-    },
-    {
-      reference: 'Tienda de Ejemplo 2',
-      message: 'Nuevo camión asignado',
-      severity: 'info',
-      icon: 'pi pi-truck'
-    },
-    {
-      reference: 'Tienda de Ejemplo 3',
-      message: 'Retraso en entrega OR-442-Y5O3',
-      severity: 'medium',
-      icon: 'pi pi-clock'
-    },
-    {
-      reference: 'Tienda de Ejemplo 4',
-      message: 'Inventario completado',
-      severity: 'info',
-      icon: 'pi pi-check-circle'
-    }
-  ]);
+  recentShopsNotifications = signal<Notification[]>([]);
 
   // Pagination
   shopsPage: PageResponse<Shop> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
@@ -88,7 +66,9 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   constructor(private shopService: ShopService,
               private userService: UserService,
               private messageService: MessageService,
-              protected authService: AuthService) {}
+              protected authService: AuthService,
+              protected uiService: UiService,
+              protected notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadShops();
@@ -148,6 +128,18 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
     });
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+    this.cancelAssignment();
+    this.loadShops();
+  }
+
   loadShops() {
     let request$;
     if (this.authService.isAdmin()) {
@@ -168,12 +160,22 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
             this.renderShopMarkers();
           }
         }, 10);
+
+        this.getShopRecentNotifications();
       },
       error: () => {
         this.loading = false;
         this.error = true;
       }
     });
+  }
+
+  getShopRecentNotifications(){
+    this.notificationService.getRecentNotifications('SHOP', 3).subscribe({
+      next: (list) => {
+        this.recentShopsNotifications.set(list);
+      }
+    })
   }
 
   //Fly to selected shop in map

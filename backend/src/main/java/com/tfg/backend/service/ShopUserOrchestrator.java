@@ -2,6 +2,10 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.User;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.UserEvent;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,15 +15,12 @@ import java.util.Map;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class ShopUserOrchestrator {
 
     private final ShopService shopService;
     private final UserService userService;
-
-    public ShopUserOrchestrator(ShopService shopService, UserService userService) {
-        this.shopService = shopService;
-        this.userService = userService;
-    }
+    private final ApplicationEventPublisher eventPublisher;
 
     public Page<Shop> getAssignedShopsPage(Pageable pageable) {
         User loggedUser = userService.findLoggedUserHelper();
@@ -36,6 +37,10 @@ public class ShopUserOrchestrator {
             shop = shopService.findShopHelper(shopId);
         }
 
+        //Send notifications
+        UserEvent userEvent = new UserEvent(EventAction.ASSIGNED, loggedUser.getUsername());
+        eventPublisher.publishEvent(userEvent);
+
         // Delegate to UserService to finish the action
         return userService.applyShopSelection(loggedUser, shop);
     }
@@ -44,14 +49,24 @@ public class ShopUserOrchestrator {
     public Shop setAssignedManager(Long shopId, Long userId, boolean state) {
         Shop shop = shopService.findShopHelper(shopId);
 
+        User targetManager;
+        boolean hasChanged = false;
+
         if (state) {
-            User newManager = userService.findUserHelper(userId);
-            shop.setAssignedManager(newManager);
+            targetManager = userService.findUserHelper(userId);
+            shop.setAssignedManager(targetManager);
+            hasChanged = true;
         } else {
-            User currentManager = shop.getAssignedManager();
-            if (currentManager != null && currentManager.getId().equals(userId)) {
+            targetManager = shop.getAssignedManager();
+            if (targetManager != null && targetManager.getId().equals(userId)) {
                 shop.setAssignedManager(null);
+                hasChanged = true;
             }
+        }
+
+        if (hasChanged && targetManager != null) {
+            UserEvent userEvent = new UserEvent(EventAction.ASSIGNED, targetManager.getUsername());
+            eventPublisher.publishEvent(userEvent);
         }
 
         return shop; // Updated automatically

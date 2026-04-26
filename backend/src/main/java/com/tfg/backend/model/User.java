@@ -57,11 +57,6 @@ public class User {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    @Column(nullable = false)
-    private boolean isLogged = false;
-
-    private LocalDateTime lastConnection = null;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> allOrderItems = new ArrayList<>(); //Necessary in order to be able to see the user cart
 
@@ -88,6 +83,8 @@ public class User {
 
 	public User() {
 	}
+
+    public String getRole(){ return roles.stream().findFirst().orElse(null); }
 
     public boolean hasRole(String roleName) {
         return roles != null && roles.contains(roleName);

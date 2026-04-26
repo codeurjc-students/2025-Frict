@@ -4,9 +4,11 @@ import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.dto.OrderDTO;
 import com.tfg.backend.dto.OrderItemDTO;
 import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.model.OrderStatus;
+import com.tfg.backend.notification.UserConnectionService;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.SaveResult;
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -30,37 +34,36 @@ public class OrderRestController {
 
     private final OrderService orderService;
 
+    // Inject the user connection service for presence enrichment
+    private final UserConnectionService userConnectionService;
 
     @Operation(summary = "(Admin, Manager, Driver) Get orders by role (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<OrderDTO>> getOrdersByRole(Pageable pageable){
         Page<Order> ordersByRole = orderService.getOrdersByRole(pageable);
-        return ResponseEntity.ok(PageFormatter.toPageResponse(ordersByRole, OrderDTO::new));
+        return ResponseEntity.ok(toEnrichedPageResponse(ordersByRole));
     }
-
 
     @Operation(summary = "(Admin) Get user orders by user ID (paged)")
     @GetMapping("/user/{id}")
     public ResponseEntity<PageResponse<OrderDTO>> getUserOrdersByUserId(@PathVariable Long id, Pageable pageable){
         Page<Order> userOrdersByUserId = orderService.getUserOrdersByUserId(id, pageable);
-        return ResponseEntity.ok(PageFormatter.toPageResponse(userOrdersByUserId, OrderDTO::new));
+        return ResponseEntity.ok(toEnrichedPageResponse(userOrdersByUserId));
     }
-
 
     @Operation(summary = "(User) Get logged user orders (paged)")
     @GetMapping
     public ResponseEntity<PageResponse<OrderDTO>> getAllUserOrders(Pageable pageable){
         Page<Order> allUserOrders = orderService.getAllUserOrders(pageable);
-        return ResponseEntity.ok(PageFormatter.toPageResponse(allUserOrders, OrderDTO::new));
+        return ResponseEntity.ok(toEnrichedPageResponse(allUserOrders));
     }
-
 
     @Operation(summary = "(User) Get order by ID")
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id){
-        return ResponseEntity.ok(new OrderDTO(orderService.findOrderHelper(id)));
+        Order order = orderService.findOrderHelper(id);
+        return ResponseEntity.ok(toEnrichedDTO(order));
     }
-
 
     @Operation(summary = "(Admin, Manager) Set assigned truck to an order")
     @PostMapping("/{orderId}/assign/truck/{truckId}")
@@ -69,12 +72,11 @@ public class OrderRestController {
             @PathVariable Long truckId,
             @RequestParam boolean state) {
         Order savedOrder = orderService.setAssignedTruck(orderId, truckId, state);
-        return ResponseEntity.ok(new OrderDTO(savedOrder));
+        return ResponseEntity.ok(toEnrichedDTO(savedOrder));
     }
 
-
-    //Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
-    //Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
+    // Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
+    // Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
     @Operation(summary = "(User) Create order for logged user")
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(@RequestParam Long addressId,
@@ -86,9 +88,8 @@ public class OrderRestController {
                 .buildAndExpand(savedOrder.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(new OrderDTO(savedOrder));
+        return ResponseEntity.created(location).body(toEnrichedDTO(savedOrder));
     }
-
 
     @Operation(summary = "(Admin, Manager) Comment and/or update order status by ID")
     @PutMapping("/{id}")
@@ -96,26 +97,23 @@ public class OrderRestController {
                                                                   @RequestParam OrderStatus orderStatus,
                                                                   @RequestParam(required = false) String comment){
         Order savedOrder = orderService.commentAndOrUpdateOrderStatus(id, orderStatus, comment);
-        return ResponseEntity.ok(new OrderDTO(savedOrder));
+        return ResponseEntity.ok(toEnrichedDTO(savedOrder));
     }
-
 
     @Operation(summary = "(User) Cancel logged user order by ID")
     @PutMapping("/cancel/{id}")
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id){
         Order savedOrder = orderService.cancelOrder(id);
-        return ResponseEntity.ok(new OrderDTO(savedOrder));
+        return ResponseEntity.ok(toEnrichedDTO(savedOrder));
     }
-
 
     @Transactional
     @Operation(summary = "(Admin) Delete cancelled or completed order by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<OrderDTO> deleteFinishedOrderById(@PathVariable Long id){
         Order deletedOrder = orderService.deleteFinishedOrderById(id);
-        return ResponseEntity.ok(new OrderDTO(deletedOrder));
+        return ResponseEntity.ok(toEnrichedDTO(deletedOrder));
     }
-
 
     @Operation(summary = "(User) Get logged user cart summary")
     @GetMapping("/cart/summary")
@@ -123,15 +121,13 @@ public class OrderRestController {
         return ResponseEntity.ok(orderService.getCartSummary());
     }
 
-
-    //Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
+    // Cart items of a user: items which order_id in DB is null and user_id is the same as the logged user id
     @Operation(summary = "(User) Get logged user cart products (paged)")
     @GetMapping("/cart")
     public ResponseEntity<PageResponse<OrderItemDTO>> getCartItemsPage(Pageable pageable) {
         Page<OrderItem> cartItems = orderService.getCartItemsPage(pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(cartItems, OrderItemDTO::new));
     }
-
 
     @Operation(summary = "(User) Get logged user cart item by product ID")
     @GetMapping("/cart/item/{id}")
@@ -148,7 +144,6 @@ public class OrderRestController {
     public ResponseEntity<CartSummaryDTO> clearCartItems() {
         return ResponseEntity.ok(orderService.clearCartItems());
     }
-
 
     @Operation(summary = "(User) Add item to logged user cart")
     @PostMapping("/cart/{id}")
@@ -170,7 +165,6 @@ public class OrderRestController {
         }
     }
 
-
     @Operation(summary = "(User) Update logged user cart product quantity")
     @PutMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> updateItemQuantity(@PathVariable Long id,
@@ -179,11 +173,44 @@ public class OrderRestController {
         return ResponseEntity.ok(orderService.getCartSummary());
     }
 
-
     @Operation(summary = "(User) Delete logged user cart item")
     @DeleteMapping("/cart/{id}")
     public ResponseEntity<CartSummaryDTO> deleteCartItem(@PathVariable Long id) {
         orderService.deleteCartItem(id);
         return this.getCartSummary();
+    }
+
+    // ==========================================
+    // ASSEMBLER AND ENRICHMENT HELPER METHODS
+    // ==========================================
+
+    /**
+     * Converts an Order entity to a DTO and enriches its user.
+     */
+    private OrderDTO toEnrichedDTO(Order order) {
+        OrderDTO dto = new OrderDTO(order);
+        if (dto.getUser() != null) {
+            userConnectionService.enrichWithConnection(dto.getUser());
+        }
+        return dto;
+    }
+
+    /**
+     * Converts a page of Order entities to a paginated response of enriched DTOs.
+     */
+    private PageResponse<OrderDTO> toEnrichedPageResponse(Page<Order> orders) {
+        // 1. Map the pure entity page to a DTO page
+        Page<OrderDTO> dtoPage = orders.map(OrderDTO::new);
+
+        // 2. Extract users from the current page and enrich them in a single batch query
+        List<UserDTO> users = dtoPage.getContent().stream()
+                .map(OrderDTO::getUser)
+                .filter(Objects::nonNull)
+                .toList();
+
+        userConnectionService.enrichWithConnections(users);
+
+        // 3. Return the formatted PageResponse
+        return PageFormatter.toPageResponse(dtoPage, dto -> dto);
     }
 }

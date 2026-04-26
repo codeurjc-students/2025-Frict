@@ -41,7 +41,35 @@ services:
       start_period: 30s
 
   # ----------------------------------------------------------------
-  # 3. MINIO HTTPS SERVICE
+  # 3. DATABASE SERVICE (MONGODB)
+  # ----------------------------------------------------------------
+  mongodb:
+    image: mongo:latest
+    container_name: frict-mongo-latest
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    command: >
+      sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+      chmod 400 /data/keyfile &&
+      chown 999:999 /data/keyfile &&
+      exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all"
+    volumes:
+      - mongodb_data_latest:/data/db
+    healthcheck:
+      test: >
+        mongosh --username admin --password password123 --authenticationDatabase admin 
+        --eval "try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------------
+  # 4. MINIO HTTPS SERVICE
   # ----------------------------------------------------------------
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -69,7 +97,7 @@ services:
       retries: 5
 
   # ----------------------------------------------------------------
-  # 4. APPLICATION (Spring Boot + Angular)
+  # 5. APPLICATION (Spring Boot + Angular)
   # ----------------------------------------------------------------
   app:
     image: mjpulido/frict:${IMAGE_TAG}
@@ -79,10 +107,13 @@ services:
       - "443:8443"
 
     environment:
-      # --- Database ---
+      # --- MySQL Database ---
       DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
       DATASOURCE_USERNAME: user_latest
       DATASOURCE_PASSWORD: password_latest
+
+      # --- MongoDB Database ---
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin&replicaSet=rs0
 
       # --- MinIO ---
       S3_ENDPOINT: https://minio:9000
@@ -91,11 +122,11 @@ services:
       S3_SECRET_KEY: password123
       S3_BUCKET_NAME: images
 
-      # --- Security (test values) ---
-      JWT_SECRET: dev_jwt_secret_key_for_testing_purposes_only
-      CARDS_DB_KEY: dev_cards_encryption_key_12345
+      # --- Security (Test values) ---
+      JWT_SECRET: c3VwZXJfc2VjcmV0X2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXNfb25seV8xMjM0NTY3ODkw
+      CARDS_DB_KEY: 1234567890123456
 
-      # --- Email and Auth (real variables required) ---
+      # --- Email and Auth (Real variables required) ---
       SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}
       SENDER_MAIL_ADDRESS: ${SENDER_MAIL_ADDRESS}
       SENDER_MAIL_PASSWORD: ${SENDER_MAIL_PASSWORD}
@@ -106,8 +137,11 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
 
 volumes:
   mysql_data_latest:
   minio_data_https:
   minio_certs:
+  mongodb_data_latest:

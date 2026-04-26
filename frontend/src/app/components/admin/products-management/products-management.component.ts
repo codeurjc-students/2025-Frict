@@ -16,13 +16,15 @@ import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {Tag} from 'primeng/tag';
 import {ConfirmationService, MessageService} from 'primeng/api';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 
 
 @Component({
   selector: 'app-products-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag,
+    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag, BreadcrumbReloadComponent, LoadingScreenComponent,
   ],
   templateUrl: './products-management.component.html',
   styleUrl: 'products-management.component.css'
@@ -134,12 +136,20 @@ export class ProductsManagementComponent implements OnInit {
     this.loadProducts();
   }
 
-  private loadProducts() {
+  protected loadProducts() {
+    this.loading = true;
+    this.error = false;
+
     this.productService.getAllProducts(this.first/this.rows, this.rows).subscribe({
       next: (products) => {
         this.productsPage = products;
         this.chartProductSelector.set(this.productsPage.items[0]);
         this.initCharts();
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.error = true;
       }
     })
   }

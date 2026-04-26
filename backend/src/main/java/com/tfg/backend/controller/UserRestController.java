@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.User;
+import com.tfg.backend.notification.UserConnectionService;
 import com.tfg.backend.service.ShopUserOrchestrator;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
@@ -26,16 +27,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserRestController {
 
-	private final UserService userService;
+    private final UserService userService;
+    private final UserConnectionService userConnectionService; //Mongo
     private final ShopUserOrchestrator shopUserOrchestrator;
 
 
     @Operation(summary = "(All) Get current session information")
-	@GetMapping("/session")
-	public ResponseEntity<UserLoginDTO> getSessionInfo() {
+    @GetMapping("/session")
+    public ResponseEntity<UserLoginDTO> getSessionInfo() {
         UserLoginDTO loginInfoOptional = userService.getLoginInfo();
         return ResponseEntity.ok(loginInfoOptional);
-	}
+    }
 
 
     @Operation(summary = "(Users) Set selected shop")
@@ -49,8 +51,9 @@ public class UserRestController {
     @Operation(summary = "(All) Get logged user information")
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getLoggedUser() {
-        User loggedUser = userService.findLoggedUserHelper();
-        return ResponseEntity.ok(new UserDTO(loggedUser));
+        UserDTO loggedUser = new UserDTO(userService.findLoggedUserHelper());
+        userConnectionService.enrichWithConnection(loggedUser);
+        return ResponseEntity.ok(loggedUser);
     }
 
 
@@ -58,6 +61,7 @@ public class UserRestController {
     @GetMapping("/drivers/available/")
     public ResponseEntity<List<UserDTO>> getAvailableDrivers() {
         List<UserDTO> dtos = userService.findAvailableDrivers().stream().map(UserDTO::new).toList();
+        userConnectionService.enrichWithConnections(dtos);
         return ResponseEntity.ok(dtos);
     }
 
@@ -66,6 +70,7 @@ public class UserRestController {
     @GetMapping("/role/")
     public ResponseEntity<List<UserDTO>> getAllUsersByRole(@RequestParam String role) {
         List<UserDTO> dtos = userService.findAllByRole(role).stream().map(UserDTO::new).toList();
+        userConnectionService.enrichWithConnections(dtos);
         return ResponseEntity.ok(dtos);
     }
 
@@ -74,7 +79,9 @@ public class UserRestController {
     @GetMapping("/")
     public ResponseEntity<PageResponse<UserDTO>> getAllUsers(Pageable pageable) {
         Page<User> allUsers = userService.findAll(pageable);
-        return ResponseEntity.ok(PageFormatter.toPageResponse(allUsers, UserDTO::new));
+        PageResponse<UserDTO> pageResponse = PageFormatter.toPageResponse(allUsers, UserDTO::new);
+        userConnectionService.enrichWithConnections(pageResponse.getItems());
+        return ResponseEntity.ok(pageResponse);
     }
 
 
@@ -82,8 +89,9 @@ public class UserRestController {
     @Operation(summary = "(User) Update remote user image")
     @PutMapping("/image/{id}")
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) {
-        User savedUser = userService.uploadUserImage(id, image);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.uploadUserImage(id, image));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
@@ -92,31 +100,35 @@ public class UserRestController {
     @Operation(summary = "(User) Anonymize logged user account")
     @PutMapping("/anonymize")
     public ResponseEntity<UserDTO> anonymizeLoggedUser() {
-        User savedUser = userService.anonymizeLoggedUser();
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.anonymizeLoggedUser());
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
     @Operation(summary = "(User) Delete logged user image")
     @DeleteMapping("/image")
     public ResponseEntity<UserDTO> deleteUserImage() {
-        User savedUser = userService.deleteUserImage();
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.deleteUserImage());
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
     @Operation(summary = "(User) Update logged user data")
     @PutMapping("/data")
     public ResponseEntity<UserDTO> updateLoggedUserData(@RequestBody UserDTO userDTO){
-        User savedUser = userService.updateLoggedUserData(userDTO);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.updateLoggedUserData(userDTO));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
     @Operation(summary = "(User) Create logged user address")
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(@RequestBody AddressDTO addressDTO){
-        User savedUser = userService.createAddress(addressDTO);
+        UserDTO savedUser = new UserDTO(userService.createAddress(addressDTO));
+        userConnectionService.enrichWithConnection(savedUser);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -124,30 +136,33 @@ public class UserRestController {
                 .buildAndExpand(savedUser.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(new UserDTO(savedUser));
+        return ResponseEntity.created(location).body(savedUser);
     }
 
 
     @Operation(summary = "(User) Edit logged user address")
     @PutMapping("/addresses")
     public ResponseEntity<UserDTO> editAddress(@RequestBody AddressDTO addressDTO){
-        User savedUser = userService.editAddress(addressDTO);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.editAddress(addressDTO));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
     @Operation(summary = "(User) Delete logged user address by ID")
     @DeleteMapping("/addresses/{id}")
     public ResponseEntity<UserDTO> deleteAddress(@PathVariable Long id){
-        User savedUser = userService.deleteAddress(id);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.deleteAddress(id));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
     @Operation(summary = "(User) Create logged user card")
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(@RequestBody PaymentCardDTO cardDTO){
-        User savedUser = userService.createPaymentCard(cardDTO);
+        UserDTO savedUser = new UserDTO(userService.createPaymentCard(cardDTO));
+        userConnectionService.enrichWithConnection(savedUser);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -155,23 +170,25 @@ public class UserRestController {
                 .buildAndExpand(savedUser.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(new UserDTO(savedUser));
+        return ResponseEntity.created(location).body(savedUser);
     }
 
 
     @Operation(summary = "(User) Update logged user card")
     @PutMapping("/cards")
     public ResponseEntity<UserDTO> editPaymentCard(@RequestBody PaymentCardDTO paymentCardDTO){
-        User savedUser = userService.editPaymentCard(paymentCardDTO);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.editPaymentCard(paymentCardDTO));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
     @Operation(summary = "(User) Delete logged user card by ID")
     @DeleteMapping("/cards/{id}")
     public ResponseEntity<UserDTO> deletePaymentCard(@PathVariable Long id){
-        User savedUser = userService.deletePaymentCard(id);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.deletePaymentCard(id));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
@@ -201,8 +218,9 @@ public class UserRestController {
     @Operation(summary = "(Admin) Unban user by ID")
     @PutMapping("/ban/{id}")
     public ResponseEntity<UserDTO> toggleUserBanById(@PathVariable Long id, @RequestBody boolean banState){
-        User savedUser = userService.toggleUserBanById(id, banState);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.toggleUserBanById(id, banState));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 
@@ -217,8 +235,9 @@ public class UserRestController {
     @Operation(summary = "(Admin) Anonymize user by ID")
     @PutMapping("/anon/{id}")
     public ResponseEntity<UserDTO> anonUserById(@PathVariable Long id){
-        User savedUser = userService.anonUserById(id);
-        return ResponseEntity.ok(new UserDTO(savedUser));
+        UserDTO savedUser = new UserDTO(userService.anonUserById(id));
+        userConnectionService.enrichWithConnection(savedUser);
+        return ResponseEntity.ok(savedUser);
     }
 
 

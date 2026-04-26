@@ -3,9 +3,12 @@ package com.tfg.backend.service;
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.model.*;
+import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.notification.TruckEvent;
 import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.utils.StatDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,7 @@ public class TruckService {
 
     private final UserService userService;
     private final TruckRepository truckRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     // --- READ-ONLY METHODS ---
@@ -61,23 +65,49 @@ public class TruckService {
     @Transactional
     public Truck setAssignedDriver(Long driverId, Long truckId, boolean state) {
         Truck truck = this.findTruckHelper(truckId);
+
+        String driverUsername;
         if (state) {
             User user = userService.findUserHelper(driverId);
             truck.setAssignedDriver(user);
+            driverUsername = Optional.ofNullable(user).map(User::getUsername).orElse(null);
         } else {
+            driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
             truck.setAssignedDriver(null);
         }
+
+        //Send in-app notifications
+        String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        TruckEvent truckEvent = new TruckEvent(EventAction.ASSIGNED, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+        eventPublisher.publishEvent(truckEvent);
+
         return truck;
     }
 
     @Transactional
     public Truck commentAndOrUpdateTruckStatus(Long id, TruckStatus truckStatus, String comment) {
         Truck truck = this.findTruckHelper(id);
+
+        //Get notification data
+        String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
+        TruckEvent truckEvent;
+
         if (truckStatus == truck.getHistory().getLast().getStatus()) {
             truck.addStatusUpdate(comment);
+
+            truckEvent = new TruckEvent(EventAction.NEW_COMMENT, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+
         } else {
+            TruckStatus currentStatus = truck.getCurrentStatus();
+
             truck.changeTruckStatus(truckStatus, comment);
+
+            truckEvent = new TruckEvent(EventAction.STATUS_CHANGED, String.valueOf(truck.getId()), currentStatus.getDescription(), truckStatus.getDescription(), null, managerUsername, driverUsername);
         }
+
+        eventPublisher.publishEvent(truckEvent);
+
         return truck;
     }
 
@@ -86,6 +116,11 @@ public class TruckService {
         Address address = mapAddressFromDTO(truckDTO.getAddress());
         Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxOrderCapacity());
         truck.setAssignedShop(assignedShop); //Can be null (valid)
+
+        //Send in-app notifications
+        String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        TruckEvent truckEvent = new TruckEvent(EventAction.CREATED, String.valueOf(truck.getId()), null, null, null, managerUsername, null);
+        eventPublisher.publishEvent(truckEvent);
 
         return truckRepository.save(truck);
     }
@@ -100,12 +135,22 @@ public class TruckService {
         truck.setMaxOrderCapacity(truckDTO.getMaxOrderCapacity());
         truck.setAssignedShop(assignedShop);
 
+        //Send in-app notifications
+        String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
+        TruckEvent truckEvent = new TruckEvent(EventAction.UPDATED, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+        eventPublisher.publishEvent(truckEvent);
+
         return truck;
     }
 
     @Transactional
     public Truck deleteTruck(Long id) {
         Truck truck = this.findTruckHelper(id);
+
+        //Get notification data
+        String managerUsername = Optional.ofNullable(truck.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
+        String driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
 
         // 1. Unlink shop
         if (truck.getAssignedShop() != null) {
@@ -131,6 +176,11 @@ public class TruckService {
 
         // 4. Secure deletion
         truckRepository.delete(truck);
+
+        //Send in-app notifications
+        TruckEvent truckEvent = new TruckEvent(EventAction.DELETED, String.valueOf(truck.getId()), null, null, null, managerUsername, driverUsername);
+        eventPublisher.publishEvent(truckEvent);
+
         return truck;
     }
 

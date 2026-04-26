@@ -39,13 +39,14 @@ import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 
 import * as L from 'leaflet';
 import {ProgressBar} from 'primeng/progressbar';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
   selector: 'app-orders-management',
   standalone: true,
   imports: [
     CommonModule, FormsModule, CdkDropListGroup, CdkDropList, CdkDrag, Avatar, CdkDragPlaceholder, CdkDragPreview,
-    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select, ProgressBar
+    Dialog, SelectButton, Paginator, LoadingScreenComponent, PrimeTemplate, TabPanel, TableModule, Button, Textarea, TabList, Tab, TabPanels, Tabs, Tag, Select, ProgressBar, BreadcrumbReloadComponent
   ],
   templateUrl: './orders-management.component.html',
   styleUrl: './orders-management.component.css'
@@ -111,6 +112,26 @@ export class OrdersManagementComponent implements OnInit {
     this.loadOrdersPage();
   }
 
+  public reloadAll() {
+    this.loading = true;
+    this.error = false;
+
+    // 1. Leaflet map cleaning
+    if (this.orderMap) {
+      this.orderMap.remove();
+      this.orderMap = undefined;
+    }
+
+    // 2. State and dialogs cleaning
+    this.displayOrderDialog = false;
+    this.displayStatusDialog = false;
+    this.selectedOrder = null;
+    this.pendingDropData = null;
+
+    // 3. Make data requests
+    this.loadOrdersPage();
+  }
+
   getCurrentStatus(order: Order): string {
     if (!order || !order.history || order.history.length === 0) return 'Pedido Realizado';
     return order.history[order.history.length - 1].status;
@@ -135,7 +156,6 @@ export class OrdersManagementComponent implements OnInit {
       next: (results) => {
         this.selectedShop = results.shop;
         this.selectedTruck = results.truck;
-        console.log(this.selectedTruck?.address);
 
         if (this.selectedTruck) {
           this.availableTrucks = [this.selectedTruck];
@@ -442,7 +462,6 @@ export class OrdersManagementComponent implements OnInit {
   private loadOrdersPage() {
     this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows, 'createdAt,desc').subscribe({
       next: (page: PageResponse<Order>) => {
-        console.log(page);
         this.ordersPage = page;
         this.ordersMade.set(page.items.filter(o => this.getCurrentStatus(o) === 'Pedido Realizado'));
         this.shippedOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Enviado'));

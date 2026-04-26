@@ -1,6 +1,6 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {ActivatedRoute, RouterModule} from '@angular/router';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router'; // Importar Router
 
 import {ButtonModule} from 'primeng/button';
 import {TagModule} from 'primeng/tag';
@@ -11,7 +11,9 @@ import {Product} from '../../../models/product.model';
 import {CategoryService} from '../../../services/category.service';
 import {ProductService} from '../../../services/product.service';
 import {Category} from '../../../models/category.model';
-import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 
 @Component({
   selector: 'app-category-info',
@@ -24,12 +26,13 @@ import {BreadcrumbComponent} from '../../common/breadcrumb/breadcrumb.component'
     RatingModule,
     FormsModule,
     ProductCardComponent,
-    BreadcrumbComponent
+    BreadcrumbReloadComponent,
+    LoadingScreenComponent
   ],
   templateUrl: './category-info.component.html',
   styleUrl: './category-info.component.css'
 })
-export class CategoryInfoComponent {
+export class CategoryInfoComponent implements OnInit {
 
   topSalesProducts: Product[] = []; //Top sales products of this main category
   mainCategory!: Category;
@@ -45,9 +48,12 @@ export class CategoryInfoComponent {
     { title: 'Segunda Residencia', icon: 'pi pi-home' }
   ];
 
+  // Inyectamos Router y BreadcrumbService en el constructor
   constructor(private categoryService: CategoryService,
               private productService: ProductService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private router: Router,
+              private breadcrumbService: BreadcrumbService) {
   }
 
   ngOnInit() {
@@ -60,11 +66,32 @@ export class CategoryInfoComponent {
   }
 
   loadMainCategory() {
+    this.loading = true;
+    this.error = false;
+
     const id = this.route.snapshot.paramMap.get('id');
+    // Capturamos el state de navegación al inicio
+    const navState = history.state;
+
     if (id) {
       this.categoryService.getCategoryById(id).subscribe({
         next: (category) => {
           this.mainCategory = category;
+
+          const currentUrl = this.router.url;
+
+          this.breadcrumbService.setNodesForUrl(currentUrl, [{ label: category.name }]);
+
+          if (navState.from === 'categories-management') {
+            // From Categories Manager: Inicio > Categories Manager > Category Name
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
+              { label: 'Gestor de Categorías', routerLink: '/admin/categories' }
+            ]);
+          } else {
+            // From Home or direct access: Home > Category Name
+            this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, []);
+          }
+
           this.loadSimilarCategories();
           this.loadTopSalesProducts();
         },
@@ -81,6 +108,7 @@ export class CategoryInfoComponent {
       this.categoryService.getCategoryById(this.mainCategory.parentId).subscribe({
         next: (category) => {
           this.similarCategories = category.children.filter(c => c.id !== this.mainCategory.id);
+          this.loading = false;
         }
       })
     }
@@ -88,6 +116,7 @@ export class CategoryInfoComponent {
       this.categoryService.getAllCategories().subscribe({
         next: (c) => {
           this.similarCategories = c.filter(c => c.id !== this.mainCategory.id);
+          this.loading = false;
         }
       })
     }

@@ -1,13 +1,15 @@
 <div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
+  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
 </div>
 
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800">
 
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto p-4 py-8">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+
+    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
+      <div class="mt-2">
         <h1 class="text-3xl font-bold text-primary-600">Gestor de Tiendas</h1>
         <p *ngIf="authService.isAdmin()" class="text-slate-500">Administra las diferentes puntos de venta de la organización.</p>
         <p *ngIf="authService.isManager()" class="text-slate-500">Administra las tiendas a las que estás asignado.</p>
@@ -51,31 +53,41 @@
 
         <div class="flex-grow flex flex-col min-h-0">
           <div class="flex justify-between items-center mb-3 shrink-0">
-            <h3 class="font-bold text-slate-700 text-sm">Notificaciones relacionadas (todas las tiendas)</h3>
-            <button class="text-xs text-cyan-600 font-bold hover:underline">Ver todas las alertas</button>
+            <h3 class="font-bold text-slate-700 text-sm">Notificaciones relacionadas (tiendas asignadas)</h3>
+            <p-button icon="pi pi-arrow-right" routerLink="/admin/notifications" [text]="true" label="Todas las notificaciones" iconPos="right" size="small"></p-button>
           </div>
 
           <div class="flex flex-col gap-2 overflow-y-auto max-h-[380px] pr-1 custom-scrollbar">
 
-            @for(alert of shopAlerts(); track $index) {
-              <div class="group flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer">
-                <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                     [ngClass]="{
-                    'bg-red-50 text-red-500': alert.severity === 'high',
-                    'bg-yellow-50 text-yellow-500': alert.severity === 'medium',
-                    'bg-cyan-50 text-cyan-500': alert.severity === 'info'
-                 }">
-                  <i [class]="alert.icon"></i>
+            @for(alert of recentShopsNotifications(); track alert.id) {
+              <div class="group relative flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer">
+
+                @if (!alert.read) {
+                  <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary-500 rounded-full"></div>
+                }
+
+                <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center border"
+                     [ngClass]="uiService.getVisualsByType(alert.type).color">
+                  <i [class]="uiService.getVisualsByType(alert.type).icon"></i>
                 </div>
 
-                <div class="flex-grow min-w-0">
-                  <p class="text-xs font-bold text-slate-700 truncate">{{ alert.reference }}</p>
-                  <p class="text-[10px] text-slate-500 truncate">{{ alert.message }}</p>
+                <div class="flex-grow min-w-0 pr-2">
+                  <p class="text-xs font-bold truncate" [ngClass]="{'text-slate-900': !alert.read, 'text-slate-700': alert.read}">
+                    {{ alert.subject }}
+                  </p>
+                  <p class="text-[10px] text-slate-500 truncate">{{ alert.description }}</p>
                 </div>
 
                 <div class="opacity-0 group-hover:opacity-100 transition-opacity">
                   <i class="pi pi-chevron-right text-xs text-slate-300"></i>
                 </div>
+              </div>
+            }
+
+            @if (recentShopsNotifications().length === 0) {
+              <div class="flex-1 h-full min-h-[200px] flex flex-col items-center justify-center text-slate-400">
+                <i class="pi pi-check-circle text-2xl mb-2 text-slate-300"></i>
+                <p class="text-xs font-medium">No hay notificaciones recientes.</p>
               </div>
             }
           </div>
@@ -122,9 +134,23 @@
 
             <td *ngIf="authService.isAdmin()">
               @if (shop.assignedManager) {
-                <div class="flex items-center gap-2">
-                  <p-avatar [image]="shop.assignedManager.imageInfo.imageUrl" shape="circle" />
-                  <div>{{ shop.assignedManager.name }}</div>
+                <div class="flex items-center gap-3">
+                  <div class="relative flex">
+                    <p-avatar [image]="shop.assignedManager.imageInfo?.imageUrl"
+                              shape="circle"
+                              styleClass="w-8 h-8 border border-slate-200" />
+
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white rounded-full transition-colors"
+                          [ngClass]="shop.assignedManager.connection?.online ? 'bg-green-500' : 'bg-slate-400'"
+                          tooltipPosition="top">
+                    </span>
+                  </div>
+
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-slate-700">
+                      {{ shop.assignedManager.name }}
+                    </span>
+                  </div>
                 </div>
               } @else {
                 <div class="text-surface-500 italic text-sm">

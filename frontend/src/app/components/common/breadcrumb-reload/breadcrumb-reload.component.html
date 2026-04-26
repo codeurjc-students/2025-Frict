@@ -1,0 +1,22 @@
+<div class="w-full flex items-center justify-between px-2 py-3 mb-4 border-b border-slate-200">
+
+  <div class="flex-grow overflow-x-auto mr-4 scrollbar-hide">
+    <p-breadcrumb
+      [home]="home"
+      [model]="breadcrumbService.breadcrumbs()"
+      styleClass="!bg-transparent !p-0 !border-0 text-md font-medium whitespace-nowrap min-w-max [&_ul]:!flex-nowrap">
+    </p-breadcrumb>
+  </div>
+
+  <div class="shrink-0 flex items-center border-l border-slate-200 pl-3">
+    <p-button
+      icon="pi pi-refresh"
+      (onClick)="triggerReload()"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      styleClass="!w-8 !h-8 !p-0 !text-primary-400 hover:!text-primary-600 hover:!bg-primary-50 transition-all">
+    </p-button>
+  </div>
+
+</div>
