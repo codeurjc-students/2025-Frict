@@ -21,7 +21,7 @@ export class UiService {
     this.initTheme();
   }
 
-  public readonly CLIENT_APP_NAME = 'MiTienda';
+  public readonly CLIENT_APP_NAME = 'TecHub';
   public readonly ADMIN_APP_NAME = 'Frict';
   public readonly APP_USER_LOGO = '/shopLogo.png';
   public readonly APP_ADMIN_LOGO = '/frictLogo.png';

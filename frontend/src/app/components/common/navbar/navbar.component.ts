@@ -178,7 +178,6 @@ export class NavbarComponent implements OnInit {
 
   triggerTest() {
     this.notificationService.triggerTest().subscribe({
-      next: () => console.log('Test request sent to server'),
       error: (err) => console.error('Error in test:', err)
     });
   }

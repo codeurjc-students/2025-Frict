@@ -156,7 +156,6 @@ export class OrdersManagementComponent implements OnInit {
       next: (results) => {
         this.selectedShop = results.shop;
         this.selectedTruck = results.truck;
-        console.log(this.selectedTruck?.address);
 
         if (this.selectedTruck) {
           this.availableTrucks = [this.selectedTruck];
@@ -463,7 +462,6 @@ export class OrdersManagementComponent implements OnInit {
   private loadOrdersPage() {
     this.orderService.getOrdersByRolePage(this.first/this.rows, this.rows, 'createdAt,desc').subscribe({
       next: (page: PageResponse<Order>) => {
-        console.log(page);
         this.ordersPage = page;
         this.ordersMade.set(page.items.filter(o => this.getCurrentStatus(o) === 'Pedido Realizado'));
         this.shippedOrders.set(page.items.filter(o => this.getCurrentStatus(o) === 'Enviado'));

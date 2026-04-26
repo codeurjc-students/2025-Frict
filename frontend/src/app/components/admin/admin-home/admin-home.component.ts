@@ -287,7 +287,6 @@ export class AdminHomeComponent implements OnInit {
   private loadRecentOrdersByRole() {
     this.orderService.getOrdersByRolePage(0, 5, 'createdAt,desc').subscribe({
       next: (response) => {
-        console.log(response);
         this.recentOrders.set(response.items);
       },
       error: (err) => {

@@ -72,7 +72,6 @@ export class NotificationsComponent implements OnInit {
 
     this.notificationService.getNotificationsByTypePage(this.first / this.rows, this.rows, '').subscribe({
       next: (page) => {
-        console.log(page)
         this.notificationsPage = page;
         this.loading = false;
         this.listLoading = false;
