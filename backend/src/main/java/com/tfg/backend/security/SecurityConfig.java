@@ -61,7 +61,6 @@ public class SecurityConfig {
                         )
                 )
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .securityMatcher("/api/**")
                 .authorizeHttpRequests(authorize -> authorize
 
                         // --- 1. AUTHENTICATION (AuthRestController) ---
@@ -144,8 +143,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
-                        
-                        .anyRequest().denyAll() // Block any URL that is not contained in this list
+
+                        .requestMatchers("/api/**").denyAll()
+                        .requestMatchers("/**").permitAll()
                 )
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedHandlerJwt))
                 .authenticationProvider(authenticationProvider())

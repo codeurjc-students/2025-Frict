@@ -24,6 +24,15 @@ Regain access to your account by entering a one-time password (OTP) sent to your
 &nbsp;
 
 
+**Notifications Page**
+
+Get real-time updates about all different events depending on your role: order updates, assignment change, new products offering, etc.
+
+![Notifications Page](/docs/images/v0.2/notifications.png)
+
+&nbsp;
+
+
 ## 🛒 Shop Subsystem
 
 - [All detailed views](/docs/pages/01-shop-subsystem.md)

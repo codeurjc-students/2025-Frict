@@ -62,7 +62,7 @@ services:
     healthcheck:
       test: >
         mongosh --username admin --password password123 --authenticationDatabase admin 
-        --eval "rs.status().ok || rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok" --quiet
+        --eval "try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -123,7 +123,7 @@ services:
       S3_BUCKET_NAME: images
 
       # --- Security (Test values) ---
-      JWT_SECRET: dev_jwt_secret_key_for_testing_purposes_only
+      JWT_SECRET: c3VwZXJfc2VjcmV0X2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXNfb25seV8xMjM0NTY3ODkw
       CARDS_DB_KEY: 1234567890123456
 
       # --- Email and Auth (Real variables required) ---

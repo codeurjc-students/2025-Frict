@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class SPAController {
 
-    @RequestMapping(value = { "/{path:^(?!api).*$}/**/{path:[^\\.]*}", "/{path:^(?!api).*$}" })
+    @RequestMapping(value = {
+            "/{path:^(?!api).*$}/**/{path:[^\\.]*}",
+            "/{path:^(?!api)[^\\.]*}"
+    })
     public String forward() {
-        // "forward:" keeps the browser URL unchanged (it stays as /dashboard)
-        // but instructs the server to render the content of static/index.html
         return "forward:/index.html";
     }
 }

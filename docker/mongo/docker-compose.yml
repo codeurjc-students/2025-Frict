@@ -1,0 +1,28 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    command: >
+      sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+      chmod 400 /data/keyfile &&
+      chown 999:999 /data/keyfile &&
+      exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all"
+    volumes:
+      - mongodb_data_dev:/data/db
+    healthcheck:
+      test: >
+        mongosh --username admin --password password123 --authenticationDatabase admin 
+        --eval "try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mongodb_data_dev:
