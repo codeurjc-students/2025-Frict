@@ -15,6 +15,8 @@ import {LoadingScreenComponent} from '../loading-screen/loading-screen.component
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {QRCodeComponent} from 'angularx-qrcode';
+import {Dialog} from 'primeng/dialog';
 
 @Component({
   selector: 'app-order-details',
@@ -28,7 +30,9 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     TagModule,
     DividerModule,
     LoadingScreenComponent,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    QRCodeComponent,
+    Dialog
   ],
   templateUrl: './order-details.component.html'
 })
@@ -39,6 +43,11 @@ export class OrderDetailsComponent implements OnInit {
 
   loading: boolean = true;
   error: boolean = false;
+
+  displayQrDialog: boolean = false;
+  qrToken: string = '';
+  qrLoading: boolean = false;
+  qrError: boolean = false;
 
   private readonly stepsDefinitions = [
     { status: 'Pedido Realizado', icon: 'pi pi-shopping-cart' },
@@ -107,6 +116,28 @@ export class OrderDetailsComponent implements OnInit {
         this.loading = false;
       }
     })
+  }
+
+  openQrDialog() {
+    this.displayQrDialog = true;
+
+    // Si ya lo hemos cargado antes, no repetimos la llamada
+    if (!this.qrToken && this.orderId) {
+      this.qrLoading = true;
+      this.qrError = false;
+
+      this.orderService.getOrderQrTokenById(this.orderId).subscribe({
+        next: (token) => {
+          this.qrToken = token;
+          this.qrLoading = false;
+        },
+        error: (err) => {
+          console.error("Error obteniendo el token QR:", err);
+          this.qrError = true;
+          this.qrLoading = false;
+        }
+      });
+    }
   }
 
   protected readonly formatAddress = formatAddress;

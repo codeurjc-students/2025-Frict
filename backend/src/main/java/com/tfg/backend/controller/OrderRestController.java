@@ -65,6 +65,15 @@ public class OrderRestController {
         return ResponseEntity.ok(toEnrichedDTO(order));
     }
 
+
+    @Operation(summary = "(User) Get order QR token by ID")
+    @GetMapping("/{id}/token")
+    public ResponseEntity<String> getOrderQrTokenById(@PathVariable Long id){
+        String token = orderService.getOrderQrToken(id);
+        return ResponseEntity.ok(token);
+    }
+
+
     @Operation(summary = "(Admin, Manager) Set assigned truck to an order")
     @PostMapping("/{orderId}/assign/truck/{truckId}")
     public ResponseEntity<OrderDTO> setAssignedTruck(

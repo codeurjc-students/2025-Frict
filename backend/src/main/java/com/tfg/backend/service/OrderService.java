@@ -66,6 +66,16 @@ public class OrderService {
         return this.findOrdersByUser(loggedUser, pageable);
     }
 
+    public String getOrderQrToken(Long id){
+        User user = userService.findLoggedUserHelper();
+        Order order = this.findOrderHelper(id);
+
+        if (!user.getUsername().equals(order.getUser().getUsername())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be the user that placed the order.");
+        }
+        return order.getQrDeliveryToken();
+    }
+
     // --- WRITING METHODS (override @Transactional) ---
 
     @Transactional
