@@ -90,6 +90,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cancel/*").hasAuthority("USER") // (User) Cancel order
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}").hasAnyAuthority("USER", "MANAGER", "DRIVER", "ADMIN") // (User, etc.)
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}/token").hasAnyAuthority("USER") // Order confirmation QR codes
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/{id}/token").hasAnyAuthority("DRIVER") // Order confirmation QR codes
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/*").hasAuthority("ADMIN") // (Admin) User orders
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasAuthority("ADMIN") // (Admin) Clear finished orders
                         .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver) Update order status

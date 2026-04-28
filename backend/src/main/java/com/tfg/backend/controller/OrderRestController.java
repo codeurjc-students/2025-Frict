@@ -24,6 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -71,6 +72,15 @@ public class OrderRestController {
     public ResponseEntity<String> getOrderQrTokenById(@PathVariable Long id){
         String token = orderService.getOrderQrToken(id);
         return ResponseEntity.ok(token);
+    }
+
+
+    @Operation(summary = "(Driver) Check order QR token by ID")
+    @PostMapping("/{id}/token")
+    public ResponseEntity<Boolean> checkOrderQrTokenById(@PathVariable Long id, @RequestBody Map<String, String> payload){
+        String cleanToken = payload.get("token");
+        boolean status = orderService.checkOrderQrToken(id, cleanToken);
+        return ResponseEntity.ok(status);
     }
 
 

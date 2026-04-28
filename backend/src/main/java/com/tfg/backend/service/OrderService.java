@@ -76,6 +76,19 @@ public class OrderService {
         return order.getQrDeliveryToken();
     }
 
+    @Transactional
+    public boolean checkOrderQrToken(Long id, String token){
+        Order order = this.findOrderHelper(id);
+
+        if (!order.getQrDeliveryToken().equals(token)){
+            return false;
+        }
+        else {
+            this.commentAndOrUpdateOrderStatus(id, OrderStatus.COMPLETED, "Entrega confirmada mediante validación QR del cliente en destino.");
+            return true;
+        }
+    }
+
     // --- WRITING METHODS (override @Transactional) ---
 
     @Transactional

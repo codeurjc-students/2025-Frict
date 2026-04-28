@@ -8,6 +8,7 @@ import { Textarea } from 'primeng/textarea';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 
 import * as L from 'leaflet';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import { BreadcrumbReloadComponent } from '../../common/breadcrumb-reload/breadcrumb-reload.component';
@@ -75,12 +76,18 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   private map: L.Map | undefined;
   protected markers: L.Marker[] = [];
 
+  // Instancia del escáner QR
+  private html5QrcodeScanner: Html5QrcodeScanner | null = null;
+
   ngOnInit() {
     this.loadDeliveryData();
   }
 
   ngOnDestroy() {
     if (this.map) this.map.remove();
+    if (this.html5QrcodeScanner) {
+      this.html5QrcodeScanner.clear().catch(e => console.error("Error al limpiar escáner:", e));
+    }
   }
 
   loadDeliveryData() {
@@ -265,7 +272,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     const order = this.selectedOrder();
     if (!order) return;
 
-    // Si el usuario deja el campo vacío, forzamos un valor por defecto para no enviar strings en blanco en este estado
     const finalComment = this.collectComment.trim() || 'Pedido recogido para su entrega.';
 
     this.orderService.commentAndOrUpdateOrderStatus(order.id, 'En Reparto', finalComment).subscribe({
@@ -312,26 +318,64 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
+  // --- MÉTODOS DEL ESCÁNER QR ---
+
   openScanner() {
     this.displayQrScanner = true;
     this.scanning = true;
+
+    // setTimeout para dar tiempo a PrimeNG de renderizar el div del dialog
+    setTimeout(() => {
+      this.html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      );
+
+      this.html5QrcodeScanner.render(
+        this.onScanSuccess.bind(this),
+        this.onScanFailure.bind(this)
+      );
+    }, 100);
+  }
+
+  onScanSuccess(decodedText: string) {
+    if (this.html5QrcodeScanner) {
+      this.html5QrcodeScanner.clear().catch(e => console.error(e));
+      this.html5QrcodeScanner = null;
+    }
+    this.onQrSuccess(decodedText);
+  }
+
+  onScanFailure(error: any) {
+    // Ignoramos el error, ya que se dispara por cada frame que no reconoce un QR
   }
 
   onQrSuccess(result: string) {
     this.scanning = false;
     const order = this.selectedOrder();
-    if (order && result === order.referenceCode) {
-      const automaticComment = 'Entrega confirmada mediante validación QR del cliente en destino.';
-      this.orderService.commentAndOrUpdateOrderStatus(order.id, 'Completado', automaticComment).subscribe({
-        next: () => {
+    if (!order) return;
+
+    this.orderService.checkOrderQrTokenById(order.id, result).subscribe({
+      next: (isValid: boolean) => {
+        if (isValid) {
           this.displayQrScanner = false;
           this.messageService.add({ severity: 'success', summary: 'Entregado', detail: 'Entrega confirmada con éxito.' });
           this.fetchOrders();
-        },
-        error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo en la confirmación.' })
-      });
-    } else {
-      this.messageService.add({ severity: 'error', summary: 'Error QR', detail: 'Código inválido para este pedido.' });
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error QR', detail: 'Código inválido para este pedido.' });
+        }
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al verificar el código QR con el servidor.' })
+    });
+  }
+
+  closeScanner() {
+    this.displayQrScanner = false;
+    this.scanning = false;
+    if (this.html5QrcodeScanner) {
+      this.html5QrcodeScanner.clear().catch(e => console.error(e));
+      this.html5QrcodeScanner = null;
     }
   }
 

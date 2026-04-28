@@ -49,6 +49,10 @@ export class OrderService {
     return this.http.get(this.apiUrl + `/${id}/token`, { responseType: 'text' });
   }
 
+  public checkOrderQrTokenById(id: string, token: string): Observable<boolean> {
+    return this.http.post<boolean>(this.apiUrl + `/${id}/token`, { token });
+  }
+
   public commentAndOrUpdateOrderStatus(id: string, orderStatus: string, comment: string): Observable<Order> {
     let params = new HttpParams();
     params = params.append('orderStatus', orderStatus);

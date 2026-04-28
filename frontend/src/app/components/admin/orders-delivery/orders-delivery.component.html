@@ -379,20 +379,18 @@
   [style]="{width: '440px'}"
   [draggable]="false"
   [resizable]="false"
+  (onHide)="closeScanner()"
   styleClass="!rounded-3xl overflow-hidden shadow-2xl">
 
   <div class="flex flex-col items-center gap-6 py-6 px-2">
     <div class="w-full aspect-square bg-slate-900 rounded-3xl border-4 border-slate-100 flex flex-col items-center justify-center relative shadow-inner overflow-hidden">
-      <div *ngIf="scanning" class="flex flex-col items-center gap-4 text-white z-10">
-        <i class="pi pi-camera text-5xl opacity-40 animate-pulse"></i>
-        <div class="h-0.5 w-48 bg-blue-500 shadow-[0_0_15px_#3b82f6] animate-scan-line"></div>
-        <span class="text-sm font-bold tracking-widest">BUSCANDO QR...</span>
-      </div>
+
+      <div id="qr-reader" class="w-full"></div>
 
       <button
-        (click)="onQrSuccess(selectedOrder()!.referenceCode)"
-        class="absolute bottom-6 bg-white/10 hover:bg-white/20 text-white/40 text-[9px] px-4 py-2 rounded-full transition-colors font-mono">
-        SIMULAR LECTURA ÉXITO (REF: {{ selectedOrder()?.referenceCode }})
+        (click)="onQrSuccess('token-falso-simulado')"
+        class="absolute bottom-6 bg-white/10 hover:bg-white/20 text-white/40 text-[9px] px-4 py-2 rounded-full transition-colors font-mono z-50">
+        SIMULAR LECTURA (Token erróneo)
       </button>
     </div>
 
@@ -401,7 +399,7 @@
     </div>
 
     <div class="flex justify-center w-full">
-      <p-button label="Cancelar y volver" severity="secondary" [text]="true" (onClick)="displayQrScanner = false" styleClass="!font-bold"></p-button>
+      <p-button label="Cancelar y volver" severity="secondary" [text]="true" (onClick)="closeScanner()" styleClass="!font-bold"></p-button>
     </div>
   </div>
 </p-dialog>
