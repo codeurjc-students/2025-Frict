@@ -80,8 +80,8 @@
 | 🔄     | Check shops, trucks and/or addresses approximate location |           | ✅               | ✅            | ✅               | ✅             |
 | 🔄     | View stored use data displayed in charts                  |           |                 |              |                 | ✅             |
 | 🔄     | Import/Export Excel tables                                |           |                 | ✅            |                 | ✅             |
-| 🔄     | Read unique QR code for order reception                   |           |                 | ✅            | ✅               |               |
-| 🔄     | Generate unique QR code for order reception               |           | ✅               |              |                 |               |
+| ✅     | Read unique QR code for order reception                   |           |                 | ✅            | ✅               |               |
+| ✅     | Generate unique QR code for order reception               |           | ✅               |              |                 |               |
 
 &nbsp;
 

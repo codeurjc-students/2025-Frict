@@ -139,12 +139,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/stats/orders").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver)
                         .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
 
-                        // --- 10. WEBSOCKETS & NOTIFICATIONS ---
+                        // --- 10. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---
                         .requestMatchers("/api/v1/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/notifications/test").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/stats").permitAll()
 
                         .requestMatchers("/api/**").denyAll()
                         .requestMatchers("/**").permitAll()
