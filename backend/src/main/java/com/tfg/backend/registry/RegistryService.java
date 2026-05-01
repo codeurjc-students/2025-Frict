@@ -1,11 +1,13 @@
 package com.tfg.backend.registry;
 
+import com.tfg.backend.notification.EntityType;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -15,7 +17,7 @@ public class RegistryService {
 
     public List<Document> getRegistryStats(
             Date startDate, Date endDate, String viewType, String interval,
-            String entityType, String dataType,
+            EntityType entityType, RegistryType dataType,
             List<String> storeIds, List<String> userIds,
             List<String> productIds, List<String> orderIds) {
 
@@ -26,7 +28,15 @@ public class RegistryService {
         );
     }
 
-    public List<String> getUniqueReferences(String targetEntityType, String associatedEntity) {
-        return repository.getUniqueReferenceCodes(targetEntityType, associatedEntity);
+    public List<String> getActiveEntityTypes() {
+        return repository.getActiveEntityTypes();
+    }
+
+    public List<String> getActiveDataTypes(EntityType entityType) {
+        return repository.getActiveDataTypes(entityType);
+    }
+
+    public Map<String, List<String>> getCrossReferences(EntityType entityType, RegistryType dataType) {
+        return repository.getCrossReferences(entityType, dataType);
     }
 }

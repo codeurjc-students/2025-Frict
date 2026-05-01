@@ -120,7 +120,7 @@ export class NavbarComponent implements OnInit {
   public adminItems = [
     { label: 'Productos', icon: 'pi pi-desktop',   link: '/admin/products', roles: ['ADMIN'] },
     { label: 'Categorías', icon: 'pi pi-tag',   link: '/admin/categories', roles: ['ADMIN'] },
-    //{ label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports', roles: ['ADMIN'] },
+    { label: 'Informes',  icon: 'pi pi-chart-bar', link: 'reports', roles: ['ADMIN'] },
     { label: 'Tiendas',   icon: 'pi pi-shop',      link: '/admin/shops', roles: ['ADMIN', 'MANAGER'] },
     { label: 'Pedidos',   icon: 'pi pi-box',       link: '/admin/orders', roles: ['ADMIN', 'MANAGER'] },
     { label: 'Reparto',   icon: 'pi pi-truck',     link: '/admin/delivery', roles: ['DRIVER'] },

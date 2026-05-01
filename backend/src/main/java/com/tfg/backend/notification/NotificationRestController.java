@@ -2,6 +2,7 @@ package com.tfg.backend.notification;
 
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.utils.PageFormatter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
+@Tag(name = "Notification Management", description = "In-app notifications management")
 @RequiredArgsConstructor
 public class NotificationRestController {
 

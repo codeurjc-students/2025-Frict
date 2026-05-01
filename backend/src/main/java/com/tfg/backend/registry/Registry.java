@@ -1,5 +1,6 @@
 package com.tfg.backend.registry;
 
+import com.tfg.backend.notification.EntityType;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -31,9 +32,9 @@ public class Registry {
     @Setter
     @Getter
     public static class Metadata {
-        private String entityType;
+        private EntityType entityType;
         private String entityId;
-        private String dataType;
+        private RegistryType dataType;
 
         private String storeId;
         private String userId;
@@ -42,7 +43,7 @@ public class Registry {
 
         public Metadata() {}
 
-        public Metadata(String entityType, String entityId, String dataType) {
+        public Metadata(EntityType entityType, String entityId, RegistryType dataType) {
             this.entityType = entityType;
             this.entityId = entityId;
             this.dataType = dataType;

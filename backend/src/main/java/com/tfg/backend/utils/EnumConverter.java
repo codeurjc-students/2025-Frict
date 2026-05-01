@@ -2,11 +2,13 @@ package com.tfg.backend.utils;
 
 import com.tfg.backend.model.OrderStatus;
 import com.tfg.backend.model.TruckStatus;
+import com.tfg.backend.notification.EntityType;
+import com.tfg.backend.registry.RegistryType;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class StatusConverter {
+public class EnumConverter {
 
     @Component
     public static class ToOrderStatus implements Converter<String, OrderStatus> {
@@ -21,6 +23,24 @@ public class StatusConverter {
         @Override
         public TruckStatus convert(String source) {
             return TruckStatus.fromDescription(source);
+        }
+    }
+
+    // --- NUEVOS CONVERSORES PARA REGISTROS Y NOTIFICACIONES ---
+
+    @Component
+    public static class ToEntityType implements Converter<String, EntityType> {
+        @Override
+        public EntityType convert(String source) {
+            return EntityType.fromTranslation(source);
+        }
+    }
+
+    @Component
+    public static class ToRegistryType implements Converter<String, RegistryType> {
+        @Override
+        public RegistryType convert(String source) {
+            return RegistryType.fromTranslation(source);
         }
     }
 }

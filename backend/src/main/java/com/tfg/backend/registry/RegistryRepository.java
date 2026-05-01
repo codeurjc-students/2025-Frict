@@ -1,6 +1,6 @@
 package com.tfg.backend.registry;
 
-
+import com.tfg.backend.notification.EntityType;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -10,9 +10,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,14 +20,14 @@ public class RegistryRepository {
 
     public List<Document> getRegistryData(
             Date startDate, Date endDate, String viewType, String interval,
-            String entityType, String dataType,
+            EntityType entityType, RegistryType dataType,
             List<String> storeIds, List<String> userIds,
             List<String> productIds, List<String> orderIds) {
 
         Criteria matchCriteria = Criteria.where("timestamp").gte(startDate).lte(endDate);
 
-        if (entityType != null && !entityType.isEmpty()) matchCriteria.and("metadata.entityType").is(entityType);
-        if (dataType != null && !dataType.isEmpty()) matchCriteria.and("metadata.dataType").is(dataType);
+        if (entityType != null) matchCriteria.and("metadata.entityType").is(entityType);
+        if (dataType != null) matchCriteria.and("metadata.dataType").is(dataType);
 
         // Dynamic filters by lists of entities reference codes
         if (storeIds != null && !storeIds.isEmpty()) matchCriteria.and("metadata.storeId").in(storeIds);
@@ -63,20 +61,39 @@ public class RegistryRepository {
         return mongoTemplate.aggregate(aggregation, "registries", Document.class).getMappedResults();
     }
 
-    public List<String> getUniqueReferenceCodes(String targetEntityType, String associatedEntity) {
-        // 1. Map entity name associated to DB real field
-        String fieldToFind = switch (associatedEntity.toUpperCase()) {
-            case "STORE" -> "metadata.storeId";
-            case "USER" -> "metadata.userId";
-            case "PRODUCT" -> "metadata.productId";
-            case "ORDER" -> "metadata.orderId";
-            default -> throw new IllegalArgumentException("Entidad asociada no válida: " + associatedEntity);
-        };
+    // 1. Obtener Entidades Principales que tienen registros activos
+    public List<String> getActiveEntityTypes() {
+        return mongoTemplate.findDistinct(new Query(), "metadata.entityType", "registries", String.class);
+    }
 
-        // 2. Filter by main entity (targetEntityType)
-        Query query = new Query(Criteria.where("metadata.entityType").is(targetEntityType));
+    // 2. Obtener Métricas disponibles para una Entidad concreta
+    public List<String> getActiveDataTypes(EntityType entityType) {
+        Query query = new Query(Criteria.where("metadata.entityType").is(entityType));
+        return mongoTemplate.findDistinct(query, "metadata.dataType", "registries", String.class);
+    }
 
-        // 3. Request the distinct values of that field
-        return mongoTemplate.findDistinct(query, fieldToFind, "registries", String.class);
+    // 3. Obtener el Mapa de IDs cruzados
+    public Map<String, List<String>> getCrossReferences(EntityType entityType, RegistryType dataType) {
+        Query query = new Query(
+                Criteria.where("metadata.entityType").is(entityType)
+                        .and("metadata.dataType").is(dataType)
+        );
+
+        Map<String, List<String>> references = new HashMap<>();
+
+        // Extraemos de Mongo y filtramos los nulos directamente con Java Streams
+        references.put("storeId", mongoTemplate.findDistinct(query, "metadata.storeId", "registries", String.class)
+                .stream().filter(Objects::nonNull).toList());
+
+        references.put("productId", mongoTemplate.findDistinct(query, "metadata.productId", "registries", String.class)
+                .stream().filter(Objects::nonNull).toList());
+
+        references.put("userId", mongoTemplate.findDistinct(query, "metadata.userId", "registries", String.class)
+                .stream().filter(Objects::nonNull).toList());
+
+        references.put("orderId", mongoTemplate.findDistinct(query, "metadata.orderId", "registries", String.class)
+                .stream().filter(Objects::nonNull).toList());
+
+        return references;
     }
 }

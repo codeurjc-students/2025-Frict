@@ -1,21 +1,21 @@
-package com.tfg.backend.notification;
+package com.tfg.backend.registry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Arrays;
 
-public enum EntityType {
-    USER("Usuario"),
-    TRUCK("Camión"),
-    SHOP("Tienda"),
-    ORDER("Pedido"),
-    PRODUCT("Producto"),
-    REVIEW("Reseña");
+public enum RegistryType {
+    VIEWS("Visualizaciones"),
+    BUDGET("Presupuesto"),
+    SALES("Ventas"),
+    REVIEWS("Reseñas"),
+    ORDERS("Pedidos"),
+    PURCHASES("Compras");
 
     private final String translation;
 
-    EntityType(String translation) {
+    RegistryType(String translation) {
         this.translation = translation;
     }
 
@@ -32,11 +32,11 @@ public enum EntityType {
 
     // Allows the backend to understand both the original name and the translated name
     @JsonCreator
-    public static EntityType fromTranslation(String value) {
-        return Arrays.stream(EntityType.values())
+    public static RegistryType fromTranslation(String value) {
+        return Arrays.stream(RegistryType.values())
                 .filter(type -> type.translation.equalsIgnoreCase(value)
                         || type.name().equalsIgnoreCase(value))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Tipo de entidad no válido: " + value));
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de registro no válido: " + value));
     }
 }
