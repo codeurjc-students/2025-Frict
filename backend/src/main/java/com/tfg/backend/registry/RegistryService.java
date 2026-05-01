@@ -18,14 +18,12 @@ public class RegistryService {
     public List<Document> getRegistryStats(
             Date startDate, Date endDate, String viewType, String interval,
             EntityType entityType, RegistryType dataType,
+            String metricMode,
             List<String> storeIds, List<String> userIds,
             List<String> productIds, List<String> orderIds) {
 
-        return repository.getRegistryData(
-                startDate, endDate, viewType, interval,
-                entityType, dataType,
-                storeIds, userIds, productIds, orderIds
-        );
+        return repository.getRegistryData(startDate, endDate, viewType, interval,
+                entityType, dataType, metricMode, storeIds, userIds, productIds, orderIds);
     }
 
     public List<String> getActiveEntityTypes() {

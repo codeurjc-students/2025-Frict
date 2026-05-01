@@ -25,6 +25,7 @@ public class RegistryRestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date endDate,
             @RequestParam String viewType,
             @RequestParam(required = false, defaultValue = "day") String interval,
+            @RequestParam(required = false, defaultValue = "VALUE") String metricMode,
             @RequestParam(required = false) EntityType entityType,
             @RequestParam(required = false) RegistryType dataType,
             @RequestParam(required = false) List<String> storeIds,
@@ -33,10 +34,9 @@ public class RegistryRestController {
             @RequestParam(required = false) List<String> orderIds) {
 
         return registryService.getRegistryStats(startDate, endDate, viewType, interval,
-                entityType, dataType, storeIds, userIds, productIds, orderIds);
+                entityType, dataType, metricMode, storeIds, userIds, productIds, orderIds);
     }
 
-    // 1. Selector de Entidades
     @GetMapping("/entities")
     public List<EntityType> getAvailableEntities() {
         return registryService.getActiveEntityTypes().stream()
@@ -44,15 +44,13 @@ public class RegistryRestController {
                 .toList();
     }
 
-    // 2. Selector de Métricas
     @GetMapping("/metrics")
     public List<RegistryType> getAvailableMetrics(@RequestParam EntityType entityType) {
         return registryService.getActiveDataTypes(entityType).stream()
-                .map(RegistryType::valueOf) // Aplica @JsonValue para enviar la traducción
+                .map(RegistryType::valueOf)
                 .toList();
     }
 
-    // 3. Mapa de IDs Asociados (Se devuelven los IDs tal cual están en la base de datos)
     @GetMapping("/references")
     public Map<String, List<String>> getReferences(
             @RequestParam EntityType entityType,

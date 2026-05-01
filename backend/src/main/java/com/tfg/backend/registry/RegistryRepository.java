@@ -21,6 +21,7 @@ public class RegistryRepository {
     public List<Document> getRegistryData(
             Date startDate, Date endDate, String viewType, String interval,
             EntityType entityType, RegistryType dataType,
+            String metricMode,
             List<String> storeIds, List<String> userIds,
             List<String> productIds, List<String> orderIds) {
 
@@ -28,8 +29,6 @@ public class RegistryRepository {
 
         if (entityType != null) matchCriteria.and("metadata.entityType").is(entityType);
         if (dataType != null) matchCriteria.and("metadata.dataType").is(dataType);
-
-        // Dynamic filters by lists of entities reference codes
         if (storeIds != null && !storeIds.isEmpty()) matchCriteria.and("metadata.storeId").in(storeIds);
         if (userIds != null && !userIds.isEmpty()) matchCriteria.and("metadata.userId").in(userIds);
         if (productIds != null && !productIds.isEmpty()) matchCriteria.and("metadata.productId").in(productIds);
@@ -39,7 +38,15 @@ public class RegistryRepository {
         operations.add(Aggregation.match(matchCriteria));
 
         if ("GRAPH".equalsIgnoreCase(viewType)) {
-            // Massive BSON aggregation
+            operations.add(Aggregation.sort(Sort.Direction.ASC, "timestamp"));
+
+            Object groupAccumulator;
+            if ("TOTAL".equalsIgnoreCase(metricMode)) {
+                groupAccumulator = new Document("$last", "$metrics.total");
+            } else {
+                groupAccumulator = new Document("$sum", "$metrics.value");
+            }
+
             AggregationOperation groupStage = context -> new Document("$group",
                     new Document("_id",
                             new Document("$dateTrunc",
@@ -47,7 +54,7 @@ public class RegistryRepository {
                                             .append("unit", interval != null ? interval.toLowerCase() : "day")
                             )
                     )
-                            .append("totalValue", new Document("$sum", "$metrics.value"))
+                            .append("totalValue", groupAccumulator) // <-- USAMOS LA VARIABLE DINÁMICA
                             .append("recordCount", new Document("$sum", 1))
             );
             operations.add(groupStage);
@@ -61,18 +68,15 @@ public class RegistryRepository {
         return mongoTemplate.aggregate(aggregation, "registries", Document.class).getMappedResults();
     }
 
-    // 1. Obtener Entidades Principales que tienen registros activos
     public List<String> getActiveEntityTypes() {
         return mongoTemplate.findDistinct(new Query(), "metadata.entityType", "registries", String.class);
     }
 
-    // 2. Obtener Métricas disponibles para una Entidad concreta
     public List<String> getActiveDataTypes(EntityType entityType) {
         Query query = new Query(Criteria.where("metadata.entityType").is(entityType));
         return mongoTemplate.findDistinct(query, "metadata.dataType", "registries", String.class);
     }
 
-    // 3. Obtener el Mapa de IDs cruzados
     public Map<String, List<String>> getCrossReferences(EntityType entityType, RegistryType dataType) {
         Query query = new Query(
                 Criteria.where("metadata.entityType").is(entityType)
@@ -81,7 +85,6 @@ public class RegistryRepository {
 
         Map<String, List<String>> references = new HashMap<>();
 
-        // Extraemos de Mongo y filtramos los nulos directamente con Java Streams
         references.put("storeId", mongoTemplate.findDistinct(query, "metadata.storeId", "registries", String.class)
                 .stream().filter(Objects::nonNull).toList());
 

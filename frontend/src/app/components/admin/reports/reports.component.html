@@ -16,13 +16,11 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-      <!-- COLUMNA IZQUIERDA: CONFIGURACIÓN DE FILTROS -->
+      <!-- LEFT COLUMN: FILTER CONFIGURATION -->
       <div class="lg:col-span-1 flex flex-col gap-6 h-fit">
 
-        <!-- CORRECCIÓN OVERFLOW: Quitamos overflow-hidden del padre para no cortar los desplegables -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col gap-6 relative">
 
-          <!-- CORRECCIÓN ICONO: Aislamos el icono en su propio contenedor con overflow-hidden -->
           <div class="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
             <i class="absolute -right-4 -top-4 opacity-5 text-8xl pi pi-chart-line"></i>
           </div>
@@ -34,7 +32,6 @@
             <p class="text-slate-500 text-xs mt-1">Configura los parámetros para la extracción de métricas.</p>
           </div>
 
-          <!-- 1. CONFIGURACIÓN DE TIEMPO (NUEVO) -->
           <div class="flex flex-col gap-4 z-10 border-b border-slate-50 pb-4">
             <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">1. Rango de Tiempo *</label>
 
@@ -73,7 +70,6 @@
             </p-select>
           </div>
 
-          <!-- 2. Entidad Principal -->
           <div class="flex flex-col gap-2 z-10">
             <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">2. Entidad Principal *</label>
             <p-select
@@ -86,7 +82,6 @@
             </p-select>
           </div>
 
-          <!-- 3. Métrica a Analizar -->
           <div class="flex flex-col gap-2 z-10">
             <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">3. Métrica *</label>
             <p-select
@@ -100,7 +95,6 @@
             </p-select>
           </div>
 
-          <!-- 4. Filtros Cruzados Múltiples -->
           <div class="flex flex-col gap-4 mt-2 z-10" [class.opacity-50]="!selectedMetric()">
             <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 border-b border-slate-100 pb-2">4. Cruce de Datos (Opcional)</label>
 
@@ -150,7 +144,6 @@
           </div>
 
           <div class="mt-4 pt-4 border-t border-slate-100 z-10">
-            <!-- Bloqueamos si falta cualquier campo obligatorio -->
             <p-button
               [label]="isLoadingReport() ? 'Procesando...' : 'Generar Analítica'"
               [icon]="isLoadingReport() ? 'pi pi-spin pi-spinner' : 'pi pi-bolt'"
@@ -163,21 +156,33 @@
         </div>
       </div>
 
-      <!-- COLUMNA DERECHA: RESULTADOS Y VISUALIZACIÓN -->
+      <!-- RIGHT COLUMN: RESULTS AND VISUALIZATION -->
       <div class="lg:col-span-2 flex flex-col gap-6">
 
-        <!-- PANEL SUPERIOR: GRÁFICA -->
+        <!-- CHARTS -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[450px]">
 
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-t-2xl">
-            <h3 class="font-bold text-slate-700 flex items-center gap-2">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 rounded-t-2xl">
+            <h3 class="font-bold text-slate-700 flex items-center gap-2 shrink-0">
               <i class="pi pi-chart-bar text-blue-500"></i> Visualización de Datos
             </h3>
 
-            <div class="flex bg-slate-200/50 rounded-lg p-1 border border-slate-200" *ngIf="graphData().length > 0">
-              <button (click)="chartType.set('bar')" [class.bg-white]="chartType() === 'bar'" [class.shadow-sm]="chartType() === 'bar'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Barras</button>
-              <button (click)="chartType.set('line')" [class.bg-white]="chartType() === 'line'" [class.shadow-sm]="chartType() === 'line'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Líneas</button>
-              <button (click)="chartType.set('pie')" [class.bg-white]="chartType() === 'pie'" [class.shadow-sm]="chartType() === 'pie'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Sectores</button>
+            <div class="flex flex-wrap gap-3" *ngIf="graphData().length > 0">
+
+              <div class="flex bg-slate-200/50 rounded-lg p-1 border border-slate-200">
+                <button (click)="updateMetricMode('VALUE')" [class.bg-white]="metricMode() === 'VALUE'" [class.shadow-sm]="metricMode() === 'VALUE'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1">
+                  <i class="pi pi-arrows-v text-[10px]"></i> Variación
+                </button>
+                <button (click)="updateMetricMode('TOTAL')" [class.bg-white]="metricMode() === 'TOTAL'" [class.shadow-sm]="metricMode() === 'TOTAL'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1">
+                  <i class="pi pi-chart-line text-[10px]"></i> Acumulado
+                </button>
+              </div>
+
+              <div class="flex bg-slate-200/50 rounded-lg p-1 border border-slate-200">
+                <button (click)="chartType.set('bar')" [class.bg-white]="chartType() === 'bar'" [class.shadow-sm]="chartType() === 'bar'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Barras</button>
+                <button (click)="chartType.set('line')" [class.bg-white]="chartType() === 'line'" [class.shadow-sm]="chartType() === 'line'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Líneas</button>
+                <button (click)="chartType.set('pie')" [class.bg-white]="chartType() === 'pie'" [class.shadow-sm]="chartType() === 'pie'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Sectores</button>
+              </div>
             </div>
           </div>
 
@@ -194,7 +199,6 @@
               <span class="text-xs font-bold tracking-widest uppercase">Consultando base de datos...</span>
             </div>
 
-            <!-- COMPONENTE PRIMENG CHART -->
             <div *ngIf="graphData().length > 0 && !isLoadingReport()" class="w-full h-full p-2">
               <p-chart
                 [type]="chartType()"
@@ -206,21 +210,38 @@
           </div>
         </div>
 
-        <!-- PANEL INFERIOR: TABLA DE REGISTROS -->
-        <!-- ... (La tabla se mantiene exactamente igual) ... -->
+        <!-- REGISTRIES TABLE -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden min-h-[350px]">
 
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4">
             <h3 class="font-bold text-slate-700 flex items-center gap-2">
               <i class="pi pi-table text-blue-500"></i> Registros en bruto
+              <span *ngIf="selectedEntity() && selectedMetric()" class="text-slate-500 font-normal text-sm ml-2">
+                ({{ selectedEntity() }} - {{ selectedMetric() }})
+              </span>
             </h3>
-            <p-tag *ngIf="tableData().length > 0" [value]="tableData().length + ' filas'" severity="secondary" styleClass="!text-[10px] !bg-slate-200 !text-slate-600"></p-tag>
+
+            <p-multiSelect
+              *ngIf="availableDynamicEntities().length > 0"
+              [options]="availableDynamicEntities()"
+              [ngModel]="selectedDynamicColumns()"
+              (onChange)="selectedDynamicColumns.set($event.value)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Mostrar columnas secundarias..."
+              display="chip"
+              [maxSelectedLabels]="2"
+              styleClass="w-full sm:w-72 !rounded-xl !border-slate-200 shadow-sm text-xs bg-white"
+              appendTo="body">
+            </p-multiSelect>
           </div>
 
-          <p-table [value]="tableData()" styleClass="p-datatable-sm" responsiveLayout="scroll" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} registros">
+          <p-table [value]="tableData()" styleClass="p-datatable-sm" responsiveLayout="scroll" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
             <ng-template pTemplate="header">
               <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
-                <th *ngFor="let col of tableColumns()" class="py-4 pl-6">{{ col.replace('meta_', '') }}</th>
+                <th *ngFor="let col of tableColumns()" class="py-4 pl-6">
+                  {{ getColumnLabel(col) }}
+                </th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -230,7 +251,7 @@
                     <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{{ getCellValue(row, col) | date:'dd/MM/yy HH:mm' }}</span>
                   </ng-container>
                   <ng-template #textCell>
-                    <span [class.font-bold]="col === 'value'" [class.text-blue-600]="col === 'value'">{{ getCellValue(row, col) }}</span>
+                    <span [class.font-bold]="col === 'metric_value' || col === 'metric_total'" [class.text-blue-600]="col === 'metric_value' || col === 'metric_total'">{{ getCellValue(row, col) }}</span>
                   </ng-template>
                 </td>
               </tr>

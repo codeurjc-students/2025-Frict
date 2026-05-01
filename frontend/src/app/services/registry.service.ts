@@ -2,12 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-// Interfaz para tipar estrictamente los parámetros permitidos
+
 export interface RegistryFilterParams {
   startDate: string;
   endDate: string;
   viewType: 'GRAPH' | 'TABLE';
   interval?: 'day' | 'week' | 'month' | 'year' | string;
+  metricMode?: 'VALUE' | 'TOTAL';
   entityType?: string;
   dataType?: string;
   storeIds?: string[];
@@ -16,7 +17,7 @@ export interface RegistryFilterParams {
   orderIds?: string[];
 }
 
-// NUEVO: Interfaz para el mapa de IDs asociados devuelto por el backend
+//Cross reference
 export interface CrossReferencesMap {
   storeId: string[];
   productId: string[];
@@ -32,9 +33,7 @@ export class RegistryService {
   private http = inject(HttpClient);
   private apiUrl = '/api/v1/registry';
 
-  /**
-   * Obtiene los datos agrupados para la gráfica o los registros detallados para la tabla.
-   */
+  //Aggregated data for the chart, or detailed registries for the table
   loadRegistry(params: RegistryFilterParams): Observable<any[]> {
     let httpParams = new HttpParams();
 
@@ -53,26 +52,20 @@ export class RegistryService {
     return this.http.get<any[]>(`${this.apiUrl}/stats`, { params: httpParams });
   }
 
-  // --- NUEVOS MÉTODOS OPTIMIZADOS PARA LOS SELECTORES DINÁMICOS ---
 
-  /**
-   * 1. Obtiene la lista de entidades principales que tienen datos.
-   */
+  //Get the main entities list that contains data
   getEntityTypes(): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/entities`);
   }
 
-  /**
-   * 2. Obtiene las métricas disponibles para una entidad específica.
-   */
+
+  //Get the available metrics for an specific entity
   getMetrics(entityType: string): Observable<string[]> {
     const params = new HttpParams().set('entityType', entityType);
     return this.http.get<string[]>(`${this.apiUrl}/metrics`, { params });
   }
 
-  /**
-   * 3. Obtiene el diccionario completo de IDs asociados a una entidad y métrica.
-   */
+  //Get all IDs from associated entities given an entity and a metric
   getCrossReferences(entityType: string, dataType: string): Observable<CrossReferencesMap> {
     const params = new HttpParams()
       .set('entityType', entityType)
