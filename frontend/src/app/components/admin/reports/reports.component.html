@@ -27,9 +27,8 @@
 
           <div class="z-10 border-b border-slate-50 pb-4">
             <h1 class="text-xl font-bold text-slate-800 flex items-center gap-3">
-              <i class="pi pi-filter text-blue-600"></i> DataHub Reports
+              <i class="pi pi-filter text-blue-600"></i> Filtros de informe
             </h1>
-            <p class="text-slate-500 text-xs mt-1">Configura los parámetros para la extracción de métricas.</p>
           </div>
 
           <div class="flex flex-col gap-4 z-10 border-b border-slate-50 pb-4">
@@ -145,8 +144,8 @@
 
           <div class="mt-4 pt-4 border-t border-slate-100 z-10">
             <p-button
-              [label]="isLoadingReport() ? 'Procesando...' : 'Generar Analítica'"
-              [icon]="isLoadingReport() ? 'pi pi-spin pi-spinner' : 'pi pi-bolt'"
+              [label]="isLoadingReport() ? 'Procesando...' : 'Generar Informe'"
+              [icon]="isLoadingReport() ? 'pi pi-spin pi-spinner' : 'pi pi-file'"
               (onClick)="fetchReportData()"
               [disabled]="!startDate() || !endDate() || !selectedEntity() || !selectedMetric() || isLoadingReport()"
               styleClass="p-button-lg w-full !py-4 !rounded-xl !font-bold shadow-md shadow-blue-100">
@@ -169,20 +168,35 @@
 
             <div class="flex flex-wrap gap-3" *ngIf="graphData().length > 0">
 
-              <div class="flex bg-slate-200/50 rounded-lg p-1 border border-slate-200">
-                <button (click)="updateMetricMode('VALUE')" [class.bg-white]="metricMode() === 'VALUE'" [class.shadow-sm]="metricMode() === 'VALUE'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1">
-                  <i class="pi pi-arrows-v text-[10px]"></i> Variación
-                </button>
-                <button (click)="updateMetricMode('TOTAL')" [class.bg-white]="metricMode() === 'TOTAL'" [class.shadow-sm]="metricMode() === 'TOTAL'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all flex items-center gap-1">
-                  <i class="pi pi-chart-line text-[10px]"></i> Acumulado
-                </button>
-              </div>
+              <!-- Selector de Modo (Valor vs Total) -->
+              <p-selectButton
+                [options]="metricModeOptions()"
+                [ngModel]="metricMode()"
+                (ngModelChange)="updateMetricMode($event)"
+                optionLabel="label"
+                optionValue="value"
+                [allowEmpty]="false">
+                <ng-template #item let-item>
+                  <div class="flex items-center gap-2 text-sm text-slate-600">
+                    <i *ngIf="item.icon" [class]="item.icon"></i>
+                    <span>{{ item.label }}</span>
+                  </div>
+                </ng-template>
+              </p-selectButton>
 
-              <div class="flex bg-slate-200/50 rounded-lg p-1 border border-slate-200">
-                <button (click)="chartType.set('bar')" [class.bg-white]="chartType() === 'bar'" [class.shadow-sm]="chartType() === 'bar'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Barras</button>
-                <button (click)="chartType.set('line')" [class.bg-white]="chartType() === 'line'" [class.shadow-sm]="chartType() === 'line'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Líneas</button>
-                <button (click)="chartType.set('pie')" [class.bg-white]="chartType() === 'pie'" [class.shadow-sm]="chartType() === 'pie'" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Sectores</button>
-              </div>
+              <!-- Selector de Tipo de Gráfica -->
+              <p-selectButton
+                [options]="chartTypeOptions()"
+                [ngModel]="chartType()"
+                (ngModelChange)="chartType.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [allowEmpty]="false">
+                <ng-template #item let-item>
+                  <span class="text-sm text-slate-600">{{ item.label }}</span>
+                </ng-template>
+              </p-selectButton>
+
             </div>
           </div>
 
@@ -210,10 +224,10 @@
           </div>
         </div>
 
-        <!-- REGISTRIES TABLE -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden min-h-[350px]">
+        <!-- REGISTRIES TABLE CON DISEÑO FIJO PARA EL PAGINADOR -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden h-[500px]">
 
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4">
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4 shrink-0">
             <h3 class="font-bold text-slate-700 flex items-center gap-2">
               <i class="pi pi-table text-blue-500"></i> Registros en bruto
               <span *ngIf="selectedEntity() && selectedMetric()" class="text-slate-500 font-normal text-sm ml-2">
@@ -236,31 +250,48 @@
             </p-multiSelect>
           </div>
 
-          <p-table [value]="tableData()" styleClass="p-datatable-sm" responsiveLayout="scroll" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
-            <ng-template pTemplate="header">
-              <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
-                <th *ngFor="let col of tableColumns()" class="py-4 pl-6">
-                  {{ getColumnLabel(col) }}
-                </th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-row>
-              <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
-                <td *ngFor="let col of tableColumns()" class="py-3 pl-6 text-sm text-slate-600">
-                  <ng-container *ngIf="col === 'timestamp'; else textCell">
-                    <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{{ getCellValue(row, col) | date:'dd/MM/yy HH:mm' }}</span>
-                  </ng-container>
-                  <ng-template #textCell>
-                    <span [class.font-bold]="col === 'metric_value' || col === 'metric_total'" [class.text-blue-600]="col === 'metric_value' || col === 'metric_total'">{{ getCellValue(row, col) }}</span>
-                  </ng-template>
-                </td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr><td [attr.colspan]="tableColumns().length || 1" class="text-center py-16 text-slate-400 italic">No hay registros asociados a esta consulta.</td></tr>
-            </ng-template>
-          </p-table>
+          <div class="flex-1 overflow-hidden">
+            <p-table
+              [value]="tableData()"
+              styleClass="p-datatable-sm h-full flex flex-col"
+              [scrollable]="true"
+              scrollHeight="flex"
+              [lazy]="true"
+              (onPage)="onPageChange($event)"
+              [paginator]="true"
+              [rows]="pageSize()"
+              [totalRecords]="totalRecords()"
+              [rowsPerPageOptions]="[5, 10, 25, 50]"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+              paginatorDropdownAppendTo="body">
 
+              <ng-template pTemplate="header">
+                <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                  <th *ngFor="let col of tableColumns()" class="py-4 pl-6">
+                    {{ getColumnLabel(col) }}
+                  </th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-row>
+                <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                  <td *ngFor="let col of tableColumns()" class="py-3 pl-6 text-sm text-slate-600">
+                    <ng-container *ngIf="col === 'timestamp'; else textCell">
+                      <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{{ getCellValue(row, col) | date:'dd/MM/yy HH:mm' }}</span>
+                    </ng-container>
+                    <ng-template #textCell>
+                      <span [class.font-bold]="col === 'metric_value' || col === 'metric_total'" [class.text-blue-600]="col === 'metric_value' || col === 'metric_total'">{{ getCellValue(row, col) }}</span>
+                    </ng-template>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td [attr.colspan]="tableColumns().length || 1" class="text-center py-16 text-slate-400 italic">No hay registros asociados a esta consulta.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
         </div>
 
       </div>

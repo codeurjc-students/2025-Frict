@@ -2,7 +2,6 @@ import { Component, effect, inject, signal, computed, OnInit, LOCALE_ID } from '
 import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// PrimeNG 19
 import { Select } from 'primeng/select';
 import { MultiSelect } from 'primeng/multiselect';
 import { DatePicker } from 'primeng/datepicker';
@@ -13,6 +12,7 @@ import { ChartModule } from 'primeng/chart';
 import { RegistryService } from '../../../services/registry.service';
 import { BreadcrumbReloadComponent } from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
+import {SelectButton} from 'primeng/selectbutton';
 
 @Component({
   selector: 'app-reports',
@@ -20,7 +20,7 @@ import { LoadingScreenComponent } from '../../common/loading-screen/loading-scre
   imports: [
     CommonModule, FormsModule,
     BreadcrumbReloadComponent, LoadingScreenComponent,
-    Select, MultiSelect, DatePicker, Button, TableModule, ChartModule
+    Select, MultiSelect, DatePicker, Button, TableModule, ChartModule, SelectButton
   ],
   templateUrl: './reports.component.html'
 })
@@ -40,6 +40,17 @@ export class ReportsComponent implements OnInit {
     { label: 'Semanal', value: 'week' },
     { label: 'Mensual', value: 'month' },
     { label: 'Anual', value: 'year' }
+  ]);
+
+  metricModeOptions = signal([
+    { label: 'Variación', value: 'VALUE', icon: 'pi pi-arrows-v' },
+    { label: 'Acumulado', value: 'TOTAL', icon: 'pi pi-chart-line' }
+  ]);
+
+  chartTypeOptions = signal([
+    { label: 'Barras', value: 'bar' },
+    { label: 'Líneas', value: 'line' },
+    { label: 'Sectores', value: 'pie' }
   ]);
 
   selectedEntity = signal<string | null>(null);
@@ -63,6 +74,11 @@ export class ReportsComponent implements OnInit {
   graphData = signal<any[]>([]);
   tableData = signal<any[]>([]);
 
+  // SEÑALES DE PAGINACIÓN
+  totalRecords = signal<number>(0);
+  currentPage = signal<number>(0);
+  pageSize = signal<number>(10);
+
   selectedDynamicColumns = signal<string[]>([]);
 
   private entityFieldMap: Record<string, { id: string, name: string }> = {
@@ -79,19 +95,12 @@ export class ReportsComponent implements OnInit {
     if (!selected) return null;
 
     const reverseMap: Record<string, string> = {
-      'Tienda': 'STORE',
-      'SHOP': 'STORE', // Por si acaso Mongo lo devuelve como SHOP
-      'STORE': 'STORE',
-      'Producto': 'PRODUCT',
-      'PRODUCT': 'PRODUCT',
-      'Usuario': 'USER',
-      'USER': 'USER',
-      'Pedido': 'ORDER',
-      'ORDER': 'ORDER',
-      'Camión': 'TRUCK',
-      'TRUCK': 'TRUCK',
-      'Reseña': 'REVIEW',
-      'REVIEW': 'REVIEW'
+      'Tienda': 'STORE', 'SHOP': 'STORE', 'STORE': 'STORE',
+      'Producto': 'PRODUCT', 'PRODUCT': 'PRODUCT',
+      'Usuario': 'USER', 'USER': 'USER',
+      'Pedido': 'ORDER', 'ORDER': 'ORDER',
+      'Camión': 'TRUCK', 'TRUCK': 'TRUCK',
+      'Reseña': 'REVIEW', 'REVIEW': 'REVIEW'
     };
     return reverseMap[selected] || selected;
   }
@@ -279,17 +288,15 @@ export class ReportsComponent implements OnInit {
     this.selectedDynamicColumns.set(internalMain ? [internalMain] : []);
   }
 
-  fetchReportData() {
+  private getBaseParams() {
     const entity = this.selectedEntity();
     const metric = this.selectedMetric();
     const start = this.startDate();
     const end = this.endDate();
 
-    if (!entity || !metric || !start || !end) return;
+    if (!entity || !metric || !start || !end) return null;
 
-    this.isLoadingReport.set(true);
-
-    const baseParams = {
+    return {
       startDate: start.toISOString(),
       endDate: end.toISOString(),
       entityType: entity,
@@ -300,24 +307,52 @@ export class ReportsComponent implements OnInit {
       orderIds: this.selectedOrders(),
       userIds: this.selectedUsers()
     };
+  }
 
-    this.registryService.loadRegistry({ ...baseParams, viewType: 'GRAPH', interval: this.selectedInterval() } as any)
+  fetchReportData() {
+    const params = this.getBaseParams();
+    if (!params) return;
+
+    this.isLoadingReport.set(true);
+    this.currentPage.set(0);
+
+    this.registryService.loadRegistry({ ...params, viewType: 'GRAPH', interval: this.selectedInterval() } as any)
       .subscribe({
-        next: (res) => this.graphData.set(res),
+        next: (res: any) => this.graphData.set(res.items || res),
         error: () => this.graphData.set([])
       });
 
-    this.registryService.loadRegistry({ ...baseParams, viewType: 'TABLE' } as any)
-      .subscribe({
-        next: (res) => {
-          this.tableData.set(res);
-          this.isLoadingReport.set(false);
-        },
-        error: () => {
-          this.tableData.set([]);
-          this.isLoadingReport.set(false);
-        }
-      });
+    this.loadTableData(params);
+  }
+
+  private loadTableData(baseParams: any) {
+    this.registryService.loadRegistry({
+      ...baseParams,
+      viewType: 'TABLE',
+      page: this.currentPage(),
+      size: this.pageSize()
+    } as any).subscribe({
+      next: (res: any) => {
+        this.tableData.set(res.items);
+        this.totalRecords.set(res.totalItems);
+        this.isLoadingReport.set(false);
+      },
+      error: () => {
+        this.tableData.set([]);
+        this.totalRecords.set(0);
+        this.isLoadingReport.set(false);
+      }
+    });
+  }
+
+  onPageChange(event: any) {
+    this.currentPage.set(Math.floor(event.first / event.rows));
+    this.pageSize.set(event.rows);
+
+    const params = this.getBaseParams();
+    if (params) {
+      this.loadTableData(params);
+    }
   }
 
   updateMetricMode(mode: 'VALUE' | 'TOTAL') {
@@ -356,5 +391,6 @@ export class ReportsComponent implements OnInit {
     this.resetAssociatedEntities();
     this.graphData.set([]);
     this.tableData.set([]);
+    this.totalRecords.set(0);
   }
 }

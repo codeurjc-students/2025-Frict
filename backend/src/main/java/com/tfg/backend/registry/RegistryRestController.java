@@ -1,9 +1,12 @@
 package com.tfg.backend.registry;
 
+import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.notification.EntityType;
+import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +23,14 @@ public class RegistryRestController {
     private final RegistryService registryService;
 
     @GetMapping("/stats")
-    public List<Document> getStats(
+    public PageResponse<Document> getStats(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date endDate,
             @RequestParam String viewType,
             @RequestParam(required = false, defaultValue = "day") String interval,
             @RequestParam(required = false, defaultValue = "VALUE") String metricMode,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false) EntityType entityType,
             @RequestParam(required = false) RegistryType dataType,
             @RequestParam(required = false) List<String> storeIds,
@@ -33,14 +38,16 @@ public class RegistryRestController {
             @RequestParam(required = false) List<String> productIds,
             @RequestParam(required = false) List<String> orderIds) {
 
-        return registryService.getRegistryStats(startDate, endDate, viewType, interval,
-                entityType, dataType, metricMode, storeIds, userIds, productIds, orderIds);
+        Page<Document> pagedResult = registryService.getRegistryStats(startDate, endDate, viewType, interval,
+                entityType, dataType, metricMode, storeIds, userIds, productIds, orderIds, page, size);
+
+        return PageFormatter.toPageResponse(pagedResult);
     }
 
     @GetMapping("/entities")
     public List<EntityType> getAvailableEntities() {
         return registryService.getActiveEntityTypes().stream()
-                .map(EntityType::valueOf) // Aplica @JsonValue para enviar la traducción
+                .map(EntityType::valueOf)
                 .toList();
     }
 

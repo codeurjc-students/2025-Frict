@@ -3,6 +3,7 @@ package com.tfg.backend.registry;
 import com.tfg.backend.notification.EntityType;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -15,15 +16,16 @@ public class RegistryService {
 
     private final RegistryRepository repository;
 
-    public List<Document> getRegistryStats(
+    public Page<Document> getRegistryStats(
             Date startDate, Date endDate, String viewType, String interval,
             EntityType entityType, RegistryType dataType,
             String metricMode,
             List<String> storeIds, List<String> userIds,
-            List<String> productIds, List<String> orderIds) {
+            List<String> productIds, List<String> orderIds,
+            int page, int size) {
 
         return repository.getRegistryData(startDate, endDate, viewType, interval,
-                entityType, dataType, metricMode, storeIds, userIds, productIds, orderIds);
+                entityType, dataType, metricMode, storeIds, userIds, productIds, orderIds, page, size);
     }
 
     public List<String> getActiveEntityTypes() {

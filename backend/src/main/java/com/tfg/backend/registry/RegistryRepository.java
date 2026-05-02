@@ -3,6 +3,9 @@ package com.tfg.backend.registry;
 import com.tfg.backend.notification.EntityType;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
@@ -18,12 +21,13 @@ public class RegistryRepository {
 
     private final MongoTemplate mongoTemplate;
 
-    public List<Document> getRegistryData(
+    public Page<Document> getRegistryData(
             Date startDate, Date endDate, String viewType, String interval,
             EntityType entityType, RegistryType dataType,
             String metricMode,
             List<String> storeIds, List<String> userIds,
-            List<String> productIds, List<String> orderIds) {
+            List<String> productIds, List<String> orderIds,
+            int page, int size) {
 
         Criteria matchCriteria = Criteria.where("timestamp").gte(startDate).lte(endDate);
 
@@ -34,18 +38,14 @@ public class RegistryRepository {
         if (productIds != null && !productIds.isEmpty()) matchCriteria.and("metadata.productId").in(productIds);
         if (orderIds != null && !orderIds.isEmpty()) matchCriteria.and("metadata.orderId").in(orderIds);
 
-        List<AggregationOperation> operations = new ArrayList<>();
-        operations.add(Aggregation.match(matchCriteria));
-
         if ("GRAPH".equalsIgnoreCase(viewType)) {
+            List<AggregationOperation> operations = new ArrayList<>();
+            operations.add(Aggregation.match(matchCriteria));
             operations.add(Aggregation.sort(Sort.Direction.ASC, "timestamp"));
 
-            Object groupAccumulator;
-            if ("TOTAL".equalsIgnoreCase(metricMode)) {
-                groupAccumulator = new Document("$last", "$metrics.total");
-            } else {
-                groupAccumulator = new Document("$sum", "$metrics.value");
-            }
+            Object groupAccumulator = "TOTAL".equalsIgnoreCase(metricMode)
+                    ? new Document("$last", "$metrics.total")
+                    : new Document("$sum", "$metrics.value");
 
             AggregationOperation groupStage = context -> new Document("$group",
                     new Document("_id",
@@ -54,18 +54,27 @@ public class RegistryRepository {
                                             .append("unit", interval != null ? interval.toLowerCase() : "day")
                             )
                     )
-                            .append("totalValue", groupAccumulator) // <-- USAMOS LA VARIABLE DINÁMICA
+                            .append("totalValue", groupAccumulator)
                             .append("recordCount", new Document("$sum", 1))
             );
             operations.add(groupStage);
             operations.add(Aggregation.sort(Sort.Direction.ASC, "_id"));
-        } else {
-            operations.add(Aggregation.sort(Sort.Direction.DESC, "timestamp"));
-            operations.add(Aggregation.limit(100));
-        }
 
-        Aggregation aggregation = Aggregation.newAggregation(operations);
-        return mongoTemplate.aggregate(aggregation, "registries", Document.class).getMappedResults();
+            Aggregation aggregation = Aggregation.newAggregation(operations);
+            List<Document> result = mongoTemplate.aggregate(aggregation, "registries", Document.class).getMappedResults();
+
+            return new PageImpl<>(result, PageRequest.of(0, Math.max(1, result.size())), result.size());
+        } else {
+            Query query = new Query(matchCriteria);
+            long total = mongoTemplate.count(query, "registries");
+
+            PageRequest pageRequest = PageRequest.of(page, size);
+            query.with(Sort.by(Sort.Direction.DESC, "timestamp"));
+            query.with(pageRequest);
+
+            List<Document> result = mongoTemplate.find(query, Document.class, "registries");
+            return new PageImpl<>(result, pageRequest, total);
+        }
     }
 
     public List<String> getActiveEntityTypes() {
