@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal, computed, OnInit, LOCALE_ID } from '@angular/core';
+import {Component, effect, inject, signal, computed, OnInit, LOCALE_ID, ViewChild} from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -7,12 +7,16 @@ import { MultiSelect } from 'primeng/multiselect';
 import { DatePicker } from 'primeng/datepicker';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { ChartModule } from 'primeng/chart';
+import {ChartModule, UIChart} from 'primeng/chart';
 
 import { RegistryService } from '../../../services/registry.service';
 import { BreadcrumbReloadComponent } from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import {SelectButton} from 'primeng/selectbutton';
+import {Chart} from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+Chart.register(ChartDataLabels);
 
 @Component({
   selector: 'app-reports',
@@ -25,6 +29,8 @@ import {SelectButton} from 'primeng/selectbutton';
   templateUrl: './reports.component.html'
 })
 export class ReportsComponent implements OnInit {
+  @ViewChild('myChart') chartComponent!: UIChart;
+
   private registryService = inject(RegistryService);
   private locale = inject(LOCALE_ID);
 
@@ -159,7 +165,21 @@ export class ReportsComponent implements OnInit {
       aspectRatio: 0.8,
       plugins: {
         legend: { display: isPie, position: 'right' },
-        tooltip: { mode: 'index', intersect: false }
+        tooltip: { mode: 'index', intersect: false },
+
+        datalabels: {
+          display: true,
+          align: isPie ? 'center' : 'end',
+          anchor: isPie ? 'center' : 'end',
+          color: isPie ? '#ffffff' : '#475569',
+          font: {
+            weight: 'bold',
+            size: 12
+          },
+          formatter: (value: any) => {
+            return Math.round(value * 10) / 10;
+          }
+        }
       },
       scales: {
         x: { display: !isPie },
@@ -392,5 +412,40 @@ export class ReportsComponent implements OnInit {
     this.graphData.set([]);
     this.tableData.set([]);
     this.totalRecords.set(0);
+  }
+
+  downloadCustomPdf() {
+    const params = this.getBaseParams();
+    if (!params) return;
+
+    this.isLoadingReport.set(true);
+
+    const base64Chart = this.chartComponent.chart.toBase64Image();
+
+    const currentIntervalValue = this.selectedInterval();
+    const intervalObj = this.intervalOptions().find(opt => opt.value === currentIntervalValue);
+    const intervalLabel = intervalObj ? intervalObj.label : 'General';
+
+    const payload = {
+      ...params,
+      interval: intervalLabel,
+      chartImage: base64Chart
+    };
+
+    this.registryService.exportCustomPdf(payload).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Informe_${this.selectedEntity()}_Personalizado.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.isLoadingReport.set(false);
+      },
+      error: () => {
+        console.error('Error generando PDF');
+        this.isLoadingReport.set(false);
+      }
+    });
   }
 }

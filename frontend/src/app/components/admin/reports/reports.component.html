@@ -159,7 +159,7 @@
       <div class="lg:col-span-2 flex flex-col gap-6">
 
         <!-- CHARTS -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[450px]">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col min-h-[500px] sm:h-[500px]">
 
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 rounded-t-2xl">
             <h3 class="font-bold text-slate-700 flex items-center gap-2 shrink-0">
@@ -168,7 +168,6 @@
 
             <div class="flex flex-wrap gap-3" *ngIf="graphData().length > 0">
 
-              <!-- Selector de Modo (Valor vs Total) -->
               <p-selectButton
                 [options]="metricModeOptions()"
                 [ngModel]="metricMode()"
@@ -184,7 +183,6 @@
                 </ng-template>
               </p-selectButton>
 
-              <!-- Selector de Tipo de Gráfica -->
               <p-selectButton
                 [options]="chartTypeOptions()"
                 [ngModel]="chartType()"
@@ -197,24 +195,38 @@
                 </ng-template>
               </p-selectButton>
 
+              <div class="w-px h-8 bg-slate-300 mx-1 hidden sm:block"></div>
+
+              <p-button
+                label="Exportar PDF"
+                icon="pi pi-file-pdf"
+                severity="danger"
+                [outlined]="true"
+                (onClick)="downloadCustomPdf()"
+                [loading]="isLoadingReport()"
+                styleClass="!px-4 !py-1.5 !text-xs !font-bold shadow-sm bg-white hover:bg-red-50">
+              </p-button>
+
             </div>
           </div>
 
-          <div class="flex-1 p-4 flex items-center justify-center relative h-full">
-            <div *ngIf="graphData().length === 0 && !isLoadingReport()" class="text-slate-400 flex flex-col items-center gap-3">
+          <div class="flex-1 w-full flex items-center justify-center relative min-h-[300px] sm:min-h-0">
+
+            <div *ngIf="graphData().length === 0 && !isLoadingReport()" class="text-slate-400 flex flex-col items-center gap-3 p-4">
               <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
                 <i class="pi pi-search text-2xl text-slate-300"></i>
               </div>
-              <span class="text-sm font-medium">Configura los filtros a la izquierda y pulsa Generar Analítica</span>
+              <span class="text-sm font-medium text-center">Configura los filtros a la izquierda y pulsa Generar Analítica</span>
             </div>
 
-            <div *ngIf="isLoadingReport()" class="flex flex-col items-center gap-3 text-blue-500">
+            <div *ngIf="isLoadingReport()" class="flex flex-col items-center gap-3 text-blue-500 p-4">
               <i class="pi pi-spin pi-spinner text-4xl"></i>
-              <span class="text-xs font-bold tracking-widest uppercase">Consultando base de datos...</span>
+              <span class="text-xs font-bold tracking-widest uppercase text-center">Consultando base de datos...</span>
             </div>
 
-            <div *ngIf="graphData().length > 0 && !isLoadingReport()" class="w-full h-full p-2">
+            <div *ngIf="graphData().length > 0 && !isLoadingReport()" class="absolute inset-0 p-4 sm:p-6 pb-2">
               <p-chart
+                #myChart
                 [type]="chartType()"
                 [data]="chartData()"
                 [options]="chartOptions()"
@@ -224,7 +236,6 @@
           </div>
         </div>
 
-        <!-- REGISTRIES TABLE CON DISEÑO FIJO PARA EL PAGINADOR -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden h-[500px]">
 
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4 shrink-0">

@@ -1,6 +1,7 @@
 package com.tfg.backend.registry;
 
 import com.tfg.backend.dto.PageResponse;
+import com.tfg.backend.dto.PdfExportRequest;
 import com.tfg.backend.notification.EntityType;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -64,5 +68,23 @@ public class RegistryRestController {
             @RequestParam RegistryType dataType) {
 
         return registryService.getCrossReferences(entityType, dataType);
+    }
+
+    @PostMapping(value = "/export/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> exportCustomPdf(@RequestBody PdfExportRequest request) {
+
+        Page<Document> allData = registryService.getRegistryStats(
+                request.getStartDate(), request.getEndDate(), "TABLE", null,
+                request.getEntityType(), request.getDataType(), request.getMetricMode(),
+                request.getStoreIds(), request.getUserIds(), request.getProductIds(),
+                request.getOrderIds(), 0, Integer.MAX_VALUE);
+        
+        byte[] pdfBytes = registryService.generateCustomPdf(allData.getContent(), request);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "informe_personalizado.pdf");
+
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }
 }

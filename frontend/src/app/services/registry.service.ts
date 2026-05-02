@@ -73,4 +73,10 @@ export class RegistryService {
 
     return this.http.get<CrossReferencesMap>(`${this.apiUrl}/references`, { params });
   }
+
+  exportCustomPdf(payload: any) {
+    return this.http.post(`${this.apiUrl}/export/pdf`, payload, {
+      responseType: 'blob'
+    });
+  }
 }
