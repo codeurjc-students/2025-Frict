@@ -11,7 +11,7 @@ export interface RegistryFilterParams {
   metricMode?: 'VALUE' | 'TOTAL';
   entityType?: string;
   dataType?: string;
-  storeIds?: string[];
+  shopIds?: string[];
   userIds?: string[];
   productIds?: string[];
   orderIds?: string[];
@@ -19,7 +19,7 @@ export interface RegistryFilterParams {
 
 //Cross reference
 export interface CrossReferencesMap {
-  storeId: string[];
+  shopId: string[];
   productId: string[];
   userId: string[];
   orderId: string[];

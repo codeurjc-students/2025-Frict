@@ -8,7 +8,6 @@ import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 
 import java.util.Date;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -23,45 +22,61 @@ public class Registry {
 
     public Registry() {}
 
-    public Registry(Date timestamp, Metadata metadata, Metrics metrics) {
-        this.timestamp = timestamp;
-        this.metadata = metadata;
-        this.metrics = metrics;
+    public Registry(EntityType entityType, RegistryType dataType,
+                    Double value,
+                    String shopId, String shopName,
+                    String userId, String userName,
+                    String productId, String productName,
+                    String orderId, String orderName) {
+
+        this.timestamp = new Date();
+
+        this.metadata = new Metadata();
+        this.metadata.setEntityType(entityType);
+        this.metadata.setDataType(dataType);
+
+        this.metadata.setShopId(shopId);
+        this.metadata.setShopName(shopName);
+        this.metadata.setUserId(userId);
+        this.metadata.setUserName(userName);
+        this.metadata.setProductId(productId);
+        this.metadata.setProductName(productName);
+        this.metadata.setOrderId(orderId);
+        this.metadata.setOrderName(orderName);
+
+        this.metrics = new Metrics(value, null);
     }
 
     @Setter
     @Getter
     public static class Metadata {
         private EntityType entityType;
-        private String entityId;
         private RegistryType dataType;
 
-        private String storeId;
+        private String shopId;
         private String userId;
         private String productId;
         private String orderId;
 
+        private String shopName;
+        private String userName;
+        private String productName;
+        private String orderName;
+
         public Metadata() {}
-
-        public Metadata(EntityType entityType, String entityId, RegistryType dataType) {
-            this.entityType = entityType;
-            this.entityId = entityId;
-            this.dataType = dataType;
-        }
-
     }
 
     @Setter
     @Getter
     public static class Metrics {
-        private double value;
-        private Map<String, Object> details;
+        private Double value;
+        private Double total;
 
         public Metrics() {}
 
-        public Metrics(double value, Map<String, Object> details) {
+        public Metrics(Double value, Double total) {
             this.value = value;
-            this.details = details;
+            this.total = total;
         }
     }
 }

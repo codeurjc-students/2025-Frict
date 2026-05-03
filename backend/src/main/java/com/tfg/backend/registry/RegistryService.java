@@ -48,6 +48,19 @@ public class RegistryService {
     }
 
 
+    public Double calculateNextTotal(EntityType entityType, String entityId, RegistryType dataType, Double variation) {
+        if (variation == null) return null;
+
+        Double lastTotal = repository.getLastTotal(entityType, entityId, dataType);
+
+        return lastTotal + variation;
+    }
+
+    public Registry save(Registry r){
+        return this.repository.save(r);
+    }
+
+
     static class HeaderFooterEvent extends PdfPageEventHelper {
         private final String periodText;
         private final Font watermarkFont = new Font(Font.HELVETICA, 8, Font.NORMAL, new Color(148, 163, 184));
@@ -84,7 +97,7 @@ public class RegistryService {
 
             Phrase headerRight = new Phrase(periodText, watermarkFont);
             ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, headerRight, document.right(), document.top() + 15, 0);
-            
+
             Phrase footer = new Phrase("Página " + writer.getPageNumber(), watermarkFont);
             ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, footer, document.right(), document.bottom() - 15, 0);
         }
@@ -220,14 +233,24 @@ public class RegistryService {
                 org.bson.Document metadata = row.get("metadata", org.bson.Document.class);
                 String entId = "-";
                 String entName = "-";
-                if (metadata != null) {
-                    entId = metadata.entrySet().stream()
-                            .filter(e -> e.getKey().endsWith("Id") && e.getValue() != null)
-                            .map(e -> e.getValue().toString()).findFirst().orElse("-");
-                    entName = metadata.entrySet().stream()
-                            .filter(e -> e.getKey().endsWith("Name") && e.getValue() != null)
-                            .map(e -> e.getValue().toString()).findFirst().orElse("-");
+
+                if (metadata != null && request.getEntityType() != null) {
+                    // 1. Averiguamos el prefijo exacto. Ej: Si EntityType es PRODUCT, baseKey será "product"
+                    String baseKey = request.getEntityType().name().toLowerCase();
+
+                    // 2. Construimos las claves exactas que queremos buscar: "productId" y "productName"
+                    String targetIdKey = baseKey + "Id";
+                    String targetNameKey = baseKey + "Name";
+
+                    // 3. Extraemos directa y únicamente esos valores
+                    if (metadata.get(targetIdKey) != null) {
+                        entId = metadata.get(targetIdKey).toString();
+                    }
+                    if (metadata.get(targetNameKey) != null) {
+                        entName = metadata.get(targetNameKey).toString();
+                    }
                 }
+
                 PdfPCell c2 = new PdfPCell(new Phrase(entId, tdFont));
                 PdfPCell c3 = new PdfPCell(new Phrase(entName, tdFont));
 

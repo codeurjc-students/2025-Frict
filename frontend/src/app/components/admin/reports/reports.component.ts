@@ -13,10 +13,7 @@ import { RegistryService } from '../../../services/registry.service';
 import { BreadcrumbReloadComponent } from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
 import {SelectButton} from 'primeng/selectbutton';
-import {Chart} from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-
-Chart.register(ChartDataLabels);
 
 @Component({
   selector: 'app-reports',
@@ -29,6 +26,9 @@ Chart.register(ChartDataLabels);
   templateUrl: './reports.component.html'
 })
 export class ReportsComponent implements OnInit {
+
+  chartPlugins = [ChartDataLabels];
+
   @ViewChild('myChart') chartComponent!: UIChart;
 
   private registryService = inject(RegistryService);
@@ -62,14 +62,14 @@ export class ReportsComponent implements OnInit {
   selectedEntity = signal<string | null>(null);
   selectedMetric = signal<string | null>(null);
   selectedProducts = signal<string[]>([]);
-  selectedStores = signal<string[]>([]);
+  selectedShops = signal<string[]>([]);
   selectedOrders = signal<string[]>([]);
   selectedUsers = signal<string[]>([]);
 
   entityOptions = signal<string[]>([]);
   metricOptions = signal<string[]>([]);
   productOptions = signal<string[]>([]);
-  storeOptions = signal<string[]>([]);
+  shopOptions = signal<string[]>([]);
   orderOptions = signal<string[]>([]);
   userOptions = signal<string[]>([]);
 
@@ -88,7 +88,7 @@ export class ReportsComponent implements OnInit {
   selectedDynamicColumns = signal<string[]>([]);
 
   private entityFieldMap: Record<string, { id: string, name: string }> = {
-    'STORE': { id: 'meta_storeId', name: 'meta_storeName' },
+    'SHOP': { id: 'meta_shopId', name: 'meta_shopName' }, // <-- Cambiado
     'PRODUCT': { id: 'meta_productId', name: 'meta_productName' },
     'USER': { id: 'meta_userId', name: 'meta_userName' },
     'ORDER': { id: 'meta_orderId', name: 'meta_orderName' },
@@ -101,7 +101,7 @@ export class ReportsComponent implements OnInit {
     if (!selected) return null;
 
     const reverseMap: Record<string, string> = {
-      'Tienda': 'STORE', 'SHOP': 'STORE', 'STORE': 'STORE',
+      'Tienda': 'SHOP', 'SHOP': 'SHOP',
       'Producto': 'PRODUCT', 'PRODUCT': 'PRODUCT',
       'Usuario': 'USER', 'USER': 'USER',
       'Pedido': 'ORDER', 'ORDER': 'ORDER',
@@ -115,8 +115,8 @@ export class ReportsComponent implements OnInit {
     'timestamp': 'Fecha',
     'metric_value': 'Variación',
     'metric_total': 'Acumulado',
-    'meta_storeId': 'ID Tienda',
-    'meta_storeName': 'Tienda',
+    'meta_shopId': 'ID Tienda',   // <-- Cambiado
+    'meta_shopName': 'Tienda',    // <-- Cambiado
     'meta_productId': 'ID Prod.',
     'meta_productName': 'Producto',
     'meta_userId': 'ID Usuario',
@@ -198,7 +198,7 @@ export class ReportsComponent implements OnInit {
 
     data.forEach(row => {
       if (row.metadata) {
-        if (row.metadata.storeId) foundEntities.add('STORE');
+        if (row.metadata.shopId) foundEntities.add('SHOP'); // <-- Cambiado
         if (row.metadata.productId) foundEntities.add('PRODUCT');
         if (row.metadata.userId) foundEntities.add('USER');
         if (row.metadata.orderId) foundEntities.add('ORDER');
@@ -283,10 +283,10 @@ export class ReportsComponent implements OnInit {
 
         this.registryService.getCrossReferences(entity, metric).subscribe({
           next: (referencesMap) => {
-            this.storeOptions.set((referencesMap.storeId || []).filter(item => item != null));
-            this.productOptions.set((referencesMap.productId || []).filter(item => item != null));
-            this.userOptions.set((referencesMap.userId || []).filter(item => item != null));
-            this.orderOptions.set((referencesMap.orderId || []).filter(item => item != null));
+            this.shopOptions.set((referencesMap.shopId || []).filter((item: any) => item != null)); // <-- Cambiado
+            this.productOptions.set((referencesMap.productId || []).filter((item: any) => item != null));
+            this.userOptions.set((referencesMap.userId || []).filter((item: any) => item != null));
+            this.orderOptions.set((referencesMap.orderId || []).filter((item: any) => item != null));
           },
           error: () => this.resetAssociatedEntities()
         });
@@ -296,11 +296,11 @@ export class ReportsComponent implements OnInit {
 
   private resetAssociatedEntities() {
     this.selectedProducts.set([]);
-    this.selectedStores.set([]);
+    this.selectedShops.set([]); // <-- Cambiado
     this.selectedOrders.set([]);
     this.selectedUsers.set([]);
     this.productOptions.set([]);
-    this.storeOptions.set([]);
+    this.shopOptions.set([]); // <-- Cambiado
     this.orderOptions.set([]);
     this.userOptions.set([]);
 
@@ -323,7 +323,7 @@ export class ReportsComponent implements OnInit {
       dataType: metric,
       metricMode: this.metricMode(),
       productIds: this.selectedProducts(),
-      storeIds: this.selectedStores(),
+      shopIds: this.selectedShops(), // <-- Cambiado de storeIds a shopIds
       orderIds: this.selectedOrders(),
       userIds: this.selectedUsers()
     };

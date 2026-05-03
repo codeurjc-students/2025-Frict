@@ -1,22 +1,41 @@
 package com.tfg.backend.registry;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
+@RequiredArgsConstructor
 public class RegistryEventListener {
 
-    private final MongoTemplate mongoTemplate;
-
-    public RegistryEventListener(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
-    }
+    private final RegistryService registryService;
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleRegistryEvent(RegistryEvent event) {
-        mongoTemplate.save(event.getRegistry());
+
+        Registry registry = event.getRegistry();
+        Registry.Metadata meta = registry.getMetadata();
+        Registry.Metrics metrics = registry.getMetrics();
+
+        String primaryEntityId = switch (meta.getEntityType()) {
+            case SHOP -> meta.getShopId();
+            case PRODUCT -> meta.getProductId();
+            case USER -> meta.getUserId();
+            case ORDER -> meta.getOrderId();
+            default -> null;
+        };
+
+        Double newTotal = registryService.calculateNextTotal(
+                meta.getEntityType(),
+                primaryEntityId,
+                meta.getDataType(),
+                metrics.getValue()
+        );
+
+        metrics.setTotal(newTotal);
+        registryService.save(registry);
     }
 }

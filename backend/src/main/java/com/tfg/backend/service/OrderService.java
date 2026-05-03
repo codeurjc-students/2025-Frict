@@ -2,8 +2,12 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.model.*;
+import com.tfg.backend.notification.EntityType;
 import com.tfg.backend.notification.EventAction;
 import com.tfg.backend.notification.OrderEvent;
+import com.tfg.backend.registry.Registry;
+import com.tfg.backend.registry.RegistryEvent;
+import com.tfg.backend.registry.RegistryType;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.utils.SaveResult;
 import com.tfg.backend.utils.StatDTO;
@@ -187,6 +191,14 @@ public class OrderService {
         String managerUsername = Optional.ofNullable(savedOrder.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
         OrderEvent orderEvent = new OrderEvent(EventAction.CREATED, String.valueOf(savedOrder.getId()), null, null, loggedUser.getUsername(), managerUsername, null);
         eventPublisher.publishEvent(orderEvent);
+
+        //Add registries
+        for (OrderItem i : cartItems) {
+            Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), i.getProduct().getReferenceCode(), i.getProduct().getName(), null, null);
+            eventPublisher.publishEvent(new RegistryEvent(unitsSoldRegistry));
+        }
+        Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
 
         // Send email confirmation
         emailService.sendOrderConfirmation(loggedUser.getEmail(), loggedUser.getName(), savedOrder.getReferenceCode(), savedOrder.getItems(), savedOrder.getTotalCost());

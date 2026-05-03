@@ -25,7 +25,7 @@ public class RegistryRepository {
             Date startDate, Date endDate, String viewType, String interval,
             EntityType entityType, RegistryType dataType,
             String metricMode,
-            List<String> storeIds, List<String> userIds,
+            List<String> shopIds, List<String> userIds,
             List<String> productIds, List<String> orderIds,
             int page, int size) {
 
@@ -33,7 +33,7 @@ public class RegistryRepository {
 
         if (entityType != null) matchCriteria.and("metadata.entityType").is(entityType);
         if (dataType != null) matchCriteria.and("metadata.dataType").is(dataType);
-        if (storeIds != null && !storeIds.isEmpty()) matchCriteria.and("metadata.storeId").in(storeIds);
+        if (shopIds != null && !shopIds.isEmpty()) matchCriteria.and("metadata.shopId").in(shopIds);
         if (userIds != null && !userIds.isEmpty()) matchCriteria.and("metadata.userId").in(userIds);
         if (productIds != null && !productIds.isEmpty()) matchCriteria.and("metadata.productId").in(productIds);
         if (orderIds != null && !orderIds.isEmpty()) matchCriteria.and("metadata.orderId").in(orderIds);
@@ -94,7 +94,7 @@ public class RegistryRepository {
 
         Map<String, List<String>> references = new HashMap<>();
 
-        references.put("storeId", mongoTemplate.findDistinct(query, "metadata.storeId", "registries", String.class)
+        references.put("shopId", mongoTemplate.findDistinct(query, "metadata.shopId", "registries", String.class)
                 .stream().filter(Objects::nonNull).toList());
 
         references.put("productId", mongoTemplate.findDistinct(query, "metadata.productId", "registries", String.class)
@@ -107,5 +107,32 @@ public class RegistryRepository {
                 .stream().filter(Objects::nonNull).toList());
 
         return references;
+    }
+
+
+    public Double getLastTotal(EntityType entityType, String entityId, RegistryType dataType) {
+        if (entityType == null || entityId == null) return 0.0;
+
+        String idField = "metadata." + entityType.name().toLowerCase() + "Id";
+
+        Query query = new Query(
+                Criteria.where(idField).is(entityId)
+                        .and("metadata.dataType").is(dataType.name())
+        );
+
+        query.with(Sort.by(Sort.Direction.DESC, "timestamp"));
+        query.limit(1);
+
+        Registry lastRecord = mongoTemplate.findOne(query, Registry.class, "registries");
+
+        if (lastRecord != null && lastRecord.getMetrics() != null && lastRecord.getMetrics().getTotal() != null) {
+            return lastRecord.getMetrics().getTotal();
+        }
+
+        return 0.0;
+    }
+
+    public Registry save(Registry r){
+        return mongoTemplate.save(r, "registries");
     }
 }

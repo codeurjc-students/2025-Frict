@@ -6,12 +6,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
 public enum RegistryType {
-    VIEWS("Visualizaciones"),
-    BUDGET("Presupuesto"),
-    SALES("Ventas"),
-    REVIEWS("Reseñas"),
-    ORDERS("Pedidos"),
-    PURCHASES("Compras");
+    PRODUCT_VIEWS("Visualizaciones"),
+    PRODUCT_UNITS_SOLD("Unidades Vendidas"),
+    USER_ORDERS("Pedidos"),
+    USER_REVIEWS("Reseñas"),
+    SHOP_BUDGET("Presupuesto");
 
     private final String translation;
 

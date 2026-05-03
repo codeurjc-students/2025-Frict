@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +25,7 @@ public class NotificationRoutingListener {
     // 1. ORDER NOTIFICATIONS HANDLER
     // ==========================================
     @Async
-    @EventListener
+    @TransactionalEventListener
     public void handleOrderEvent(OrderEvent event) {
         String orderId = event.getOrderId();
 
@@ -68,7 +69,7 @@ public class NotificationRoutingListener {
     // 2. TRUCK NOTIFICATIONS HANDLER
     // ==========================================
     @Async
-    @EventListener
+    @TransactionalEventListener
     public void handleTruckEvent(TruckEvent event) {
         String truckId = event.getTruckId();
 
@@ -115,7 +116,7 @@ public class NotificationRoutingListener {
     // 3. SHOP NOTIFICATIONS HANDLER
     // ==========================================
     @Async
-    @EventListener
+    @TransactionalEventListener
     public void handleShopEvent(ShopEvent event) {
         String shopId = event.getShopId();
 
@@ -173,7 +174,7 @@ public class NotificationRoutingListener {
     // 4. PRODUCT NOTIFICATIONS HANDLER
     // ==========================================
     @Async
-    @EventListener
+    @TransactionalEventListener
     public void handleProductEvent(ProductEvent event) {
         String productId = event.getProductId();
         Long pIdLong;
@@ -234,7 +235,7 @@ public class NotificationRoutingListener {
     // 5. USER NOTIFICATIONS HANDLER
     // ==========================================
     @Async
-    @EventListener
+    @TransactionalEventListener
     public void handleUserEvent(UserEvent event) {
         String targetUsername = event.getTargetUsername(); // The user affected by the action
 
@@ -306,7 +307,7 @@ public class NotificationRoutingListener {
     // 6. REVIEW NOTIFICATIONS HANDLER
     // ==========================================
     @Async
-    @EventListener
+    @TransactionalEventListener
     public void handleReviewEvent(ReviewEvent event) {
         String reviewId = event.getReviewId();
         String productId = event.getProductId();

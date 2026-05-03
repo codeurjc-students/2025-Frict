@@ -108,11 +108,12 @@
               appendTo="body">
             </p-multiSelect>
 
+            <!-- Variables actualizadas de selectedStores/storeOptions a selectedShops/shopOptions -->
             <p-multiSelect
-              [options]="storeOptions()"
-              [ngModel]="selectedStores()"
-              (onChange)="selectedStores.set($event.value)"
-              [disabled]="!selectedMetric() || storeOptions().length === 0"
+              [options]="shopOptions()"
+              [ngModel]="selectedShops()"
+              (onChange)="selectedShops.set($event.value)"
+              [disabled]="!selectedMetric() || shopOptions().length === 0"
               placeholder="Filtrar por Tiendas"
               display="chip"
               styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
@@ -230,6 +231,7 @@
                 [type]="chartType()"
                 [data]="chartData()"
                 [options]="chartOptions()"
+                [plugins]="chartPlugins"
                 height="100%">
               </p-chart>
             </div>
