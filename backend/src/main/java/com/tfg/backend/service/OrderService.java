@@ -194,11 +194,14 @@ public class OrderService {
 
         //Add registries
         for (OrderItem i : cartItems) {
-            Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), i.getProduct().getReferenceCode(), i.getProduct().getName(), null, null);
+            Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), i.getProduct().getReferenceCode(), i.getProduct().getName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
             eventPublisher.publishEvent(new RegistryEvent(unitsSoldRegistry));
         }
-        Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
+
+        Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, orderTotal, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
 
         // Send email confirmation
         emailService.sendOrderConfirmation(loggedUser.getEmail(), loggedUser.getName(), savedOrder.getReferenceCode(), savedOrder.getItems(), savedOrder.getTotalCost());
@@ -234,6 +237,19 @@ public class OrderService {
             // Send notifications
             OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), orderStatus.getDescription(), order.getUser().getUsername(), managerUsername, driverUsername);
             eventPublisher.publishEvent(orderEvent);
+
+            if (orderStatus.equals(OrderStatus.COMPLETED) || orderStatus.equals(OrderStatus.CANCELLED)){
+                RegistryType registryType = switch (orderStatus) {
+                    case COMPLETED -> RegistryType.ORDERS_COMPLETED;
+                    case CANCELLED -> RegistryType.ORDERS_CANCELLED;
+                    default -> null;
+                };
+
+                User loggedUser = userService.findLoggedUserHelper();
+                Registry orderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
+            }
+
         }
         return order;
     }
@@ -265,6 +281,9 @@ public class OrderService {
         String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
         OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), OrderStatus.CANCELLED.getDescription(), loggedUser.getUsername(), managerUsername, driverUsername);
         eventPublisher.publishEvent(orderEvent);
+
+        Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.ORDERS_CANCELLED, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
 
         return order; // Saved automatically
     }

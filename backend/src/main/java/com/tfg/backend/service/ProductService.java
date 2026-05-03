@@ -86,9 +86,20 @@ public class ProductService {
     // Method used by controller, includes registry adding
     public Product getProductById(Long id){
         Product product = this.findProductHelper(id);
-        User user = this.userService.findLoggedUserHelper();
 
-        Registry viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, user.getSelectedShop().getReferenceCode(), user.getSelectedShop().getName(), user.getUsername(), user.getName(), product.getReferenceCode(), product.getName(), null, null);
+        Registry viewRegistry;
+        if (userService.getLoggedUserUsername() != null){
+            User user = this.userService.findLoggedUserHelper();
+            if (user.getSelectedShop() != null){
+                viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, user.getSelectedShop().getReferenceCode(), user.getSelectedShop().getName(), user.getUsername(), user.getName(), product.getReferenceCode(), product.getName(), null, null);
+            }
+            else {
+                viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, null, null, user.getUsername(), user.getName(), product.getReferenceCode(), product.getName(), null, null);
+            }
+        }
+        else {
+            viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, null, null, null, "Usuario anónimo", product.getReferenceCode(), product.getName(), null, null);
+        }
         eventPublisher.publishEvent(new RegistryEvent(viewRegistry));
         return product;
     }

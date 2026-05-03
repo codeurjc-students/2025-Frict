@@ -8,6 +8,8 @@ import java.util.Arrays;
 public enum RegistryType {
     PRODUCT_VIEWS("Visualizaciones"),
     PRODUCT_UNITS_SOLD("Unidades Vendidas"),
+    ORDERS_COMPLETED("Pedidos Completados"),
+    ORDERS_CANCELLED("Pedidos Cancelados"),
     USER_ORDERS("Pedidos"),
     USER_REVIEWS("Reseñas"),
     SHOP_BUDGET("Presupuesto");
