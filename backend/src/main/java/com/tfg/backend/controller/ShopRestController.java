@@ -28,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -43,6 +44,12 @@ public class ShopRestController {
 
     // Inject the user connection service for presence enrichment
     private final UserConnectionService userConnectionService;
+
+    @Operation(summary = "(Manager) Get lightweight list of managed shops (Key-Value)")
+    @GetMapping("/references")
+    public ResponseEntity<List<Map<String, Object>>> getManagedShopReferences() {
+        return ResponseEntity.ok(shopUserOrchestrator.getManagedShopReferences());
+    }
 
     @Operation(summary = "(Manager) Get assigned shops information (paged)")
     @GetMapping

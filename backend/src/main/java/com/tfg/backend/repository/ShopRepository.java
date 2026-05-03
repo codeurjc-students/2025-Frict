@@ -1,15 +1,23 @@
 package com.tfg.backend.repository;
 
 import com.tfg.backend.model.Shop;
+import com.tfg.backend.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Map;
+
 public interface ShopRepository extends JpaRepository<Shop, Long> {
 
     Page<Shop> findAllByAssignedManagerId(Long id, Pageable pageable);
+
+    @Query("SELECT new map(s.id as id, s.referenceCode as referenceCode, s.name as name) " +
+            "FROM Shop s WHERE s.assignedManager = :manager")
+    List<Map<String, Object>> findAllShopReferencesByManager(@Param("manager") User manager);
 
     //Metrics
     // Admin: Count all shops

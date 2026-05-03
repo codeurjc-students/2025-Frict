@@ -1,5 +1,5 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {Component, inject, LOCALE_ID, OnInit, signal} from '@angular/core';
+import {CommonModule, formatDate} from '@angular/common';
 import {RouterLink} from '@angular/router';
 
 import {Button} from 'primeng/button';
@@ -17,13 +17,14 @@ import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {OrderService} from '../../../services/order.service';
 import {Order} from '../../../models/order.model';
-import {catchError, forkJoin, of, switchMap} from 'rxjs';
+import {catchError, forkJoin, map, of, switchMap} from 'rxjs';
 import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {StyleClass} from 'primeng/styleclass';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import {NotificationService} from '../../../services/notification.service';
 import {UiService} from '../../../utils/ui.service';
+import {RegistryService} from '../../../services/registry.service'; // <-- NUEVO IMPORT
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -68,6 +69,8 @@ export class AdminHomeComponent implements OnInit {
   loginInfo!: LoginInfo;
 
   private metricService = inject(StatService);
+  private registryService = inject(RegistryService); // <-- NUEVA INYECCIÓN
+  private locale = inject(LOCALE_ID); // <-- NUEVA INYECCIÓN
 
   constructor(protected authService: AuthService,
               private orderService: OrderService,
@@ -103,7 +106,7 @@ export class AdminHomeComponent implements OnInit {
 
     if (this.authService.isAdmin() || this.authService.isManager()) {
       this.loadKpis();
-      this.loadSalesChartMock();
+      this.loadSalesChartData();
       this.loadRecentOrdersByRole();
       this.loadRecentNotifications();
     } else if (this.authService.isDriver()) {
@@ -139,10 +142,8 @@ export class AdminHomeComponent implements OnInit {
           const onMaintenance = Number(trucks.find(m => m.label === 'En mantenimiento')?.value || 0);
           const outOfService = Number(trucks.find(m => m.label === 'Fuera de servicio')?.value || 0);
 
-
           const activeOrders = orderMade + sent + onDelivery;
           const activeTrucks = available + onRoute;
-
 
           this.globalKpis.set({
             totalBudget: totalBudget,
@@ -269,19 +270,108 @@ export class AdminHomeComponent implements OnInit {
     });
   }
 
-  // Sales chart (mock)
-  private loadSalesChartMock() {
-    this.salesChartData.set({
-      labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-      datasets: [{
-        label: 'Ingresos',
-        data: [2500, 3200, 2800, 4100, 3900, 5200, 2880.50],
-        fill: true,
-        borderColor: '#3b82f6',
-        tension: 0.4,
-        backgroundColor: 'rgba(59, 130, 246, 0.1)'
-      }]
-    });
+// --- CARGA DE DATOS REALES DE INGRESOS (MULTILÍNEA PARA MÁNAGERS) ---
+  private loadSalesChartData() {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 6);
+
+    const baseParams: any = {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      entityType: 'SHOP',
+      dataType: 'SHOP_BUDGET',
+      metricMode: 'VALUE',
+      viewType: 'GRAPH',
+      interval: 'day'
+    };
+
+    // Paleta de colores atractiva para las distintas tiendas
+    const lineColors = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#06b6d4', '#ec4899'];
+
+    if (this.authService.isManager()) {
+
+      this.shopService.getManagedShopReferences().pipe(
+        switchMap(shops => {
+          if (!shops || shops.length === 0) return of([]);
+
+          // Por cada tienda, creamos una petición independiente al histórico
+          const requests = shops.map(shop => {
+            const shopParams = { ...baseParams, shopIds: [shop.referenceCode] };
+            return this.registryService.loadInternalRegistry(shopParams).pipe(
+              map((res: any) => ({
+                name: shop.name, // Guardamos el nombre para la leyenda
+                data: res.items || res
+              }))
+            );
+          });
+
+          // forkJoin ejecuta todas las peticiones a la vez y espera a que terminen
+          return forkJoin(requests);
+        })
+      ).subscribe({
+        next: (results: any[]) => {
+          console.log(results);
+
+          if (results.length === 0) return;
+
+          // Extraemos las etiquetas de fecha (usamos la primera tienda, ya que todas coinciden en días)
+          const labels = results[0].data.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));
+
+          // Mapeamos los resultados a datasets independientes (múltiples líneas)
+          const datasets = results.map((result, index) => {
+            const dataValues = result.data.map((item: any) => item.totalValue);
+            const color = lineColors[index % lineColors.length]; // Asignamos un color por índice
+
+            return {
+              label: result.name, // Nombre de la tienda
+              data: dataValues,
+              fill: false, // IMPORTANTE: Quitamos el relleno para que las áreas no se solapen
+              borderColor: color,
+              backgroundColor: color,
+              tension: 0.4,
+              borderWidth: 2
+            };
+          });
+
+          this.salesChartData.set({ labels, datasets });
+
+          // Activamos la leyenda en la gráfica para que sepan de qué tienda es cada línea
+          const currentOptions = this.salesChartOptions();
+          this.salesChartOptions.set({
+            ...currentOptions,
+            plugins: {
+              ...currentOptions.plugins,
+              legend: { display: true, position: 'bottom', labels: { usePointStyle: true } }
+            }
+          });
+        },
+        error: (err) => console.error('Error cargando gráfica multilínea', err)
+      });
+
+    } else {
+      // SI ES ADMIN: Mantenemos la línea global unificada para no saturar la vista
+      this.registryService.loadInternalRegistry(baseParams).subscribe({
+        next: (res: any) => {
+          const rawData = res.items || res;
+          const labels = rawData.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));
+          const dataValues = rawData.map((item: any) => item.totalValue);
+
+          this.salesChartData.set({
+            labels: labels,
+            datasets: [{
+              label: 'Presupuesto Global',
+              data: dataValues,
+              fill: true,
+              borderColor: '#3b82f6',
+              tension: 0.4,
+              backgroundColor: 'rgba(59, 130, 246, 0.1)'
+            }]
+          });
+        },
+        error: (err) => console.error('Error cargando gráfica global', err)
+      });
+    }
   }
 
   private loadRecentOrdersByRole() {
@@ -307,7 +397,6 @@ export class AdminHomeComponent implements OnInit {
       }
     });
   }
-
 
   private loadDriverHistoryMock() {
     this.driverHistoryChartData.set({
@@ -349,7 +438,6 @@ export class AdminHomeComponent implements OnInit {
       scales: { x: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }, y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } } }
     });
 
-    // 4. Modificado para permitir 'stacked' (apilamiento) en X e Y
     this.driverHistoryChartOptions.set({
       maintainAspectRatio: false,
       plugins: {

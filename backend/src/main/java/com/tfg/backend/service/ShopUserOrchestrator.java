@@ -122,6 +122,11 @@ public class ShopUserOrchestrator {
         return shopService.findAllByAssignedManagerId(loggedUser.getId(), pageable);
     }
 
+    public List<Map<String, Object>> getManagedShopReferences() {
+        User loggedUser = userService.findLoggedUserHelper();
+        return shopService.findAllShopReferencesByManager(loggedUser);
+    }
+
     @Transactional
     public boolean setSelectedShop(Map<String, Long> body) {
         User loggedUser = userService.findLoggedUserHelper();

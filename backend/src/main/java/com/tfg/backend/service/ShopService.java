@@ -42,6 +42,7 @@ public class ShopService {
     public Page<Shop> findAll(Pageable pageInfo) { return shopRepository.findAll(pageInfo); }
     public Page<Shop> findAllByAssignedManagerId(Long userId, Pageable pageInfo) { return shopRepository.findAllByAssignedManagerId(userId, pageInfo); }
     public Optional<Shop> findById(Long id) { return shopRepository.findById(id); }
+    public List<Map<String, Object>> findAllShopReferencesByManager(User manager){ return shopRepository.findAllShopReferencesByManager(manager); }
 
     public Shop findShopHelper(Long id) {
         return this.findById(id)

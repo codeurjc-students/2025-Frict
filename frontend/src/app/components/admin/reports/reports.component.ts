@@ -336,7 +336,7 @@ export class ReportsComponent implements OnInit {
     this.isLoadingReport.set(true);
     this.currentPage.set(0);
 
-    this.registryService.loadRegistry({ ...params, viewType: 'GRAPH', interval: this.selectedInterval() } as any)
+    this.registryService.loadInternalRegistry({ ...params, viewType: 'GRAPH', interval: this.selectedInterval() } as any)
       .subscribe({
         next: (res: any) => this.graphData.set(res.items || res),
         error: () => this.graphData.set([])
@@ -346,7 +346,7 @@ export class ReportsComponent implements OnInit {
   }
 
   private loadTableData(baseParams: any) {
-    this.registryService.loadRegistry({
+    this.registryService.loadInternalRegistry({
       ...baseParams,
       viewType: 'TABLE',
       page: this.currentPage(),

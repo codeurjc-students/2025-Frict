@@ -20,10 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -157,6 +154,9 @@ public class OrderService {
 
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
 
+        //Stores product references for later registries
+        Map<OrderItem, String> productRefMap = new HashMap<>();
+
         // Validate AND reduce stock in a single pass
         for (OrderItem i : cartItems) {
             ShopStock localStock = i.getProduct().getShopsStock().stream()
@@ -170,6 +170,9 @@ public class OrderService {
 
             // Decrease stock (Safe because @Transactional will roll this back if a later item throws an exception)
             localStock.setUnits(localStock.getUnits() - i.getQuantity());
+
+            //Save the product reference
+            productRefMap.put(i, i.getProduct().getReferenceCode());
 
             // Make the order item historical
             i.setProductName(i.getProduct().getName());
@@ -194,7 +197,7 @@ public class OrderService {
 
         //Add registries
         for (OrderItem i : cartItems) {
-            Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), i.getProduct().getReferenceCode(), i.getProduct().getName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+            Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), productRefMap.get(i), i.getProductName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
             eventPublisher.publishEvent(new RegistryEvent(unitsSoldRegistry));
         }
         Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
@@ -246,10 +249,15 @@ public class OrderService {
                 };
 
                 User loggedUser = userService.findLoggedUserHelper();
-                Registry orderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
-                eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
-            }
+                Registry userOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
 
+                if (order.getAssignedTruck() != null && order.getAssignedTruck().getAssignedDriver() != null){
+                    User driver = order.getAssignedTruck().getAssignedDriver();
+                    Registry driverOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), driver.getUsername(), driver.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                    eventPublisher.publishEvent(new RegistryEvent(driverOrderRegistry));
+                }
+            }
         }
         return order;
     }

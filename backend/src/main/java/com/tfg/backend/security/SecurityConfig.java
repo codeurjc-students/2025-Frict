@@ -108,6 +108,7 @@ public class SecurityConfig {
 
                         // --- 6. SHOPS (ShopRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/list").hasAnyAuthority("USER", "ADMIN") // (User)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/references").hasAnyAuthority("MANAGER") // (Manager)
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/truck/*").hasAuthority("DRIVER") // (Driver)
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/stock/*").permitAll() // (All)
                         .requestMatchers(HttpMethod.POST, "/api/v1/shops").hasAuthority("ADMIN") // (Admin) Create shop
@@ -145,8 +146,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/stats", "/api/v1/registry/entities", "/api/v1/registry/metrics", "/api/v1/registry/references").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/registry/export/pdf").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/private/*").hasAnyAuthority("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/public/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/registry/private/export/pdf").hasAuthority("ADMIN")
 
                         .requestMatchers("/api/**").denyAll()
                         .requestMatchers("/**").permitAll()

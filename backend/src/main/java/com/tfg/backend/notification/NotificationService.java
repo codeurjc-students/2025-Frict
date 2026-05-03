@@ -30,28 +30,8 @@ public class NotificationService {
     }
 
     public void createAndSendNotification(String username, String subject, String description, EntityType type) {
-
-        // 1. Save in MongoDB
         Notification notification = new Notification(username, subject, description, type);
-        Notification savedNotification = notificationRepository.save(notification);
-
-        // 2. Map to NotificationDTO
-        NotificationDTO payloadDto = new NotificationDTO(savedNotification);
-
-        // 3. Emit via WebSocket
-        try {
-            Map<String, Object> message = Map.of(
-                    "topic", "NOTIFICATIONS",
-                    "action", "NEW",
-                    "payload", payloadDto
-            );
-
-            String jsonMessage = objectMapper.writeValueAsString(message);
-            webSocketHandler.sendMessageToUser(username, jsonMessage);
-
-        } catch (Exception e) {
-            log.error("Error al procesar el mensaje de notificación para el usuario: {}", username, e);
-        }
+        notificationRepository.save(notification);
     }
 
 

@@ -20,6 +20,10 @@ export class ShopService {
     return this.http.get<Shop>(this.apiUrl + `/${id}`);
   }
 
+  getManagedShopReferences(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/references`);
+  }
+
   //Managers: retrieve only shops that have the logged user assigned
   public getAssignedShopsPage(page: number, size: number): Observable<PageResponse<Shop>> {
     let params = new HttpParams();
