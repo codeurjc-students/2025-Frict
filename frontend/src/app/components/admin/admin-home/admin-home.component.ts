@@ -257,7 +257,7 @@ export class AdminHomeComponent implements OnInit {
           completed: Number(orders.find(m => m.label === 'Completados')?.value || 0)
         });
 
-        this.loadDriverHistoryMock();
+        this.loadDriverHistoryData();
         this.loadRecentOrdersByRole();
         this.loadRecentNotifications();
         this.loading = false;
@@ -270,7 +270,6 @@ export class AdminHomeComponent implements OnInit {
     });
   }
 
-// --- CARGA DE DATOS REALES DE INGRESOS (MULTILÍNEA PARA MÁNAGERS) ---
   private loadSalesChartData() {
     const endDate = new Date();
     const startDate = new Date();
@@ -286,7 +285,6 @@ export class AdminHomeComponent implements OnInit {
       interval: 'day'
     };
 
-    // Paleta de colores atractiva para las distintas tiendas
     const lineColors = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ef4444', '#06b6d4', '#ec4899'];
 
     if (this.authService.isManager()) {
@@ -295,7 +293,6 @@ export class AdminHomeComponent implements OnInit {
         switchMap(shops => {
           if (!shops || shops.length === 0) return of([]);
 
-          // Por cada tienda, creamos una petición independiente al histórico
           const requests = shops.map(shop => {
             const shopParams = { ...baseParams, shopIds: [shop.referenceCode] };
             return this.registryService.loadInternalRegistry(shopParams).pipe(
@@ -306,7 +303,6 @@ export class AdminHomeComponent implements OnInit {
             );
           });
 
-          // forkJoin ejecuta todas las peticiones a la vez y espera a que terminen
           return forkJoin(requests);
         })
       ).subscribe({
@@ -315,18 +311,16 @@ export class AdminHomeComponent implements OnInit {
 
           if (results.length === 0) return;
 
-          // Extraemos las etiquetas de fecha (usamos la primera tienda, ya que todas coinciden en días)
           const labels = results[0].data.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));
 
-          // Mapeamos los resultados a datasets independientes (múltiples líneas)
           const datasets = results.map((result, index) => {
             const dataValues = result.data.map((item: any) => item.totalValue);
-            const color = lineColors[index % lineColors.length]; // Asignamos un color por índice
+            const color = lineColors[index % lineColors.length];
 
             return {
-              label: result.name, // Nombre de la tienda
+              label: result.name,
               data: dataValues,
-              fill: false, // IMPORTANTE: Quitamos el relleno para que las áreas no se solapen
+              fill: false,
               borderColor: color,
               backgroundColor: color,
               tension: 0.4,
@@ -336,7 +330,6 @@ export class AdminHomeComponent implements OnInit {
 
           this.salesChartData.set({ labels, datasets });
 
-          // Activamos la leyenda en la gráfica para que sepan de qué tienda es cada línea
           const currentOptions = this.salesChartOptions();
           this.salesChartOptions.set({
             ...currentOptions,
@@ -350,7 +343,6 @@ export class AdminHomeComponent implements OnInit {
       });
 
     } else {
-      // SI ES ADMIN: Mantenemos la línea global unificada para no saturar la vista
       this.registryService.loadInternalRegistry(baseParams).subscribe({
         next: (res: any) => {
           const rawData = res.items || res;
@@ -398,31 +390,64 @@ export class AdminHomeComponent implements OnInit {
     });
   }
 
-  private loadDriverHistoryMock() {
-    this.driverHistoryChartData.set({
-      labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-      datasets: [
-        {
-          label: 'Completados',
-          data: [15, 18, 14, 20, 19, 22, 12],
-          backgroundColor: '#22c55e'
-        },
-        {
-          label: 'En Reparto',
-          data: [2, 1, 3, 0, 2, 1, 0],
-          backgroundColor: '#3b82f6'
-        },
-        {
-          label: 'Enviados',
-          data: [1, 2, 1, 1, 0, 2, 1],
-          backgroundColor: '#f59e0b'
-        },
-        {
-          label: 'Realizados',
-          data: [0, 1, 0, 2, 1, 0, 0],
-          backgroundColor: '#64748b'
-        }
-      ]
+
+  private loadDriverHistoryData() {
+    const truck = this.driverTruck();
+    if (!truck) return; // Si el conductor no tiene camión, no pedimos la gráfica
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 6);
+
+    const baseParams: any = {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      entityType: 'ORDER',
+      metricMode: 'VALUE', // "Modo variación" (eventos diarios)
+      viewType: 'GRAPH',
+      interval: 'day',
+      truckIds: [truck.referenceCode] // Filtramos explícitamente por el camión del conductor
+    };
+
+    // Preparamos las dos peticiones
+    const reqCompleted = this.registryService.loadInternalRegistry({ ...baseParams, dataType: 'ORDERS_COMPLETED' });
+    const reqCancelled = this.registryService.loadInternalRegistry({ ...baseParams, dataType: 'ORDERS_CANCELLED' });
+
+    // Las lanzamos en paralelo
+    forkJoin([reqCompleted, reqCancelled]).subscribe({
+      next: ([resCompleted, resCancelled]: [any, any]) => {
+        const dataCompleted = resCompleted.items || resCompleted;
+        const dataCancelled = resCancelled.items || resCancelled;
+
+        const labels = dataCompleted.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));
+
+        this.driverHistoryChartData.set({
+          labels: labels,
+          datasets: [
+            {
+              type: 'line', // Forzamos que se pinte como línea
+              label: 'Completados',
+              data: dataCompleted.map((item: any) => item.totalValue),
+              fill: false,
+              borderColor: '#22c55e', // Verde
+              backgroundColor: '#22c55e',
+              tension: 0.4,
+              borderWidth: 2
+            },
+            {
+              type: 'line', // Forzamos que se pinte como línea
+              label: 'Cancelados',
+              data: dataCancelled.map((item: any) => item.totalValue),
+              fill: false,
+              borderColor: '#ef4444', // Rojo
+              backgroundColor: '#ef4444',
+              tension: 0.4,
+              borderWidth: 2
+            }
+          ]
+        });
+      },
+      error: (err) => console.error('Error cargando el historial del conductor', err)
     });
   }
 
@@ -445,8 +470,8 @@ export class AdminHomeComponent implements OnInit {
         tooltip: { mode: 'index', intersect: false }
       },
       scales: {
-        x: { stacked: true, ticks: { color: textColorSecondary }, grid: { display: false, drawBorder: false } },
-        y: { stacked: true, ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } }
+        x: { ticks: { color: textColorSecondary }, grid: { display: false, drawBorder: false } }, // <-- Quitamos stacked: true
+        y: { ticks: { color: textColorSecondary }, grid: { color: surfaceBorder, drawBorder: false } } // <-- Quitamos stacked: true
       }
     });
 

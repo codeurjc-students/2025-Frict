@@ -63,7 +63,10 @@ class ShopUserOrchestratorUTest {
 
         shop = new Shop();
         shop.setId(10L);
+        shop.setReferenceCode("SH-TEST");
         shop.setAssignedManager(managerUser);
+
+        loggedUser.setSelectedShop(shop);
 
         ImageInfo img = new ImageInfo();
         img.setS3Key("shop-pic.jpg");
@@ -81,6 +84,8 @@ class ShopUserOrchestratorUTest {
         shopDTO.setName("New Shop Name");
         shopDTO.setAssignedBudget(5000.0);
         shopDTO.setAddress(addressDTO);
+
+        lenient().when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
     }
 
     @Nested

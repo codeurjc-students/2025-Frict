@@ -54,6 +54,7 @@ class OrderServiceUTest {
     void setUp() {
         selectedShop = new Shop();
         selectedShop.setId(10L);
+        selectedShop.setReferenceCode("SH-TEST");
         selectedShop.setAssignedOrders(new ArrayList<>());
 
         address = new Address();
@@ -250,6 +251,7 @@ class OrderServiceUTest {
             order = new Order();
             order.setId(1L);
             order.setUser(loggedUser);
+            order.setAssignedShop(selectedShop);
         }
 
         @Test

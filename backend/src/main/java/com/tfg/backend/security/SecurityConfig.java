@@ -146,7 +146,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/private/*").hasAnyAuthority("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/private/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/registry/public/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/registry/private/export/pdf").hasAuthority("ADMIN")
 
