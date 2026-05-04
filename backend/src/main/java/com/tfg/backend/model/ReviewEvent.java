@@ -1,6 +1,6 @@
 package com.tfg.backend.model;
 
-import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.dto.EventAction;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

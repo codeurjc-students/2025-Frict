@@ -1,6 +1,7 @@
 package com.tfg.backend.integration;
 
 import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
@@ -166,7 +167,7 @@ public class UserServiceITest {
         entityManager.flush();
         entityManager.clear();
 
-        List<com.tfg.backend.utils.StatDTO> stats = userService.getUsersStats();
+        List<StatDTO> stats = userService.getUsersStats();
 
         // Total count should be 2 (testsubject + staff)
         assertEquals(2L, stats.stream().filter(s -> s.label().equals("Totales")).findFirst().get().value());

@@ -1,17 +1,11 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.AddressDTO;
-import com.tfg.backend.dto.ShopDTO;
 import com.tfg.backend.model.*;
-import com.tfg.backend.notification.EntityType;
-import com.tfg.backend.notification.EventAction;
-import com.tfg.backend.notification.ShopEvent;
-import com.tfg.backend.notification.TruckEvent;
-import com.tfg.backend.registry.Registry;
-import com.tfg.backend.registry.RegistryType;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.event.ShopEvent;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -23,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)

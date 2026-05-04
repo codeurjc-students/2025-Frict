@@ -4,7 +4,6 @@ import com.tfg.backend.model.Address;
 import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.model.PaymentCard;
 import com.tfg.backend.model.User;
-import com.tfg.backend.notification.ConnectionDTO;
 import lombok.Getter;
 import lombok.Setter;
 

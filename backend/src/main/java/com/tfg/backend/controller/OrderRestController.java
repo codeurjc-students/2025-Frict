@@ -8,7 +8,7 @@ import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.model.OrderStatus;
-import com.tfg.backend.notification.UserConnectionService;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.SaveResult;

@@ -8,7 +8,7 @@ import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.Truck;
-import com.tfg.backend.notification.UserConnectionService;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.ShopStockService;
 import com.tfg.backend.service.ShopTruckOrchestrator;

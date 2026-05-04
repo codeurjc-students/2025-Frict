@@ -6,7 +6,7 @@ import com.tfg.backend.model.*;
 import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,7 +1,7 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.model.User;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
