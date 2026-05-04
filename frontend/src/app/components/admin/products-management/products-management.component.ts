@@ -1,5 +1,5 @@
-import {Component, OnInit, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {Component, inject, LOCALE_ID, OnInit, signal} from '@angular/core';
+import {CommonModule, formatDate} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Button} from 'primeng/button';
 import {UIChart} from 'primeng/chart';
@@ -18,6 +18,7 @@ import {Tag} from 'primeng/tag';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {RegistryService} from '../../../services/registry.service';
 
 
 @Component({
@@ -49,6 +50,9 @@ export class ProductsManagementComponent implements OnInit {
 
   // Sales chart selector
   chartProductSelector = signal<Product | null>(null);
+
+  private registryService = inject(RegistryService);
+  private locale = inject(LOCALE_ID);
 
   constructor(private productService: ProductService,
               private confirmationService: ConfirmationService,
@@ -202,21 +206,43 @@ export class ProductsManagementComponent implements OnInit {
     const product = this.chartProductSelector();
     if (!product) return;
 
-    const base = +product.id * 10;
-    const data = [base + 50, base + 20, base + 80, base + 45, base + 90, base + 120];
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 6);
 
-    this.lineData.set({
-      labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
-      datasets: [
-        {
-          label: `Ventas: ${product.name}`,
-          data: data,
-          fill: true,
-          borderColor: '#06b6d4', // Cyan
-          backgroundColor: 'rgba(6, 182, 212, 0.1)',
-          tension: 0.4
-        }
-      ]
+    this.registryService.loadInternalRegistry({
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      entityType: 'PRODUCT',
+      dataType: 'PRODUCT_UNITS_SOLD',
+      metricMode: 'VALUE',
+      viewType: 'GRAPH',
+      interval: 'day',
+      productIds: [product.referenceCode]
+    } as any).subscribe({
+      next: (res: any) => {
+        const rawData = res.items || res;
+
+        const labels = rawData.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));
+        const dataValues = rawData.map((item: any) => item.totalValue);
+
+        this.lineData.set({
+          labels: labels,
+          datasets: [
+            {
+              label: `Ventas: ${product.name}`,
+              data: dataValues,
+              fill: true,
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              tension: 0.4
+            }
+          ]
+        });
+      },
+      error: (err) => {
+        console.error('Error cargando los datos de ventas del producto', err);
+      }
     });
   }
 

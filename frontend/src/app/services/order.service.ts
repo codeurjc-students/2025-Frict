@@ -66,6 +66,10 @@ export class OrderService {
     return this.http.post<Order>(this.apiUrl + `/${orderId}/assign/truck/${truckId}`,null,  { params });
   }
 
+  public unassignAsFinished(orderId: string): Observable<Order> {
+    return this.http.post<Order>(this.apiUrl + `/${orderId}/unassign`, null);
+  }
+
   public getCartItemByProductId(id: string): Observable<OrderItem | null> {
     return this.http.get<OrderItem>(this.apiUrl + `/cart/item/${id}`);
   }

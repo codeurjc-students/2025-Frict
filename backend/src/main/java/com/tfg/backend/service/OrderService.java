@@ -126,7 +126,6 @@ public class OrderService {
 
         } else {
             driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
-
             order.setAssignedTruck(null);
         }
 
@@ -135,6 +134,29 @@ public class OrderService {
         eventPublisher.publishEvent(orderEvent);
 
         return order; // Saved automatically
+    }
+
+
+    @Transactional
+    public Order unassignAsFinished(Long orderId){
+        Order order = this.findOrderHelper(orderId);
+        OrderStatus orderStatus = order.getCurrentStatus();
+        if (!orderStatus.equals(OrderStatus.COMPLETED) && !orderStatus.equals(OrderStatus.CANCELLED)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order must be completed or cancelled to be unassigned by yourself.");
+        }
+
+        Truck assignedTruck = order.getAssignedTruck();
+        if (assignedTruck == null || assignedTruck.getAssignedDriver() == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order must have a truck and a driver assigned to perform this operation.");
+        }
+
+        User loggedUser = this.userService.findLoggedUserHelper();
+        if (!assignedTruck.getAssignedDriver().getUsername().equals(loggedUser.getUsername())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order must be assigned to your truck to perform this operation.");
+        }
+
+        order.setAssignedTruck(null);
+        return order;
     }
 
     @Transactional

@@ -94,6 +94,14 @@ public class OrderRestController {
         return ResponseEntity.ok(toEnrichedDTO(savedOrder));
     }
 
+
+    @Operation(summary = "(Driver) Unassign completed or cancelled order")
+    @PostMapping("/{orderId}/unassign")
+    public ResponseEntity<OrderDTO> unassignAsFinished(@PathVariable Long orderId) {
+        Order savedOrder = orderService.unassignAsFinished(orderId);
+        return ResponseEntity.ok(toEnrichedDTO(savedOrder));
+    }
+
     // Option 1 (active): CartSummaryDTO does not include the cart items list, finishing orders will require 2 queries to DB
     // Option 2: CartSummaryDTO includes the cart items list, and it is called from createdOrder to complete the order in 1 query (sends unnecessary information to frontend)
     @Operation(summary = "(User) Create order for logged user")

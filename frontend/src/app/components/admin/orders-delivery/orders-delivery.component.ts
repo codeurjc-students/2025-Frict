@@ -318,6 +318,20 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
+  // --- NUEVA ACCIÓN: DESASIGNAR PEDIDO ---
+  unassignOrder() {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    this.orderService.unassignAsFinished(order.id).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Desasignado', detail: 'El pedido ha sido liberado de tu camión.' });
+        this.fetchOrders(); // Recargamos para que desaparezca de la lista
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al desasignar el pedido.' })
+    });
+  }
+
   // --- MÉTODOS DEL ESCÁNER QR ---
 
   openScanner() {

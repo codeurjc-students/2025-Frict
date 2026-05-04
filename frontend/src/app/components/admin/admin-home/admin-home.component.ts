@@ -406,7 +406,7 @@ export class AdminHomeComponent implements OnInit {
       metricMode: 'VALUE', // "Modo variación" (eventos diarios)
       viewType: 'GRAPH',
       interval: 'day',
-      truckIds: [truck.referenceCode] // Filtramos explícitamente por el camión del conductor
+      userIds: [this.loginInfo.username]
     };
 
     // Preparamos las dos peticiones
@@ -419,27 +419,34 @@ export class AdminHomeComponent implements OnInit {
         const dataCompleted = resCompleted.items || resCompleted;
         const dataCancelled = resCancelled.items || resCancelled;
 
+        const completedToday = dataCompleted.length > 0 ? dataCompleted[dataCompleted.length - 1].totalValue : 0;
+        
+        this.driverKpis.update(current => ({
+          ...current,
+          completed: completedToday
+        }));
+
         const labels = dataCompleted.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));
 
         this.driverHistoryChartData.set({
           labels: labels,
           datasets: [
             {
-              type: 'line', // Forzamos que se pinte como línea
+              type: 'line',
               label: 'Completados',
               data: dataCompleted.map((item: any) => item.totalValue),
               fill: false,
-              borderColor: '#22c55e', // Verde
+              borderColor: '#22c55e',
               backgroundColor: '#22c55e',
               tension: 0.4,
               borderWidth: 2
             },
             {
-              type: 'line', // Forzamos que se pinte como línea
+              type: 'line',
               label: 'Cancelados',
               data: dataCancelled.map((item: any) => item.totalValue),
               fill: false,
-              borderColor: '#ef4444', // Rojo
+              borderColor: '#ef4444',
               backgroundColor: '#ef4444',
               tension: 0.4,
               borderWidth: 2

@@ -291,18 +291,38 @@
               </p>
             </div>
 
-            <div *ngIf="getCurrentStatus(order) === 'Completado'" class="flex flex-col items-center gap-3 text-green-600 z-10">
-              <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center border-2 border-green-200">
-                <i class="pi pi-check-circle text-3xl"></i>
+            <!-- MODIFICADO: Bloque de Completado con botón de desasignar -->
+            <div *ngIf="getCurrentStatus(order) === 'Completado'" class="w-full flex flex-col gap-4 items-center z-10">
+              <div class="flex flex-col items-center gap-2 text-green-600">
+                <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center border-2 border-green-200">
+                  <i class="pi pi-check-circle text-3xl"></i>
+                </div>
+                <span class="font-black uppercase tracking-widest text-sm">Entrega Finalizada</span>
               </div>
-              <span class="font-black uppercase tracking-widest text-sm">Entrega Finalizada</span>
+              <p-button
+                label="Desasignar Pedido"
+                icon="pi pi-trash"
+                (onClick)="unassignOrder()"
+                severity="secondary"
+                styleClass="p-button-sm !rounded-xl !font-bold w-full">
+              </p-button>
             </div>
 
-            <div *ngIf="getCurrentStatus(order) === 'Cancelado'" class="flex flex-col items-center gap-3 text-red-600 z-10">
-              <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center border-2 border-red-200">
-                <i class="pi pi-times-circle text-3xl"></i>
+            <!-- MODIFICADO: Bloque de Cancelado con botón de desasignar -->
+            <div *ngIf="getCurrentStatus(order) === 'Cancelado'" class="w-full flex flex-col gap-4 items-center z-10">
+              <div class="flex flex-col items-center gap-2 text-red-600">
+                <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center border-2 border-red-200">
+                  <i class="pi pi-times-circle text-3xl"></i>
+                </div>
+                <span class="font-black uppercase tracking-widest text-sm">Pedido Cancelado</span>
               </div>
-              <span class="font-black uppercase tracking-widest text-sm">Pedido Cancelado</span>
+              <p-button
+                label="Desasignar Pedido"
+                icon="pi pi-trash"
+                (onClick)="unassignOrder()"
+                severity="secondary"
+                styleClass="p-button-sm !rounded-xl !font-bold w-full">
+              </p-button>
             </div>
           </ng-container>
 
