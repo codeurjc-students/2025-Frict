@@ -8,7 +8,7 @@ import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.model.OrderStatus;
-import com.tfg.backend.notification.UserConnectionService;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.OrderService;
 import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.SaveResult;
@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -65,6 +68,24 @@ public class OrderRestController {
         return ResponseEntity.ok(toEnrichedDTO(order));
     }
 
+
+    @Operation(summary = "(User) Get order QR token by ID")
+    @GetMapping("/{id}/token")
+    public ResponseEntity<String> getOrderQrTokenById(@PathVariable Long id){
+        String token = orderService.getOrderQrToken(id);
+        return ResponseEntity.ok(token);
+    }
+
+
+    @Operation(summary = "(Driver) Check order QR token by ID")
+    @PostMapping("/{id}/token")
+    public ResponseEntity<Boolean> checkOrderQrTokenById(@PathVariable Long id, @RequestBody Map<String, String> payload){
+        String cleanToken = payload.get("token");
+        boolean status = orderService.checkOrderQrToken(id, cleanToken);
+        return ResponseEntity.ok(status);
+    }
+
+
     @Operation(summary = "(Admin, Manager) Set assigned truck to an order")
     @PostMapping("/{orderId}/assign/truck/{truckId}")
     public ResponseEntity<OrderDTO> setAssignedTruck(
@@ -72,6 +93,14 @@ public class OrderRestController {
             @PathVariable Long truckId,
             @RequestParam boolean state) {
         Order savedOrder = orderService.setAssignedTruck(orderId, truckId, state);
+        return ResponseEntity.ok(toEnrichedDTO(savedOrder));
+    }
+
+
+    @Operation(summary = "(Driver) Unassign completed or cancelled order")
+    @PostMapping("/{orderId}/unassign")
+    public ResponseEntity<OrderDTO> unassignAsFinished(@PathVariable Long orderId) {
+        Order savedOrder = orderService.unassignAsFinished(orderId);
         return ResponseEntity.ok(toEnrichedDTO(savedOrder));
     }
 
@@ -91,7 +120,7 @@ public class OrderRestController {
         return ResponseEntity.created(location).body(toEnrichedDTO(savedOrder));
     }
 
-    @Operation(summary = "(Admin, Manager) Comment and/or update order status by ID")
+    @Operation(summary = "(Admin, Manager, Driver) Comment and/or update order status by ID")
     @PutMapping("/{id}")
     public ResponseEntity<OrderDTO> commentAndOrUpdateOrderStatus(@PathVariable Long id,
                                                                   @RequestParam OrderStatus orderStatus,
@@ -178,6 +207,20 @@ public class OrderRestController {
     public ResponseEntity<CartSummaryDTO> deleteCartItem(@PathVariable Long id) {
         orderService.deleteCartItem(id);
         return this.getCartSummary();
+    }
+
+    @Operation(summary = "(User) Download order PDF invoice")
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> downloadOrderInvoice(@PathVariable("id") Long orderId) {
+        byte[] pdfBytes = orderService.generateOrderPdfInvoice(orderId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+
+        String filename = "Factura.pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }
 
     // ==========================================

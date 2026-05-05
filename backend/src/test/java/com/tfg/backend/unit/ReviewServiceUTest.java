@@ -3,6 +3,7 @@ package com.tfg.backend.unit;
 import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
+import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.ReviewRepository;
 import com.tfg.backend.service.ProductService;
@@ -51,10 +52,16 @@ class ReviewServiceUTest {
 
     @BeforeEach
     void setUp() {
+        Shop dummyShop = new Shop();
+        dummyShop.setReferenceCode("SH-TEST");
+
         // Setup User
         loggedUser = new User();
         loggedUser.setId(1L);
+        loggedUser.setUsername("testUser");
         loggedUser.setRoles(new HashSet<>(List.of("USER")));
+        loggedUser.setSelectedShop(dummyShop);
+        lenient().when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
 
         // Setup Product
         product = new Product();
@@ -274,6 +281,10 @@ class ReviewServiceUTest {
             User admin = new User();
             admin.setId(88L);
             admin.setRoles(new HashSet<>(List.of("ADMIN")));
+
+            Shop dummyShop = new Shop();
+            dummyShop.setReferenceCode("SH-TEST");
+            admin.setSelectedShop(dummyShop);
 
             // The review belongs to user 1, but user 88 (Admin) is calling the action
             when(reviewRepository.findById(100L)).thenReturn(Optional.of(review));

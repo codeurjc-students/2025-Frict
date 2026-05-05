@@ -45,6 +45,14 @@ export class OrderService {
     return this.http.get<Order>(this.apiUrl + `/${id}`);
   }
 
+  public getOrderQrTokenById(id: string): Observable<string> {
+    return this.http.get(this.apiUrl + `/${id}/token`, { responseType: 'text' });
+  }
+
+  public checkOrderQrTokenById(id: string, token: string): Observable<boolean> {
+    return this.http.post<boolean>(this.apiUrl + `/${id}/token`, { token });
+  }
+
   public commentAndOrUpdateOrderStatus(id: string, orderStatus: string, comment: string): Observable<Order> {
     let params = new HttpParams();
     params = params.append('orderStatus', orderStatus);
@@ -56,6 +64,10 @@ export class OrderService {
     let params = new HttpParams();
     params = params.append('state', state);
     return this.http.post<Order>(this.apiUrl + `/${orderId}/assign/truck/${truckId}`,null,  { params });
+  }
+
+  public unassignAsFinished(orderId: string): Observable<Order> {
+    return this.http.post<Order>(this.apiUrl + `/${orderId}/unassign`, null);
   }
 
   public getCartItemByProductId(id: string): Observable<OrderItem | null> {
@@ -120,6 +132,12 @@ export class OrderService {
 
   public deleteOrderById(id: string): Observable<CartSummary> {
     return this.http.delete<CartSummary>(this.apiUrl + `/${id}`)
+  }
+
+  downloadOrderInvoice(orderId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${orderId}/invoice`, {
+      responseType: 'blob' // CRÍTICO: Indica que esperamos un archivo binario, no un JSON
+    });
   }
 
 }

@@ -8,7 +8,7 @@ import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.Truck;
-import com.tfg.backend.notification.UserConnectionService;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.ShopStockService;
 import com.tfg.backend.service.ShopTruckOrchestrator;
@@ -28,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -43,6 +44,12 @@ public class ShopRestController {
 
     // Inject the user connection service for presence enrichment
     private final UserConnectionService userConnectionService;
+
+    @Operation(summary = "(Manager) Get lightweight list of managed shops (Key-Value)")
+    @GetMapping("/references")
+    public ResponseEntity<List<Map<String, Object>>> getManagedShopReferences() {
+        return ResponseEntity.ok(shopUserOrchestrator.getManagedShopReferences());
+    }
 
     @Operation(summary = "(Manager) Get assigned shops information (paged)")
     @GetMapping
@@ -89,7 +96,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Create shop")
     @PostMapping
     public ResponseEntity<ShopDTO> createShop(@RequestBody ShopDTO shopDTO) {
-        Shop savedShop = shopService.createShop(shopDTO);
+        Shop savedShop = shopUserOrchestrator.createShop(shopDTO);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -103,7 +110,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin, Manager) Update shop by ID")
     @PutMapping("/{id}")
     public ResponseEntity<ShopDTO> updateShop(@PathVariable Long id, @RequestBody ShopDTO shopDTO) {
-        Shop updatedShop = shopService.updateShop(id, shopDTO);
+        Shop updatedShop = shopUserOrchestrator.updateShop(id, shopDTO);
         return ResponseEntity.accepted().body(toEnrichedDTO(updatedShop));
     }
 
@@ -111,7 +118,7 @@ public class ShopRestController {
     @Operation(summary = "(Admin) Delete shop by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ShopDTO> deleteShop(@PathVariable Long id) {
-        Shop deletedShop = shopService.deleteShop(id);
+        Shop deletedShop = shopUserOrchestrator.deleteShop(id);
         return ResponseEntity.ok(toEnrichedDTO(deletedShop));
     }
 

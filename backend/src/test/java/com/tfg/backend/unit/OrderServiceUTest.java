@@ -3,7 +3,7 @@ package com.tfg.backend.unit;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.service.*;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -54,6 +54,7 @@ class OrderServiceUTest {
     void setUp() {
         selectedShop = new Shop();
         selectedShop.setId(10L);
+        selectedShop.setReferenceCode("SH-TEST");
         selectedShop.setAssignedOrders(new ArrayList<>());
 
         address = new Address();
@@ -250,6 +251,7 @@ class OrderServiceUTest {
             order = new Order();
             order.setId(1L);
             order.setUser(loggedUser);
+            order.setAssignedShop(selectedShop);
         }
 
         @Test

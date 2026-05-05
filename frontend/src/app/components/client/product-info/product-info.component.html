@@ -1,4 +1,3 @@
-
 <div *ngIf="loading || error">
   <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadProduct()"></app-loading-screen>
 </div>
@@ -19,9 +18,9 @@
         </div>
 
         <div class="flex items-center flex-wrap gap-4 text-sm">
-    <span class="text-surface-500 font-medium whitespace-nowrap">
-      Ref: {{ product.referenceCode }}
-    </span>
+          <span class="text-surface-500 font-medium whitespace-nowrap">
+            Ref: {{ product.referenceCode }}
+          </span>
 
           <div class="h-4 w-px bg-surface-300"></div>
 
@@ -88,12 +87,95 @@
           <p-tablist class="!border-b !border-surface-200 mb-6">
             <p-tab value="0" class="!font-bold">Información</p-tab>
             <p-tab disabled value="1" class="!font-bold">Especificaciones</p-tab>
+            <!-- NUEVA PESTAÑA: VISUALIZACIONES -->
+            <p-tab value="2" class="!font-bold">Visualizaciones</p-tab>
           </p-tablist>
+
           <p-tabpanels>
             <p-tabpanel value="0">
               <div class="prose prose-slate max-w-none text-surface-600 leading-relaxed" [innerHTML]="product.description"></div>
             </p-tabpanel>
             <p-tabpanel value="1">Coming soon...</p-tabpanel>
+
+            <!-- NUEVO PANEL: VISUALIZACIONES -->
+
+            <p-tabpanel value="2">
+              <div class="flex flex-col gap-6">
+
+                <!-- KPI Hoy y Controles -->
+                <div class="flex items-center justify-between flex-wrap gap-6 bg-surface-50 p-5 rounded-xl border border-surface-200">
+
+                  <div class="flex flex-col gap-1">
+                    <span class="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-1.5"><i class="pi pi-eye text-blue-500"></i> Visualizaciones Hoy</span>
+                    <span class="text-3xl font-extrabold text-surface-900">{{ viewsToday }}</span>
+                  </div>
+
+                  <!-- Agrupador de filtros dinámicos -->
+                  <div class="flex items-center gap-4 flex-wrap">
+
+                    <!-- NUEVO: Rango de fechas -->
+                    <div class="flex flex-col gap-1.5">
+                      <label class="text-[10px] font-bold text-surface-400 uppercase">Rango de fechas</label>
+                      <div class="flex items-center gap-2">
+                        <p-datepicker
+                          [(ngModel)]="viewsStartDate"
+                          (ngModelChange)="loadViewsData()"
+                          dateFormat="dd/mm/yy"
+                          [showIcon]="true"
+                          iconDisplay="input"
+                          styleClass="w-36 !rounded-lg border-surface-200 shadow-sm text-sm"
+                          appendTo="body">
+                        </p-datepicker>
+                        <span class="text-surface-400 font-bold">-</span>
+                        <p-datepicker
+                          [(ngModel)]="viewsEndDate"
+                          (ngModelChange)="loadViewsData()"
+                          dateFormat="dd/mm/yy"
+                          [showIcon]="true"
+                          iconDisplay="input"
+                          styleClass="w-36 !rounded-lg border-surface-200 shadow-sm text-sm"
+                          appendTo="body">
+                        </p-datepicker>
+                      </div>
+                    </div>
+
+                    <!-- Divisor visual -->
+                    <div class="hidden sm:block w-px h-10 bg-surface-200"></div>
+
+                    <!-- Agrupación (Conservada) -->
+                    <div class="flex flex-col gap-1.5">
+                      <label class="text-[10px] font-bold text-surface-400 uppercase">Agrupación gráfica</label>
+                      <p-select
+                        [options]="viewIntervalOptions"
+                        [(ngModel)]="selectedViewInterval"
+                        (onChange)="loadViewsData()"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="w-32 !rounded-lg border-surface-200 shadow-sm text-sm"
+                        appendTo="body">
+                      </p-select>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Gráfico de Variación -->
+                <div class="w-full h-[300px] relative">
+                  <!-- Loader de Gráfica -->
+                  <div *ngIf="isViewsLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-2 rounded-xl">
+                    <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
+                    <span class="text-xs font-bold tracking-widest uppercase text-blue-500">Cargando datos...</span>
+                  </div>
+
+                  <!-- Chart -->
+                  <div *ngIf="viewsChartData?.datasets[0]?.data?.length === 0 && !isViewsLoading" class="absolute inset-0 flex items-center justify-center border border-dashed border-surface-200 rounded-xl bg-surface-50/50">
+                    <span class="text-sm text-surface-400 font-medium">No hay histórico de visualizaciones para este rango.</span>
+                  </div>
+                  <p-chart *ngIf="viewsChartData?.datasets[0]?.data?.length > 0" type="line" [data]="viewsChartData" [options]="viewsChartOptions" height="100%"></p-chart>
+                </div>
+
+              </div>
+            </p-tabpanel>
           </p-tabpanels>
         </p-tabs>
       </div>

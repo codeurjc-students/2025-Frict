@@ -36,13 +36,61 @@
 
           </div>
 
-          <div class="flex gap-3">
-            <p-button label="Descargar Factura" icon="pi pi-file-pdf" [outlined]="true" severity="secondary" styleClass="!text-white !border-surface-600 hover:!bg-surface-800" />
+          <div class="flex flex-wrap gap-3 justify-end mt-4 md:mt-0">
+            <p-button
+              (onClick)="openQrDialog()"
+              label="Código de Entrega"
+              icon="pi pi-qrcode"
+              [outlined]="false"
+              styleClass="!bg-primary-500 !border-primary-500 hover:!bg-primary-600 text-white shadow-lg shadow-primary-500/20" />
+
+            <p-button (onClick)="downloadInvoice()" [loading]="isDownloadingInvoice" label="Descargar Factura" icon="pi pi-file-pdf" [outlined]="true" severity="secondary" styleClass="!text-white !border-surface-600 hover:!bg-surface-800" />
             <div *ngIf="!(order.history[order.history.length-1].status == 'Completado') && !(order.history[order.history.length-1].status == 'Cancelado')">
               <p-button (click)="cancelOrder()" label="Cancelar pedido" icon="pi pi-times-circle" [outlined]="true" severity="secondary" styleClass="!text-white !border-surface-600 hover:!bg-surface-800" />
             </div>
           </div>
         </div>
+
+        <p-dialog
+          [(visible)]="displayQrDialog"
+          [modal]="true"
+          header="Validación de Entrega"
+          [style]="{width: '400px'}"
+          [draggable]="false"
+          [resizable]="false"
+          styleClass="!rounded-3xl overflow-hidden shadow-2xl bg-surface-900 border border-surface-700">
+
+          <div class="flex flex-col items-center gap-6 py-6 text-center">
+
+            <div class="w-16 h-16 rounded-full bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-primary-400">
+              <i class="pi pi-shield text-2xl"></i>
+            </div>
+
+            <p class="text-sm text-surface-400 leading-relaxed px-4">
+              Muestra este código QR al repartidor para confirmar la recepción de tu pedido <span class="font-bold">{{ order.referenceCode }}</span>.
+            </p>
+
+            <div *ngIf="qrLoading" class="py-10">
+              <i class="pi pi-spin pi-spinner text-4xl text-primary-500"></i>
+            </div>
+
+            <div *ngIf="!qrLoading && qrToken" class="p-4 bg-white border-4 border-surface-100 rounded-2xl shadow-inner mt-2">
+              <qrcode
+                [qrdata]="qrToken"
+                [width]="200"
+                [errorCorrectionLevel]="'M'"
+                colorDark="#0f172a"
+                colorLight="#ffffff">
+              </qrcode>
+            </div>
+
+            <div *ngIf="!qrLoading && qrError" class="py-6 px-4 bg-red-500/10 border border-red-500/20 rounded-xl mt-2 w-full text-center">
+              <i class="pi pi-exclamation-triangle text-red-400 text-2xl mb-2"></i>
+              <p class="text-red-400 text-sm">No se pudo generar el código seguro. Inténtalo de nuevo.</p>
+            </div>
+
+          </div>
+        </p-dialog>
 
         <div class="mt-12 pt-8 border-t border-surface-700/50">
           <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">

@@ -3,9 +3,12 @@ package com.tfg.backend.service;
 import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.ProductDTO;
 import com.tfg.backend.model.*;
-import com.tfg.backend.notification.EventAction;
-import com.tfg.backend.notification.ProductEvent;
-import com.tfg.backend.notification.TruckEvent;
+import com.tfg.backend.dto.EntityType;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.event.ProductEvent;
+import com.tfg.backend.model.Registry;
+import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.model.RegistryType;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.EntityNotFoundException;
@@ -78,6 +81,27 @@ public class ProductService {
     }
 
     // --- WRITING METHODS (override Transactional) ---
+
+    // Method used by controller, includes registry adding
+    public Product getProductById(Long id){
+        Product product = this.findProductHelper(id);
+
+        Registry viewRegistry;
+        if (userService.getLoggedUserUsername() != null){
+            User user = this.userService.findLoggedUserHelper();
+            if (user.getSelectedShop() != null){
+                viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, user.getSelectedShop().getReferenceCode(), user.getSelectedShop().getName(), user.getUsername(), user.getName(), product.getReferenceCode(), product.getName(), null, null);
+            }
+            else {
+                viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, null, null, user.getUsername(), user.getName(), product.getReferenceCode(), product.getName(), null, null);
+            }
+        }
+        else {
+            viewRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_VIEWS, 1.0, null, null, null, "Usuario anónimo", product.getReferenceCode(), product.getName(), null, null);
+        }
+        eventPublisher.publishEvent(new RegistryEvent(viewRegistry));
+        return product;
+    }
 
     @Transactional
     public Product save(Product p) {

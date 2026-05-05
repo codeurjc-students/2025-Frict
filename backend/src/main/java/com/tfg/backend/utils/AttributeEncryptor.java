@@ -18,7 +18,7 @@ public class AttributeEncryptor implements AttributeConverter<String, String> {
 
     private final Key key;
 
-    public AttributeEncryptor(@Value("${app.cards-db.key}") String secret) {
+    public AttributeEncryptor(@Value("${app.db-encrytion.key}") String secret) {
         this.key = new SecretKeySpec(secret.getBytes(), ALGORITHM);
     }
 

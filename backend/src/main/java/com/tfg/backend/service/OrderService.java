@@ -2,11 +2,16 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.model.*;
-import com.tfg.backend.notification.EventAction;
-import com.tfg.backend.notification.OrderEvent;
+import com.tfg.backend.dto.EntityType;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.event.OrderEvent;
+import com.tfg.backend.model.Registry;
+import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.model.RegistryType;
 import com.tfg.backend.repository.OrderRepository;
+import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -16,16 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class OrderService {
 
+    private final PdfService pdfService;
     private final UserService userService;
     private final TruckService truckService;
     private final ShopService shopService;
@@ -66,6 +69,29 @@ public class OrderService {
         return this.findOrdersByUser(loggedUser, pageable);
     }
 
+    public String getOrderQrToken(Long id){
+        User user = userService.findLoggedUserHelper();
+        Order order = this.findOrderHelper(id);
+
+        if (!user.getUsername().equals(order.getUser().getUsername())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be the user that placed the order.");
+        }
+        return order.getQrDeliveryToken();
+    }
+
+    @Transactional
+    public boolean checkOrderQrToken(Long id, String token){
+        Order order = this.findOrderHelper(id);
+
+        if (!order.getQrDeliveryToken().equals(token)){
+            return false;
+        }
+        else {
+            this.commentAndOrUpdateOrderStatus(id, OrderStatus.COMPLETED, "Entrega confirmada mediante validación QR del cliente en destino.");
+            return true;
+        }
+    }
+
     // --- WRITING METHODS (override @Transactional) ---
 
     @Transactional
@@ -102,7 +128,6 @@ public class OrderService {
 
         } else {
             driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
-
             order.setAssignedTruck(null);
         }
 
@@ -111,6 +136,29 @@ public class OrderService {
         eventPublisher.publishEvent(orderEvent);
 
         return order; // Saved automatically
+    }
+
+
+    @Transactional
+    public Order unassignAsFinished(Long orderId){
+        Order order = this.findOrderHelper(orderId);
+        OrderStatus orderStatus = order.getCurrentStatus();
+        if (!orderStatus.equals(OrderStatus.COMPLETED) && !orderStatus.equals(OrderStatus.CANCELLED)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order must be completed or cancelled to be unassigned by yourself.");
+        }
+
+        Truck assignedTruck = order.getAssignedTruck();
+        if (assignedTruck == null || assignedTruck.getAssignedDriver() == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order must have a truck and a driver assigned to perform this operation.");
+        }
+
+        User loggedUser = this.userService.findLoggedUserHelper();
+        if (!assignedTruck.getAssignedDriver().getUsername().equals(loggedUser.getUsername())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order must be assigned to your truck to perform this operation.");
+        }
+
+        order.setAssignedTruck(null);
+        return order;
     }
 
     @Transactional
@@ -130,6 +178,9 @@ public class OrderService {
 
         List<OrderItem> cartItems = orderItemService.findUserCartItemsList(loggedUser.getId());
 
+        //Stores product references for later registries
+        Map<OrderItem, String> productRefMap = new HashMap<>();
+
         // Validate AND reduce stock in a single pass
         for (OrderItem i : cartItems) {
             ShopStock localStock = i.getProduct().getShopsStock().stream()
@@ -143,6 +194,9 @@ public class OrderService {
 
             // Decrease stock (Safe because @Transactional will roll this back if a later item throws an exception)
             localStock.setUnits(localStock.getUnits() - i.getQuantity());
+
+            //Save the product reference
+            productRefMap.put(i, i.getProduct().getReferenceCode());
 
             // Make the order item historical
             i.setProductName(i.getProduct().getName());
@@ -164,6 +218,17 @@ public class OrderService {
         String managerUsername = Optional.ofNullable(savedOrder.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
         OrderEvent orderEvent = new OrderEvent(EventAction.CREATED, String.valueOf(savedOrder.getId()), null, null, loggedUser.getUsername(), managerUsername, null);
         eventPublisher.publishEvent(orderEvent);
+
+        //Add registries
+        for (OrderItem i : cartItems) {
+            Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), productRefMap.get(i), i.getProductName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+            eventPublisher.publishEvent(new RegistryEvent(unitsSoldRegistry));
+        }
+        Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
+
+        Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, orderTotal, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
 
         // Send email confirmation
         emailService.sendOrderConfirmation(loggedUser.getEmail(), loggedUser.getName(), savedOrder.getReferenceCode(), savedOrder.getItems(), savedOrder.getTotalCost());
@@ -199,6 +264,24 @@ public class OrderService {
             // Send notifications
             OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), orderStatus.getDescription(), order.getUser().getUsername(), managerUsername, driverUsername);
             eventPublisher.publishEvent(orderEvent);
+
+            if (orderStatus.equals(OrderStatus.COMPLETED) || orderStatus.equals(OrderStatus.CANCELLED)){
+                RegistryType registryType = switch (orderStatus) {
+                    case COMPLETED -> RegistryType.ORDERS_COMPLETED;
+                    case CANCELLED -> RegistryType.ORDERS_CANCELLED;
+                    default -> null;
+                };
+
+                User loggedUser = userService.findLoggedUserHelper();
+                Registry userOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
+
+                if (order.getAssignedTruck() != null && order.getAssignedTruck().getAssignedDriver() != null){
+                    User driver = order.getAssignedTruck().getAssignedDriver();
+                    Registry driverOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), driver.getUsername(), driver.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                    eventPublisher.publishEvent(new RegistryEvent(driverOrderRegistry));
+                }
+            }
         }
         return order;
     }
@@ -230,6 +313,9 @@ public class OrderService {
         String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
         OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), OrderStatus.CANCELLED.getDescription(), loggedUser.getUsername(), managerUsername, driverUsername);
         eventPublisher.publishEvent(orderEvent);
+
+        Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.ORDERS_CANCELLED, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
 
         return order; // Saved automatically
     }
@@ -371,6 +457,12 @@ public class OrderService {
         if(!removed){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order item not deleted as it does not exist.");
         }
+    }
+
+    public byte[] generateOrderPdfInvoice(Long orderId) {
+        Order order = this.findOrderHelper(orderId);
+        String qrToken = this.getOrderQrToken(orderId);
+        return pdfService.generateOrderInvoicePdf(order, qrToken);
     }
 
     // --- METRICS METHOD ---

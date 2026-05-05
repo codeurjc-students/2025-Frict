@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, inject, LOCALE_ID} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -36,6 +36,11 @@ import {StockTagComponent} from '../../common/stock-tag/stock-tag.component';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {Tag} from 'primeng/tag';
+import {ChartModule} from 'primeng/chart';
+import {Select} from 'primeng/select';
+import {RegistryService} from '../../../services/registry.service';
+import {formatDate} from '@angular/common';
+import {DatePicker} from 'primeng/datepicker';
 
 
 @Component({
@@ -64,7 +69,10 @@ import {Tag} from 'primeng/tag';
     Image,
     StockTagComponent,
     BreadcrumbReloadComponent,
-    Tag
+    Tag,
+    ChartModule,
+    Select,
+    DatePicker
   ],
   templateUrl: './product-info.component.html'
 })
@@ -84,10 +92,10 @@ export class ProductInfoComponent implements OnInit {
 
   protected relatedLoading: boolean = true;
   protected relatedError: boolean = false;
-  protected relatedProducts: Product[] = []; //Products related to products first category
+  protected relatedProducts: Product[] = [];
 
   protected product!: Product;
-  protected inCartUnits: number = 0; //Provided by getOrderItemById, helps detecting how much units the user can add to the cart without exceeding the local stock limit
+  protected inCartUnits: number = 0;
   protected inFavourites: boolean = false;
   protected productCategory!: Category;
 
@@ -107,6 +115,26 @@ export class ProductInfoComponent implements OnInit {
 
   protected loggedUserInfo!: LoginInfo;
 
+  // --- NUEVAS VARIABLES PARA VISUALIZACIONES ---
+  private registryService = inject(RegistryService);
+  private locale = inject(LOCALE_ID);
+
+  protected viewsToday: number = 0;
+  protected isViewsLoading: boolean = false;
+
+  protected viewsEndDate: Date = new Date();
+  protected viewsStartDate: Date = new Date(new Date().setMonth(new Date().getMonth() - 12));
+
+  protected selectedViewInterval = 'week';
+  protected viewIntervalOptions = [
+    { label: 'Diario', value: 'day' },
+    { label: 'Semanal', value: 'week' },
+    { label: 'Mensual', value: 'month' },
+    { label: 'Anual', value: 'year' }
+  ];
+  protected viewsChartData: any;
+  protected viewsChartOptions: any;
+
   constructor(private productService: ProductService,
               private categoryService: CategoryService,
               private reviewService: ReviewService,
@@ -119,12 +147,11 @@ export class ProductInfoComponent implements OnInit {
               private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
-    this.route.params.subscribe(() => { //If a related product is clicked when visualizing a product, the page should refresh the information
+    this.route.params.subscribe(() => {
       this.loadProduct();
     });
   }
 
-  //If the Partial<Review> object does not include a value in the field id, then it is a new review
   protected submitReview(){
     this.newReview.productId = this.product.id;
     this.newReview.creatorId = this.loggedUserInfo.id;
@@ -139,7 +166,7 @@ export class ProductInfoComponent implements OnInit {
   protected editReview(id: string) {
     const publishedReview = this.productReviews.find(r => r.id === id);
     if(publishedReview){
-      this.newReview = { ...publishedReview }; //Deep copy, in order to be able to delete the old one from reviews array
+      this.newReview = { ...publishedReview };
       this.productReviews = this.productReviews.filter(r => r.id !== id);
       this.userReviewed = false;
     }
@@ -173,31 +200,21 @@ export class ProductInfoComponent implements OnInit {
 
           const currentUrl = this.router.url;
 
-          // 1. Dinamically set product name as last node
           this.breadcrumbService.setNodesForUrl(currentUrl, [{ label: product.name }]);
 
-          // 2. Dinamically set the penultimate node from route state
           if (navState.from === 'search') {
-            // From search page: Home > Search > Product Name
             this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
               { label: 'Búsqueda', routerLink: '/search' }
             ]);
-
           } else if (navState.from === 'category' && navState.categoryName) {
-            // From category page: Home > Category Name > Product Name
             this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
               { label: navState.categoryName, routerLink: `/category/${navState.categoryId}` }
             ]);
-
           } else if (navState.from === 'products-management') {
-            // From products management page: Home > Products Manager > Product Name
             this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
               { label: 'Gestor de productos', routerLink: `/admin/products` }
             ]);
-
-          }
-          else {
-            // From index, or after refreshing the entire page (F5) (Home > First Category Name > Product Name)
+          } else {
             if (product.categories && product.categories.length > 0) {
               this.breadcrumbService.insertPenultimateNodesForUrl(currentUrl, [
                 { label: product.categories[0].name, routerLink: `/category/${product.categories[0].id}` }
@@ -207,7 +224,6 @@ export class ProductInfoComponent implements OnInit {
             }
           }
 
-          // --- RESTO DE TU LÓGICA INTACTA ---
           if (product.imagesInfo && Array.isArray(product.imagesInfo)) {
             this.images = product.imagesInfo.map((imgInfo) => ({
               itemImageSrc: imgInfo.imageUrl
@@ -216,7 +232,6 @@ export class ProductInfoComponent implements OnInit {
             this.images = [];
           }
 
-          // Light scroll to the top of the page on page change
           if (typeof window !== 'undefined') {
             window.scrollTo({ top: 0, behavior: 'instant' });
           }
@@ -230,6 +245,10 @@ export class ProductInfoComponent implements OnInit {
           this.checkInFavourites();
           this.loadShopStocks();
           this.loadReviews();
+
+          // --- Cargar Analíticas ---
+          this.loadTodayViews();
+          this.loadViewsData();
         },
         error: () => {
           this.loading = false;
@@ -238,6 +257,88 @@ export class ProductInfoComponent implements OnInit {
       });
     }
   }
+
+  // --- MÉTODOS PARA LA GRÁFICA DE VISUALIZACIONES ---
+  protected loadTodayViews() {
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+    this.registryService.loadPublicRegistry({
+      startDate: startOfToday.toISOString(),
+      endDate: endOfToday.toISOString(),
+      entityType: 'PRODUCT',
+      dataType: 'PRODUCT_VIEWS',
+      metricMode: 'VALUE',
+      productIds: [this.product.referenceCode],
+      viewType: 'GRAPH',
+      interval: 'day'
+    }).subscribe({
+      next: (res: any) => {
+        const data = res.items || res;
+        this.viewsToday = data && data.length > 0 ? data[0].totalValue : 0;
+      }
+    });
+  }
+
+  protected loadViewsData() {
+    this.isViewsLoading = true;
+
+    this.registryService.loadPublicRegistry({
+      startDate: this.viewsStartDate.toISOString(),
+      endDate: this.viewsEndDate.toISOString(),
+      entityType: 'PRODUCT',
+      dataType: 'PRODUCT_VIEWS',
+      metricMode: 'VALUE',
+      productIds: [this.product.referenceCode],
+      viewType: 'GRAPH',
+      interval: this.selectedViewInterval
+    }).subscribe({
+      next: (res: any) => {
+        console.log(res);
+        const rawData = res.items || res;
+        this.buildViewsChart(rawData);
+        this.isViewsLoading = false;
+      },
+      error: () => {
+        this.isViewsLoading = false;
+      }
+    });
+  }
+
+  private buildViewsChart(rawData: any[]) {
+    const labels = rawData.map(item => formatDate(item._id, 'dd MMM yyyy', this.locale));
+    const dataValues = rawData.map(item => item.totalValue);
+
+    this.viewsChartData = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Visualizaciones',
+          data: dataValues,
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    };
+
+    this.viewsChartOptions = {
+      maintainAspectRatio: false,
+      aspectRatio: 0.8,
+      plugins: {
+        legend: { display: false },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { display: true },
+        y: { display: true, beginAtZero: true }
+      }
+    };
+  }
+  // ---------------------------------------------------
 
   protected loadCartItemUnits(){
     this.orderService.getCartItemByProductId(this.product.id).subscribe({
@@ -260,7 +361,7 @@ export class ProductInfoComponent implements OnInit {
     }
   }
 
-  protected loadProductCategory() { //Only the first category is taken into account in related products
+  protected loadProductCategory() {
     this.categoryService.getCategoryById(this.product.categories[0].id).subscribe({
       next: (category) => {
         this.productCategory = category;

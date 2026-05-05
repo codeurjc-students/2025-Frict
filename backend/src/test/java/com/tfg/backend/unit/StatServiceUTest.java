@@ -2,7 +2,7 @@ package com.tfg.backend.unit;
 
 import com.tfg.backend.model.User;
 import com.tfg.backend.service.*;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

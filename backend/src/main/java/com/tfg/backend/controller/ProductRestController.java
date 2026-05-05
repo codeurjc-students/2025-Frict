@@ -63,7 +63,7 @@ public class ProductRestController {
     @Operation(summary = "(All) Get product by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
-        Product product = productService.findProductHelper(id);
+        Product product = productService.getProductById(id);
         return ResponseEntity.ok(new ProductDTO(product));
     }
 

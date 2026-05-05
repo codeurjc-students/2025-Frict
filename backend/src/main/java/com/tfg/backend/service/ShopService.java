@@ -1,14 +1,11 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.AddressDTO;
-import com.tfg.backend.dto.ShopDTO;
 import com.tfg.backend.model.*;
-import com.tfg.backend.notification.EventAction;
-import com.tfg.backend.notification.ShopEvent;
-import com.tfg.backend.notification.TruckEvent;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.event.ShopEvent;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -20,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -39,6 +35,7 @@ public class ShopService {
     public Page<Shop> findAll(Pageable pageInfo) { return shopRepository.findAll(pageInfo); }
     public Page<Shop> findAllByAssignedManagerId(Long userId, Pageable pageInfo) { return shopRepository.findAllByAssignedManagerId(userId, pageInfo); }
     public Optional<Shop> findById(Long id) { return shopRepository.findById(id); }
+    public List<Map<String, Object>> findAllShopReferencesByManager(User manager){ return shopRepository.findAllShopReferencesByManager(manager); }
 
     public Shop findShopHelper(Long id) {
         return this.findById(id)
@@ -51,77 +48,7 @@ public class ShopService {
     public Shop save(Shop s) { return shopRepository.save(s); }
 
     @Transactional
-    public Shop createShop(ShopDTO shopDTO){
-        AddressDTO dto = shopDTO.getAddress();
-        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
-        address.setLatitude(dto.getLatitude());
-        address.setLongitude(dto.getLongitude());
-
-        Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
-
-        //Send notifications
-        ShopEvent shopEvent = new ShopEvent(EventAction.CREATED, String.valueOf(shop.getId()), false, null, null);
-        eventPublisher.publishEvent(shopEvent);
-
-        return shopRepository.save(shop);
-    }
-
-    @Transactional
-    public Shop updateShop(Long id, ShopDTO shopDTO){
-        Shop shop = this.findShopHelper(id);
-
-        shop.setName(shopDTO.getName());
-        AddressDTO dto = shopDTO.getAddress();
-        Address address = new Address(dto.getAlias(), dto.getStreet(), dto.getNumber(), dto.getFloor(), dto.getPostalCode(), dto.getCity(), dto.getCountry());
-        address.setLatitude(dto.getLatitude());
-        address.setLongitude(dto.getLongitude());
-
-        shop.setAddress(address);
-        shop.setAssignedBudget(shopDTO.getAssignedBudget());
-
-        //Send notifications
-        String managerUsername = Optional.ofNullable(shop.getAssignedManager()).map(User::getUsername).orElse(null);
-        List<String> driverUsernames = Optional.ofNullable(shop.getAssignedTrucks()).orElse(Collections.emptyList()).stream().map(Truck::getAssignedDriver).filter(Objects::nonNull).map(User::getUsername).toList();
-        ShopEvent shopEvent = new ShopEvent(EventAction.UPDATED, String.valueOf(shop.getId()), true, managerUsername, driverUsernames);
-        eventPublisher.publishEvent(shopEvent);
-
-        return shop;
-    }
-
-    @Transactional
-    public Shop deleteShop(Long id){
-        Shop shop = this.findShopHelper(id);
-
-        //Get notification data
-        String managerUsername = Optional.ofNullable(shop.getAssignedManager()).map(User::getUsername).orElse(null);
-        List<String> driverUsernames = Optional.ofNullable(shop.getAssignedTrucks()).orElse(Collections.emptyList()).stream().map(Truck::getAssignedDriver).filter(Objects::nonNull).map(User::getUsername).toList();
-
-        new ArrayList<>(shop.getAssignedTrucks()).forEach(truck -> truck.setAssignedShop(null));
-        shop.getAssignedTrucks().clear();
-
-        new ArrayList<>(shop.getAssignedOrders()).forEach(order -> {
-            order.setAssignedShop(null);
-            if(order.getCurrentStatus() == OrderStatus.ORDER_MADE || order.getCurrentStatus() == OrderStatus.SENT){
-                order.changeOrderStatus(OrderStatus.CANCELLED, "La tienda a la que estaba asignado el pedido ha sido eliminada.");
-            }
-        });
-        shop.getAssignedOrders().clear();
-
-        new ArrayList<>(shop.getCustomers()).forEach(customer -> customer.setSelectedShop(null));
-        shop.getCustomers().clear();
-
-        shopRepository.delete(shop);
-
-        if (shop.getImage() != null && shop.getImage().getS3Key() != null && !GlobalDefaults.isDefaultShopImage(shop.getImage())) {
-            imageService.deleteFile(shop.getImage().getS3Key());
-        }
-
-        //Send notifications
-        ShopEvent shopEvent = new ShopEvent(EventAction.DELETED, String.valueOf(shop.getId()), true, managerUsername, driverUsernames);
-        eventPublisher.publishEvent(shopEvent);
-
-        return shop;
-    }
+    public void delete(Shop s) { shopRepository.delete(s); }
 
     @Transactional
     public ShopStock toggleLocalActivation(Long id, boolean state){

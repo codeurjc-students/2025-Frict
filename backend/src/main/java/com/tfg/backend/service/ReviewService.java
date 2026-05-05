@@ -5,7 +5,11 @@ import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
 import com.tfg.backend.model.ReviewEvent;
 import com.tfg.backend.model.User;
-import com.tfg.backend.notification.EventAction;
+import com.tfg.backend.dto.EntityType;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.model.Registry;
+import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.model.RegistryType;
 import com.tfg.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,13 +37,8 @@ public class ReviewService {
 
 
     // --- READ-ONLY METHODS ---
-
     public Optional<Review> findById(Long id) {
         return reviewRepository.findById(id);
-    }
-
-    public List<Review> findAllByUser(User u) {
-        return reviewRepository.findAllByUser(u);
     }
 
     public Page<Review> getLoggedUserReviews(Pageable pageInfo) {
@@ -82,6 +81,10 @@ public class ReviewService {
         ReviewEvent reviewEvent = new ReviewEvent(EventAction.CREATED, null, String.valueOf(product.getId()), managerUsernames);
         eventPublisher.publishEvent(reviewEvent);
 
+        //Add registries
+        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, 1.0, loggedUser.getSelectedShop().getReferenceCode(), loggedUser.getSelectedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), product.getReferenceCode(), product.getName(), null, null);
+        eventPublisher.publishEvent(new RegistryEvent(reviewRegistry));
+
         return reviewRepository.save(newReview);
     }
 
@@ -123,6 +126,10 @@ public class ReviewService {
         ReviewEvent reviewEvent = new ReviewEvent(EventAction.DELETED, null, String.valueOf(reviewedProduct.getId()), managerUsernames);
         eventPublisher.publishEvent(reviewEvent);
 
+        //Add registries
+        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, -1.0, loggedUser.getSelectedShop().getReferenceCode(), loggedUser.getSelectedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), reviewedProduct.getReferenceCode(), reviewedProduct.getName(), null, null);
+        eventPublisher.publishEvent(new RegistryEvent(reviewRegistry));
+
         reviewRepository.delete(review);
         return review;
     }
@@ -130,10 +137,5 @@ public class ReviewService {
     @Transactional
     public Review save(Review r) {
         return reviewRepository.save(r);
-    }
-
-    @Transactional
-    public void deleteById(Long id) {
-        reviewRepository.deleteById(id);
     }
 }

@@ -1,8 +1,11 @@
 package com.tfg.backend.integration;
 
-import com.tfg.backend.model.Shop;
-import com.tfg.backend.model.User;
+import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.ShopDTO;
+import com.tfg.backend.model.*;
+import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.repository.ShopRepository;
+import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.ShopUserOrchestrator;
 import org.junit.jupiter.api.AfterEach;
@@ -29,6 +32,8 @@ public class ShopUserOrchestratorITest {
     @Autowired private ShopUserOrchestrator orchestrator;
     @Autowired private ShopRepository shopRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private TruckRepository truckRepository;
+    @Autowired private OrderRepository orderRepository;
 
     private User activeUser;
     private Shop localShop;
@@ -85,5 +90,82 @@ public class ShopUserOrchestratorITest {
 
         dbShop = shopRepository.findById(localShop.getId()).orElseThrow();
         assertNull(dbShop.getAssignedManager(), "The manager should be successfully unlinked");
+    }
+
+    @Test
+    @DisplayName("Create Shop: Persists correctly with nested address")
+    void testCreateShop_SavesAddressAndShop() {
+        ShopDTO dto = new ShopDTO();
+        dto.setName("New Outlet");
+        dto.setAssignedBudget(2000.0);
+
+        AddressDTO addressDTO = new AddressDTO();
+        addressDTO.setStreet("Gran Via");
+        addressDTO.setCity("Madrid");
+        addressDTO.setCountry("Spain");
+        dto.setAddress(addressDTO);
+
+        Shop createdShop = orchestrator.createShop(dto);
+
+        Shop dbShop = shopRepository.findById(createdShop.getId()).orElseThrow();
+        assertAll(
+                () -> assertEquals("New Outlet", dbShop.getName()),
+                () -> assertEquals(2000.0, dbShop.getAssignedBudget()),
+                () -> assertNotNull(dbShop.getAddress()),
+                () -> assertEquals("Gran Via", dbShop.getAddress().getStreet())
+        );
+    }
+
+    @Test
+    @DisplayName("Delete Shop: Strictly nullifies relations and automatically cancels pending orders")
+    void testDeleteShop_CascadesUnlinksAndCancelsOrders() {
+        // Setup complex scenario locally
+        User customer = new User("Customer", "customer_del", "cust_del@test.com", "pass", "USER");
+        customer = userRepository.saveAndFlush(customer);
+
+        Shop mainShop = new Shop("Main Tech Shop", null, 1000.0);
+        mainShop.setReferenceCode("SHOP-MAIN-DEL-123");
+        mainShop = shopRepository.saveAndFlush(mainShop);
+
+        customer.setSelectedShop(mainShop);
+        mainShop.getCustomers().add(customer);
+        customer = userRepository.saveAndFlush(customer);
+        mainShop = shopRepository.saveAndFlush(mainShop);
+
+        Truck deliveryTruck = new Truck();
+        deliveryTruck.setReferenceCode("TRUCK-DEL-123");
+        deliveryTruck.setPlateNumber("9999-ZZZ");
+        deliveryTruck.setMaxOrderCapacity(10);
+        deliveryTruck.setAssignedShop(mainShop);
+        mainShop.getAssignedTrucks().add(deliveryTruck);
+        deliveryTruck = truckRepository.saveAndFlush(deliveryTruck);
+
+        Order pendingOrder = new Order();
+        pendingOrder.setUser(customer);
+        pendingOrder.setReferenceCode("ORD-DEL-123");
+        pendingOrder.setAssignedShop(mainShop);
+        pendingOrder.setTotalCost(100.0);
+        pendingOrder.changeOrderStatus(OrderStatus.ORDER_MADE, "Order placed");
+        mainShop.getAssignedOrders().add(pendingOrder);
+        pendingOrder = orderRepository.saveAndFlush(pendingOrder);
+
+        // Act: Delete the shop via Orchestrator
+        orchestrator.deleteShop(mainShop.getId());
+
+        // Assertions
+        assertFalse(shopRepository.existsById(mainShop.getId()), "Shop should be deleted from DB");
+
+        Truck dbTruck = truckRepository.findById(deliveryTruck.getId()).orElseThrow();
+        assertNull(dbTruck.getAssignedShop(), "Truck must be unlinked from the deleted shop");
+
+        User dbCustomer = userRepository.findById(customer.getId()).orElseThrow();
+        assertNull(dbCustomer.getSelectedShop(), "Customer's selected shop must be nullified");
+
+        Order dbOrder = orderRepository.findById(pendingOrder.getId()).orElseThrow();
+        assertAll(
+                () -> assertNull(dbOrder.getAssignedShop(), "Order must be unlinked from shop"),
+                () -> assertEquals(OrderStatus.CANCELLED, dbOrder.getCurrentStatus(), "Pending order must be automatically cancelled"),
+                () -> assertTrue(dbOrder.getHistory().getLast().getUpdates().getLast().getDescription().contains("eliminada"))
+        );
     }
 }

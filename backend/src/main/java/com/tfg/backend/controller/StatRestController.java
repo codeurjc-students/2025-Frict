@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.service.StatService;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

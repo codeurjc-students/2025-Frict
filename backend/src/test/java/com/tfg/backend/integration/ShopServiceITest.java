@@ -126,55 +126,9 @@ public class ShopServiceITest {
         );
     }
 
-    @Test
-    @DisplayName("Create Shop: Persists correctly with nested address")
-    void testCreateShop_SavesAddressAndShop() {
-        ShopDTO dto = new ShopDTO();
-        dto.setName("New Outlet");
-        dto.setAssignedBudget(2000.0);
 
-        AddressDTO addressDTO = new AddressDTO();
-        addressDTO.setStreet("Gran Via");
-        addressDTO.setCity("Madrid");
-        addressDTO.setCountry("Spain");
-        dto.setAddress(addressDTO);
 
-        Shop createdShop = shopService.createShop(dto);
 
-        Shop dbShop = shopRepository.findById(createdShop.getId()).orElseThrow();
-        assertAll(
-                () -> assertEquals("New Outlet", dbShop.getName()),
-                () -> assertEquals(2000.0, dbShop.getAssignedBudget()),
-                () -> assertNotNull(dbShop.getAddress()),
-                () -> assertEquals("Gran Via", dbShop.getAddress().getStreet())
-        );
-    }
-
-    @Test
-    @DisplayName("Delete Shop: Strictly nullifies relations and automatically cancels pending orders")
-    void testDeleteShop_CascadesUnlinksAndCancelsOrders() {
-        // Act: Delete the main shop
-        shopService.deleteShop(mainShop.getId());
-
-        // 1. Assert Shop is completely deleted
-        assertFalse(shopRepository.existsById(mainShop.getId()), "Shop should be deleted from DB");
-
-        // 2. Assert Truck is unlinked
-        Truck dbTruck = truckRepository.findById(deliveryTruck.getId()).orElseThrow();
-        assertNull(dbTruck.getAssignedShop(), "Truck must be unlinked from the deleted shop");
-
-        // 3. Assert Customer is unlinked
-        User dbCustomer = userRepository.findById(customer.getId()).orElseThrow();
-        assertNull(dbCustomer.getSelectedShop(), "Customer's selected shop must be nullified");
-
-        // 4. Assert Order is unlinked AND Cancelled
-        Order dbOrder = orderRepository.findById(pendingOrder.getId()).orElseThrow();
-        assertAll(
-                () -> assertNull(dbOrder.getAssignedShop(), "Order must be unlinked from shop"),
-                () -> assertEquals(OrderStatus.CANCELLED, dbOrder.getCurrentStatus(), "Pending order must be automatically cancelled"),
-                () -> assertTrue(dbOrder.getHistory().getLast().getUpdates().getLast().getDescription().contains("eliminada"))
-        );
-    }
 
     @Test
     @DisplayName("Restock Product: Successfully increments stock units and reduces shop budget")

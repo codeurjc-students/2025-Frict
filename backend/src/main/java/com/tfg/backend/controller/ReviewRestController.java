@@ -4,7 +4,7 @@ import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Review;
-import com.tfg.backend.notification.UserConnectionService;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ReviewService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;

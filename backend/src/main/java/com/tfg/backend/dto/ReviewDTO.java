@@ -1,7 +1,6 @@
 package com.tfg.backend.dto;
 
 import com.tfg.backend.model.Review;
-import com.tfg.backend.notification.ConnectionDTO;
 import lombok.Getter;
 import lombok.Setter;
 

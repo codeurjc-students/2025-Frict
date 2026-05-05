@@ -1,5 +1,6 @@
 package com.tfg.backend.model;
 
+import com.tfg.backend.utils.AttributeEncryptor;
 import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -47,6 +49,10 @@ public class Order {
     @Setter(AccessLevel.NONE)
     private LocalDateTime createdAt;
 
+    @Convert(converter = AttributeEncryptor.class)
+    @Column(name = "qr_delivery_token")
+    private String qrDeliveryToken;
+
     //Fields from CartSummaryDTO
     private int totalItems;
     private double subtotalCost;
@@ -61,12 +67,15 @@ public class Order {
 
     public Order() {
         this.history.add(new OrderStatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
+        this.qrDeliveryToken = UUID.randomUUID().toString();
     }
 
     public Order(User user, List<OrderItem> items, Shop assignedShop, Address address, PaymentCard card) {
         this.referenceCode = ReferenceNumberGenerator.generateOrderReferenceNumber();
 
         this.history.add(new OrderStatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
+
+        this.qrDeliveryToken = UUID.randomUUID().toString();
 
         this.user = user;
         for (OrderItem item : items) {

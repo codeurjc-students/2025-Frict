@@ -119,6 +119,11 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'MANAGER'], title: 'Editar categoría', icon: 'admin', breadcrumb: 'Editar categoría' }
       },
       {
+        path: 'reports',
+        loadComponent: () => import('./components/admin/reports/reports.component').then(m => m.ReportsComponent),
+        data: { roles: ['ADMIN'], title: 'Gestor de Informes', icon: 'admin', breadcrumb: 'Gestor de Informes' }
+      },
+      {
         path: 'shops',
         loadComponent: () => import('./components/admin/shops-management/shops-management.component').then(m => m.ShopsManagementComponent),
         data: { roles: ['ADMIN', 'MANAGER'], title: 'Gestor de Tiendas', icon: 'admin', breadcrumb: 'Gestor de Tiendas' }
@@ -177,6 +182,11 @@ export const routes: Routes = [
         path: 'notifications',
         loadComponent: () => import('./components/common/notifications/notifications.component').then(m => m.NotificationsComponent),
         data: { roles: ['MANAGER', 'DRIVER', 'ADMIN'], title: 'Notificaciones', icon: 'admin', breadcrumb: 'Notificaciones' }
+      },
+      {
+        path: 'delivery',
+        loadComponent: () => import('./components/admin/orders-delivery/orders-delivery.component').then(m => m.OrdersDeliveryComponent),
+        data: { roles: ['DRIVER'], title: 'Reparto', icon: 'admin', breadcrumb: 'Reparto de pedidos' }
       },
     ]
   },

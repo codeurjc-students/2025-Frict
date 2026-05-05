@@ -5,7 +5,7 @@ import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
-import com.tfg.backend.notification.UserConnectionService;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ShopTruckOrchestrator;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.utils.PageFormatter;

@@ -3,9 +3,11 @@ package com.tfg.backend.integration;
 import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.Review;
+import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.repository.ReviewRepository;
+import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.ReviewService;
 import org.junit.jupiter.api.AfterEach;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ReviewServiceITest {
 
     @Autowired private ReviewService reviewService;
+    @Autowired private ShopRepository shopRepository;
     @Autowired private ReviewRepository reviewRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private ProductRepository productRepository;
@@ -49,11 +52,20 @@ public class ReviewServiceITest {
 
     @BeforeEach
     void setUpComplexScenario() {
+        Shop testShop = new com.tfg.backend.model.Shop();
+        testShop.setReferenceCode("SH-INTEGRATION");
+        testShop.setName("Integration Shop");
+        shopRepository.save(testShop);
+
         // 1. Create multiple users to test ownership and permissions
         reviewOwner = new User("Owner User", "owner", "owner@test.com", "pass", "USER");
         otherUser = new User("Other User", "other", "other@test.com", "pass", "USER");
         adminUser = new User("Admin User", "admin", "admin@test.com", "pass", "ADMIN");
         userRepository.saveAll(List.of(reviewOwner, otherUser, adminUser));
+
+        reviewOwner.setSelectedShop(testShop);
+        otherUser.setSelectedShop(testShop);
+        adminUser.setSelectedShop(testShop);
 
         // 2. Create a product to be reviewed
         mockProduct = new Product("Test Laptop", "A powerful machine", 1200.0, 900.0);

@@ -89,12 +89,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAuthority("USER") // (User) Create order
                         .requestMatchers(HttpMethod.PUT, "/api/v1/orders/cancel/*").hasAuthority("USER") // (User) Cancel order
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}").hasAnyAuthority("USER", "MANAGER", "DRIVER", "ADMIN") // (User, etc.)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/{id}/token").hasAnyAuthority("USER") // Order confirmation QR codes
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/{id}/token").hasAnyAuthority("DRIVER") // Order confirmation QR codes
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/user/*").hasAuthority("ADMIN") // (Admin) User orders
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/orders/*").hasAuthority("ADMIN") // (Admin) Clear finished orders
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager) Update order status
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver) Update order status
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/assign/truck/*").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager) Assign truck
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/unassign").hasAnyAuthority("DRIVER") // (Driver) Unassign truck as order is finished (completed or cancelled)
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // Internal roles endpoint
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasAuthority("USER") // Client exclusive endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*/invoice").hasAuthority("USER") // Client exclusive endpoint
 
                         // --- 5. REVIEWS (ReviewRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Product reviews
@@ -106,6 +110,7 @@ public class SecurityConfig {
 
                         // --- 6. SHOPS (ShopRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/list").hasAnyAuthority("USER", "ADMIN") // (User)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/references").hasAnyAuthority("MANAGER") // (Manager)
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/truck/*").hasAuthority("DRIVER") // (Driver)
                         .requestMatchers(HttpMethod.GET, "/api/v1/shops/stock/*").permitAll() // (All)
                         .requestMatchers(HttpMethod.POST, "/api/v1/shops").hasAuthority("ADMIN") // (Admin) Create shop
@@ -137,12 +142,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/stats/orders").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver)
                         .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
 
-                        // --- 10. WEBSOCKETS & NOTIFICATIONS ---
+                        // --- 10. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---
                         .requestMatchers("/api/v1/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/notifications/test").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/private/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/registry/public/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/registry/private/export/pdf").hasAuthority("ADMIN")
 
                         .requestMatchers("/api/**").denyAll()
                         .requestMatchers("/**").permitAll()

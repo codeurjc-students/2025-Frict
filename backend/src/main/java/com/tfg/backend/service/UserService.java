@@ -2,11 +2,11 @@ package com.tfg.backend.service;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.*;
-import com.tfg.backend.notification.EventAction;
-import com.tfg.backend.notification.UserEvent;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.event.UserEvent;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import com.tfg.backend.utils.StatDTO;
+import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
