@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PdfExportRequestDTO {
+public class PdfReportDTO {
     private Date startDate;
     private Date endDate;
     private EntityType entityType;

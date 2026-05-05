@@ -44,6 +44,7 @@ export class OrderDetailsComponent implements OnInit {
   loading: boolean = true;
   error: boolean = false;
 
+  isDownloadingInvoice: boolean = false;
   displayQrDialog: boolean = false;
   qrToken: string = '';
   qrLoading: boolean = false;
@@ -138,6 +139,33 @@ export class OrderDetailsComponent implements OnInit {
         }
       });
     }
+  }
+
+  downloadInvoice() {
+    if (!this.orderId || !this.order) return;
+
+    this.isDownloadingInvoice = true;
+
+    this.orderService.downloadOrderInvoice(this.orderId).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+
+        anchor.download = `Factura_${this.order.referenceCode}.pdf`;
+        document.body.appendChild(anchor);
+        anchor.click();
+
+        document.body.removeChild(anchor);
+        window.URL.revokeObjectURL(url);
+
+        this.isDownloadingInvoice = false;
+      },
+      error: (err) => {
+        console.error('Error al descargar la factura:', err);
+        this.isDownloadingInvoice = false;
+      }
+    });
   }
 
   protected readonly formatAddress = formatAddress;

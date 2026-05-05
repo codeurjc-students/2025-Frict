@@ -9,6 +9,7 @@ import com.tfg.backend.model.Registry;
 import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.model.RegistryType;
 import com.tfg.backend.repository.OrderRepository;
+import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
 import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private final PdfService pdfService;
     private final UserService userService;
     private final TruckService truckService;
     private final ShopService shopService;
@@ -455,6 +457,12 @@ public class OrderService {
         if(!removed){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order item not deleted as it does not exist.");
         }
+    }
+
+    public byte[] generateOrderPdfInvoice(Long orderId) {
+        Order order = this.findOrderHelper(orderId);
+        String qrToken = this.getOrderQrToken(orderId);
+        return pdfService.generateOrderInvoicePdf(order, qrToken);
     }
 
     // --- METRICS METHOD ---

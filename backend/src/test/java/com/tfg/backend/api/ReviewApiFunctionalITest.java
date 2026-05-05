@@ -32,13 +32,21 @@ public class ReviewApiFunctionalITest extends BaseApiFunctionalITest {
             testProduct.setActive(true);
             testProduct = productRepository.saveAndFlush(testProduct);
 
+            Shop testShop = new Shop();
+            testShop.setName("Functional Shop");
+            testShop.setReferenceCode("SH-FUNC");
+            testShop = shopRepository.saveAndFlush(testShop);
+
             User testAdmin = new User("Admin", "admin_rev", "admin@rev.com", passwordEncoder.encode("pass"), "ADMIN");
+            testAdmin.setSelectedShop(testShop);
             userRepository.saveAndFlush(testAdmin);
 
             reviewOwner = new User("Owner", "owner_rev", "owner@rev.com", passwordEncoder.encode("pass"), "USER");
+            reviewOwner.setSelectedShop(testShop);
             userRepository.saveAndFlush(reviewOwner);
 
             otherUser = new User("Other", "other_rev", "other@rev.com", passwordEncoder.encode("pass"), "USER");
+            otherUser.setSelectedShop(testShop);
             userRepository.saveAndFlush(otherUser);
 
             testReview = new Review(reviewOwner, testProduct, 5, "Excellent product!", true);

@@ -134,4 +134,10 @@ export class OrderService {
     return this.http.delete<CartSummary>(this.apiUrl + `/${id}`)
   }
 
+  downloadOrderInvoice(orderId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${orderId}/invoice`, {
+      responseType: 'blob' // CRÍTICO: Indica que esperamos un archivo binario, no un JSON
+    });
+  }
+
 }

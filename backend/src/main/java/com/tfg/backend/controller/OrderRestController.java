@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -205,6 +207,20 @@ public class OrderRestController {
     public ResponseEntity<CartSummaryDTO> deleteCartItem(@PathVariable Long id) {
         orderService.deleteCartItem(id);
         return this.getCartSummary();
+    }
+
+    @Operation(summary = "(User) Download order PDF invoice")
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> downloadOrderInvoice(@PathVariable("id") Long orderId) {
+        byte[] pdfBytes = orderService.generateOrderPdfInvoice(orderId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+
+        String filename = "Factura.pdf";
+        headers.setContentDispositionFormData("attachment", filename);
+
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }
 
     // ==========================================

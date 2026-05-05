@@ -58,19 +58,19 @@
 &nbsp;
 
 ### 🟡 Intermediate features
-| Ready? | Intermediate feature description                      | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
-|--------|-------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
-| ✅      | Dynamic breadcrumbs navigation                        | ✅         | ✅               | ✅             | ✅               | ✅             |
-| ✅      | Search products by name                               | ✅         | ✅               | ✅             | ✅               | ✅             |
-| ✅      | Filter products by associated categories              | ✅         | ✅               | ✅             | ✅               | ✅             |
-| ✅      | Order search results by lowest/highest field          | ✅         | ✅               | ✅             | ✅               | ✅             |
-| ✅      | Change app primary theme color (session-persistent)   | ✅         | ✅               | ✅             | ✅               | ✅             |
-| ✅      | Receive mail confirmations about relevant info        |           | ✅               | ✅             | ✅               | ✅             |
-| ✅     | Receive in-app notifications about relevant info      |           | ✅               | ✅             | ✅               | ✅             |
-| ✅     | Real-time user online / offline connection status     |           | ✅               | ✅             | ✅               | ✅             |
-| ✅      | Toggle global / local stock visibility                |          | ✅               | ✅             | ✅               | ✅             |
+| Ready? | Intermediate feature description                       | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
+|--------|--------------------------------------------------------|-----------|-----------------|---------------|-----------------|---------------|
+| ✅      | Dynamic breadcrumbs navigation                         | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Search products by name                                | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Filter products by associated categories               | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Order search results by lowest/highest field           | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Change app primary theme color (session-persistent)    | ✅         | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Receive mail confirmations about relevant info         |           | ✅               | ✅             | ✅               | ✅             |
+| ✅     | Receive in-app notifications about relevant info       |           | ✅               | ✅             | ✅               | ✅             |
+| ✅     | Real-time user online / offline connection status      |           | ✅               | ✅             | ✅               | ✅             |
+| ✅      | Toggle global / local stock visibility                 |          | ✅               | ✅             | ✅               | ✅             |
 | 🔄     | View product recommendations based on user preferences |           | ✅               |               |                 |               |
-| 🔄     | Download PDF invoices and resumes                     |           | ✅               | ✅             | ✅               | ✅             |
+| ✅     | Download PDF invoices and reports                      |           | ✅               | ✅             | ✅               | ✅             |
 
 &nbsp;
 

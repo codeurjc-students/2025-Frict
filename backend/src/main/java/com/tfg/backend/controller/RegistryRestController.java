@@ -1,7 +1,7 @@
 package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.PdfExportRequestDTO;
+import com.tfg.backend.dto.PdfReportDTO;
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.service.RegistryService;
 import com.tfg.backend.model.RegistryType;
@@ -105,15 +105,8 @@ public class RegistryRestController {
 
     @Operation(summary = "(Admin) Generate performance report from selected registry information")
     @PostMapping(value = "/private/export/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> exportCustomPdf(@RequestBody PdfExportRequestDTO request) {
-
-        Page<Document> allData = registryService.getRegistryStats(
-                request.getStartDate(), request.getEndDate(), "TABLE", null,
-                request.getEntityType(), request.getDataType(), request.getMetricMode(),
-                request.getStoreIds(), request.getUserIds(), request.getProductIds(),
-                request.getOrderIds(), 0, Integer.MAX_VALUE);
-        
-        byte[] pdfBytes = registryService.generateCustomPdf(allData.getContent(), request);
+    public ResponseEntity<byte[]> exportCustomPdfReport(@RequestBody PdfReportDTO request) {
+        byte[] pdfBytes = registryService.generateRegistryReport(request);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

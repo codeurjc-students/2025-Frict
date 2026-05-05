@@ -98,6 +98,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/*/unassign").hasAnyAuthority("DRIVER") // (Driver) Unassign truck as order is finished (completed or cancelled)
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // Internal roles endpoint
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasAuthority("USER") // Client exclusive endpoint
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*/invoice").hasAuthority("USER") // Client exclusive endpoint
 
                         // --- 5. REVIEWS (ReviewRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Product reviews
