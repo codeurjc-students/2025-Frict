@@ -46,6 +46,15 @@ public class RegistryService {
     }
 
 
+    public Set<String> getInteractedProductReferences(String userId, List<RegistryType> actionTypes) {
+        return repository.getInteractedProductIds(userId, actionTypes);
+    }
+
+    public List<String> getTopViewedReferences(int limit, Collection<String> excludedRefs) {
+        return repository.getMostViewedProductReferences(limit, excludedRefs);
+    }
+
+
     public Double calculateNextTotal(EntityType entityType, String entityId, RegistryType dataType, Double variation) {
         if (variation == null) return null;
 

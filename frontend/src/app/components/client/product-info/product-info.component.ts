@@ -115,7 +115,6 @@ export class ProductInfoComponent implements OnInit {
 
   protected loggedUserInfo!: LoginInfo;
 
-  // --- NUEVAS VARIABLES PARA VISUALIZACIONES ---
   private registryService = inject(RegistryService);
   private locale = inject(LOCALE_ID);
 
@@ -246,7 +245,7 @@ export class ProductInfoComponent implements OnInit {
           this.loadShopStocks();
           this.loadReviews();
 
-          // --- Cargar Analíticas ---
+          // --- Load analytics ---
           this.loadTodayViews();
           this.loadViewsData();
         },
@@ -258,7 +257,7 @@ export class ProductInfoComponent implements OnInit {
     }
   }
 
-  // --- MÉTODOS PARA LA GRÁFICA DE VISUALIZACIONES ---
+  // --- VIEWS CHART VISUALIZATION METHODS ---
   protected loadTodayViews() {
     const today = new Date();
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
@@ -338,7 +337,7 @@ export class ProductInfoComponent implements OnInit {
       }
     };
   }
-  // ---------------------------------------------------
+
 
   protected loadCartItemUnits(){
     this.orderService.getCartItemByProductId(this.product.id).subscribe({
@@ -376,16 +375,17 @@ export class ProductInfoComponent implements OnInit {
 
   protected loadRelatedProducts() {
     const currentProductId = this.route.snapshot.paramMap.get('id');
-    this.productService.getProductsByCategoryName(this.productCategory.name).subscribe({
-      next: (products) => {
-        this.relatedProducts = products.items.filter(p => p.id.toString() !== currentProductId?.toString());
+
+    this.productService.getRecommendedProducts(10).subscribe({
+      next: (pageResponse) => {
+        this.relatedProducts = pageResponse.items.filter((p: Product) => p.id.toString() !== currentProductId?.toString());
         this.relatedLoading = false;
       },
-      error: () => {
+      error: (err) => {
         this.relatedLoading = false;
         this.relatedError = true;
       }
-    })
+    });
   }
 
   protected showShippingDialog() {

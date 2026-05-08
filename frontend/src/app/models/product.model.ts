@@ -18,4 +18,6 @@ export interface Product {
   shopsWithStock: number;
   averageRating: number;
   totalReviews: number;
+
+  createdAt: string;
 }

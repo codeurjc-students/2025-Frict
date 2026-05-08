@@ -15,6 +15,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductService {
 
+    private final RegistryService registryService;
     private final ProductRepository productRepository;
     private final UserService userService;
     private final ShopStockService shopStockService;
@@ -79,6 +82,66 @@ public class ProductService {
         return this.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with ID " + id + " does not exist."));
     }
+
+    public Page<Product> getPersonalizedRecommendations(int page, int size) {
+        String loggedUserUsernane = userService.getLoggedUserUsername();
+
+        List<Product> finalRecommendations = new ArrayList<>();
+        Set<String> boughtRefs = new HashSet<>();
+
+        // Category-based recommendations (only logged users)
+        if (loggedUserUsernane != null) {
+            List<RegistryType> interestActions = Arrays.asList(
+                    RegistryType.PRODUCT_VIEWS, RegistryType.USER_ORDERS, RegistryType.USER_REVIEWS
+            );
+
+            Set<String> interactedRefs = registryService.getInteractedProductReferences(loggedUserUsernane, interestActions);
+            Set<String> tempBought = registryService.getInteractedProductReferences(loggedUserUsernane, List.of(RegistryType.USER_ORDERS));
+            if (tempBought != null) boughtRefs.addAll(tempBought);
+
+            if (interactedRefs != null && !interactedRefs.isEmpty()) {
+                List<Product> interactedProducts = productRepository.findByReferenceCodeIn(interactedRefs);
+                List<Long> topCategoryIds = interactedProducts.stream()
+                        .filter(p -> p.getCategories() != null && !p.getCategories().isEmpty())
+                        .flatMap(p -> p.getCategories().stream())
+                        .collect(Collectors.groupingBy(Category::getId, Collectors.counting()))
+                        .entrySet().stream()
+                        .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                        .map(Map.Entry::getKey).limit(3).toList();
+
+                if (!topCategoryIds.isEmpty()) {
+                    Set<String> excluded = boughtRefs.isEmpty() ? Set.of("DUMMY") : boughtRefs;
+                    finalRecommendations.addAll(productRepository.findRecommendedProducts(topCategoryIds, excluded, PageRequest.of(0, size)).getContent());
+                }
+            }
+        }
+
+        // Views-based recommendations
+        if (finalRecommendations.size() < size) {
+            int missing = size - finalRecommendations.size();
+            Set<String> toExclude = new HashSet<>(boughtRefs);
+            finalRecommendations.forEach(p -> toExclude.add(p.getReferenceCode()));
+
+            List<String> topViewed = registryService.getTopViewedReferences(missing, toExclude);
+            if (!topViewed.isEmpty()) {
+                finalRecommendations.addAll(productRepository.findByReferenceCodeIn(topViewed));
+            }
+        }
+
+        // Fallback if products list have not been fulfilled
+        if (finalRecommendations.size() < size) {
+            int missing = size - finalRecommendations.size();
+            Set<String> toExclude = finalRecommendations.stream().map(Product::getReferenceCode).collect(Collectors.toSet());
+            toExclude.addAll(boughtRefs);
+            finalRecommendations.addAll(productRepository.findActiveProductsExcluding(toExclude, PageRequest.of(0, missing)).getContent());
+        }
+
+        Collections.shuffle(finalRecommendations);
+        enrichWithStock(finalRecommendations);
+        return new PageImpl<>(finalRecommendations, PageRequest.of(page, size), finalRecommendations.size());
+    }
+
+
 
     // --- WRITING METHODS (override Transactional) ---
 

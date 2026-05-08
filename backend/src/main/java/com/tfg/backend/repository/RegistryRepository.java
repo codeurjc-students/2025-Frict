@@ -112,6 +112,37 @@ public class RegistryRepository {
     }
 
 
+    public Set<String> getInteractedProductIds(String userId, List<RegistryType> actionTypes) {
+        Query query = new Query(
+                Criteria.where("metadata.userId").is(userId)
+                        .and("metadata.dataType").in(actionTypes)
+                        .and("metadata.productId").ne(null)
+        );
+        List<String> productIds = mongoTemplate.findDistinct(query, "metadata.productId", "registries", String.class);
+        return new HashSet<>(productIds);
+    }
+
+    public List<String> getMostViewedProductReferences(int limit, Collection<String> excludedRefs) {
+        List<AggregationOperation> operations = new ArrayList<>();
+
+        operations.add(Aggregation.match(Criteria.where("metadata.dataType").is(RegistryType.PRODUCT_VIEWS)));
+
+        if (excludedRefs != null && !excludedRefs.isEmpty()) {
+            operations.add(Aggregation.match(Criteria.where("metadata.productId").nin(excludedRefs)));
+        }
+
+        operations.add(Aggregation.group("metadata.productId").sum("metrics.value").as("totalViews"));
+        operations.add(Aggregation.sort(Sort.Direction.DESC, "totalViews"));
+        operations.add(Aggregation.limit(limit));
+
+        return mongoTemplate.aggregate(Aggregation.newAggregation(operations), "registries", Document.class)
+                .getMappedResults().stream()
+                .map(doc -> doc.getString("_id"))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+
     public Double getLastTotal(EntityType entityType, String entityId, RegistryType dataType) {
         if (entityType == null || entityId == null) return 0.0;
 
