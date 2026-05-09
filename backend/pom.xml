@@ -44,23 +44,6 @@
 
 	<properties>
         <aws.java.sdk.version>2.39.5</aws.java.sdk.version> <!-- AWS SDK v2 version -->
-        <sonar.organization>codeurjc-students</sonar.organization>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.sources>src/main/java,../frontend/src</sonar.sources>
-        <sonar.tests>src/test/java,../frontend/src</sonar.tests>
-        <sonar.test.inclusions>**/*.spec.ts</sonar.test.inclusions>
-        <sonar.exclusions>
-            **/model/**,
-            **/dto/**,
-            **/repository/**,
-            **/config/**,
-            **/utils/**,
-            **/BackendApplication.java,
-            ../frontend/src/**/*.spec.ts,
-            ../frontend/src/environments/**,
-            ../frontend/src/app/models/**
-        </sonar.exclusions>
-        <sonar.javascript.lcov.reportPaths>../frontend/coverage/frontend/lcov.info</sonar.javascript.lcov.reportPaths>
 		<java.version>21</java.version>
         <jjwt.version>0.12.6</jjwt.version>
 	</properties>
