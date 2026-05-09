@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ButtonModule} from 'primeng/button';
 import {RouterLink} from '@angular/router';
@@ -37,6 +37,9 @@ interface ServiceUI {
 })
 export class ClientHomeComponent implements OnInit {
 
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+
   protected readonly responsiveOptions = carouselResponsiveOptions;
 
   public services: ServiceUI[] = [
@@ -63,9 +66,6 @@ export class ClientHomeComponent implements OnInit {
 
   topSalesLoading: boolean = true;
   topSalesError: boolean = false;
-
-  constructor(private productService: ProductService,
-              private categoryService: CategoryService) {}
 
   ngOnInit() {
     this.loadCategories();

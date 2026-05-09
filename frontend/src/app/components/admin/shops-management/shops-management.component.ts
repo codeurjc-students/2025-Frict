@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
@@ -41,6 +41,13 @@ import {NotificationService} from '../../../services/notification.service';
 })
 export class ShopsManagementComponent implements OnInit, OnDestroy {
 
+  private shopService = inject(ShopService);
+  private userService = inject(UserService);
+  private messageService = inject(MessageService);
+  protected authService = inject(AuthService);
+  protected uiService = inject(UiService);
+  protected notificationService = inject(NotificationService);
+
   recentShopsNotifications = signal<Notification[]>([]);
 
   // Pagination
@@ -62,13 +69,6 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   protected selectedManager: User | undefined = undefined;
   protected visibleAssignmentDialog: boolean = false;
   protected visibleUnassignButton: boolean = false;
-
-  constructor(private shopService: ShopService,
-              private userService: UserService,
-              private messageService: MessageService,
-              protected authService: AuthService,
-              protected uiService: UiService,
-              protected notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadShops();

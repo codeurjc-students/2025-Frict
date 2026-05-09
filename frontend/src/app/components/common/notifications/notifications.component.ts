@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import {DatePipe, NgClass, NgForOf, NgIf, UpperCasePipe} from '@angular/common';
 import { LoadingScreenComponent } from '../loading-screen/loading-screen.component';
 import { PageResponse } from '../../../models/pageResponse.model';
@@ -33,6 +33,10 @@ import {UiService} from '../../../utils/ui.service';
 })
 export class NotificationsComponent implements OnInit {
 
+  private messageService = inject(MessageService);
+  private notificationService = inject(NotificationService);
+  protected uiService = inject(UiService);
+
   // Pagination and Data
   notificationsPage: PageResponse<Notification> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
   first = 0;
@@ -45,12 +49,6 @@ export class NotificationsComponent implements OnInit {
 
   // Selection
   selectedNotification = signal<Notification | null>(null);
-
-  constructor(
-    private messageService: MessageService,
-    private notificationService: NotificationService,
-    protected uiService: UiService
-  ) {}
 
   ngOnInit() {
     this.loadNotifications();

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
@@ -24,6 +24,11 @@ import {AuthService} from '../../../services/auth.service';
 })
 export class ResetPasswordComponent implements OnInit {
 
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+
   currentStep: number = 1;
 
   username: string = '';
@@ -35,12 +40,7 @@ export class ResetPasswordComponent implements OnInit {
   errorMessage: string = '';
   showPassword: boolean = false;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private fb: FormBuilder,
-    private authService: AuthService
-  ) {
+  constructor() {
     this.passwordForm = this.fb.group({
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]]

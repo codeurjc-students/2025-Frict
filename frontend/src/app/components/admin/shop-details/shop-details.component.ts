@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core'; // IMPORTANTE: ChangeDetectorRef
+import {ChangeDetectorRef, Component, inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
 import {isPlatformBrowser, NgClass, NgIf} from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
 
@@ -55,6 +55,16 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
 })
 export class ShopDetailsComponent implements OnInit, OnDestroy {
 
+  private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private messageService = inject(MessageService);
+  private shopService = inject(ShopService);
+  private truckService = inject(TruckService);
+  private confirmationService = inject(ConfirmationService);
+  private productService = inject(ProductService);
+  private cdr = inject(ChangeDetectorRef);
+
   shop!: Shop;
 
   trucksPage: PageResponse<Truck> = { items: [], totalItems: 0, currentPage: 0, lastPage: 0, pageSize: 5 };
@@ -80,18 +90,6 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   protected unassignedTrucks: Truck[] = [];
   protected selectedTruck: Truck | undefined = undefined;
   protected visibleAddTruckDialog: boolean = false;
-
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService,
-    private shopService: ShopService,
-    private truckService: TruckService,
-    private confirmationService: ConfirmationService,
-    private productService: ProductService,
-    private cdr: ChangeDetectorRef
-  ) {}
 
   ngOnInit() {
     this.loadData();

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
@@ -22,6 +22,11 @@ import {CustomValidators} from '../../../utils/customValidators.util';
 })
 export class SignupComponent {
 
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private router = inject(Router);
+
   registerForm: FormGroup;
   showPassword = false;
   selectedImage: File | null = null;
@@ -29,10 +34,7 @@ export class SignupComponent {
   get usernameControl() { return this.registerForm.get('username'); }
   get emailControl() { return this.registerForm.get('email'); }
 
-  constructor(private fb: FormBuilder,
-              private authService: AuthService,
-              private userService: UserService,
-              private router: Router) {
+  constructor() {
 
     this.registerForm = this.fb.nonNullable.group({
       name: ['', Validators.required],

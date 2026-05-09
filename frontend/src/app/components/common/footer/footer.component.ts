@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {NgIf} from '@angular/common';
 import {AuthService} from '../../../services/auth.service';
@@ -14,5 +14,5 @@ import {AuthService} from '../../../services/auth.service';
   styleUrl: './footer.component.css'
 })
 export class FooterComponent {
-  constructor(protected authService: AuthService) {}
+  protected authService = inject(AuthService);
 }

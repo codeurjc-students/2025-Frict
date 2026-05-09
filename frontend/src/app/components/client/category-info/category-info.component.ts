@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router'; // Importar Router
 
@@ -34,6 +34,12 @@ import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen
 })
 export class CategoryInfoComponent implements OnInit {
 
+  private categoryService = inject(CategoryService);
+  private productService = inject(ProductService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private breadcrumbService = inject(BreadcrumbService);
+
   topSalesProducts: Product[] = []; //Top sales products of this main category
   mainCategory!: Category;
   similarCategories: Category[] = []; //Main category siblings
@@ -47,14 +53,6 @@ export class CategoryInfoComponent implements OnInit {
     { title: 'Monitor de Bebés', icon: 'pi pi-users' },
     { title: 'Segunda Residencia', icon: 'pi pi-home' }
   ];
-
-  // Inyectamos Router y BreadcrumbService en el constructor
-  constructor(private categoryService: CategoryService,
-              private productService: ProductService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private breadcrumbService: BreadcrumbService) {
-  }
 
   ngOnInit() {
     this.route.params.subscribe(() => { //If a related product is clicked when visualizing a product, the page should refresh the information

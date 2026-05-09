@@ -37,6 +37,16 @@ import {RegistryService} from '../../../services/registry.service'; // <-- NUEVO
 })
 export class AdminHomeComponent implements OnInit {
 
+  protected authService = inject(AuthService);
+  private orderService = inject(OrderService);
+  private shopService = inject(ShopService);
+  private truckService = inject(TruckService);
+  private notificationService = inject(NotificationService);
+  protected uiService = inject(UiService);
+  private metricService = inject(StatService);
+  private registryService = inject(RegistryService);
+  private locale = inject(LOCALE_ID);
+
   loading = true;
   loadingNotifications = true;
   error = false;
@@ -67,17 +77,6 @@ export class AdminHomeComponent implements OnInit {
   recentNotifications = signal<Notification[]>([]);
 
   loginInfo!: LoginInfo;
-
-  private metricService = inject(StatService);
-  private registryService = inject(RegistryService); // <-- NUEVA INYECCIÓN
-  private locale = inject(LOCALE_ID); // <-- NUEVA INYECCIÓN
-
-  constructor(protected authService: AuthService,
-              private orderService: OrderService,
-              private shopService: ShopService,
-              private truckService: TruckService,
-              private notificationService: NotificationService,
-              protected uiService: UiService) {}
 
   ngOnInit() {
     this.getLoginInfo();
@@ -420,7 +419,7 @@ export class AdminHomeComponent implements OnInit {
         const dataCancelled = resCancelled.items || resCancelled;
 
         const completedToday = dataCompleted.length > 0 ? dataCompleted[dataCompleted.length - 1].totalValue : 0;
-        
+
         this.driverKpis.update(current => ({
           ...current,
           completed: completedToday

@@ -1,4 +1,4 @@
-import {Component, computed, OnInit, signal} from '@angular/core';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {Button} from 'primeng/button';
 import {Tag} from 'primeng/tag';
@@ -104,13 +104,15 @@ export class UsersManagementComponent implements OnInit {
   showNewPasswordConfirmation: boolean = false;
   selectedImage: File | null = null;
 
-  constructor(private userService: UserService,
-              private confirmationService: ConfirmationService,
-              private fb: FormBuilder,
-              private authService: AuthService,
-              private messageService: MessageService,
-              private reviewService: ReviewService,
-              private orderService: OrderService) {
+  private userService = inject(UserService);
+  private confirmationService = inject(ConfirmationService);
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private messageService = inject(MessageService);
+  private reviewService = inject(ReviewService);
+  private orderService = inject(OrderService);
+
+  constructor() {
 
     this.changePasswordForm = this.fb.nonNullable.group({
       password: ['', Validators.required],

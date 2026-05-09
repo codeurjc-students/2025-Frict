@@ -32,6 +32,12 @@ import {RegistryService} from '../../../services/registry.service';
 })
 export class ProductsManagementComponent implements OnInit {
 
+  private productService = inject(ProductService);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  private registryService = inject(RegistryService);
+  private locale = inject(LOCALE_ID);
+
   productsPage: PageResponse<Product> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   selectedProduct: Product | null = null;
 
@@ -50,13 +56,6 @@ export class ProductsManagementComponent implements OnInit {
 
   // Sales chart selector
   chartProductSelector = signal<Product | null>(null);
-
-  private registryService = inject(RegistryService);
-  private locale = inject(LOCALE_ID);
-
-  constructor(private productService: ProductService,
-              private confirmationService: ConfirmationService,
-              private messageService: MessageService) {}
 
   confirmDelete(event: Event, id: string) {
     this.confirmationService.confirm({

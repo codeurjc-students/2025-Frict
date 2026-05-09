@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
@@ -41,6 +41,11 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
   templateUrl: './trucks-management.component.html'
 })
 export class TrucksManagementComponent implements OnInit, OnDestroy {
+
+  private truckService = inject(TruckService);
+  private messageService = inject(MessageService);
+  private userService = inject(UserService);
+  private confirmationService = inject(ConfirmationService);
 
   trucksPage: PageResponse<Truck> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
   first = 0;
@@ -97,11 +102,6 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     { label: 'En Mantenimiento', value: 'En mantenimiento' },
     { label: 'Fuera de Servicio', value: 'Fuera de servicio' }
   ];
-
-  constructor(private truckService: TruckService,
-              private messageService: MessageService,
-              private userService: UserService,
-              private confirmationService: ConfirmationService) {}
 
   ngOnInit() {
     this.initChartOptions();

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, RouterModule} from '@angular/router';
 
@@ -22,6 +22,9 @@ import {User} from '../../../models/user.model';
 })
 export class OrderConfirmedComponent implements OnInit {
 
+  private route = inject(ActivatedRoute);
+  private userService = inject(UserService);
+
   orderId: string = '';
   orderRefCode: string = '';
 
@@ -29,9 +32,6 @@ export class OrderConfirmedComponent implements OnInit {
 
   loading: boolean = true;
   error: boolean = false;
-
-  constructor(private route: ActivatedRoute,
-              private userService: UserService) {}
 
   ngOnInit(): void {
     // Intentamos obtener la referencia de la URL (ej: /order-confirmed/ORD-123)

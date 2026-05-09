@@ -1,4 +1,4 @@
-import {Component, computed, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
+import {Component, computed, inject, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
 import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NgClass, NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {Button} from 'primeng/button';
@@ -46,15 +46,13 @@ import { DatePipe } from '@angular/common';
 })
 export class NavbarComponent implements OnInit {
 
-  constructor(
-    protected authService: AuthService,
-    protected orderService: OrderService,
-    private categoryService: CategoryService,
-    protected productService: ProductService,
-    protected notificationService: NotificationService,
-    private router: Router,
-    private http: HttpClient
-  ) {}
+  protected authService = inject(AuthService);
+  protected orderService = inject(OrderService);
+  private categoryService = inject(CategoryService);
+  protected productService = inject(ProductService);
+  protected notificationService = inject(NotificationService);
+  private router = inject(Router);
+  private http = inject(HttpClient);
 
   @ViewChild('drawerRef') drawerRef!: Drawer;
   @ViewChild('notifPopover') notifPopover!: Popover;

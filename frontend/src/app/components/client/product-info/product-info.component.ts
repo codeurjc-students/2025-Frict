@@ -78,6 +78,19 @@ import {DatePicker} from 'primeng/datepicker';
 })
 export class ProductInfoComponent implements OnInit {
 
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+  private reviewService = inject(ReviewService);
+  private orderService = inject(OrderService);
+  private shopService = inject(ShopService);
+  protected authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private breadcrumbService = inject(BreadcrumbService);
+  private registryService = inject(RegistryService);
+  private locale = inject(LOCALE_ID);
+
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;
   protected readonly formatPrice = formatPrice;
@@ -115,9 +128,6 @@ export class ProductInfoComponent implements OnInit {
 
   protected loggedUserInfo!: LoginInfo;
 
-  private registryService = inject(RegistryService);
-  private locale = inject(LOCALE_ID);
-
   protected viewsToday: number = 0;
   protected isViewsLoading: boolean = false;
 
@@ -133,17 +143,6 @@ export class ProductInfoComponent implements OnInit {
   ];
   protected viewsChartData: any;
   protected viewsChartOptions: any;
-
-  constructor(private productService: ProductService,
-              private categoryService: CategoryService,
-              private reviewService: ReviewService,
-              private orderService: OrderService,
-              private shopService: ShopService,
-              protected authService: AuthService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private messageService: MessageService,
-              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
     this.route.params.subscribe(() => {

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router, RouterModule} from '@angular/router';
@@ -49,6 +49,12 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 })
 export class OrderSummaryComponent implements OnInit {
 
+  private orderService = inject(OrderService);
+  private userService = inject(UserService);
+  private messageService = inject(MessageService);
+  private router = inject(Router);
+  private breadcrumbService = inject(BreadcrumbService);
+
   protected readonly formatPrice = formatPrice;
 
   cartSummary!: CartSummary;
@@ -74,12 +80,6 @@ export class OrderSummaryComponent implements OnInit {
   loadingCards: boolean = true;
 
   activeStep: number = 1;
-
-  constructor(private orderService: OrderService,
-              private userService: UserService,
-              private messageService: MessageService,
-              private router: Router,
-              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
     this.getUserInfo();

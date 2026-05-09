@@ -1,4 +1,4 @@
-import {Component, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {NgIf} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
@@ -48,14 +48,16 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 })
 export class CreateEditProductComponent implements OnInit {
 
-  constructor(private fb: FormBuilder,
-              private router: Router,
-              private messageService: MessageService,
-              private route: ActivatedRoute,
-              private productService: ProductService,
-              private categoryService: CategoryService,
-              private sanitizer: DomSanitizer,
-              private breadcrumbService: BreadcrumbService) {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+  private sanitizer = inject(DomSanitizer);
+  private breadcrumbService = inject(BreadcrumbService);
+
+  constructor() {
 
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
