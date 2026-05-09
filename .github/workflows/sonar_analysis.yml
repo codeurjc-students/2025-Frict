@@ -8,7 +8,7 @@ on:
 
 env:
   RUNNER_DB_NAME: FrictTest
-  RUNNER_DB_PASSWORD: p4ssw0rd
+  RUNNER_DB_PASSWORD: password
   RUNNER_MINIO_USER: admin
   RUNNER_MINIO_PASSWORD: password123
   RUNNER_MINIO_BUCKET_NAME: images
@@ -25,7 +25,7 @@ jobs:
           MYSQL_DATABASE: ${{ env.RUNNER_DB_NAME }}
           MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_DB_PASSWORD }}
         ports:
-          - 3306:3306
+          - 3307:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
@@ -90,9 +90,18 @@ jobs:
           npm install -g @angular/cli
 
 
+      - name: Generate SSL certs for Angular dev server
+        working-directory: frontend
+        run: |
+          mkdir -p certs
+          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
+            -keyout certs/localhost-key.pem \
+            -out certs/localhost.pem \
+            -subj "/CN=localhost"
+
       - name: Start Angular project
         working-directory: frontend
-        run: ng serve --proxy-config proxy-test.conf.json &
+        run: ng serve &
 
 
       - name: Cache SonarQube packages

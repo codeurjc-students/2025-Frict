@@ -25,12 +25,12 @@ services:
     container_name: db-dev
     restart: unless-stopped
     ports:
-      - "3307:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: Frict
-      MYSQL_USER: user_dev
-      MYSQL_PASSWORD: password_dev
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
     volumes:
       - mysql_data_dev:/var/lib/mysql
     healthcheck:
@@ -114,8 +114,8 @@ services:
     environment:
       # --- MySQL Database ---
       DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
-      DATASOURCE_USERNAME: user_dev
-      DATASOURCE_PASSWORD: password_dev
+      DATASOURCE_USERNAME: user
+      DATASOURCE_PASSWORD: password
 
       # --- MongoDB Database ---
       MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin&replicaSet=rs0
@@ -130,6 +130,7 @@ services:
       # --- Security (Fixed test values) ---
       JWT_SECRET: c3VwZXJfc2VjcmV0X2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXNfb25seV8xMjM0NTY3ODkw
       CARDS_DB_KEY: 1234567890123456
+      CORS_ALLOWED_ORIGIN: https://localhost
 
       # --- Email and Auth (External variables required) ---
       SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}

@@ -43,10 +43,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		} catch (Exception ex) {
-			//Avoid logging when no token is found
-			if(!ex.getMessage().equals("No access token cookie found in request")) {
+			String msg = ex.getMessage();
+			boolean noToken = "No access token cookie found in request".equals(msg)
+					|| "No cookies found in request".equals(msg);
+			if (!noToken) {
 				log.error("Exception processing JWT Token: ", ex);
-			}			
+			}
 		}
 
 		filterChain.doFilter(request, response);

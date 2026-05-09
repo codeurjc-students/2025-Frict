@@ -80,7 +80,7 @@
             },
             "testing": {
               "buildTarget": "frontend:build:development",
-              "proxyConfig": "proxy-test.conf.json"
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
@@ -110,5 +110,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

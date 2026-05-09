@@ -22,6 +22,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.List;
 
 @Configuration
@@ -32,6 +34,9 @@ public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
     private final RepositoryUserDetailsService userDetailsService;
     private final UnauthorizedHandlerJwt unauthorizedHandlerJwt;
+
+    @Value("${app.cors.allowed-origin}")
+    private String corsAllowedOrigin;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -168,7 +173,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://localhost:4202"));
+        configuration.setAllowedOrigins(List.of(corsAllowedOrigin));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
