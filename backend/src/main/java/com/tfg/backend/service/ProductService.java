@@ -1,14 +1,12 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.dto.CategoryDTO;
-import com.tfg.backend.dto.ProductDTO;
-import com.tfg.backend.model.*;
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.dto.ProductDTO;
 import com.tfg.backend.event.ProductEvent;
-import com.tfg.backend.model.Registry;
 import com.tfg.backend.event.RegistryEvent;
-import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import jakarta.persistence.EntityNotFoundException;

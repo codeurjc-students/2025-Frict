@@ -1,314 +1,334 @@
-<div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
-</div>
-
-<div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
-
-    <app-breadcrumb-reload (onReload)="resetAll()"></app-breadcrumb-reload>
-
-    <div class="my-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-primary-600">Gestor de Informes</h1>
-        <p class="text-slate-500">Genera informes acerca de las métricas globales de la organización.</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-      <!-- LEFT COLUMN: FILTER CONFIGURATION -->
-      <div class="lg:col-span-1 flex flex-col gap-6 h-fit">
-
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col gap-6 relative">
-
-          <div class="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
-            <i class="absolute -right-4 -top-4 opacity-5 text-8xl pi pi-chart-line"></i>
-          </div>
-
-          <div class="z-10 border-b border-slate-50 pb-4">
-            <h1 class="text-xl font-bold text-slate-800 flex items-center gap-3">
-              <i class="pi pi-filter text-blue-600"></i> Filtros de informe
-            </h1>
-          </div>
-
-          <div class="flex flex-col gap-4 z-10 border-b border-slate-50 pb-4">
-            <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">1. Rango de Tiempo *</label>
-
-            <div class="flex gap-2">
-              <p-datepicker
-                [ngModel]="startDate()"
-                (ngModelChange)="startDate.set($event)"
-                placeholder="Inicio"
-                dateFormat="dd/mm/yy"
-                appendTo="body"
-                [showIcon]="true"
-                iconDisplay="input"
-                styleClass="w-full !rounded-xl !border-slate-200">
-              </p-datepicker>
-              <p-datepicker
-                [ngModel]="endDate()"
-                (ngModelChange)="endDate.set($event)"
-                placeholder="Fin"
-                dateFormat="dd/mm/yy"
-                appendTo="body"
-                [showIcon]="true"
-                iconDisplay="input"
-                styleClass="w-full !rounded-xl !border-slate-200">
-              </p-datepicker>
-            </div>
-
-            <p-select
-              [options]="intervalOptions()"
-              [ngModel]="selectedInterval()"
-              (onChange)="selectedInterval.set($event.value)"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Agrupación"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
-              appendTo="body">
-            </p-select>
-          </div>
-
-          <div class="flex flex-col gap-2 z-10">
-            <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">2. Entidad Principal *</label>
-            <p-select
-              [options]="entityOptions()"
-              [ngModel]="selectedEntity()"
-              (onChange)="selectedEntity.set($event.value)"
-              placeholder="Selecciona entidad base"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
-              appendTo="body">
-            </p-select>
-          </div>
-
-          <div class="flex flex-col gap-2 z-10">
-            <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">3. Métrica *</label>
-            <p-select
-              [options]="metricOptions()"
-              [ngModel]="selectedMetric()"
-              (onChange)="selectedMetric.set($event.value)"
-              [disabled]="!selectedEntity() || metricOptions().length === 0"
-              placeholder="Selecciona dato"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
-              appendTo="body">
-            </p-select>
-          </div>
-
-          <div class="flex flex-col gap-4 mt-2 z-10" [class.opacity-50]="!selectedMetric()">
-            <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 border-b border-slate-100 pb-2">4. Cruce de Datos (Opcional)</label>
-
-            <p-multiSelect
-              [options]="productOptions()"
-              [ngModel]="selectedProducts()"
-              (onChange)="selectedProducts.set($event.value)"
-              [disabled]="!selectedMetric() || productOptions().length === 0"
-              placeholder="Filtrar por Productos"
-              display="chip"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
-              appendTo="body">
-            </p-multiSelect>
-
-            <!-- Variables actualizadas de selectedStores/storeOptions a selectedShops/shopOptions -->
-            <p-multiSelect
-              [options]="shopOptions()"
-              [ngModel]="selectedShops()"
-              (onChange)="selectedShops.set($event.value)"
-              [disabled]="!selectedMetric() || shopOptions().length === 0"
-              placeholder="Filtrar por Tiendas"
-              display="chip"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
-              appendTo="body">
-            </p-multiSelect>
-
-            <p-multiSelect
-              [options]="userOptions()"
-              [ngModel]="selectedUsers()"
-              (onChange)="selectedUsers.set($event.value)"
-              [disabled]="!selectedMetric() || userOptions().length === 0"
-              placeholder="Filtrar por Usuarios"
-              display="chip"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
-              appendTo="body">
-            </p-multiSelect>
-
-            <p-multiSelect
-              [options]="orderOptions()"
-              [ngModel]="selectedOrders()"
-              (onChange)="selectedOrders.set($event.value)"
-              [disabled]="!selectedMetric() || orderOptions().length === 0"
-              placeholder="Filtrar por Pedidos"
-              display="chip"
-              styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
-              appendTo="body">
-            </p-multiSelect>
-          </div>
-
-          <div class="mt-4 pt-4 border-t border-slate-100 z-10">
-            <p-button
-              [label]="isLoadingReport() ? 'Procesando...' : 'Generar Informe'"
-              [icon]="isLoadingReport() ? 'pi pi-spin pi-spinner' : 'pi pi-file'"
-              (onClick)="fetchReportData()"
-              [disabled]="!startDate() || !endDate() || !selectedEntity() || !selectedMetric() || isLoadingReport()"
-              styleClass="p-button-lg w-full !py-4 !rounded-xl !font-bold shadow-md shadow-blue-100">
-            </p-button>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: RESULTS AND VISUALIZATION -->
-      <div class="lg:col-span-2 flex flex-col gap-6">
-
-        <!-- CHARTS -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col min-h-[500px] sm:h-[500px]">
-
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 rounded-t-2xl">
-            <h3 class="font-bold text-slate-700 flex items-center gap-2 shrink-0">
-              <i class="pi pi-chart-bar text-blue-500"></i> Visualización de Datos
-            </h3>
-
-            <div class="flex flex-wrap gap-3" *ngIf="graphData().length > 0">
-
-              <p-selectButton
-                [options]="metricModeOptions()"
-                [ngModel]="metricMode()"
-                (ngModelChange)="updateMetricMode($event)"
-                optionLabel="label"
-                optionValue="value"
-                [allowEmpty]="false">
-                <ng-template #item let-item>
-                  <div class="flex items-center gap-2 text-sm text-slate-600">
-                    <i *ngIf="item.icon" [class]="item.icon"></i>
-                    <span>{{ item.label }}</span>
-                  </div>
-                </ng-template>
-              </p-selectButton>
-
-              <p-selectButton
-                [options]="chartTypeOptions()"
-                [ngModel]="chartType()"
-                (ngModelChange)="chartType.set($event)"
-                optionLabel="label"
-                optionValue="value"
-                [allowEmpty]="false">
-                <ng-template #item let-item>
-                  <span class="text-sm text-slate-600">{{ item.label }}</span>
-                </ng-template>
-              </p-selectButton>
-
-              <div class="w-px h-8 bg-slate-300 mx-1 hidden sm:block"></div>
-
-              <p-button
-                label="Exportar PDF"
-                icon="pi pi-file-pdf"
-                severity="danger"
-                [outlined]="true"
-                (onClick)="downloadCustomPdf()"
-                [loading]="isLoadingReport()"
-                styleClass="!px-4 !py-1.5 !text-xs !font-bold shadow-sm bg-white hover:bg-red-50">
-              </p-button>
-
-            </div>
-          </div>
-
-          <div class="flex-1 w-full flex items-center justify-center relative min-h-[300px] sm:min-h-0">
-
-            <div *ngIf="graphData().length === 0 && !isLoadingReport()" class="text-slate-400 flex flex-col items-center gap-3 p-4">
-              <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                <i class="pi pi-search text-2xl text-slate-300"></i>
-              </div>
-              <span class="text-sm font-medium text-center">Configura los filtros a la izquierda y pulsa Generar Analítica</span>
-            </div>
-
-            <div *ngIf="isLoadingReport()" class="flex flex-col items-center gap-3 text-blue-500 p-4">
-              <i class="pi pi-spin pi-spinner text-4xl"></i>
-              <span class="text-xs font-bold tracking-widest uppercase text-center">Consultando base de datos...</span>
-            </div>
-
-            <div *ngIf="graphData().length > 0 && !isLoadingReport()" class="absolute inset-0 p-4 sm:p-6 pb-2">
-              <p-chart
-                #myChart
-                [type]="chartType()"
-                [data]="chartData()"
-                [options]="chartOptions()"
-                [plugins]="chartPlugins"
-                height="100%">
-              </p-chart>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden h-[500px]">
-
-          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4 shrink-0">
-            <h3 class="font-bold text-slate-700 flex items-center gap-2">
-              <i class="pi pi-table text-blue-500"></i> Registros en bruto
-              <span *ngIf="selectedEntity() && selectedMetric()" class="text-slate-500 font-normal text-sm ml-2">
-                ({{ selectedEntity() }} - {{ selectedMetric() }})
-              </span>
-            </h3>
-
-            <p-multiSelect
-              *ngIf="availableDynamicEntities().length > 0"
-              [options]="availableDynamicEntities()"
-              [ngModel]="selectedDynamicColumns()"
-              (onChange)="selectedDynamicColumns.set($event.value)"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Mostrar columnas secundarias..."
-              display="chip"
-              [maxSelectedLabels]="2"
-              styleClass="w-full sm:w-72 !rounded-xl !border-slate-200 shadow-sm text-xs bg-white"
-              appendTo="body">
-            </p-multiSelect>
-          </div>
-
-          <div class="flex-1 overflow-hidden">
-            <p-table
-              [value]="tableData()"
-              styleClass="p-datatable-sm h-full flex flex-col"
-              [scrollable]="true"
-              scrollHeight="flex"
-              [lazy]="true"
-              (onPage)="onPageChange($event)"
-              [paginator]="true"
-              [rows]="pageSize()"
-              [totalRecords]="totalRecords()"
-              [rowsPerPageOptions]="[5, 10, 25, 50]"
-              [showCurrentPageReport]="true"
-              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
-              paginatorDropdownAppendTo="body">
-
-              <ng-template pTemplate="header">
-                <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
-                  <th *ngFor="let col of tableColumns()" class="py-4 pl-6">
-                    {{ getColumnLabel(col) }}
-                  </th>
-                </tr>
-              </ng-template>
-
-              <ng-template pTemplate="body" let-row>
-                <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
-                  <td *ngFor="let col of tableColumns()" class="py-3 pl-6 text-sm text-slate-600">
-                    <ng-container *ngIf="col === 'timestamp'; else textCell">
-                      <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{{ getCellValue(row, col) | date:'dd/MM/yy HH:mm' }}</span>
-                    </ng-container>
-                    <ng-template #textCell>
-                      <span [class.font-bold]="col === 'metric_value' || col === 'metric_total'" [class.text-blue-600]="col === 'metric_value' || col === 'metric_total'">{{ getCellValue(row, col) }}</span>
-                    </ng-template>
-                  </td>
-                </tr>
-              </ng-template>
-
-              <ng-template pTemplate="emptymessage">
-                <tr><td [attr.colspan]="tableColumns().length || 1" class="text-center py-16 text-slate-400 italic">No hay registros asociados a esta consulta.</td></tr>
-              </ng-template>
-            </p-table>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
+@if (loading || error) {
+  <div>
+    <app-loading-screen [loading]="loading" [error]="error"></app-loading-screen>
   </div>
-</div>
+}
+
+@if (!loading && !error) {
+  <div class="min-h-screen font-sans text-slate-800 pb-12">
+    <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+
+      <app-breadcrumb-reload (onReload)="resetAll()"></app-breadcrumb-reload>
+
+      <div class="my-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-primary-600">Gestor de Informes</h1>
+          <p class="text-slate-500">Genera informes acerca de las métricas globales de la organización.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- LEFT COLUMN: FILTER CONFIGURATION -->
+        <div class="lg:col-span-1 flex flex-col gap-6 h-fit">
+
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col gap-6 relative">
+
+            <div class="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+              <i class="absolute -right-4 -top-4 opacity-5 text-8xl pi pi-chart-line"></i>
+            </div>
+
+            <div class="z-10 border-b border-slate-50 pb-4">
+              <h1 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                <i class="pi pi-filter text-blue-600"></i> Filtros de informe
+              </h1>
+            </div>
+
+            <div class="flex flex-col gap-4 z-10 border-b border-slate-50 pb-4">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">1. Rango de Tiempo *</label>
+
+              <div class="flex gap-2">
+                <p-datepicker
+                  [ngModel]="startDate()"
+                  (ngModelChange)="startDate.set($event)"
+                  placeholder="Inicio"
+                  dateFormat="dd/mm/yy"
+                  appendTo="body"
+                  [showIcon]="true"
+                  iconDisplay="input"
+                  styleClass="w-full !rounded-xl !border-slate-200">
+                </p-datepicker>
+                <p-datepicker
+                  [ngModel]="endDate()"
+                  (ngModelChange)="endDate.set($event)"
+                  placeholder="Fin"
+                  dateFormat="dd/mm/yy"
+                  appendTo="body"
+                  [showIcon]="true"
+                  iconDisplay="input"
+                  styleClass="w-full !rounded-xl !border-slate-200">
+                </p-datepicker>
+              </div>
+
+              <p-select
+                [options]="intervalOptions()"
+                [ngModel]="selectedInterval()"
+                (onChange)="selectedInterval.set($event.value)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Agrupación"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
+                appendTo="body">
+              </p-select>
+            </div>
+
+            <div class="flex flex-col gap-2 z-10">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">2. Entidad Principal *</label>
+              <p-select
+                [options]="entityOptions()"
+                [ngModel]="selectedEntity()"
+                (onChange)="selectedEntity.set($event.value)"
+                placeholder="Selecciona entidad base"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
+                appendTo="body">
+              </p-select>
+            </div>
+
+            <div class="flex flex-col gap-2 z-10">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">3. Métrica *</label>
+              <p-select
+                [options]="metricOptions()"
+                [ngModel]="selectedMetric()"
+                (onChange)="selectedMetric.set($event.value)"
+                [disabled]="!selectedEntity() || metricOptions().length === 0"
+                placeholder="Selecciona dato"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm"
+                appendTo="body">
+              </p-select>
+            </div>
+
+            <div class="flex flex-col gap-4 mt-2 z-10" [class.opacity-50]="!selectedMetric()">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 border-b border-slate-100 pb-2">4. Cruce de Datos (Opcional)</label>
+
+              <p-multiSelect
+                [options]="productOptions()"
+                [ngModel]="selectedProducts()"
+                (onChange)="selectedProducts.set($event.value)"
+                [disabled]="!selectedMetric() || productOptions().length === 0"
+                placeholder="Filtrar por Productos"
+                display="chip"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
+                appendTo="body">
+              </p-multiSelect>
+
+              <!-- Variables actualizadas de selectedStores/storeOptions a selectedShops/shopOptions -->
+              <p-multiSelect
+                [options]="shopOptions()"
+                [ngModel]="selectedShops()"
+                (onChange)="selectedShops.set($event.value)"
+                [disabled]="!selectedMetric() || shopOptions().length === 0"
+                placeholder="Filtrar por Tiendas"
+                display="chip"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
+                appendTo="body">
+              </p-multiSelect>
+
+              <p-multiSelect
+                [options]="userOptions()"
+                [ngModel]="selectedUsers()"
+                (onChange)="selectedUsers.set($event.value)"
+                [disabled]="!selectedMetric() || userOptions().length === 0"
+                placeholder="Filtrar por Usuarios"
+                display="chip"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
+                appendTo="body">
+              </p-multiSelect>
+
+              <p-multiSelect
+                [options]="orderOptions()"
+                [ngModel]="selectedOrders()"
+                (onChange)="selectedOrders.set($event.value)"
+                [disabled]="!selectedMetric() || orderOptions().length === 0"
+                placeholder="Filtrar por Pedidos"
+                display="chip"
+                styleClass="w-full !rounded-xl !border-slate-200 shadow-sm text-sm"
+                appendTo="body">
+              </p-multiSelect>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 z-10">
+              <p-button
+                [label]="isLoadingReport() ? 'Procesando...' : 'Generar Informe'"
+                [icon]="isLoadingReport() ? 'pi pi-spin pi-spinner' : 'pi pi-file'"
+                (onClick)="fetchReportData()"
+                [disabled]="!startDate() || !endDate() || !selectedEntity() || !selectedMetric() || isLoadingReport()"
+                styleClass="p-button-lg w-full !py-4 !rounded-xl !font-bold shadow-md shadow-blue-100">
+              </p-button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: RESULTS AND VISUALIZATION -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+
+          <!-- CHARTS -->
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col min-h-[500px] sm:h-[500px]">
+
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 rounded-t-2xl">
+              <h3 class="font-bold text-slate-700 flex items-center gap-2 shrink-0">
+                <i class="pi pi-chart-bar text-blue-500"></i> Visualización de Datos
+              </h3>
+
+              @if (graphData().length > 0) {
+                <div class="flex flex-wrap gap-3">
+
+                  <p-selectButton
+                    [options]="metricModeOptions()"
+                    [ngModel]="metricMode()"
+                    (ngModelChange)="updateMetricMode($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    [allowEmpty]="false">
+                    <ng-template #item let-item>
+                      <div class="flex items-center gap-2 text-sm text-slate-600">
+                        @if (item.icon) {
+                          <i [class]="item.icon"></i>
+                        }
+                        <span>{{ item.label }}</span>
+                      </div>
+                    </ng-template>
+                  </p-selectButton>
+
+                  <p-selectButton
+                    [options]="chartTypeOptions()"
+                    [ngModel]="chartType()"
+                    (ngModelChange)="chartType.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    [allowEmpty]="false">
+                    <ng-template #item let-item>
+                      <span class="text-sm text-slate-600">{{ item.label }}</span>
+                    </ng-template>
+                  </p-selectButton>
+
+                  <div class="w-px h-8 bg-slate-300 mx-1 hidden sm:block"></div>
+
+                  <p-button
+                    label="Exportar PDF"
+                    icon="pi pi-file-pdf"
+                    severity="danger"
+                    [outlined]="true"
+                    (onClick)="downloadCustomPdf()"
+                    [loading]="isLoadingReport()"
+                    styleClass="!px-4 !py-1.5 !text-xs !font-bold shadow-sm bg-white hover:bg-red-50">
+                  </p-button>
+
+                </div>
+              }
+            </div>
+
+            <div class="flex-1 w-full flex items-center justify-center relative min-h-[300px] sm:min-h-0">
+
+              @if (graphData().length === 0 && !isLoadingReport()) {
+                <div class="text-slate-400 flex flex-col items-center gap-3 p-4">
+                  <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                    <i class="pi pi-search text-2xl text-slate-300"></i>
+                  </div>
+                  <span class="text-sm font-medium text-center">Configura los filtros a la izquierda y pulsa Generar Analítica</span>
+                </div>
+              }
+
+              @if (isLoadingReport()) {
+                <div class="flex flex-col items-center gap-3 text-blue-500 p-4">
+                  <i class="pi pi-spin pi-spinner text-4xl"></i>
+                  <span class="text-xs font-bold tracking-widest uppercase text-center">Consultando base de datos...</span>
+                </div>
+              }
+
+              @if (graphData().length > 0 && !isLoadingReport()) {
+                <div class="absolute inset-0 p-4 sm:p-6 pb-2">
+                  <p-chart
+                    #myChart
+                    [type]="chartType()"
+                    [data]="chartData()"
+                    [options]="chartOptions()"
+                    [plugins]="chartPlugins"
+                    height="100%">
+                  </p-chart>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden h-[500px]">
+
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4 shrink-0">
+              <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                <i class="pi pi-table text-blue-500"></i> Registros en bruto
+                @if (selectedEntity() && selectedMetric()) {
+                  <span class="text-slate-500 font-normal text-sm ml-2">
+                    ({{ selectedEntity() }} - {{ selectedMetric() }})
+                  </span>
+                }
+              </h3>
+
+              @if (availableDynamicEntities().length > 0) {
+                <p-multiSelect
+                  [options]="availableDynamicEntities()"
+                  [ngModel]="selectedDynamicColumns()"
+                  (onChange)="selectedDynamicColumns.set($event.value)"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Mostrar columnas secundarias..."
+                  display="chip"
+                  [maxSelectedLabels]="2"
+                  styleClass="w-full sm:w-72 !rounded-xl !border-slate-200 shadow-sm text-xs bg-white"
+                  appendTo="body">
+                </p-multiSelect>
+              }
+            </div>
+
+            <div class="flex-1 overflow-hidden">
+              <p-table
+                [value]="tableData()"
+                styleClass="p-datatable-sm h-full flex flex-col"
+                [scrollable]="true"
+                scrollHeight="flex"
+                [lazy]="true"
+                (onPage)="onPageChange($event)"
+                [paginator]="true"
+                [rows]="pageSize()"
+                [totalRecords]="totalRecords()"
+                [rowsPerPageOptions]="[5, 10, 25, 50]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+                paginatorDropdownAppendTo="body">
+
+                <ng-template pTemplate="header">
+                  <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                    @for (col of tableColumns(); track $index) {
+                      <th class="py-4 pl-6">
+                        {{ getColumnLabel(col) }}
+                      </th>
+                    }
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-row>
+                  <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                    @for (col of tableColumns(); track $index) {
+                      <td class="py-3 pl-6 text-sm text-slate-600">
+                        @if (col === 'timestamp') {
+                          <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{{ getCellValue(row, col) | date:'dd/MM/yy HH:mm' }}</span>
+                        } @else {
+                          <span [class.font-bold]="col === 'metric_value' || col === 'metric_total'" [class.text-blue-600]="col === 'metric_value' || col === 'metric_total'">{{ getCellValue(row, col) }}</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                  <tr><td [attr.colspan]="tableColumns().length || 1" class="text-center py-16 text-slate-400 italic">No hay registros asociados a esta consulta.</td></tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+}

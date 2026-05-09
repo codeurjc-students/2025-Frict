@@ -1,5 +1,5 @@
 import {ChangeDetectorRef, Component, inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
-import {isPlatformBrowser, NgClass, NgIf} from '@angular/common';
+import {isPlatformBrowser, NgClass} from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
 
 import * as L from 'leaflet';
@@ -43,7 +43,6 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
     ToggleSwitch,
     FormsModule,
     InputNumber,
-    NgIf,
     Tooltip,
     Dialog,
     Select,

@@ -1,5 +1,4 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {NgIf} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 
@@ -36,7 +35,6 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     Editor,
     ToggleSwitch,
     FileUpload,
-    NgIf,
     TreeSelect,
     FormsModule,
     RouterLink,

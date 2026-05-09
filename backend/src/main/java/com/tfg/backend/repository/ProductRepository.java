@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 

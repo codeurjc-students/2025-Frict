@@ -1,23 +1,22 @@
-
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { UsersManagementComponent } from './users-management.component';
-import { UserService } from '../../../services/user.service';
-import { AuthService } from '../../../services/auth.service';
-import { ReviewService } from '../../../services/review.service';
-import { OrderService } from '../../../services/order.service';
-import { BreadcrumbService } from '../../../utils/breadcrumb.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { of, Subject, throwError } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { User } from '../../../models/user.model';
-import { Order } from '../../../models/order.model';
-import { Review } from '../../../models/review.model';
-import { Stat } from '../../../models/stat.model';
-import { PageResponse } from '../../../models/pageResponse.model';
-import { LoginInfo } from '../../../models/loginInfo.model';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {UsersManagementComponent} from './users-management.component';
+import {UserService} from '../../../services/user.service';
+import {AuthService} from '../../../services/auth.service';
+import {ReviewService} from '../../../services/review.service';
+import {OrderService} from '../../../services/order.service';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {ConfirmationService, MessageService} from 'primeng/api';
+import {of, Subject, throwError} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {User} from '../../../models/user.model';
+import {Order} from '../../../models/order.model';
+import {Review} from '../../../models/review.model';
+import {Stat} from '../../../models/stat.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {LoginInfo} from '../../../models/loginInfo.model';
 
 // ConfirmPopup (PrimeNG) subscribes to ConfirmationService.requireConfirmation$ in its
 // constructor, so the real service must be provided — a jasmine.SpyObj would lack

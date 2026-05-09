@@ -1,327 +1,349 @@
-<div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="getLoginInfo()"></app-loading-screen>
-</div>
+@if (loading || error) {
+  <div>
+    <app-loading-screen [loading]="loading" [error]="error" (tryReload)="getLoginInfo()"></app-loading-screen>
+  </div>
+}
 
-<div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+@if (!loading && !error) {
+  <div class="min-h-screen font-sans text-slate-800 pb-12">
+    <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload (onReload)="getLoginInfo()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (onReload)="getLoginInfo()"></app-breadcrumb-reload>
 
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pt-6">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pt-6">
 
-      <div class="relative">
-        <div class="flex items-center gap-3 mb-2">
-          <h1 class="text-3xl font-bold text-primary-600 tracking-tight">
-            {{ authService.isDriver() ? 'Hoja de Ruta' : 'Panel de Control' }}
-          </h1>
-          <p-tag [value]="(currentDate | date:'EEEE, d MMMM') ?? ''" severity="secondary" styleClass="uppercase"></p-tag>
-        </div>
-
-        <p class="text-slate-500 text-sm flex items-center gap-2" *ngIf="!authService.isDriver() || driverTruck()">
-          <i class="pi text-primary-500" [ngClass]="authService.isDriver() ? 'pi-truck' : 'pi-map-marker'"></i>
-          <span class="font-medium">
-            <ng-container *ngIf="authService.isAdmin()">
-              Información general de la organización ({{ globalKpis().totalShops }} tiendas asociadas)
-            </ng-container>
-
-            <ng-container *ngIf="authService.isManager()">
-              Información general de tiendas asociadas ({{ globalKpis().totalShops }})
-            </ng-container>
-
-            <ng-container *ngIf="authService.isDriver()">
-              Información del camión asociado
-            </ng-container>
-          </span>
-          <span class="text-slate-300">|</span>
-          <span>Vista operativa actualizada</span>
-        </p>
-      </div>
-    </div>
-
-    <ng-container *ngIf="authService.isAdmin() || authService.isManager()">
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-        <div routerLink="/admin/shops"
-             class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>
-          <div class="flex justify-between items-start mb-4">
-            <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-dollar"></i></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-2">
+            <h1 class="text-3xl font-bold text-primary-600 tracking-tight">
+              {{ authService.isDriver() ? 'Hoja de Ruta' : 'Panel de Control' }}
+            </h1>
+            <p-tag [value]="(currentDate | date:'EEEE, d MMMM') ?? ''" severity="secondary" styleClass="uppercase"></p-tag>
           </div>
-          <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Presupuesto Asignado</h3>
-          <p class="text-3xl font-black text-slate-800">{{ formatPrice(globalKpis().totalBudget) }}</p>
-        </div>
 
-        <div routerLink="/admin/orders"
-             class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-          <div class="flex justify-between items-start mb-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-shopping-cart"></i></div>
-          </div>
-          <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Pedidos Activos</h3>
-          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeOrders }} / {{ globalKpis().totalOrders }}</p>
-        </div>
+          @if (!authService.isDriver() || driverTruck()) {
+            <p class="text-slate-500 text-sm flex items-center gap-2">
+              <i class="pi text-primary-500" [ngClass]="authService.isDriver() ? 'pi-truck' : 'pi-map-marker'"></i>
+              <span class="font-medium">
+                @if (authService.isAdmin()) {
+                  Información general de la organización ({{ globalKpis().totalShops }} tiendas asociadas)
+                }
 
-        <div routerLink="/admin/trucks"
-             class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500"></div>
-          <div class="flex justify-between items-start mb-4">
-            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-truck"></i></div>
-          </div>
-          <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Vehículos Operativos</h3>
-          <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeTrucks }} / {{ globalKpis().totalTrucks }}</p>
-        </div>
+                @if (authService.isManager()) {
+                  Información general de tiendas asociadas ({{ globalKpis().totalShops }})
+                }
 
-        <div routerLink="/admin/shops"
-             class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
-          <div class="flex justify-between items-start mb-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-shop"></i></div>
-          </div>
-          <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Tiendas Asignadas</h3>
-          <p class="text-3xl font-black text-slate-800">{{ globalKpis().totalShops }}</p>
+                @if (authService.isDriver()) {
+                  Información del camión asociado
+                }
+              </span>
+              <span class="text-slate-300">|</span>
+              <span>Vista operativa actualizada</span>
+            </p>
+          }
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
-          <div class="flex justify-between items-center mb-2"> <div>
-            <h2 class="text-lg font-bold text-slate-800">Evolución de Ingresos</h2>
-            <p class="text-sm text-slate-500">Rendimiento de los últimos 7 días</p>
-          </div>
-            <p-button icon="pi pi-arrow-right" routerLink="/admin/reports" [text]="true" label="Todos los informes" iconPos="right" size="small"></p-button>
+      @if (authService.isAdmin() || authService.isManager()) {
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+          <div routerLink="/admin/shops"
+               class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>
+            <div class="flex justify-between items-start mb-4">
+              <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-dollar"></i></div>
+            </div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Presupuesto Asignado</h3>
+            <p class="text-3xl font-black text-slate-800">{{ formatPrice(globalKpis().totalBudget) }}</p>
           </div>
 
-          <div class="flex-1 min-h-0 w-full">
-            <p-chart type="line"
-                     [data]="salesChartData()"
-                     [options]="salesChartOptions()"
-                     height="100%">
-            </p-chart>
+          <div routerLink="/admin/orders"
+               class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+            <div class="flex justify-between items-start mb-4">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-shopping-cart"></i></div>
+            </div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Pedidos Activos</h3>
+            <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeOrders }} / {{ globalKpis().totalOrders }}</p>
+          </div>
+
+          <div routerLink="/admin/trucks"
+               class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500"></div>
+            <div class="flex justify-between items-start mb-4">
+              <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-truck"></i></div>
+            </div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Vehículos Operativos</h3>
+            <p class="text-3xl font-black text-slate-800">{{ globalKpis().activeTrucks }} / {{ globalKpis().totalTrucks }}</p>
+          </div>
+
+          <div routerLink="/admin/shops"
+               class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md transition-all group">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
+            <div class="flex justify-between items-start mb-4">
+              <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-shop"></i></div>
+            </div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Tiendas Asignadas</h3>
+            <p class="text-3xl font-black text-slate-800">{{ globalKpis().totalShops }}</p>
           </div>
         </div>
 
-        <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
-          <div class="mb-2 shrink-0"> <h2 class="text-lg font-bold text-slate-800">Estado Operativo</h2>
-            <p class="text-sm text-slate-500">Distribución de pedidos</p>
-          </div>
-
-          <div class="flex-1 min-h-0 w-full relative">
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 mt-[-40px]">
-              <span class="text-3xl font-black text-slate-800 leading-none">{{ globalKpis().activeOrders + ordersChartData().datasets[0]?.data[0] || 0 }}</span>
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Totales</span>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
+            <div class="flex justify-between items-center mb-2"> <div>
+              <h2 class="text-lg font-bold text-slate-800">Evolución de Ingresos</h2>
+              <p class="text-sm text-slate-500">Rendimiento de los últimos 7 días</p>
+            </div>
+              <p-button icon="pi pi-arrow-right" routerLink="/admin/reports" [text]="true" label="Todos los informes" iconPos="right" size="small"></p-button>
             </div>
 
-            <p-chart type="doughnut"
-                     [data]="ordersChartData()"
-                     [options]="ordersChartOptions()"
-                     height="100%"
-                     pStyleClass="h-full w-full">
-            </p-chart>
-          </div>
-        </div>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="authService.isDriver() && driverTruck()">
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-400"></div>
-          <div class="flex items-center gap-4 mb-2">
-            <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center"><i class="pi pi-box"></i></div>
-            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">Realizados</h3>
-          </div>
-          <p class="text-3xl font-black text-slate-800 mt-2">{{ driverKpis().orderMade }}</p>
-        </div>
-
-        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500"></div>
-          <div class="flex items-center gap-4 mb-2">
-            <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center"><i class="pi pi-directions"></i></div>
-            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">Enviados</h3>
-          </div>
-          <p class="text-3xl font-black text-orange-500 mt-2">{{ driverKpis().sent }}</p>
-        </div>
-
-        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-          <div class="flex items-center gap-4 mb-2">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-truck"></i></div>
-            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">En Reparto</h3>
-          </div>
-          <p class="text-3xl font-black text-blue-600 mt-2">{{ driverKpis().onDelivery }}</p>
-        </div>
-
-        <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>
-          <div class="flex items-center gap-4 mb-2">
-            <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><i class="pi pi-check"></i></div>
-            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">Total Completados (Hoy)</h3>
-          </div>
-          <p class="text-3xl font-black text-green-600 mt-2">{{ driverKpis().completed }}</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-auto">
-          <div class="mb-4">
-            <h2 class="text-lg font-bold text-slate-800">Rendimiento Semanal</h2>
-            <p class="text-sm text-slate-500">Pedidos desglosados por estado diario</p>
-          </div>
-          <div class="flex-1 min-h-0 w-full">
-            <p-chart type="bar" [data]="driverHistoryChartData()" [options]="driverHistoryChartOptions()" height="100%"></p-chart>
-          </div>
-        </div>
-
-        <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-auto relative overflow-hidden">
-          <div class="absolute right-[-20px] top-[-20px] opacity-5">
-            <i class="pi pi-shop text-[12rem]"></i>
+            <div class="flex-1 min-h-0 w-full">
+              <p-chart type="line"
+                       [data]="salesChartData()"
+                       [options]="salesChartOptions()"
+                       height="100%">
+              </p-chart>
+            </div>
           </div>
 
-          <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Información Operativa</h2>
-
-          <div class="flex flex-col gap-5 relative z-10 h-full">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
-                <i class="pi pi-map-marker text-xl"></i>
-              </div>
-              <div>
-                <p class="text-xs text-slate-500 font-medium">Tienda Asignada</p>
-                <p class="text-lg font-bold text-slate-800 leading-tight">{{ driverShop()?.name || 'No asignada' }}</p>
-              </div>
+          <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-[400px]">
+            <div class="mb-2 shrink-0"> <h2 class="text-lg font-bold text-slate-800">Estado Operativo</h2>
+              <p class="text-sm text-slate-500">Distribución de pedidos</p>
             </div>
 
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <i class="pi pi-phone text-xl"></i>
+            <div class="flex-1 min-h-0 w-full relative">
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 mt-[-40px]">
+                <span class="text-3xl font-black text-slate-800 leading-none">{{ globalKpis().activeOrders + ordersChartData().datasets[0]?.data[0] || 0 }}</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Totales</span>
               </div>
-              <div>
-                <p class="text-xs text-slate-500 font-medium">Contacto Urgente</p>
-                <p class="text-lg font-bold text-slate-800">{{ driverShop()?.phone || 'No disponible' }}</p>
-              </div>
-            </div>
 
-            <div class="border-t border-slate-100 my-1"></div>
-
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
-                <i class="pi pi-car text-xl"></i>
-              </div>
-              <div>
-                <p class="text-xs text-slate-500 font-medium">Vehículo Asociado</p>
-                <p class="text-lg font-bold font-mono text-slate-800 leading-tight">{{ driverTruck()?.referenceCode }}</p>
-                <p-tag [value]="driverTruck().history[driverTruck().history.length -1].status" severity="info" [rounded]="true" styleClass="!text-[10px] mt-1"></p-tag>
-              </div>
-            </div>
-
-            <div class="mt-auto pt-4 border-t border-slate-100">
-              <p-button label="Soporte Técnico" icon="pi pi-headphones" styleClass="p-button-secondary w-full" [outlined]="true"></p-button>
+              <p-chart type="doughnut"
+                       [data]="ordersChartData()"
+                       [options]="ordersChartOptions()"
+                       height="100%"
+                       pStyleClass="h-full w-full">
+              </p-chart>
             </div>
           </div>
         </div>
-      </div>
-    </ng-container>
+      }
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      @if (authService.isDriver() && driverTruck()) {
 
-      <div *ngIf="!authService.isDriver() || driverTruck()" class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <i class="pi pi-list text-primary-400"></i> {{ authService.isDriver() ? 'Mis Próximas Entregas' : 'Pedidos Recientes' }}
-          </h2>
-          <p-button *ngIf="authService.isAdmin() || authService.isManager()" icon="pi pi-arrow-right" routerLink="/admin/orders" [text]="true" label="Todos los pedidos" iconPos="right" size="small"></p-button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-400"></div>
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center"><i class="pi pi-box"></i></div>
+              <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">Realizados</h3>
+            </div>
+            <p class="text-3xl font-black text-slate-800 mt-2">{{ driverKpis().orderMade }}</p>
+          </div>
+
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500"></div>
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center"><i class="pi pi-directions"></i></div>
+              <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">Enviados</h3>
+            </div>
+            <p class="text-3xl font-black text-orange-500 mt-2">{{ driverKpis().sent }}</p>
+          </div>
+
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-truck"></i></div>
+              <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">En Reparto</h3>
+            </div>
+            <p class="text-3xl font-black text-blue-600 mt-2">{{ driverKpis().onDelivery }}</p>
+          </div>
+
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><i class="pi pi-check"></i></div>
+              <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider">Total Completados (Hoy)</h3>
+            </div>
+            <p class="text-3xl font-black text-green-600 mt-2">{{ driverKpis().completed }}</p>
+          </div>
         </div>
 
-        <p-table [value]="recentOrders()" styleClass="p-datatable-sm" responsiveLayout="scroll">
-          <ng-template pTemplate="header">
-            <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
-              <th class="py-3 pl-5">Referencia</th>
-              <th class="py-3">Creado el</th>
-              <th class="py-3">Cliente</th>
-              <th *ngIf="authService.isDriver()" class="py-3">Dirección</th>
-              <th class="py-3">Estado</th>
-              <th *ngIf="authService.isAdmin() || authService.isManager()" class="py-3 text-right pr-5">Importe</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-order>
-            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
-              <td class="py-3 pl-5 text-sm font-mono text-slate-600 font-medium">{{ order.referenceCode }}</td>
-              <td class="py-3 pl-5 text-sm text-slate-600 font-medium">{{ order.createdAt }}</td>
-              <td class="py-3 text-sm font-bold text-slate-800">
-                <div class="flex items-center gap-2">
-                  <div class="relative flex">
-                    <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-auto">
+            <div class="mb-4">
+              <h2 class="text-lg font-bold text-slate-800">Rendimiento Semanal</h2>
+              <p class="text-sm text-slate-500">Pedidos desglosados por estado diario</p>
+            </div>
+            <div class="flex-1 min-h-0 w-full">
+              <p-chart type="bar" [data]="driverHistoryChartData()" [options]="driverHistoryChartOptions()" height="100%"></p-chart>
+            </div>
+          </div>
 
-                    <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 border border-white rounded-full"
-                          [ngClass]="order.user.connection?.online ? 'bg-green-500' : 'bg-slate-400'"
-                          [pTooltip]="order.user.connection?.online ? 'Online' : 'Offline'"
-                          tooltipPosition="top">
-                </span>
-                  </div>
-                  <span>{{ order.user.name }}</span>
+          <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col h-auto relative overflow-hidden">
+            <div class="absolute right-[-20px] top-[-20px] opacity-5">
+              <i class="pi pi-shop text-[12rem]"></i>
+            </div>
+
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Información Operativa</h2>
+
+            <div class="flex flex-col gap-5 relative z-10 h-full">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+                  <i class="pi pi-map-marker text-xl"></i>
                 </div>
-              </td>
-              <td *ngIf="authService.isDriver()" class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ formatAddress(order.sendingAddress) }}</td>
-              <td class="py-3">
-                <p-tag [value]="order.history[order.history.length - 1].status" severity="secondary"></p-tag>
-              </td>
-              <td *ngIf="authService.isAdmin() || authService.isManager()" class="py-3 text-right pr-5 font-bold text-slate-900">{{ formatPrice(order.totalCost) }}</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
+                <div>
+                  <p class="text-xs text-slate-500 font-medium">Tienda Asignada</p>
+                  <p class="text-lg font-bold text-slate-800 leading-tight">{{ driverShop()?.name || 'No asignada' }}</p>
+                </div>
+              </div>
 
-      <div *ngIf="authService.isDriver() && !driverTruck()" class="lg:col-span-3 flex flex-col items-center justify-center py-16 px-6 bg-white border border-slate-200 rounded-2xl shadow-sm text-center">
-        <div class="w-24 h-24 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center border-4 border-orange-100 mb-6">
-          <i class="pi pi-truck" style="font-size: 2rem"></i>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <i class="pi pi-phone text-xl"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-500 font-medium">Contacto Urgente</p>
+                  <p class="text-lg font-bold text-slate-800">{{ driverShop()?.phone || 'No disponible' }}</p>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-100 my-1"></div>
+
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
+                  <i class="pi pi-car text-xl"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-500 font-medium">Vehículo Asociado</p>
+                  <p class="text-lg font-bold font-mono text-slate-800 leading-tight">{{ driverTruck()?.referenceCode }}</p>
+                  <p-tag [value]="driverTruck().history[driverTruck().history.length -1].status" severity="info" [rounded]="true" styleClass="!text-[10px] mt-1"></p-tag>
+                </div>
+              </div>
+
+              <div class="mt-auto pt-4 border-t border-slate-100">
+                <p-button label="Soporte Técnico" icon="pi pi-headphones" styleClass="p-button-secondary w-full" [outlined]="true"></p-button>
+              </div>
+            </div>
+          </div>
         </div>
-        <h2 class="text-3xl font-black text-slate-800 mb-2">Vehículo No Asignado</h2>
-        <p class="text-slate-500 max-w-lg mb-8 leading-relaxed">
-          Actualmente no tienes ningún vehículo vinculado a tu cuenta. Para poder acceder a tu hoja de ruta y comenzar a gestionar entregas, necesitas que un administrador te asigne uno.
-        </p>
-      </div>
+      }
 
-      <div *ngIf="!authService.isDriver() || driverTruck()" class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-auto">
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <i class="pi pi-bell text-red-500 animate-pulse"></i> {{ authService.isDriver() ? 'Notificaciones de Camión' : 'Notificaciones del Sistema' }}
-          </h2>
-          <p-button icon="pi pi-arrow-right" routerLink="/admin/notifications" [text]="true" label="Ver todas" iconPos="right" size="small"></p-button>
-        </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div class="flex-grow overflow-y-auto custom-scrollbar p-5 flex flex-col gap-3">
-          @for (notif of recentNotifications(); track notif.id) {
-            <div class="flex gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
+        @if (!authService.isDriver() || driverTruck()) {
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="pi pi-list text-primary-400"></i> {{ authService.isDriver() ? 'Mis Próximas Entregas' : 'Pedidos Recientes' }}
+              </h2>
+              @if (authService.isAdmin() || authService.isManager()) {
+                <p-button icon="pi pi-arrow-right" routerLink="/admin/orders" [text]="true" label="Todos los pedidos" iconPos="right" size="small"></p-button>
+              }
+            </div>
 
-              @if (!notif.read) {
-                <div class="absolute top-3 right-3 w-2 h-2 bg-primary-500 rounded-full"></div>
+            <p-table [value]="recentOrders()" styleClass="p-datatable-sm" responsiveLayout="scroll">
+              <ng-template pTemplate="header">
+                <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
+                  <th class="py-3 pl-5">Referencia</th>
+                  <th class="py-3">Creado el</th>
+                  <th class="py-3">Cliente</th>
+                  @if (authService.isDriver()) {
+                    <th class="py-3">Dirección</th>
+                  }
+                  <th class="py-3">Estado</th>
+                  @if (authService.isAdmin() || authService.isManager()) {
+                    <th class="py-3 text-right pr-5">Importe</th>
+                  }
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-order>
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
+                  <td class="py-3 pl-5 text-sm font-mono text-slate-600 font-medium">{{ order.referenceCode }}</td>
+                  <td class="py-3 pl-5 text-sm text-slate-600 font-medium">{{ order.createdAt }}</td>
+                  <td class="py-3 text-sm font-bold text-slate-800">
+                    <div class="flex items-center gap-2">
+                      <div class="relative flex">
+                        <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
+
+                        <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 border border-white rounded-full"
+                              [ngClass]="order.user.connection?.online ? 'bg-green-500' : 'bg-slate-400'"
+                              [pTooltip]="order.user.connection?.online ? 'Online' : 'Offline'"
+                              tooltipPosition="top">
+                    </span>
+                      </div>
+                      <span>{{ order.user.name }}</span>
+                    </div>
+                  </td>
+                  @if (authService.isDriver()) {
+                    <td class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ formatAddress(order.sendingAddress) }}</td>
+                  }
+                  <td class="py-3">
+                    <p-tag [value]="order.history[order.history.length - 1].status" severity="secondary"></p-tag>
+                  </td>
+                  @if (authService.isAdmin() || authService.isManager()) {
+                    <td class="py-3 text-right pr-5 font-bold text-slate-900">{{ formatPrice(order.totalCost) }}</td>
+                  }
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        }
+
+        @if (authService.isDriver() && !driverTruck()) {
+          <div class="lg:col-span-3 flex flex-col items-center justify-center py-16 px-6 bg-white border border-slate-200 rounded-2xl shadow-sm text-center">
+            <div class="w-24 h-24 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center border-4 border-orange-100 mb-6">
+              <i class="pi pi-truck" style="font-size: 2rem"></i>
+            </div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">Vehículo No Asignado</h2>
+            <p class="text-slate-500 max-w-lg mb-8 leading-relaxed">
+              Actualmente no tienes ningún vehículo vinculado a tu cuenta. Para poder acceder a tu hoja de ruta y comenzar a gestionar entregas, necesitas que un administrador te asigne uno.
+            </p>
+          </div>
+        }
+
+        @if (!authService.isDriver() || driverTruck()) {
+          <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-auto">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+              <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="pi pi-bell text-red-500 animate-pulse"></i> {{ authService.isDriver() ? 'Notificaciones de Camión' : 'Notificaciones del Sistema' }}
+              </h2>
+              <p-button icon="pi pi-arrow-right" routerLink="/admin/notifications" [text]="true" label="Ver todas" iconPos="right" size="small"></p-button>
+            </div>
+
+            <div class="flex-grow overflow-y-auto custom-scrollbar p-5 flex flex-col gap-3">
+              @for (notif of recentNotifications(); track notif.id) {
+                <div class="flex gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
+
+                  @if (!notif.read) {
+                    <div class="absolute top-3 right-3 w-2 h-2 bg-primary-500 rounded-full"></div>
+                  }
+
+                  <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center border" [ngClass]="uiService.getVisualsByType(notif.type).color">
+                    <i [class]="uiService.getVisualsByType(notif.type).icon"></i>
+                  </div>
+
+                  <div class="flex flex-col min-w-0 pr-4">
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="text-sm font-bold text-slate-800 truncate" [ngClass]="{'text-slate-900': !notif.read, 'text-slate-700': notif.read}">{{ notif.subject }}</span>
+                      <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 shrink-0">{{ notif.type }}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">{{ notif.description }}</p>
+
+                  </div>
+                </div>
               }
 
-              <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center border" [ngClass]="uiService.getVisualsByType(notif.type).color">
-                <i [class]="uiService.getVisualsByType(notif.type).icon"></i>
-              </div>
-
-              <div class="flex flex-col min-w-0 pr-4">
-                <div class="flex items-center gap-2 mb-0.5">
-                  <span class="text-sm font-bold text-slate-800 truncate" [ngClass]="{'text-slate-900': !notif.read, 'text-slate-700': notif.read}">{{ notif.subject }}</span>
-                  <span class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 shrink-0">{{ notif.type }}</span>
+              @if(recentNotifications().length === 0) {
+                <div class="h-full flex flex-col items-center justify-center text-slate-400 py-6">
+                  <i class="pi pi-check-circle text-4xl mb-2 text-green-400"></i>
+                  <p class="text-sm font-medium">No hay notificaciones.</p>
                 </div>
-                <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">{{ notif.description }}</p>
-
-              </div>
+              }
             </div>
-          }
+          </div>
+        }
 
-          @if(recentNotifications().length === 0) {
-            <div class="h-full flex flex-col items-center justify-center text-slate-400 py-6">
-              <i class="pi pi-check-circle text-4xl mb-2 text-green-400"></i>
-              <p class="text-sm font-medium">No hay notificaciones.</p>
-            </div>
-          }
-        </div>
       </div>
-
     </div>
   </div>
-</div>
+}

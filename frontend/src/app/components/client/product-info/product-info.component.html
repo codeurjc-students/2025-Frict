@@ -1,514 +1,549 @@
-<div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadProduct()"></app-loading-screen>
-</div>
+@if (loading || error) {
+  <div>
+    <app-loading-screen [loading]="loading" [error]="error" (tryReload)="loadProduct()"></app-loading-screen>
+  </div>
+}
 
-<div *ngIf="!loading && !error" class="max-w-[95%] xl:max-w-[83%] mx-auto pb-16 relative">
+@if (!loading && !error) {
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto pb-16 relative">
 
-  <app-breadcrumb-reload (onReload)="loadProduct()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (onReload)="loadProduct()"></app-breadcrumb-reload>
 
-  <header class="mb-4 mt-4 border-surface-200 py-4">
-    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-      <div class="space-y-3">
+    <header class="mb-4 mt-4 border-surface-200 py-4">
+      <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div class="space-y-3">
 
-        <div class="flex items-center gap-4">
-          <h1 class="text-3xl md:text-4xl font-bold text-surface-900 m-0">
-            {{ product.name }}
-          </h1>
-          <app-stock-tag [product]="product"></app-stock-tag>
+          <div class="flex items-center gap-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-surface-900 m-0">
+              {{ product.name }}
+            </h1>
+            <app-stock-tag [product]="product"></app-stock-tag>
+          </div>
+
+          <div class="flex items-center flex-wrap gap-4 text-sm">
+            <span class="text-surface-500 font-medium whitespace-nowrap">
+              Ref: {{ product.referenceCode }}
+            </span>
+
+            <div class="h-4 w-px bg-surface-300"></div>
+
+            <div class="flex items-center flex-wrap gap-2">
+              @for (category of product.categories; track category.id) {
+                <p-tag [value]="category.name" [icon]="category.icon || 'pi pi-tag'" [rounded]="true" severity="info">
+                </p-tag>
+              } @empty {
+                <span class="text-surface-400 italic">Sin categoría</span>
+              }
+            </div>
+          </div>
+
         </div>
 
-        <div class="flex items-center flex-wrap gap-4 text-sm">
-          <span class="text-surface-500 font-medium whitespace-nowrap">
-            Ref: {{ product.referenceCode }}
-          </span>
+        <div class="flex items-center gap-3 bg-surface-50 px-4 py-2 rounded-xl border border-surface-200">
+          <div class="flex flex-col items-end">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl font-bold text-surface-900">{{ product.averageRating }}</span>
+              <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true" class="scale-90"></p-rating>
+            </div>
+            <span class="text-xs text-primary-600 font-medium cursor-pointer hover:underline">{{ product.totalReviews }} opiniones</span>
+          </div>
+        </div>
+      </div>
+    </header>
 
-          <div class="h-4 w-px bg-surface-300"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12">
 
-          <div class="flex items-center flex-wrap gap-2">
-            @for (category of product.categories; track category.id) {
-              <p-tag [value]="category.name" [icon]="category.icon || 'pi pi-tag'" [rounded]="true" severity="info">
-              </p-tag>
-            } @empty {
-              <span class="text-surface-400 italic">Sin categoría</span>
+      <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-8">
+
+        <div class="bg-white rounded-xl p-2 border border-surface-200 shadow-sm w-full mx-auto">
+          <p-galleria
+            [value]="images"
+            [responsiveOptions]="galleryResponsiveOptions"
+            [numVisible]="5"
+            [circular]="true"
+            [showThumbnails]="true">
+
+            <ng-template pTemplate="item" let-item>
+              <div class="w-full h-[300px] md:h-[450px] bg-surface-50 flex items-center justify-center overflow-hidden relative group">
+                <p-image
+                  [src]="item.itemImageSrc"
+                  [alt]="item.alt"
+                  [preview]="true"
+                  appendTo="body"
+                  imageClass="w-full h-full object-contain mix-blend-multiply">
+                </p-image>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="thumbnail" let-item>
+              <div class="p-1">
+                <div class="w-16 h-16 bg-surface-50 rounded-lg border border-surface-200 overflow-hidden flex items-center justify-center hover:border-primary-500 transition-colors cursor-pointer">
+                  <img [src]="item.itemImageSrc" [alt]="item.alt" class="w-full h-full object-contain p-1 mix-blend-multiply"/>
+                </div>
+              </div>
+            </ng-template>
+          </p-galleria>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-surface-200 shadow-sm p-6 md:p-8">
+          <p-tabs value="0">
+            <p-tablist class="!border-b !border-surface-200 mb-6">
+              <p-tab value="0" class="!font-bold">Información</p-tab>
+              <p-tab disabled value="1" class="!font-bold">Especificaciones</p-tab>
+              <!-- NUEVA PESTAÑA: VISUALIZACIONES -->
+              <p-tab value="2" class="!font-bold">Visualizaciones</p-tab>
+            </p-tablist>
+
+            <p-tabpanels>
+              <p-tabpanel value="0">
+                <div class="prose prose-slate max-w-none text-surface-600 leading-relaxed" [innerHTML]="product.description"></div>
+              </p-tabpanel>
+              <p-tabpanel value="1">Coming soon...</p-tabpanel>
+
+              <!-- NUEVO PANEL: VISUALIZACIONES -->
+
+              <p-tabpanel value="2">
+                <div class="flex flex-col gap-6">
+
+                  <!-- KPI Hoy y Controles -->
+                  <div class="flex items-center justify-between flex-wrap gap-6 bg-surface-50 p-5 rounded-xl border border-surface-200">
+
+                    <div class="flex flex-col gap-1">
+                      <span class="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-1.5"><i class="pi pi-eye text-blue-500"></i> Visualizaciones Hoy</span>
+                      <span class="text-3xl font-extrabold text-surface-900">{{ viewsToday }}</span>
+                    </div>
+
+                    <!-- Agrupador de filtros dinámicos -->
+                    <div class="flex items-center gap-4 flex-wrap">
+
+                      <!-- NUEVO: Rango de fechas -->
+                      <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold text-surface-400 uppercase">Rango de fechas</label>
+                        <div class="flex items-center gap-2">
+                          <p-datepicker
+                            [(ngModel)]="viewsStartDate"
+                            (ngModelChange)="loadViewsData()"
+                            dateFormat="dd/mm/yy"
+                            [showIcon]="true"
+                            iconDisplay="input"
+                            styleClass="w-36 !rounded-lg border-surface-200 shadow-sm text-sm"
+                            appendTo="body">
+                          </p-datepicker>
+                          <span class="text-surface-400 font-bold">-</span>
+                          <p-datepicker
+                            [(ngModel)]="viewsEndDate"
+                            (ngModelChange)="loadViewsData()"
+                            dateFormat="dd/mm/yy"
+                            [showIcon]="true"
+                            iconDisplay="input"
+                            styleClass="w-36 !rounded-lg border-surface-200 shadow-sm text-sm"
+                            appendTo="body">
+                          </p-datepicker>
+                        </div>
+                      </div>
+
+                      <!-- Divisor visual -->
+                      <div class="hidden sm:block w-px h-10 bg-surface-200"></div>
+
+                      <!-- Agrupación (Conservada) -->
+                      <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold text-surface-400 uppercase">Agrupación gráfica</label>
+                        <p-select
+                          [options]="viewIntervalOptions"
+                          [(ngModel)]="selectedViewInterval"
+                          (onChange)="loadViewsData()"
+                          optionLabel="label"
+                          optionValue="value"
+                          styleClass="w-32 !rounded-lg border-surface-200 shadow-sm text-sm"
+                          appendTo="body">
+                        </p-select>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <!-- Gráfico de Variación -->
+                  <div class="w-full h-[300px] relative">
+                    <!-- Loader de Gráfica -->
+                    @if (isViewsLoading) {
+                      <div class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-2 rounded-xl">
+                        <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
+                        <span class="text-xs font-bold tracking-widest uppercase text-blue-500">Cargando datos...</span>
+                      </div>
+                    }
+
+                    <!-- Chart -->
+                    @if (viewsChartData?.datasets[0]?.data?.length === 0 && !isViewsLoading) {
+                      <div class="absolute inset-0 flex items-center justify-center border border-dashed border-surface-200 rounded-xl bg-surface-50/50">
+                        <span class="text-sm text-surface-400 font-medium">No hay histórico de visualizaciones para este rango.</span>
+                      </div>
+                    }
+                    @if (viewsChartData?.datasets[0]?.data?.length > 0) {
+                      <p-chart type="line" [data]="viewsChartData" [options]="viewsChartOptions" height="100%"></p-chart>
+                    }
+                  </div>
+
+                </div>
+              </p-tabpanel>
+            </p-tabpanels>
+          </p-tabs>
+        </div>
+
+        <div class="mt-4">
+          <h2 class="text-2xl font-bold text-surface-900 mb-6 flex items-center gap-3">
+            <i class="pi pi-comments text-primary-500"></i> Opiniones de usuarios
+          </h2>
+
+          <div class="bg-surface-900 text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center justify-between shadow-xl mb-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-primary-500/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+
+            <div class="text-center relative z-10">
+              <span class="text-6xl font-extrabold tracking-tighter">{{ product.averageRating }}</span>
+              <div class="flex justify-center my-2">
+                <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true" class="gap-1"></p-rating>
+              </div>
+              <p class="text-surface-400 text-sm">{{product.totalReviews}} reseñas totales</p>
+            </div>
+
+            <div class="hidden md:block w-px h-24 bg-surface-700"></div>
+
+            <div class="text-center md:text-left relative z-10">
+              <div class="flex items-center gap-3 justify-center md:justify-start">
+                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+                  <i class="pi pi-thumbs-up text-xl"></i>
+                </div>
+                <div>
+                  <span class="block text-3xl font-bold">{{ recommendationPercentage }}%</span>
+                  <span class="text-surface-400 text-sm">recomiendan este producto</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-1 w-full md:w-auto relative z-10">
+              @for (star of stars; track $index) {
+                <div class="flex items-center gap-2 mb-1.5 text-sm">
+                  <span class="w-3 font-bold">{{ star.value }}</span>
+                  <i class="pi pi-star-fill text-yellow-500 text-xs"></i>
+                  <div class="flex-1 h-2 bg-surface-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary-500 rounded-full" [style.width.%]="product.totalReviews > 0 ? (star.count / product.totalReviews) * 100 : 0"></div>
+                  </div>
+                  <span class="w-8 text-right text-surface-400">{{ star.count }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (authService.isLogged() && authService.isUser() && !userReviewed) {
+            <div class="my-8 bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
+              <h3 class="text-lg font-bold mb-4">Escribe tu reseña</h3>
+              <div class="flex gap-4">
+                <p-avatar [image]="loggedUserInfo.imageUrl" shape="circle" size="large"></p-avatar>
+                <div class="flex-1 space-y-4">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span class="text-sm text-surface-500 block mb-1">Tu valoración general</span>
+                      <p-rating [(ngModel)]="newReview.rating"></p-rating>
+                    </div>
+                    <div class="flex items-center gap-2 bg-surface-50 p-1 rounded-lg border border-surface-200">
+                      <button (click)="setRecommendation(true)" [class]="newReview.recommended ? 'bg-green-100 text-green-700 shadow-sm' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
+                        <i class="pi pi-thumbs-up"></i> Recomendado
+                      </button>
+                      <button (click)="setRecommendation(false)" [class]="!newReview.recommended && newReview.recommended !== null ? 'bg-red-100 text-red-700 shadow-sm' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
+                        <i class="pi pi-thumbs-down"></i> No recomendado
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea pTextarea [(ngModel)]="newReview.text" rows="4" placeholder="¿Qué es lo que más te ha gustado? ¿Y lo que menos?" class="w-full !bg-surface-50 !border-surface-200 focus:!bg-white focus:!border-primary-500 transition-colors rounded-xl p-3 resize-none"></textarea>
+
+                  <div class="flex justify-end">
+                    <p-button (onClick)="submitReview()" label="Publicar opinión" icon="pi pi-send" class="rounded-xl"></p-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="space-y-4">
+            @for (review of productReviews; track $index) {
+              <div class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm hover:border-surface-300 transition-colors">
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex items-center gap-3">
+                    <div class="relative flex">
+                      <p-avatar [image]="review.creatorImage" shape="circle" size="normal"></p-avatar>
+
+                      <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white rounded-full transition-colors"
+                            [ngClass]="review.creatorConnection?.online ? 'bg-green-500' : 'bg-slate-400'">
+                      </span>
+                    </div>
+
+                    <div>
+                      <p class="font-bold text-surface-900 text-sm">{{ review.creatorName }}</p>
+                      <div class="flex items-center gap-2 text-xs text-surface-500">
+                        <span>{{ review.createdAt }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p-rating [ngModel]="review.rating" [readonly]="true" class="scale-90"></p-rating>
+                </div>
+
+                <p class="text-surface-700 leading-relaxed mb-4">{{ review.text }}</p>
+
+                <div class="flex items-center justify-between pt-4 border-t border-surface-100">
+                  <div class="flex items-center gap-2 text-sm">
+                    @if (review.recommended) {
+                      <span class="text-green-600 font-medium flex items-center gap-1"><i class="pi pi-thumbs-up"></i> Recomienda este producto</span>
+                    }
+                    @if (!review.recommended) {
+                      <span class="text-red-500 font-medium flex items-center gap-1"><i class="pi pi-thumbs-down"></i> No recomienda este producto</span>
+                    }
+                  </div>
+
+                  @if (authService.isLogged() && authService.isUser() && userReviewed && (loggedUserInfo.id == review.creatorId)) {
+                    <div class="flex gap-2">
+                      <button (click)="editReview(review.id)" class="text-surface-400 hover:text-primary-600 transition-colors"><i class="pi pi-pencil"></i></button>
+                      <button (click)="deleteReview(review.id)" class="text-surface-400 hover:text-red-600 transition-colors"><i class="pi pi-trash"></i></button>
+                    </div>
+                  }
+                </div>
+              </div>
             }
           </div>
         </div>
-
       </div>
 
-      <div class="flex items-center gap-3 bg-surface-50 px-4 py-2 rounded-xl border border-surface-200">
-        <div class="flex flex-col items-end">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl font-bold text-surface-900">{{ product.averageRating }}</span>
-            <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true" class="scale-90"></p-rating>
-          </div>
-          <span class="text-xs text-primary-600 font-medium cursor-pointer hover:underline">{{ product.totalReviews }} opiniones</span>
-        </div>
-      </div>
-    </div>
-  </header>
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12">
+      <div class="lg:col-span-5 xl:col-span-4 h-fit lg:sticky lg:top-24 space-y-6">
+        <div class="bg-white p-6 rounded-3xl border border-surface-200 shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary-400 to-primary-600"></div>
 
-    <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-8">
-
-      <div class="bg-white rounded-xl p-2 border border-surface-200 shadow-sm w-full mx-auto">
-        <p-galleria
-          [value]="images"
-          [responsiveOptions]="galleryResponsiveOptions"
-          [numVisible]="5"
-          [circular]="true"
-          [showThumbnails]="true">
-
-          <ng-template pTemplate="item" let-item>
-            <div class="w-full h-[300px] md:h-[450px] bg-surface-50 flex items-center justify-center overflow-hidden relative group">
-              <p-image
-                [src]="item.itemImageSrc"
-                [alt]="item.alt"
-                [preview]="true"
-                appendTo="body"
-                imageClass="w-full h-full object-contain mix-blend-multiply">
-              </p-image>
+          <div class="mb-6 mt-2">
+            <div class="flex items-end gap-3 flex-wrap">
+              <span class="text-4xl lg:text-5xl font-bold text-surface-900">{{formatPrice(product.currentPrice)}}</span>
+              <span class="text-surface-500 text-sm font-medium mb-2">IVA incluido</span>
             </div>
-          </ng-template>
-
-          <ng-template pTemplate="thumbnail" let-item>
-            <div class="p-1">
-              <div class="w-16 h-16 bg-surface-50 rounded-lg border border-surface-200 overflow-hidden flex items-center justify-center hover:border-primary-500 transition-colors cursor-pointer">
-                <img [src]="item.itemImageSrc" [alt]="item.alt" class="w-full h-full object-contain p-1 mix-blend-multiply"/>
+            @if (product.previousPrice > 0 && product.discount != '0%') {
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-surface-400 line-through font-medium">{{formatPrice(product.previousPrice)}}</span>
+                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold border border-red-200">Ahorras {{product.discount}}</span>
               </div>
+            }
+          </div>
+
+          <div class="space-y-3 mb-6">
+
+            <div class="flex items-center gap-2 px-1">
+              <div class="relative flex h-2.5 w-2.5">
+                @if (product.totalUnits > 0) {
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                }
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5" [ngClass]="product.totalUnits > 0 ? 'bg-green-500' : 'bg-red-500'"></span>
+              </div>
+              <p class="text-sm font-medium text-surface-600">
+                Stock web global: <span class="font-bold" [ngClass]="product.totalUnits > 0 ? 'text-surface-900' : 'text-red-600'">{{ product.totalUnits }} uds.</span>
+              </p>
             </div>
-          </ng-template>
-        </p-galleria>
-      </div>
 
-      <div class="bg-white rounded-2xl border border-surface-200 shadow-sm p-6 md:p-8">
-        <p-tabs value="0">
-          <p-tablist class="!border-b !border-surface-200 mb-6">
-            <p-tab value="0" class="!font-bold">Información</p-tab>
-            <p-tab disabled value="1" class="!font-bold">Especificaciones</p-tab>
-            <!-- NUEVA PESTAÑA: VISUALIZACIONES -->
-            <p-tab value="2" class="!font-bold">Visualizaciones</p-tab>
-          </p-tablist>
-
-          <p-tabpanels>
-            <p-tabpanel value="0">
-              <div class="prose prose-slate max-w-none text-surface-600 leading-relaxed" [innerHTML]="product.description"></div>
-            </p-tabpanel>
-            <p-tabpanel value="1">Coming soon...</p-tabpanel>
-
-            <!-- NUEVO PANEL: VISUALIZACIONES -->
-
-            <p-tabpanel value="2">
-              <div class="flex flex-col gap-6">
-
-                <!-- KPI Hoy y Controles -->
-                <div class="flex items-center justify-between flex-wrap gap-6 bg-surface-50 p-5 rounded-xl border border-surface-200">
-
-                  <div class="flex flex-col gap-1">
-                    <span class="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-1.5"><i class="pi pi-eye text-blue-500"></i> Visualizaciones Hoy</span>
-                    <span class="text-3xl font-extrabold text-surface-900">{{ viewsToday }}</span>
-                  </div>
-
-                  <!-- Agrupador de filtros dinámicos -->
-                  <div class="flex items-center gap-4 flex-wrap">
-
-                    <!-- NUEVO: Rango de fechas -->
-                    <div class="flex flex-col gap-1.5">
-                      <label class="text-[10px] font-bold text-surface-400 uppercase">Rango de fechas</label>
-                      <div class="flex items-center gap-2">
-                        <p-datepicker
-                          [(ngModel)]="viewsStartDate"
-                          (ngModelChange)="loadViewsData()"
-                          dateFormat="dd/mm/yy"
-                          [showIcon]="true"
-                          iconDisplay="input"
-                          styleClass="w-36 !rounded-lg border-surface-200 shadow-sm text-sm"
-                          appendTo="body">
-                        </p-datepicker>
-                        <span class="text-surface-400 font-bold">-</span>
-                        <p-datepicker
-                          [(ngModel)]="viewsEndDate"
-                          (ngModelChange)="loadViewsData()"
-                          dateFormat="dd/mm/yy"
-                          [showIcon]="true"
-                          iconDisplay="input"
-                          styleClass="w-36 !rounded-lg border-surface-200 shadow-sm text-sm"
-                          appendTo="body">
-                        </p-datepicker>
-                      </div>
-                    </div>
-
-                    <!-- Divisor visual -->
-                    <div class="hidden sm:block w-px h-10 bg-surface-200"></div>
-
-                    <!-- Agrupación (Conservada) -->
-                    <div class="flex flex-col gap-1.5">
-                      <label class="text-[10px] font-bold text-surface-400 uppercase">Agrupación gráfica</label>
-                      <p-select
-                        [options]="viewIntervalOptions"
-                        [(ngModel)]="selectedViewInterval"
-                        (onChange)="loadViewsData()"
-                        optionLabel="label"
-                        optionValue="value"
-                        styleClass="w-32 !rounded-lg border-surface-200 shadow-sm text-sm"
-                        appendTo="body">
-                      </p-select>
-                    </div>
-
-                  </div>
+            @if (authService.selectedShopId()) {
+              <div class="bg-blue-50/50 border border-blue-100 p-3.5 rounded-xl transition-all">
+                <div class="flex items-center gap-2 text-blue-900 text-sm font-bold mb-1.5">
+                  <i class="pi pi-shop text-blue-600"></i>
+                  <span>Tienda seleccionada: {{ selectedShop?.name }}</span>
                 </div>
 
-                <!-- Gráfico de Variación -->
-                <div class="w-full h-[300px] relative">
-                  <!-- Loader de Gráfica -->
-                  <div *ngIf="isViewsLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-2 rounded-xl">
-                    <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
-                    <span class="text-xs font-bold tracking-widest uppercase text-blue-500">Cargando datos...</span>
-                  </div>
-
-                  <!-- Chart -->
-                  <div *ngIf="viewsChartData?.datasets[0]?.data?.length === 0 && !isViewsLoading" class="absolute inset-0 flex items-center justify-center border border-dashed border-surface-200 rounded-xl bg-surface-50/50">
-                    <span class="text-sm text-surface-400 font-medium">No hay histórico de visualizaciones para este rango.</span>
-                  </div>
-                  <p-chart *ngIf="viewsChartData?.datasets[0]?.data?.length > 0" type="line" [data]="viewsChartData" [options]="viewsChartOptions" height="100%"></p-chart>
+                <div class="flex items-center gap-1.5 text-xs font-medium pl-6" [ngClass]="product.availableUnits > 0 ? 'text-green-700' : 'text-red-600'">
+                  <i [class]="product.availableUnits > 0 ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+                  <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : 'Agotado en esta tienda' }}</span>
                 </div>
 
-              </div>
-            </p-tabpanel>
-          </p-tabpanels>
-        </p-tabs>
-      </div>
-
-      <div class="mt-4">
-        <h2 class="text-2xl font-bold text-surface-900 mb-6 flex items-center gap-3">
-          <i class="pi pi-comments text-primary-500"></i> Opiniones de usuarios
-        </h2>
-
-        <div class="bg-surface-900 text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center justify-between shadow-xl mb-8 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-64 h-64 bg-primary-500/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-
-          <div class="text-center relative z-10">
-            <span class="text-6xl font-extrabold tracking-tighter">{{ product.averageRating }}</span>
-            <div class="flex justify-center my-2">
-              <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true" class="gap-1"></p-rating>
-            </div>
-            <p class="text-surface-400 text-sm">{{product.totalReviews}} reseñas totales</p>
-          </div>
-
-          <div class="hidden md:block w-px h-24 bg-surface-700"></div>
-
-          <div class="text-center md:text-left relative z-10">
-            <div class="flex items-center gap-3 justify-center md:justify-start">
-              <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
-                <i class="pi pi-thumbs-up text-xl"></i>
-              </div>
-              <div>
-                <span class="block text-3xl font-bold">{{ recommendationPercentage }}%</span>
-                <span class="text-surface-400 text-sm">recomiendan este producto</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex-1 w-full md:w-auto relative z-10">
-            <div *ngFor="let star of stars" class="flex items-center gap-2 mb-1.5 text-sm">
-              <span class="w-3 font-bold">{{ star.value }}</span>
-              <i class="pi pi-star-fill text-yellow-500 text-xs"></i>
-              <div class="flex-1 h-2 bg-surface-700 rounded-full overflow-hidden">
-                <div class="h-full bg-primary-500 rounded-full" [style.width.%]="product.totalReviews > 0 ? (star.count / product.totalReviews) * 100 : 0"></div>
-              </div>
-              <span class="w-8 text-right text-surface-400">{{ star.count }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="my-8 bg-white border border-surface-200 rounded-2xl p-6 shadow-sm" *ngIf="authService.isLogged() && authService.isUser() && !userReviewed">
-          <h3 class="text-lg font-bold mb-4">Escribe tu reseña</h3>
-          <div class="flex gap-4">
-            <p-avatar [image]="loggedUserInfo.imageUrl" shape="circle" size="large"></p-avatar>
-            <div class="flex-1 space-y-4">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span class="text-sm text-surface-500 block mb-1">Tu valoración general</span>
-                  <p-rating [(ngModel)]="newReview.rating"></p-rating>
-                </div>
-                <div class="flex items-center gap-2 bg-surface-50 p-1 rounded-lg border border-surface-200">
-                  <button (click)="setRecommendation(true)" [class]="newReview.recommended ? 'bg-green-100 text-green-700 shadow-sm' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
-                    <i class="pi pi-thumbs-up"></i> Recomendado
-                  </button>
-                  <button (click)="setRecommendation(false)" [class]="!newReview.recommended && newReview.recommended !== null ? 'bg-red-100 text-red-700 shadow-sm' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
-                    <i class="pi pi-thumbs-down"></i> No recomendado
-                  </button>
-                </div>
-              </div>
-
-              <textarea pTextarea [(ngModel)]="newReview.text" rows="4" placeholder="¿Qué es lo que más te ha gustado? ¿Y lo que menos?" class="w-full !bg-surface-50 !border-surface-200 focus:!bg-white focus:!border-primary-500 transition-colors rounded-xl p-3 resize-none"></textarea>
-
-              <div class="flex justify-end">
-                <p-button (onClick)="submitReview()" label="Publicar opinión" icon="pi pi-send" class="rounded-xl"></p-button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <div *ngFor="let review of productReviews" class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm hover:border-surface-300 transition-colors">
-            <div class="flex justify-between items-start mb-4">
-              <div class="flex items-center gap-3">
-                <div class="relative flex">
-                  <p-avatar [image]="review.creatorImage" shape="circle" size="normal"></p-avatar>
-
-                  <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white rounded-full transition-colors"
-                        [ngClass]="review.creatorConnection?.online ? 'bg-green-500' : 'bg-slate-400'">
+                <div class="flex items-center gap-1.5 text-xs font-medium pl-6 mt-1 text-primary-800">
+                  <i class="pi pi-shopping-cart"></i>
+                  <span>
+                    {{ 'Unidades en el carrito: ' + inCartUnits + ' uds.' }}
                   </span>
                 </div>
+              </div>
+            }
 
-                <div>
-                  <p class="font-bold text-surface-900 text-sm">{{ review.creatorName }}</p>
-                  <div class="flex items-center gap-2 text-xs text-surface-500">
-                    <span>{{ review.createdAt }}</span>
+            @if (!authService.isLogged() || (authService.isUser() && !authService.selectedShopId())) {
+              <div class="bg-primary-50 border border-primary-200 p-3.5 rounded-xl flex items-start gap-2.5 text-primary-600">
+                <i class="pi pi-info-circle mt-0.5 text-primary-400 text-lg"></i>
+                @if (!authService.isLogged()) {
+                  <div>
+                    <p class="text-xs font-medium leading-relaxed">Inicia sesión para empezar a añadir artículos a la cesta.</p>
                   </div>
-                </div>
+                }
+                @if (authService.isUser()) {
+                  <div>
+                    <p class="text-xs font-medium leading-relaxed">Selecciona una tienda cercana para comprobar la disponibilidad local y añadir el artículo a la cesta.</p>
+                  </div>
+                }
               </div>
-              <p-rating [ngModel]="review.rating" [readonly]="true" class="scale-90"></p-rating>
-            </div>
+            }
 
-            <p class="text-surface-700 leading-relaxed mb-4">{{ review.text }}</p>
-
-            <div class="flex items-center justify-between pt-4 border-t border-surface-100">
-              <div class="flex items-center gap-2 text-sm">
-                <span *ngIf="review.recommended" class="text-green-600 font-medium flex items-center gap-1"><i class="pi pi-thumbs-up"></i> Recomienda este producto</span>
-                <span *ngIf="!review.recommended" class="text-red-500 font-medium flex items-center gap-1"><i class="pi pi-thumbs-down"></i> No recomienda este producto</span>
-              </div>
-
-              <div *ngIf="authService.isLogged() && authService.isUser() && userReviewed && (loggedUserInfo.id == review.creatorId)" class="flex gap-2">
-                <button (click)="editReview(review.id)" class="text-surface-400 hover:text-primary-600 transition-colors"><i class="pi pi-pencil"></i></button>
-                <button (click)="deleteReview(review.id)" class="text-surface-400 hover:text-red-600 transition-colors"><i class="pi pi-trash"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-    <div class="lg:col-span-5 xl:col-span-4 h-fit lg:sticky lg:top-24 space-y-6">
-      <div class="bg-white p-6 rounded-3xl border border-surface-200 shadow-xl relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary-400 to-primary-600"></div>
-
-        <div class="mb-6 mt-2">
-          <div class="flex items-end gap-3 flex-wrap">
-            <span class="text-4xl lg:text-5xl font-bold text-surface-900">{{formatPrice(product.currentPrice)}}</span>
-            <span class="text-surface-500 text-sm font-medium mb-2">IVA incluido</span>
-          </div>
-          <div *ngIf="product.previousPrice > 0 && product.discount != '0%'" class="flex items-center gap-2 mt-1">
-            <span class="text-surface-400 line-through font-medium">{{formatPrice(product.previousPrice)}}</span>
-            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold border border-red-200">Ahorras {{product.discount}}</span>
-          </div>
-        </div>
-
-        <div class="space-y-3 mb-6">
-
-          <div class="flex items-center gap-2 px-1">
-            <div class="relative flex h-2.5 w-2.5">
-              <span *ngIf="product.totalUnits > 0" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2.5 w-2.5" [ngClass]="product.totalUnits > 0 ? 'bg-green-500' : 'bg-red-500'"></span>
-            </div>
-            <p class="text-sm font-medium text-surface-600">
-              Stock web global: <span class="font-bold" [ngClass]="product.totalUnits > 0 ? 'text-surface-900' : 'text-red-600'">{{ product.totalUnits }} uds.</span>
-            </p>
           </div>
 
-          <div *ngIf="authService.selectedShopId()" class="bg-blue-50/50 border border-blue-100 p-3.5 rounded-xl transition-all">
-            <div class="flex items-center gap-2 text-blue-900 text-sm font-bold mb-1.5">
-              <i class="pi pi-shop text-blue-600"></i>
-              <span>Tienda seleccionada: {{ selectedShop?.name }}</span>
-            </div>
-
-            <div class="flex items-center gap-1.5 text-xs font-medium pl-6" [ngClass]="product.availableUnits > 0 ? 'text-green-700' : 'text-red-600'">
-              <i [class]="product.availableUnits > 0 ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-              <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : 'Agotado en esta tienda' }}</span>
-            </div>
-
-            <div class="flex items-center gap-1.5 text-xs font-medium pl-6 mt-1 text-primary-800">
-              <i class="pi pi-shopping-cart"></i>
-              <span>
-                {{ 'Unidades en el carrito: ' + inCartUnits + ' uds.' }}
-              </span>
+          <div class="space-y-4 mb-6">
+            <div class="bg-surface-50 p-3 rounded-xl border border-surface-200 transition-opacity"
+                 [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits">
+              <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
+              <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
+                             [min]="1" [max]="(product.availableUnits - inCartUnits) || 1"
+                             [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
+                             class="w-full input-number-modern"
+                             [inputStyle]="{'width': '100%', 'background': 'transparent', 'border': 'none', 'text-align': 'center', 'font-weight': 'bold' }">
+                <ng-template pTemplate="incrementbuttonicon"><span class="pi pi-plus"></span></ng-template>
+                <ng-template pTemplate="decrementbuttonicon"><span class="pi pi-minus"></span></ng-template>
+              </p-inputNumber>
             </div>
           </div>
 
-          <div *ngIf="!authService.isLogged() || (authService.isUser() && !authService.selectedShopId())" class="bg-primary-50 border border-primary-200 p-3.5 rounded-xl flex items-start gap-2.5 text-primary-600">
-            <i class="pi pi-info-circle mt-0.5 text-primary-400 text-lg"></i>
-            <div *ngIf="!authService.isLogged()">
-              <p class="text-xs font-medium leading-relaxed">Inicia sesión para empezar a añadir artículos a la cesta.</p>
-            </div>
-            <div *ngIf="authService.isUser()">
-              <p class="text-xs font-medium leading-relaxed">Selecciona una tienda cercana para comprobar la disponibilidad local y añadir el artículo a la cesta.</p>
-            </div>
-          </div>
+          <div class="space-y-3">
 
-        </div>
+            <button (click)="addItemToCart()"
+                    [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
+                    class="w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                    [class]="(authService.isUser() && authService.selectedShopId() && (product.availableUnits - inCartUnits > 0)) ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-surface-200 text-surface-500 cursor-not-allowed'">
 
-        <div class="space-y-4 mb-6">
-          <div class="bg-surface-50 p-3 rounded-xl border border-surface-200 transition-opacity"
-               [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits">
-            <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
-            <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
-                           [min]="1" [max]="(product.availableUnits - inCartUnits) || 1"
-                           [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
-                           class="w-full input-number-modern"
-                           [inputStyle]="{'width': '100%', 'background': 'transparent', 'border': 'none', 'text-align': 'center', 'font-weight': 'bold' }">
-              <ng-template pTemplate="incrementbuttonicon"><span class="pi pi-plus"></span></ng-template>
-              <ng-template pTemplate="decrementbuttonicon"><span class="pi pi-minus"></span></ng-template>
-            </p-inputNumber>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-
-          <button (click)="addItemToCart()"
-                  [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
-                  class="w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                  [class]="(authService.isUser() && authService.selectedShopId() && (product.availableUnits - inCartUnits > 0)) ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-surface-200 text-surface-500 cursor-not-allowed'">
-
-            <ng-container *ngIf="!authService.isUser()">
-              <i class="pi pi-lock"></i>
-              Bloqueado
-            </ng-container>
-
-            <ng-container *ngIf="authService.isUser() && !authService.selectedShopId()">
-              <i class="pi pi-map-marker"></i>
-              Sin tienda seleccionada
-            </ng-container>
-
-            <ng-container *ngIf="authService.isUser() && authService.selectedShopId()">
-
-              @if (product.availableUnits === 0) {
-                <i class="pi pi-times"></i>
-                Agotado
-
-              } @else if (product.availableUnits - inCartUnits === 0) {
-                <i class="pi pi-info-circle"></i>
-                Todo en la cesta
-
-              } @else {
-                <i class="pi pi-shopping-cart"></i>
-                Añadir a la cesta
+              @if (!authService.isUser()) {
+                <i class="pi pi-lock"></i>
+                Bloqueado
               }
 
-            </ng-container>
+              @if (authService.isUser() && !authService.selectedShopId()) {
+                <i class="pi pi-map-marker"></i>
+                Sin tienda seleccionada
+              }
 
-          </button>
+              @if (authService.isUser() && authService.selectedShopId()) {
 
-          <button (click)="toggleInFavourites()" [disabled]="!authService.isLogged() || !authService.isUser()"
-                  class="w-full py-3 rounded-xl font-bold border-2 transition-colors flex items-center justify-center gap-2"
-                  [class]="inFavourites ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-surface-200 text-surface-700 hover:border-surface-300 hover:bg-surface-50'">
-            <i [class]="inFavourites ? 'pi pi-heart-fill' : 'pi pi-heart'"></i>
-            {{ inFavourites ? 'Guardado en favoritos' : 'Guardar en favoritos' }}
-          </button>
-        </div>
+                @if (product.availableUnits === 0) {
+                  <i class="pi pi-times"></i>
+                  Agotado
 
-        <div class="mt-6 space-y-3 pt-6 border-t border-surface-100">
-          <div (click)="showShippingDialog()" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
-            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="pi pi-truck"></i></div>
-            <div>
-              <p class="font-bold text-sm text-surface-900">Envío Gratis</p>
-              <p class="text-xs text-surface-500">En pedidos +50€. Entrega estimada: 24/48h.</p>
-            </div>
+                } @else if (product.availableUnits - inCartUnits === 0) {
+                  <i class="pi pi-info-circle"></i>
+                  Todo en la cesta
+
+                } @else {
+                  <i class="pi pi-shopping-cart"></i>
+                  Añadir a la cesta
+                }
+
+              }
+
+            </button>
+
+            <button (click)="toggleInFavourites()" [disabled]="!authService.isLogged() || !authService.isUser()"
+                    class="w-full py-3 rounded-xl font-bold border-2 transition-colors flex items-center justify-center gap-2"
+                    [class]="inFavourites ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-surface-200 text-surface-700 hover:border-surface-300 hover:bg-surface-50'">
+              <i [class]="inFavourites ? 'pi pi-heart-fill' : 'pi pi-heart'"></i>
+              {{ inFavourites ? 'Guardado en favoritos' : 'Guardar en favoritos' }}
+            </button>
           </div>
-          <div (click)="showAvailabilityDialog()" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
-            <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="pi pi-map-marker"></i></div>
-            <div>
-              <p class="font-bold text-sm text-surface-900">Stock en tienda</p>
-              <p class="text-xs text-surface-500">Consulta disponibilidad cerca de ti.</p>
+
+          <div class="mt-6 space-y-3 pt-6 border-t border-surface-100">
+            <div (click)="showShippingDialog()" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
+              <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="pi pi-truck"></i></div>
+              <div>
+                <p class="font-bold text-sm text-surface-900">Envío Gratis</p>
+                <p class="text-xs text-surface-500">En pedidos +50€. Entrega estimada: 24/48h.</p>
+              </div>
             </div>
-          </div>
-          <div class="flex items-start gap-3 p-2">
-            <div class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0"><i class="pi pi-shield"></i></div>
-            <div>
-              <p class="font-bold text-sm text-surface-900">Garantía Oficial</p>
-              <p class="text-xs text-surface-500">3 años de garantía y soporte incluido.</p>
+            <div (click)="showAvailabilityDialog()" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
+              <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="pi pi-map-marker"></i></div>
+              <div>
+                <p class="font-bold text-sm text-surface-900">Stock en tienda</p>
+                <p class="text-xs text-surface-500">Consulta disponibilidad cerca de ti.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-2">
+              <div class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0"><i class="pi pi-shield"></i></div>
+              <div>
+                <p class="font-bold text-sm text-surface-900">Garantía Oficial</p>
+                <p class="text-xs text-surface-500">3 años de garantía y soporte incluido.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="mt-16 border-t border-surface-200 pt-12" *ngIf="relatedProducts.length">
-    <div class="flex items-center gap-3 mb-8">
-      <div class="w-1.5 h-8 bg-surface-900 rounded-full"></div>
-      <h2 class="text-2xl font-bold text-surface-900">También te podría interesar</h2>
-    </div>
+    @if (relatedProducts.length) {
+      <div class="mt-16 border-t border-surface-200 pt-12">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-1.5 h-8 bg-surface-900 rounded-full"></div>
+          <h2 class="text-2xl font-bold text-surface-900">También te podría interesar</h2>
+        </div>
 
-    <div id="category-content" class="content">
-      <ng-container *ngIf="!relatedLoading && !relatedError; else noRelated">
-        <p-carousel [value]="relatedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="carouselResponsiveOptions" [showIndicators]="false">
-          <ng-template let-p pTemplate="item">
-            <div class="p-2 h-full">
-              <app-product-card [product]="p" [elementId]="'relatedProduct-' + p.id"/>
+        <div id="category-content" class="content">
+          @if (!relatedLoading && !relatedError) {
+            <p-carousel [value]="relatedProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="carouselResponsiveOptions" [showIndicators]="false">
+              <ng-template let-p pTemplate="item">
+                <div class="p-2 h-full">
+                  <app-product-card [product]="p" [elementId]="'relatedProduct-' + p.id"/>
+                </div>
+              </ng-template>
+            </p-carousel>
+          } @else {
+            <app-loading [loading]="relatedLoading" [error]="relatedError" [numElements]="relatedProducts.length" elementsType="productos relacionados"/>
+          }
+        </div>
+      </div>
+    }
+
+    <p-dialog header="Envíos y Entregas" [modal]="true" [(visible)]="visibleShippingDialog" [style]="{ width: '40rem' }" [draggable]="false" [resizable]="false" class="p-dialog-modern">
+      <div class="p-4 text-surface-600 leading-relaxed">
+        <i class="pi pi-info-circle text-primary-500 text-2xl mb-2 block"></i>
+        <p>Todos los envíos son gratuitos para pedidos superiores a 50€, tanto en Península, Baleares y Canarias. Trabajamos con las mejores agencias de transporte para asegurar que tu tecnología llegue sana y salva.</p>
+      </div>
+    </p-dialog>
+
+    <p-dialog
+      header="Disponibilidad en tiendas"
+      [modal]="true"
+      [(visible)]="visibleAvailabilityDialog"
+      [style]="{ width: '45rem' }"
+      [breakpoints]="{ '960px': '90vw' }"
+      [draggable]="false"
+      [resizable]="false">
+
+      <div class="flex flex-col gap-3 mt-2">
+        @for (stock of stocks; track stock.id) {
+          <div class="flex items-center gap-4 p-3 rounded-xl border border-surface-200 hover:bg-surface-50 transition-colors">
+
+            <img
+              [src]="stock.shopImageUrl"
+              [alt]="stock.shopName"
+              class="w-14 h-14 rounded-lg object-cover border border-surface-200 shadow-sm shrink-0">
+
+            <div class="flex-grow min-w-0">
+              <h3 class="text-surface-900 font-bold text-base m-0 truncate">
+                {{ stock.shopName }}
+              </h3>
+              <p class="text-surface-500 text-sm m-0 truncate mt-0.5">
+                {{ stock.shopAddress }}
+              </p>
             </div>
-          </ng-template>
-        </p-carousel>
-      </ng-container>
-      <ng-template #noRelated>
-        <app-loading [loading]="relatedLoading" [error]="relatedError" [numElements]="relatedProducts.length" elementsType="productos relacionados"/>
-      </ng-template>
-    </div>
+
+            <div class="shrink-0 text-right min-w-[5rem]">
+              <p-tag
+                [value]="stock.units > 1 ? stock.units + ' unidades' : (stock.units === 1 ? '1 unidad' : 'Agotado')"
+                [severity]="stock.units > 5 ? 'success' : (stock.units > 0 ? 'warning' : 'danger')"
+                [rounded]="true">
+              </p-tag>
+            </div>
+
+          </div>
+        } @empty {
+          <div class="p-8 text-center flex flex-col items-center justify-center">
+            <i class="pi pi-store text-4xl text-surface-300 mb-3"></i>
+            <p class="text-surface-500 m-0">No hay tiendas con stock de este producto.</p>
+          </div>
+        }
+      </div>
+
+    </p-dialog>
+
   </div>
-
-  <p-dialog header="Envíos y Entregas" [modal]="true" [(visible)]="visibleShippingDialog" [style]="{ width: '40rem' }" [draggable]="false" [resizable]="false" class="p-dialog-modern">
-    <div class="p-4 text-surface-600 leading-relaxed">
-      <i class="pi pi-info-circle text-primary-500 text-2xl mb-2 block"></i>
-      <p>Todos los envíos son gratuitos para pedidos superiores a 50€, tanto en Península, Baleares y Canarias. Trabajamos con las mejores agencias de transporte para asegurar que tu tecnología llegue sana y salva.</p>
-    </div>
-  </p-dialog>
-
-  <p-dialog
-    header="Disponibilidad en tiendas"
-    [modal]="true"
-    [(visible)]="visibleAvailabilityDialog"
-    [style]="{ width: '45rem' }"
-    [breakpoints]="{ '960px': '90vw' }"
-    [draggable]="false"
-    [resizable]="false">
-
-    <div class="flex flex-col gap-3 mt-2">
-      @for (stock of stocks; track stock.id) {
-        <div class="flex items-center gap-4 p-3 rounded-xl border border-surface-200 hover:bg-surface-50 transition-colors">
-
-          <img
-            [src]="stock.shopImageUrl"
-            [alt]="stock.shopName"
-            class="w-14 h-14 rounded-lg object-cover border border-surface-200 shadow-sm shrink-0">
-
-          <div class="flex-grow min-w-0">
-            <h3 class="text-surface-900 font-bold text-base m-0 truncate">
-              {{ stock.shopName }}
-            </h3>
-            <p class="text-surface-500 text-sm m-0 truncate mt-0.5">
-              {{ stock.shopAddress }}
-            </p>
-          </div>
-
-          <div class="shrink-0 text-right min-w-[5rem]">
-            <p-tag
-              [value]="stock.units > 1 ? stock.units + ' unidades' : (stock.units === 1 ? '1 unidad' : 'Agotado')"
-              [severity]="stock.units > 5 ? 'success' : (stock.units > 0 ? 'warning' : 'danger')"
-              [rounded]="true">
-            </p-tag>
-          </div>
-
-        </div>
-      } @empty {
-        <div class="p-8 text-center flex flex-col items-center justify-center">
-          <i class="pi pi-store text-4xl text-surface-300 mb-3"></i>
-          <p class="text-surface-500 m-0">No hay tiendas con stock de este producto.</p>
-        </div>
-      }
-    </div>
-
-  </p-dialog>
-
-</div>
+}

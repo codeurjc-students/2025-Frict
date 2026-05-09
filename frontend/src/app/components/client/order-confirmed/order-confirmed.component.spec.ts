@@ -1,14 +1,13 @@
-
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { OrderConfirmedComponent } from './order-confirmed.component';
-import { UserService } from '../../../services/user.service';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { User } from '../../../models/user.model';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {By} from '@angular/platform-browser';
+import {OrderConfirmedComponent} from './order-confirmed.component';
+import {UserService} from '../../../services/user.service';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {of, Subject, throwError} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {User} from '../../../models/user.model';
 
 describe('OrderConfirmedComponent', () => {
   let component: OrderConfirmedComponent;

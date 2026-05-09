@@ -1,17 +1,15 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.dto.CartSummaryDTO;
-import com.tfg.backend.model.*;
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.event.OrderEvent;
-import com.tfg.backend.model.Registry;
 import com.tfg.backend.event.RegistryEvent;
-import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
-import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;

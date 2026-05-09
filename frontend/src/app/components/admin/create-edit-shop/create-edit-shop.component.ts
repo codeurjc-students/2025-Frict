@@ -1,14 +1,5 @@
-import {
-  AfterViewInit,
-  Component,
-  DestroyRef,
-  inject,
-  OnInit,
-  PLATFORM_ID,
-  signal,
-  ViewChild
-} from '@angular/core';
-import {isPlatformBrowser, NgIf} from '@angular/common';
+import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal, ViewChild} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -38,7 +29,6 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     InputText,
     InputNumber,
     FileUpload,
-    NgIf,
     FormsModule,
     RouterLink,
     LoadingScreenComponent,

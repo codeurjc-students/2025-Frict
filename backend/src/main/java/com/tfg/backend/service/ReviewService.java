@@ -1,15 +1,10 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.ReviewDTO;
-import com.tfg.backend.model.Product;
-import com.tfg.backend.model.Review;
-import com.tfg.backend.model.ReviewEvent;
-import com.tfg.backend.model.User;
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
-import com.tfg.backend.model.Registry;
+import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.event.RegistryEvent;
-import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

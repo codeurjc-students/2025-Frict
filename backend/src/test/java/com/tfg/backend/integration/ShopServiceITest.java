@@ -1,7 +1,5 @@
 package com.tfg.backend.integration;
 
-import com.tfg.backend.dto.AddressDTO;
-import com.tfg.backend.dto.ShopDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
 import com.tfg.backend.service.ImageService;
@@ -22,7 +20,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;

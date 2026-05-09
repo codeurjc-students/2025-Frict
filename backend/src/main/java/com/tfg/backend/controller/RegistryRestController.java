@@ -1,10 +1,10 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.PdfReportDTO;
-import com.tfg.backend.dto.EntityType;
-import com.tfg.backend.service.RegistryService;
 import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.service.RegistryService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

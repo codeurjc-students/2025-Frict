@@ -3,7 +3,10 @@ package com.tfg.backend.api;
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.PaymentCardDTO;
 import com.tfg.backend.dto.UserDTO;
-import com.tfg.backend.model.*;
+import com.tfg.backend.model.Address;
+import com.tfg.backend.model.PaymentCard;
+import com.tfg.backend.model.Shop;
+import com.tfg.backend.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

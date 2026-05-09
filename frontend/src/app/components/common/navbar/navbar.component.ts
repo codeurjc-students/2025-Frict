@@ -1,9 +1,9 @@
 import {Component, computed, inject, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
 import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
-import {NgClass, NgIf, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
+import {DatePipe, NgClass, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {Button} from 'primeng/button';
 import {Drawer} from 'primeng/drawer';
-import {MenuItem, PrimeTemplate} from 'primeng/api';
+import {PrimeTemplate} from 'primeng/api';
 import {FormsModule} from '@angular/forms';
 import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
@@ -15,10 +15,9 @@ import {InputGroup} from 'primeng/inputgroup';
 import {InputText} from 'primeng/inputtext';
 import {ProductService, SearchScope} from '../../../services/product.service';
 import {Select} from 'primeng/select';
-import { Popover } from 'primeng/popover';
+import {Popover} from 'primeng/popover';
 import {NotificationService} from '../../../services/notification.service';
-import { HttpClient } from '@angular/common/http';
-import { DatePipe } from '@angular/common';
+import {HttpClient} from '@angular/common/http';
 
 @Component({
   selector: 'app-navbar',
@@ -26,7 +25,6 @@ import { DatePipe } from '@angular/common';
   imports: [
     RouterLink,
     RouterLinkActive,
-    NgIf,
     NgOptimizedImage,
     Button,
     Drawer,

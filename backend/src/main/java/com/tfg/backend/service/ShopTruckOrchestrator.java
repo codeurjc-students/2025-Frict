@@ -1,10 +1,11 @@
 package com.tfg.backend.service;
+
+import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.TruckDTO;
+import com.tfg.backend.event.ShopEvent;
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.User;
-import com.tfg.backend.dto.EventAction;
-import com.tfg.backend.event.ShopEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;

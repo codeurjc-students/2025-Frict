@@ -1,9 +1,9 @@
-import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angular/core';
-import { Notification } from '../models/notification.model';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import {computed, effect, inject, Injectable, OnDestroy, signal} from '@angular/core';
+import {Notification} from '../models/notification.model';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {map, Observable, throwError} from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { PageResponse } from '../models/pageResponse.model';
+import {catchError} from 'rxjs/operators';
+import {PageResponse} from '../models/pageResponse.model';
 import {AuthService} from './auth.service';
 
 @Injectable({

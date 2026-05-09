@@ -1,7 +1,6 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router'; // Importar Router
-
 import {ButtonModule} from 'primeng/button';
 import {TagModule} from 'primeng/tag';
 import {RatingModule} from 'primeng/rating';

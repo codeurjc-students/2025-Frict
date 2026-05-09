@@ -1,13 +1,11 @@
 import {Component, inject} from '@angular/core';
 import {RouterLink} from '@angular/router';
-import {NgIf} from '@angular/common';
 import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-footer',
   imports: [
-    RouterLink,
-    NgIf
+    RouterLink
   ],
   templateUrl: './footer.component.html',
   standalone: true,

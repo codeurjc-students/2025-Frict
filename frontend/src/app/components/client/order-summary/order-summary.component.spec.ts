@@ -1,22 +1,21 @@
-
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OrderSummaryComponent } from './order-summary.component';
-import { OrderService } from '../../../services/order.service';
-import { UserService } from '../../../services/user.service';
-import { BreadcrumbService } from '../../../utils/breadcrumb.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { of, Subject, throwError } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { User } from '../../../models/user.model';
-import { Address } from '../../../models/address.model';
-import { PaymentCard } from '../../../models/paymentCard.model';
-import { CartSummary } from '../../../models/cartSummary.model';
-import { OrderItem } from '../../../models/orderItem.model';
-import { PageResponse } from '../../../models/pageResponse.model';
-import { Order } from '../../../models/order.model';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {OrderSummaryComponent} from './order-summary.component';
+import {OrderService} from '../../../services/order.service';
+import {UserService} from '../../../services/user.service';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {MessageService} from 'primeng/api';
+import {of, Subject, throwError} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {User} from '../../../models/user.model';
+import {Address} from '../../../models/address.model';
+import {PaymentCard} from '../../../models/paymentCard.model';
+import {CartSummary} from '../../../models/cartSummary.model';
+import {OrderItem} from '../../../models/orderItem.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Order} from '../../../models/order.model';
 
 describe('OrderSummaryComponent', () => {
   let component: OrderSummaryComponent;

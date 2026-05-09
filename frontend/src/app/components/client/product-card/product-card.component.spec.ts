@@ -1,16 +1,14 @@
-
-
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { ProductCardComponent } from './product-card.component';
-import { ProductService } from '../../../services/product.service';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { of, Subject } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { Product } from '../../../models/product.model';
-import { ImageInfo } from '../../../models/imageInfo.model';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {By} from '@angular/platform-browser';
+import {ProductCardComponent} from './product-card.component';
+import {ProductService} from '../../../services/product.service';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {of, Subject} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {Product} from '../../../models/product.model';
+import {ImageInfo} from '../../../models/imageInfo.model';
 
 describe('ProductCardComponent', () => {
   let component: ProductCardComponent;

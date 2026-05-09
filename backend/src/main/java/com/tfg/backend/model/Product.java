@@ -1,6 +1,5 @@
 package com.tfg.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.tfg.backend.utils.GlobalDefaults;
 import com.tfg.backend.utils.ReferenceNumberGenerator;

@@ -3,7 +3,7 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
-import {NgIf, NgOptimizedImage} from '@angular/common';
+import {NgOptimizedImage} from '@angular/common';
 import {GoogleAuthComponent} from '../google-auth/google-auth.component';
 import {CustomValidators} from '../../../utils/customValidators.util';
 
@@ -13,8 +13,7 @@ import {CustomValidators} from '../../../utils/customValidators.util';
     ReactiveFormsModule,
     RouterLink,
     NgOptimizedImage,
-    GoogleAuthComponent,
-    NgIf
+    GoogleAuthComponent
   ],
   templateUrl: './signup.component.html',
   standalone: true,

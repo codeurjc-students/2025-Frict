@@ -1,230 +1,254 @@
-<div *ngIf="loading || error">
-  <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
-</div>
+@if (loading || error) {
+  <div>
+    <app-loading-screen [loading]="loading" [error]="error" (tryReload)="reloadAll()"></app-loading-screen>
+  </div>
+}
 
-<div *ngIf="!loading && !error" class="min-h-screen font-sans text-surface-800 pb-12">
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
+@if (!loading && !error) {
+  <div class="min-h-screen font-sans text-surface-800 pb-12">
+    <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
-    <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div class="mt-2">
-        <h1 class="text-3xl font-bold text-primary-600">Gestor de Camiones</h1>
-        <p class="text-surface-500 mt-1">Administra y monitoriza los vehículos de reparto de la organización.</p>
-      </div>
-      <p-button label="Añadir Camión" icon="pi pi-plus" styleClass="p-button-warning" [rounded]="true" routerLink="/admin/trucks/new"></p-button>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-
-      <div class="lg:col-span-1 flex flex-col gap-4">
-        <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-surface-500 text-sm">Camiones Totales</span><span class="text-2xl font-bold text-surface-800">{{ totalTrucks }}</span></div>
-          <i class="pi pi-truck text-surface-400/20 text-4xl"></i>
+      <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="mt-2">
+          <h1 class="text-3xl font-bold text-primary-600">Gestor de Camiones</h1>
+          <p class="text-surface-500 mt-1">Administra y monitoriza los vehículos de reparto de la organización.</p>
         </div>
-        <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-surface-500 text-sm">Sin Conductor Asignado</span><span class="text-2xl font-bold text-purple-500">{{ noDriverTrucks }}</span></div>
-          <i class="pi pi-user-minus text-orange-500/20 text-4xl"></i>
-        </div>
-        <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-surface-500 text-sm">En Ruta</span><span class="text-2xl font-bold text-blue-600">{{ onRouteTrucks }}</span></div>
-          <i class="pi pi-send text-blue-600/20 text-4xl"></i>
-        </div>
-        <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <div><span class="block text-surface-500 text-sm">Mantenimiento</span><span class="text-2xl font-bold text-orange-500">{{ maintenanceTrucks }}</span></div>
-          <i class="pi pi-wrench text-red-500/20 text-4xl"></i>
-        </div>
+        <p-button label="Añadir Camión" icon="pi pi-plus" styleClass="p-button-warning" [rounded]="true" routerLink="/admin/trucks/new"></p-button>
       </div>
 
-      <div class="lg:col-span-3 bg-white border border-surface-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[485px]">
-        <div class="p-4 border-b border-surface-100 flex flex-col sm:flex-row justify-between items-center bg-white z-[400] gap-3">
-          <h3 class="font-bold text-surface-700 text-sm flex items-center gap-2"><i class="pi pi-eye text-blue-600"></i> Vista General (página actual)</h3>
-          <p-selectButton [options]="viewModeOptions" [(ngModel)]="selectedViewMode" unselectable="true" optionLabel="label" optionValue="value" (onChange)="onViewModeChange()" styleClass="p-button-sm"></p-selectButton>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+
+        <div class="lg:col-span-1 flex flex-col gap-4">
+          <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+            <div><span class="block text-surface-500 text-sm">Camiones Totales</span><span class="text-2xl font-bold text-surface-800">{{ totalTrucks }}</span></div>
+            <i class="pi pi-truck text-surface-400/20 text-4xl"></i>
+          </div>
+          <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+            <div><span class="block text-surface-500 text-sm">Sin Conductor Asignado</span><span class="text-2xl font-bold text-purple-500">{{ noDriverTrucks }}</span></div>
+            <i class="pi pi-user-minus text-orange-500/20 text-4xl"></i>
+          </div>
+          <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+            <div><span class="block text-surface-500 text-sm">En Ruta</span><span class="text-2xl font-bold text-blue-600">{{ onRouteTrucks }}</span></div>
+            <i class="pi pi-send text-blue-600/20 text-4xl"></i>
+          </div>
+          <div class="bg-white border border-surface-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
+            <div><span class="block text-surface-500 text-sm">Mantenimiento</span><span class="text-2xl font-bold text-orange-500">{{ maintenanceTrucks }}</span></div>
+            <i class="pi pi-wrench text-red-500/20 text-4xl"></i>
+          </div>
         </div>
 
-        <div class="flex-grow w-full bg-surface-50 relative">
-          <div id="trucks-map" class="absolute inset-0 z-[10]" [class.hidden]="selectedViewMode !== 'map'"></div>
+        <div class="lg:col-span-3 bg-white border border-surface-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[485px]">
+          <div class="p-4 border-b border-surface-100 flex flex-col sm:flex-row justify-between items-center bg-white z-[400] gap-3">
+            <h3 class="font-bold text-surface-700 text-sm flex items-center gap-2"><i class="pi pi-eye text-blue-600"></i> Vista General (página actual)</h3>
+            <p-selectButton [options]="viewModeOptions" [(ngModel)]="selectedViewMode" unselectable="true" optionLabel="label" optionValue="value" (onChange)="onViewModeChange()" styleClass="p-button-sm"></p-selectButton>
+          </div>
 
-          <div *ngIf="selectedViewMode === 'chart'" class="absolute inset-0 z-[20] bg-white animate-fade-in overflow-y-auto custom-scrollbar flex flex-col">
+          <div class="flex-grow w-full bg-surface-50 relative">
+            <div id="trucks-map" class="absolute inset-0 z-[10]" [class.hidden]="selectedViewMode !== 'map'"></div>
 
-            <div class="w-full max-w-5xl m-auto grid grid-cols-1 md:grid-cols-2 gap-10 py-6">
+            @if (selectedViewMode === 'chart') {
+              <div class="absolute inset-0 z-[20] bg-white animate-fade-in overflow-y-auto custom-scrollbar flex flex-col">
 
-              <div class="w-full">
-                <h4 class="text-sm font-bold text-surface-500 mb-4 uppercase tracking-wider text-center">Asignación de Camiones</h4>
-                <div class="relative block w-full h-[320px]">
-                  <p-chart type="pie" [data]="assignedChartData" [options]="chartOptions" height="320px"></p-chart>
+                <div class="w-full max-w-5xl m-auto grid grid-cols-1 md:grid-cols-2 gap-10 py-6">
+
+                  <div class="w-full">
+                    <h4 class="text-sm font-bold text-surface-500 mb-4 uppercase tracking-wider text-center">Asignación de Camiones</h4>
+                    <div class="relative block w-full h-[320px]">
+                      <p-chart type="pie" [data]="assignedChartData" [options]="chartOptions" height="320px"></p-chart>
+                    </div>
+                  </div>
+
+                  <div class="w-full">
+                    <h4 class="text-sm font-bold text-surface-500 mb-4 uppercase tracking-wider text-center">Estado Operativo</h4>
+                    <div class="relative block w-full h-[320px]">
+                      <p-chart type="pie" [data]="chartData" [options]="chartOptions" height="320px"></p-chart>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-
-              <div class="w-full">
-                <h4 class="text-sm font-bold text-surface-500 mb-4 uppercase tracking-wider text-center">Estado Operativo</h4>
-                <div class="relative block w-full h-[320px]">
-                  <p-chart type="pie" [data]="chartData" [options]="chartOptions" height="320px"></p-chart>
-                </div>
-              </div>
-
-            </div>
+            }
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="bg-white border border-surface-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+      <div class="bg-white border border-surface-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
 
-      <div class="p-4 border-b border-surface-200 bg-surface-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h3 class="text-xl font-bold text-surface-800">Parque de Vehículos</h3>
-        <div class="flex gap-2 w-full sm:w-auto">
-          <p-inputgroup>
-            <input pInputText placeholder="Buscar matrícula o ref..." [(ngModel)]="globalFilter"/>
-            <p-inputgroup-addon>
-              <p-button (click)="onSearch()" icon="pi pi-search" severity="secondary" variant="text"/>
-            </p-inputgroup-addon>
-          </p-inputgroup>
+        <div class="p-4 border-b border-surface-200 bg-surface-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h3 class="text-xl font-bold text-surface-800">Parque de Vehículos</h3>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <p-inputgroup>
+              <input pInputText placeholder="Buscar matrícula o ref..." [(ngModel)]="globalFilter"/>
+              <p-inputgroup-addon>
+                <p-button (click)="onSearch()" icon="pi pi-search" severity="secondary" variant="text"/>
+              </p-inputgroup-addon>
+            </p-inputgroup>
+          </div>
         </div>
+
+        <p-table [value]="trucksPage.items" styleClass="p-datatable-sm" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr class="bg-surface-50 text-surface-700 text-sm uppercase tracking-wider border-b border-surface-200">
+              <th class="pl-4 py-3">Referencia</th>
+              <th>Conductor Asignado</th>
+              <th>Estado Actual</th>
+              <th>Ubicación</th>
+              <th class="w-48">Capacidad</th>
+              <th class="!text-center">Acciones</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-truck>
+            <tr class="hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0">
+              <td class="pl-4 py-3">
+                <div class="font-bold text-sm text-surface-900">{{ truck.plateNumber }}</div>
+                <div class="text-xs font-mono text-surface-400">{{ truck.referenceCode }}</div>
+              </td>
+              <td>
+                @if (truck.assignedDriver) {
+                  <div class="flex items-center gap-2">
+                    <p-avatar [image]="truck.assignedDriver.imageInfo?.imageUrl" shape="circle" styleClass="w-7 h-7" />
+                    <span class="text-sm font-medium text-surface-700">{{ truck.assignedDriver.name }}</span>
+                  </div>
+                }
+                @if (!truck.assignedDriver) {
+                  <span class="text-sm text-surface-400 italic">No asignado</span>
+                }
+              </td>
+              <td><p-tag [value]="getStatusLabel(getCurrentStatus(truck))" [severity]="getStatusSeverity(getCurrentStatus(truck))"/></td>
+              <td class="text-sm text-surface-500"><i class="pi pi-map-marker mr-1 text-surface-300"></i>{{ formatAddress(truck.address) }}</td>
+              <td>
+                <p-progressBar [value]="getLoadPercentage(truck.ordersToDeliver, truck.maxOrderCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-surface-100" />
+                <p class="text-xs text-surface-400 mt-1 font-bold">{{ truck.ordersToDeliver }} / {{ truck.maxOrderCapacity }} pedidos</p>
+              </td>
+              <td>
+                <div class="flex justify-center gap-1">
+                  <p-button icon="pi pi-id-card" (onClick)="openAssignmentDialog(truck)" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Asignar Conductor" tooltipPosition="top" />
+                  <p-button icon="pi pi-history" (onClick)="openHistory(truck)" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true" pTooltip="Historial" tooltipPosition="top" />
+                  <p-button icon="pi pi-map-marker" (onClick)="locateTruckOnMap(truck)" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar" tooltipPosition="top" />
+                  <p-button icon="pi pi-pencil" [routerLink]="['/admin/trucks/edit', truck.id]" styleClass="p-button-xs p-button-outlined p-button-warn" rounded="true" pTooltip="Editar" tooltipPosition="top" />
+                  <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Borrar" tooltipPosition="top" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="6" class="text-center py-10 text-surface-400">No se encontraron camiones.</td></tr>
+          </ng-template>
+        </p-table>
+
+        <p-paginator
+          (onPageChange)="onPageChange($event)"
+          [first]="first"
+          [rows]="rows"
+          [totalRecords]="trucksPage.totalItems"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          [showCurrentPageReport]="true"
+          [dropdownAppendTo]="'body'"
+          currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} camiones"
+          styleClass="border-t border-surface-200 bg-surface-50 text-sm rounded-b-2xl">
+        </p-paginator>
       </div>
-
-      <p-table [value]="trucksPage.items" styleClass="p-datatable-sm" responsiveLayout="scroll">
-        <ng-template pTemplate="header">
-          <tr class="bg-surface-50 text-surface-700 text-sm uppercase tracking-wider border-b border-surface-200">
-            <th class="pl-4 py-3">Referencia</th>
-            <th>Conductor Asignado</th>
-            <th>Estado Actual</th>
-            <th>Ubicación</th>
-            <th class="w-48">Capacidad</th>
-            <th class="!text-center">Acciones</th>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-truck>
-          <tr class="hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0">
-            <td class="pl-4 py-3">
-              <div class="font-bold text-sm text-surface-900">{{ truck.plateNumber }}</div>
-              <div class="text-xs font-mono text-surface-400">{{ truck.referenceCode }}</div>
-            </td>
-            <td>
-              <div *ngIf="truck.assignedDriver" class="flex items-center gap-2">
-                <p-avatar [image]="truck.assignedDriver.imageInfo?.imageUrl" shape="circle" styleClass="w-7 h-7" />
-                <span class="text-sm font-medium text-surface-700">{{ truck.assignedDriver.name }}</span>
-              </div>
-              <span *ngIf="!truck.assignedDriver" class="text-sm text-surface-400 italic">No asignado</span>
-            </td>
-            <td><p-tag [value]="getStatusLabel(getCurrentStatus(truck))" [severity]="getStatusSeverity(getCurrentStatus(truck))"/></td>
-            <td class="text-sm text-surface-500"><i class="pi pi-map-marker mr-1 text-surface-300"></i>{{ formatAddress(truck.address) }}</td>
-            <td>
-              <p-progressBar [value]="getLoadPercentage(truck.ordersToDeliver, truck.maxOrderCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-surface-100" />
-              <p class="text-xs text-surface-400 mt-1 font-bold">{{ truck.ordersToDeliver }} / {{ truck.maxOrderCapacity }} pedidos</p>
-            </td>
-            <td>
-              <div class="flex justify-center gap-1">
-                <p-button icon="pi pi-id-card" (onClick)="openAssignmentDialog(truck)" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Asignar Conductor" tooltipPosition="top" />
-                <p-button icon="pi pi-history" (onClick)="openHistory(truck)" styleClass="p-button-xs p-button-outlined p-button-secondary" rounded="true" pTooltip="Historial" tooltipPosition="top" />
-                <p-button icon="pi pi-map-marker" (onClick)="locateTruckOnMap(truck)" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar" tooltipPosition="top" />
-                <p-button icon="pi pi-pencil" [routerLink]="['/admin/trucks/edit', truck.id]" styleClass="p-button-xs p-button-outlined p-button-warn" rounded="true" pTooltip="Editar" tooltipPosition="top" />
-                <p-button icon="pi pi-trash" (onClick)="deleteTruck(truck.id)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Borrar" tooltipPosition="top" />
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr><td colspan="6" class="text-center py-10 text-surface-400">No se encontraron camiones.</td></tr>
-        </ng-template>
-      </p-table>
-
-      <p-paginator
-        (onPageChange)="onPageChange($event)"
-        [first]="first"
-        [rows]="rows"
-        [totalRecords]="trucksPage.totalItems"
-        [rowsPerPageOptions]="[5, 10, 20]"
-        [showCurrentPageReport]="true"
-        [dropdownAppendTo]="'body'"
-        currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} camiones"
-        styleClass="border-t border-surface-200 bg-surface-50 text-sm rounded-b-2xl">
-      </p-paginator>
     </div>
   </div>
-</div>
+}
 
 <p-dialog [(visible)]="displayAssignmentDialog" [modal]="true" header="Asignación de conductor" [style]="{width: '500px'}" [draggable]="false" [resizable]="false">
-  <div *ngIf="currentTruckForAssignment" class="py-4">
-    <span class="text-surface-500 text-sm block mb-4">Selecciona el conductor que se encargará del camión <strong>{{ currentTruckForAssignment.plateNumber }}</strong>.</span>
+  @if (currentTruckForAssignment) {
+    <div class="py-4">
+      <span class="text-surface-500 text-sm block mb-4">Selecciona el conductor que se encargará del camión <strong>{{ currentTruckForAssignment.plateNumber }}</strong>.</span>
 
-    <p-select [options]="drivers" [(ngModel)]="selectedDriver" optionLabel="name" placeholder="Selecciona un conductor..." class="w-full mb-4" appendTo="body">
-      <ng-template #empty>
-        <div class="flex items-center gap-2 px-2 py-1 text-surface-500">
-          <span>No existen conductores disponibles.</span>
-        </div>
-      </ng-template>
-      <ng-template let-user #selectedItem>
-        <div class="flex items-center gap-2">
-          <p-avatar [image]="user.imageInfo?.imageUrl" shape="circle" />
-          <div>{{ user.name }}</div>
-        </div>
-      </ng-template>
-      <ng-template let-user #item>
-        <div class="flex items-center gap-2">
-          <p-avatar [image]="user.imageInfo?.imageUrl" shape="circle" />
-          <div>{{ user.name }}</div>
-        </div>
-      </ng-template>
-    </p-select>
+      <p-select [options]="drivers" [(ngModel)]="selectedDriver" optionLabel="name" placeholder="Selecciona un conductor..." class="w-full mb-4" appendTo="body">
+        <ng-template #empty>
+          <div class="flex items-center gap-2 px-2 py-1 text-surface-500">
+            <span>No existen conductores disponibles.</span>
+          </div>
+        </ng-template>
+        <ng-template let-user #selectedItem>
+          <div class="flex items-center gap-2">
+            <p-avatar [image]="user.imageInfo?.imageUrl" shape="circle" />
+            <div>{{ user.name }}</div>
+          </div>
+        </ng-template>
+        <ng-template let-user #item>
+          <div class="flex items-center gap-2">
+            <p-avatar [image]="user.imageInfo?.imageUrl" shape="circle" />
+            <div>{{ user.name }}</div>
+          </div>
+        </ng-template>
+      </p-select>
 
-    <div class="flex justify-end gap-2 mt-4">
-      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelAssignment()" />
-      <p-button *ngIf="currentTruckForAssignment.assignedDriver" label="Desasignar" severity="danger" [outlined]="true" (onClick)="unassignDriver(currentTruckForAssignment.id)" />
-      <p-button label="Confirmar" icon="pi pi-check" (onClick)="confirmAssignment(currentTruckForAssignment.id)" [disabled]="!selectedDriver" />
+      <div class="flex justify-end gap-2 mt-4">
+        <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelAssignment()" />
+        @if (currentTruckForAssignment.assignedDriver) {
+          <p-button label="Desasignar" severity="danger" [outlined]="true" (onClick)="unassignDriver(currentTruckForAssignment.id)" />
+        }
+        <p-button label="Confirmar" icon="pi pi-check" (onClick)="confirmAssignment(currentTruckForAssignment.id)" [disabled]="!selectedDriver" />
+      </div>
     </div>
-  </div>
+  }
 </p-dialog>
 
 
 <p-dialog [(visible)]="displayHistoryDialog" [modal]="true" header="Historial de Estados" [style]="{width: '700px'}" [draggable]="false" [resizable]="false">
-  <div *ngIf="selectedTruck" class="py-2">
+  @if (selectedTruck) {
+    <div class="py-2">
 
-    <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-2">
-      <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</label>
-      <div class="flex flex-col gap-3">
-        <p-select [options]="statusOptions" [(ngModel)]="newHistoryStatus" optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full sm:w-64"></p-select>
-        <textarea pTextarea [(ngModel)]="newHistoryComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario sobre la ruta o incidencia..."></textarea>
-      </div>
-      <div class="flex justify-end mt-3">
-        <p-button label="Confirmar" icon="pi pi-check" size="small" (onClick)="addHistoryComment()" [disabled]="!newHistoryComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button>
-      </div>
-    </div>
-
-    <div class="relative pl-4 border-l-2 border-surface-200 ml-4 space-y-8 pb-4 mt-8">
-      <div *ngFor="let log of selectedTruck.history" class="relative">
-
-        <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
-          <i class="text-xs" [ngClass]="log.icon || getIconForStatus(log.status)"></i>
+      <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-2">
+        <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</label>
+        <div class="flex flex-col gap-3">
+          <p-select [options]="statusOptions" [(ngModel)]="newHistoryStatus" optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full sm:w-64"></p-select>
+          <textarea pTextarea [(ngModel)]="newHistoryComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario sobre la ruta o incidencia..."></textarea>
         </div>
+        <div class="flex justify-end mt-3">
+          <p-button label="Confirmar" icon="pi pi-check" size="small" (onClick)="addHistoryComment()" [disabled]="!newHistoryComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button>
+        </div>
+      </div>
 
-        <div class="bg-white border rounded-xl p-4 shadow-sm border-surface-200">
-          <div class="flex justify-between items-center mb-3 pb-3 border-b border-surface-100">
-            <span class="text-sm font-bold text-surface-800 uppercase tracking-wider">{{ getStatusLabel(log.status) }}</span>
-            <span class="text-xs text-surface-500 font-mono bg-surface-100 px-2 py-1 rounded">
-              {{ (log.updates && log.updates.length > 0) ? (log.updates[0].date) : 'Sin fecha' }}
-            </span>
-          </div>
+      <div class="relative pl-4 border-l-2 border-surface-200 ml-4 space-y-8 pb-4 mt-8">
+        @for (log of selectedTruck.history; track $index) {
+          <div class="relative">
 
-          <div class="flex flex-col gap-3">
-            <div *ngFor="let update of log.updates" class="bg-surface-50 rounded-lg p-3 border border-surface-100">
-              <div class="flex items-center gap-1.5 mb-1.5">
-                <i class="pi pi-clock text-xs text-surface-400"></i>
-                <span class="text-xs font-bold text-surface-500">{{ update.date }}</span>
-              </div>
-              <p class="text-sm text-surface-600 leading-relaxed">{{ update.description }}</p>
+            <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
+              <i class="text-xs" [ngClass]="log.icon || getIconForStatus(log.status)"></i>
             </div>
 
-            <p *ngIf="!log.updates || log.updates.length === 0" class="text-xs text-surface-400 italic">No hay actualizaciones registradas para este estado.</p>
+            <div class="bg-white border rounded-xl p-4 shadow-sm border-surface-200">
+              <div class="flex justify-between items-center mb-3 pb-3 border-b border-surface-100">
+                <span class="text-sm font-bold text-surface-800 uppercase tracking-wider">{{ getStatusLabel(log.status) }}</span>
+                <span class="text-xs text-surface-500 font-mono bg-surface-100 px-2 py-1 rounded">
+                  {{ (log.updates && log.updates.length > 0) ? (log.updates[0].date) : 'Sin fecha' }}
+                </span>
+              </div>
+
+              <div class="flex flex-col gap-3">
+                @for (update of log.updates; track $index) {
+                  <div class="bg-surface-50 rounded-lg p-3 border border-surface-100">
+                    <div class="flex items-center gap-1.5 mb-1.5">
+                      <i class="pi pi-clock text-xs text-surface-400"></i>
+                      <span class="text-xs font-bold text-surface-500">{{ update.date }}</span>
+                    </div>
+                    <p class="text-sm text-surface-600 leading-relaxed">{{ update.description }}</p>
+                  </div>
+                }
+
+                @if (!log.updates || log.updates.length === 0) {
+                  <p class="text-xs text-surface-400 italic">No hay actualizaciones registradas para este estado.</p>
+                }
+              </div>
+            </div>
           </div>
-        </div>
+        }
+
+        @if (!selectedTruck.history || selectedTruck.history.length === 0) {
+          <div class="text-sm text-surface-500 italic p-4 bg-surface-50 rounded-lg">
+            El camión no tiene ningún registro en su historial operativo.
+          </div>
+        }
       </div>
 
-      <div *ngIf="!selectedTruck.history || selectedTruck.history.length === 0" class="text-sm text-surface-500 italic p-4 bg-surface-50 rounded-lg">
-        El camión no tiene ningún registro en su historial operativo.
-      </div>
     </div>
-
-  </div>
+  }
 </p-dialog>

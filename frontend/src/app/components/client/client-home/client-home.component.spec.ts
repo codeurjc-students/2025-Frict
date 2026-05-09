@@ -1,19 +1,17 @@
-
-
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ClientHomeComponent } from './client-home.component';
-import { ProductService } from '../../../services/product.service';
-import { CategoryService } from '../../../services/category.service';
-import { BreadcrumbService } from '../../../utils/breadcrumb.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { Category } from '../../../models/category.model';
-import { Product } from '../../../models/product.model';
-import { PageResponse } from '../../../models/pageResponse.model';
-import { ImageInfo } from '../../../models/imageInfo.model';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {ClientHomeComponent} from './client-home.component';
+import {ProductService} from '../../../services/product.service';
+import {CategoryService} from '../../../services/category.service';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {of, Subject, throwError} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {Category} from '../../../models/category.model';
+import {Product} from '../../../models/product.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {ImageInfo} from '../../../models/imageInfo.model';
 
 describe('ClientHomeComponent', () => {
   let component: ClientHomeComponent;

@@ -1,33 +1,33 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {Component, computed, inject, OnDestroy, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 
 // PrimeNG
-import { PaginatorModule, PaginatorState } from 'primeng/paginator';
-import { Textarea } from 'primeng/textarea';
-import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
+import {PaginatorModule, PaginatorState} from 'primeng/paginator';
+import {Textarea} from 'primeng/textarea';
+import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
 
 import * as L from 'leaflet';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import {Html5QrcodeScanner} from 'html5-qrcode';
 
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
-import { BreadcrumbReloadComponent } from '../../common/breadcrumb-reload/breadcrumb-reload.component';
-import { OrderService } from '../../../services/order.service';
-import { TruckService } from '../../../services/truck.service';
-import { ShopService } from '../../../services/shop.service';
-import { AuthService } from '../../../services/auth.service';
-import { formatAddress } from '../../../utils/textFormat.util';
-import { PageResponse } from '../../../models/pageResponse.model';
-import { Order } from '../../../models/order.model';
-import { Truck } from '../../../models/truck.model';
-import { Shop } from '../../../models/shop.model';
-import { MessageService } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { Select } from 'primeng/select';
-import { Tag } from 'primeng/tag';
-import { TableModule } from 'primeng/table';
-import { Dialog } from 'primeng/dialog';
-import { Tooltip } from 'primeng/tooltip';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {OrderService} from '../../../services/order.service';
+import {TruckService} from '../../../services/truck.service';
+import {ShopService} from '../../../services/shop.service';
+import {AuthService} from '../../../services/auth.service';
+import {formatAddress} from '../../../utils/textFormat.util';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Order} from '../../../models/order.model';
+import {Truck} from '../../../models/truck.model';
+import {Shop} from '../../../models/shop.model';
+import {MessageService} from 'primeng/api';
+import {Button} from 'primeng/button';
+import {Select} from 'primeng/select';
+import {Tag} from 'primeng/tag';
+import {TableModule} from 'primeng/table';
+import {Dialog} from 'primeng/dialog';
+import {Tooltip} from 'primeng/tooltip';
 
 @Component({
   selector: 'app-orders-delivery',

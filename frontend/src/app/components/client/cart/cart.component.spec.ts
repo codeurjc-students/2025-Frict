@@ -1,22 +1,20 @@
-
-
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { CartComponent } from './cart.component';
-import { OrderService } from '../../../services/order.service';
-import { ProductService } from '../../../services/product.service';
-import { AuthService } from '../../../services/auth.service';
-import { ShopService } from '../../../services/shop.service';
-import { BreadcrumbService } from '../../../utils/breadcrumb.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ImageInfo } from '../../../models/imageInfo.model';
-import { Product } from '../../../models/product.model';
-import { OrderItem } from '../../../models/orderItem.model';
-import { CartSummary } from '../../../models/cartSummary.model';
-import { PageResponse } from '../../../models/pageResponse.model';
+import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
+import {CartComponent} from './cart.component';
+import {OrderService} from '../../../services/order.service';
+import {ProductService} from '../../../services/product.service';
+import {AuthService} from '../../../services/auth.service';
+import {ShopService} from '../../../services/shop.service';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {of, Subject, throwError} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {ImageInfo} from '../../../models/imageInfo.model';
+import {Product} from '../../../models/product.model';
+import {OrderItem} from '../../../models/orderItem.model';
+import {CartSummary} from '../../../models/cartSummary.model';
+import {PageResponse} from '../../../models/pageResponse.model';
 
 describe('CartComponent', () => {
   let component: CartComponent;

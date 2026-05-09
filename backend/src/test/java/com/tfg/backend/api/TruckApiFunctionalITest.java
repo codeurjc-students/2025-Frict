@@ -2,12 +2,16 @@ package com.tfg.backend.api;
 
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.TruckDTO;
-import com.tfg.backend.model.*;
+import com.tfg.backend.model.Address;
+import com.tfg.backend.model.Shop;
+import com.tfg.backend.model.Truck;
+import com.tfg.backend.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TruckApiFunctionalITest extends BaseApiFunctionalITest {

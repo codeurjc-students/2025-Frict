@@ -1,4 +1,4 @@
-import {Component, OnInit, inject, LOCALE_ID} from '@angular/core';
+import {Component, inject, LOCALE_ID, OnInit} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';

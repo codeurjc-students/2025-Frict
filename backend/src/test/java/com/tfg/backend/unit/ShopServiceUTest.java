@@ -2,6 +2,7 @@ package com.tfg.backend.unit;
 
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.ShopDTO;
+import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.service.ImageService;
@@ -9,7 +10,6 @@ import com.tfg.backend.service.ProductService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.ShopStockService;
 import com.tfg.backend.utils.GlobalDefaults;
-import com.tfg.backend.dto.StatDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

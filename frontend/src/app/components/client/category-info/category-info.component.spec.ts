@@ -1,19 +1,18 @@
-
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { CategoryInfoComponent } from './category-info.component';
-import { CategoryService } from '../../../services/category.service';
-import { ProductService } from '../../../services/product.service';
-import { BreadcrumbService } from '../../../utils/breadcrumb.service';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { Category } from '../../../models/category.model';
-import { Product } from '../../../models/product.model';
-import { ImageInfo } from '../../../models/imageInfo.model';
-import { PageResponse } from '../../../models/pageResponse.model';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {By} from '@angular/platform-browser';
+import {CategoryInfoComponent} from './category-info.component';
+import {CategoryService} from '../../../services/category.service';
+import {ProductService} from '../../../services/product.service';
+import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {of, Subject, throwError} from 'rxjs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClientTesting} from '@angular/common/http/testing';
+import {Category} from '../../../models/category.model';
+import {Product} from '../../../models/product.model';
+import {ImageInfo} from '../../../models/imageInfo.model';
+import {PageResponse} from '../../../models/pageResponse.model';
 
 describe('CategoryInfoComponent', () => {
   let component: CategoryInfoComponent;

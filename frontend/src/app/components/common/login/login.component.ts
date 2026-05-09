@@ -2,7 +2,7 @@ import {Component, inject, OnInit} from '@angular/core';
 import {AuthService} from '../../../services/auth.service';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {NgIf, NgOptimizedImage} from '@angular/common';
+import {NgOptimizedImage} from '@angular/common';
 import {GoogleAuthComponent} from '../google-auth/google-auth.component';
 import {CustomValidators} from '../../../utils/customValidators.util';
 import {UserService} from '../../../services/user.service';
@@ -13,7 +13,6 @@ import {UserService} from '../../../services/user.service';
     ReactiveFormsModule,
     RouterLink,
     NgOptimizedImage,
-    NgIf,
     GoogleAuthComponent,
   ],
   templateUrl: './login.component.html',

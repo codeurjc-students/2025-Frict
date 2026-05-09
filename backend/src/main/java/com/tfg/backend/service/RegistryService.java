@@ -1,10 +1,10 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.PdfReportDTO;
 import com.tfg.backend.dto.EntityType;
+import com.tfg.backend.dto.PdfReportDTO;
 import com.tfg.backend.model.Registry;
-import com.tfg.backend.repository.RegistryRepository;
 import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.repository.RegistryRepository;
 import com.tfg.backend.utils.PdfService;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

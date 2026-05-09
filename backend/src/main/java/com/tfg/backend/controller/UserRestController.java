@@ -2,11 +2,10 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.User;
-import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ShopUserOrchestrator;
+import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
-import com.tfg.backend.dto.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

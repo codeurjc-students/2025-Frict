@@ -2,7 +2,6 @@ import {Component, inject, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ProductService} from '../../../services/product.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
-import {NgForOf, NgIf} from '@angular/common';
 import {ProductCardComponent} from '../../client/product-card/product-card.component';
 import {Select} from 'primeng/select';
 import {Button} from 'primeng/button';
@@ -26,9 +25,7 @@ interface SortOption {
   standalone: true,
   imports: [
     Paginator,
-    NgIf,
     ProductCardComponent,
-    NgForOf,
     Select,
     FormsModule,
     Button,

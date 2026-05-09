@@ -1,17 +1,17 @@
-import {Component, effect, inject, signal, computed, OnInit, LOCALE_ID, ViewChild} from '@angular/core';
-import { CommonModule, formatDate } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {Component, computed, effect, inject, LOCALE_ID, OnInit, signal, ViewChild} from '@angular/core';
+import {CommonModule, formatDate} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 
-import { Select } from 'primeng/select';
-import { MultiSelect } from 'primeng/multiselect';
-import { DatePicker } from 'primeng/datepicker';
-import { Button } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import {Select} from 'primeng/select';
+import {MultiSelect} from 'primeng/multiselect';
+import {DatePicker} from 'primeng/datepicker';
+import {Button} from 'primeng/button';
+import {TableModule} from 'primeng/table';
 import {ChartModule, UIChart} from 'primeng/chart';
 
-import { RegistryService } from '../../../services/registry.service';
-import { BreadcrumbReloadComponent } from '../../common/breadcrumb-reload/breadcrumb-reload.component';
-import { LoadingScreenComponent } from '../../common/loading-screen/loading-screen.component';
+import {RegistryService} from '../../../services/registry.service';
+import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {SelectButton} from 'primeng/selectbutton';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
