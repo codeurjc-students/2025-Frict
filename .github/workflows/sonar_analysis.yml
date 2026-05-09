@@ -90,18 +90,9 @@ jobs:
           npm install -g @angular/cli
 
 
-      - name: Generate SSL certs for Angular dev server
+      - name: Run Frontend Tests with Coverage
         working-directory: frontend
-        run: |
-          mkdir -p certs
-          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
-            -keyout certs/localhost-key.pem \
-            -out certs/localhost.pem \
-            -subj "/CN=localhost"
-
-      - name: Start Angular project
-        working-directory: frontend
-        run: ng serve &
+        run: ng test --watch=false --code-coverage --browsers=ChromeHeadlessNoSandbox
 
 
       - name: Cache SonarQube packages
