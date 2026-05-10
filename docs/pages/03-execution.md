@@ -44,7 +44,7 @@ Execute the composition directly from the remote registry using a terminal windo
 # For the development version:
 docker compose -f oci://mjpulido/frict:dev-compose up -d
 
-# For the production (latest) version:
+# For the production (latest) version, with DB ports not exposed:
 docker compose -f oci://mjpulido/frict up -d
 ```
 
@@ -60,8 +60,11 @@ docker compose -f oci://mjpulido/frict up -d
 
 Because the stack uses self-signed HTTPS certificates generated automatically upon startup, your browser will initially flag the connection as insecure. To access the platform properly:
 
-* **Trust the MinIO Certificate (image service):** First, navigate to the MinIO endpoint at `https://localhost:9000`. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
+* **Trust the backend API:** Firstly, navigate to the main API endpoint at `https://localhost/api/v1`. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
 
+* **Trust the WebSockets endpoint:** Secondly, navigate to the websockets communications endpoint at ``. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
+
+* **Trust the MinIO Certificate (image service):** First, navigate to the MinIO endpoint at `https://localhost:9000`. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
 
 * **Launch the Main App:** Once the MinIO certificate is accepted in your session, navigate to the main application at **`https://localhost`** (which maps to port 443). Also, bypass the security warning if necessary.
 

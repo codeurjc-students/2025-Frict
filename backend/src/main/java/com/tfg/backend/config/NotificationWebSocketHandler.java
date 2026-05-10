@@ -1,7 +1,7 @@
 package com.tfg.backend.config;
 
-import com.tfg.backend.model.UserConnection;
-import com.tfg.backend.repository.UserConnectionRepository;
+import com.tfg.backend.model.Connection;
+import com.tfg.backend.repository.ConnectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,7 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, WebSocketSession>> userSessions = new ConcurrentHashMap<>();
 
     // Inject Mongo connections repository
-    private final UserConnectionRepository connectionRepository;
+    private final ConnectionRepository connectionRepository;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -82,8 +82,8 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
         // Execute in a separate virtual thread to avoid blocking the WebSocket establishment
         Thread.startVirtualThread(() -> {
             try {
-                UserConnection conn = connectionRepository.findById(username)
-                        .orElse(new UserConnection(username));
+                Connection conn = connectionRepository.findById(username)
+                        .orElse(new Connection(username));
 
                 // If already online (e.g., opened another tab), just update the timestamp
                 conn.setOnline(true);

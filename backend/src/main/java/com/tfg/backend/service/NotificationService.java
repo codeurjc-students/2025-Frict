@@ -18,11 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
-
     private final NotificationRepository notificationRepository;
-    private final NotificationWebSocketHandler webSocketHandler;
-    private final ObjectMapper objectMapper;
 
     public List<Notification> findByUsernameAndIsReadFalseOrderByTimestampDesc(String username){
         return this.notificationRepository.findByUsernameAndIsReadFalseOrderByTimestampDesc(username);

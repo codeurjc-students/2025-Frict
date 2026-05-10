@@ -10,6 +10,7 @@ import {AuthService} from './auth.service';
   providedIn: 'root'
 })
 export class NotificationService implements OnDestroy {
+
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 

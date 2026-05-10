@@ -191,9 +191,9 @@ Review the selected user's posts and remove inappropriate or offensive reviews.
 
 **Reports Page**
 
-Access historical organizational insights, such as past orders, budget trends, and delivery truck performance.
+Create and export custom reports and analyze the organization performance, using use-data collected from normal shopping and management activities.
 
-_Coming soon..._
+![Reports Page](/docs/images/v0.2/reports.png)
 
 &nbsp;
 
@@ -202,6 +202,6 @@ _Coming soon..._
 
 Handle pickups and deliveries at destination, including customer reference code verification.
 
-_Coming soon..._
+![Order Delivery Page](/docs/images/v0.2/order-delivery.png)
 
 &nbsp;

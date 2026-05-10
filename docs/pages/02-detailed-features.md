@@ -69,7 +69,7 @@
 | ✅     | Receive in-app notifications about relevant info       |           | ✅               | ✅             | ✅               | ✅             |
 | ✅     | Real-time user online / offline connection status      |           | ✅               | ✅             | ✅               | ✅             |
 | ✅      | Toggle global / local stock visibility                 |          | ✅               | ✅             | ✅               | ✅             |
-| 🔄     | View product recommendations based on user preferences |           | ✅               |               |                 |               |
+| ✅     | View product recommendations based on user preferences |           | ✅               |               |                 |               |
 | ✅     | Download PDF invoices and reports                      |           | ✅               | ✅             | ✅               | ✅             |
 
 &nbsp;
