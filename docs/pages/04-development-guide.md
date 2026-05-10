@@ -439,12 +439,21 @@ This will create a new container in Docker Desktop that will act as a dedicated 
 **3. Set up the MongoDB Database**
 On the other hand, we need to instantiate the MongoDB database for use-data collection and analysis. We will also use Docker Desktop running the following command:
 ```bash
-docker run -d --name mongodb-frict \
-  -p 27017:27017 \
-  -e MONGO_INITDB_DATABASE=Frict
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=password123 \
-  mongo
+  # Start a MongoDB instance in Replica Set mode (required for change streams)
+  docker run -d \
+    --name mongodb-frict \
+    -e MONGO_INITDB_ROOT_USERNAME=user \
+    -e MONGO_INITDB_ROOT_PASSWORD=password \
+    -e MONGO_INITDB_DATABASE=Frict \
+    -p 27017:27017 \
+    mongo \
+    sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+  chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
+  /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
+  /data/keyfile --bind_ip_all"
+
+  # Wait few seconds until container had started completely, and then run:
+  docker exec mongodb-frict mongosh --username user --password password --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
 ```
 This will create a new container in Docker Desktop that will act as a dedicated noSQL DB. To explore its schema, we can create a new connection in MongoDB Compass, using the data that we provided to Docker for its creation (port 27017, username "admin" and password "password123").
 
@@ -466,7 +475,7 @@ MYSQL_URL=jdbc:mysql://localhost:3306/Frict?useSSL=false&allowPublicKeyRetrieval
 MYSQL_USERNAME=user
 MYSQL_PASSWORD=password
 
-MONGODB_URI=mongodb://localhost:27017/Frict?authSource=admin&directConnection=true
+MONGODB_URI=localhost:27017/Frict?authSource=admin&directConnection=true
 MONGODB_USERNAME=user
 MONGODB_PASSWORD=password
 
@@ -491,6 +500,7 @@ DOCKERHUB_TOKEN=dckr_pat_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678
 
 SONAR_TOKEN=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
 ```
+
 > ℹ️ **NOTE:** If you run the application directly via your IDE's "Run" button instead of Maven, you might need to install an EnvFile plugin (like the one available in IntelliJ IDEA) to inject these variables during execution.
 
 **5. Run the Backend Component**
@@ -538,14 +548,24 @@ docker run -d --name mysql-fricttest \
 ```
 
 ```bash
-docker run -d --name mongodb-fricttest \
-  -p 27018:27017 \
-  -e MONGO_INITDB_DATABASE=FrictTest
-  -e MONGO_INITDB_ROOT_USERNAME=root \
-  -e MONGO_INITDB_ROOT_PASSWORD=password \
-  mongo
-```
+  # Start a MongoDB instance in Replica Set mode (required for change streams)
+  docker run -d \
+    --name mongodb-fricttest \
+    -e MONGO_INITDB_ROOT_USERNAME=root \
+    -e MONGO_INITDB_ROOT_PASSWORD=password \
+    -e MONGO_INITDB_DATABASE=FrictTest \
+    -p 27018:27017 \
+    mongo:8.0 \
+    sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+  chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
+  /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
+  /data/keyfile --bind_ip_all"
 
+  # Wait few seconds until container had started completely, and then run:
+  docker exec mongodb-fricttest mongosh --username root --password
+  password --authenticationDatabase admin --eval
+  "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+```
 After that, make sure they are running by checking the Docker Desktop UI or start them via CLI by running:
 
 ```bash
