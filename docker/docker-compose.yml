@@ -113,7 +113,7 @@ services:
       MYSQL_PASSWORD: password
 
       # --- MongoDB Database ---
-      MONGODB_URI: mongodb://mongodb:27017/Frict?authSource=admin&replicaSet=rs0
+      MONGODB_URI: mongodb:27017/Frict?authSource=admin&replicaSet=rs0
       MONGODB_USERNAME: user
       MONGODB_PASSWORD: password
 
