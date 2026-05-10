@@ -422,26 +422,34 @@ docker run -d --name minio \
 Thanks to the `spring.config.import` property, Spring Boot natively parses `.env` files. Create a file named `.env` inside the `backend` folder and populate it with the following required variables:
 
 ```env
-# Database Credentials
-DATASOURCE_URL=jdbc:mysql://localhost:3306/Frict
-DATASOURCE_PASSWORD=your_mysql_password
+MYSQL_URL=jdbc:mysql://localhost:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+MYSQL_USERNAME=user
+MYSQL_PASSWORD=password
 
-# Security Keys
-JWT_SECRET=your_super_secret_jwt_key_here
-CARDS_DB_KEY=your_encryption_key_for_cards
+MONGODB_URI=mongodb://localhost:27017/Frict?authSource=admin&directConnection=true
+MONGODB_USERNAME=user
+MONGODB_PASSWORD=password
 
-# MinIO Storage Settings
-S3_ENDPOINT=http://localhost:9000
-S3_PUBLIC_URL=http://localhost:9000
+JWT_SECRET=A3F7B2E8C1D4F6A9B0E3C2D5F8A1B4E7C0D3F6A9B2E5C8D1F4A7B0E3C6D9F2A5
+DB_ENCRYPTION_KEY=a1b2c3d4e5f6g7h8a1b2c3d4e5f6g7h8
+
+CORS_ALLOWED_ORIGIN=https://localhost:4202
+
+S3_ENDPOINT=https://localhost:9000
+S3_PUBLIC_URL=https://localhost:9000
 S3_ACCESS_KEY=admin
-S3_SECRET_KEY=adminpass
-S3_BUCKET_NAME=frict-bucket
+S3_SECRET_KEY=password123
+S3_BUCKET_NAME=images
 
-# Email & Auth Setup
 SENDER_MAIL_PORT=587
-SENDER_MAIL_ADDRESS=your_email@example.com
-SENDER_MAIL_PASSWORD=your_app_password
-GOOGLE_AUTH_CLIENT_ID=your_google_client_id
+SENDER_MAIL_ADDRESS=address@domain.com
+SENDER_MAIL_PASSWORD=aaaa aaaa aaaa aaaa
+GOOGLE_AUTH_CLIENT_ID=123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com
+
+DOCKERHUB_USERNAME=user
+DOCKERHUB_TOKEN=dckr_pat_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678
+
+SONAR_TOKEN=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
 ```
 > ℹ️ **NOTE:** If you run the application directly via your IDE's "Run" button instead of Maven, you might need to install an EnvFile plugin (like the one available in IntelliJ IDEA) to inject these variables during execution.
 

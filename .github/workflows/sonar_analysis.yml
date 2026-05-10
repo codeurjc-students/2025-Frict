@@ -7,11 +7,14 @@ on:
       - main
 
 env:
-  RUNNER_DB_NAME: FrictTest
-  RUNNER_DB_PASSWORD: password
+  RUNNER_MYSQL_NAME: FrictTest
+  RUNNER_MYSQL_PASSWORD: password
+  RUNNER_MONGODB_NAME: FrictTest
+  RUNNER_MONGODB_USERNAME: root
+  RUNNER_MONGODB_PASSWORD: password
+  RUNNER_MINIO_BUCKET_NAME: images
   RUNNER_MINIO_USER: admin
   RUNNER_MINIO_PASSWORD: password123
-  RUNNER_MINIO_BUCKET_NAME: images
 
 jobs:
   build:
@@ -22,8 +25,8 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: ${{ env.RUNNER_DB_NAME }}
-          MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_DB_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.RUNNER_MYSQL_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_MYSQL_PASSWORD }}
         ports:
           - 3307:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -35,14 +38,14 @@ jobs:
 
       - name: Start MongoDB Replica Set
         run: |
-          docker run -d -p 27017:27017 --name mongodb \
-            -e MONGO_INITDB_ROOT_USERNAME=admin \
-            -e MONGO_INITDB_ROOT_PASSWORD=password123 \
+          docker run -d -p 27018:27017 --name mongodb \
+            -e MONGO_INITDB_ROOT_USERNAME=${{ env.RUNNER_MONGODB_USERNAME }} \
+            -e MONGO_INITDB_ROOT_PASSWORD=${{ env.RUNNER_MONGODB_PASSWORD }} \
             mongo:latest \
             sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile && chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all"
           
           sleep 10
-          docker exec mongodb mongosh --username admin --password password123 --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+          docker exec mongodb mongosh --username ${{ env.RUNNER_MONGODB_USERNAME }} --password ${{ env.RUNNER_MONGODB_PASSWORD }} --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
 
       - name: Start MinIO and Create Bucket
         env:

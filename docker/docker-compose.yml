@@ -50,8 +50,8 @@ services:
     expose:
       - "27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password123
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
     command: >
       sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
       chmod 400 /data/keyfile &&
@@ -61,7 +61,7 @@ services:
       - mongodb_data_latest:/data/db
     healthcheck:
       test: >
-        mongosh --username admin --password password123 --authenticationDatabase admin 
+        mongosh --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin
         --eval "try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" --quiet
       interval: 10s
       timeout: 5s
@@ -108,12 +108,14 @@ services:
 
     environment:
       # --- MySQL Database ---
-      DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
-      DATASOURCE_USERNAME: user
-      DATASOURCE_PASSWORD: password
+      MYSQL_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+      MYSQL_USERNAME: user
+      MYSQL_PASSWORD: password
 
       # --- MongoDB Database ---
-      MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin&replicaSet=rs0
+      MONGODB_URI: mongodb://mongodb:27017/Frict?authSource=admin&replicaSet=rs0
+      MONGODB_USERNAME: user
+      MONGODB_PASSWORD: password
 
       # --- MinIO ---
       S3_ENDPOINT: https://minio:9000
