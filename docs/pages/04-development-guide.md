@@ -436,7 +436,7 @@ docker run -d --name mysql-frict \
 This will create a new container in Docker Desktop that will act as a dedicated SQL DB. To explore its schema, we can create a new connection in MySQL Workbench, using the data that we provided to Docker for its creation (port 3306, username "user" and password "password").
 
 
-**3. Set up the MongoDB Database**
+**3. Set up the MongoDB noSQL Database**
 On the other hand, we need to instantiate the MongoDB database for use-data collection and analysis. We will also use Docker Desktop running the following command:
 ```bash
   # Start a MongoDB instance in Replica Set mode (required for change streams)
@@ -460,10 +460,24 @@ This will create a new container in Docker Desktop that will act as a dedicated 
 **4. Deploy the MinIO Object Storage**
 The system uses MinIO for handling image uploads. Spin up a local container using Docker:
 ```bash
-docker run -d --name minio \
-  -p 9000:9000 -p 9001:9001 \
-  -e MINIO_ROOT_USER=admin \
-  -e MINIO_ROOT_PASSWORD=adminpass \
+# Create self-signed certificates to serve images via HTTPS (if not exists)
+docker run --rm `
+  -v "C:\...\2025-Frict\docker\minio_https\certs:/certs" `
+  alpine/openssl req -x509 -nodes -days 365 -newkey rsa:2048 `
+  -keyout /certs/private.key `
+  -out /certs/public.crt `
+  -subj "/CN=minio" `
+  -addext "subjectAltName = DNS:minio, DNS:localhost, IP:127.0.0.1"
+
+# Create and start a MinIO container that uses the certificates
+docker run -d \
+  --name minio-frict \
+  -e MINIO_ROOT_USER=user \
+  -e MINIO_ROOT_PASSWORD=password \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -v minio_frict_data:/data \
+  -v "C:\...\2025-Frict\docker\minio_https\certs:/root/.minio/certs" \
   minio/minio server /data --console-address ":9001"
 ```
 
@@ -486,8 +500,8 @@ CORS_ALLOWED_ORIGIN=https://localhost:4202
 
 S3_ENDPOINT=https://localhost:9000
 S3_PUBLIC_URL=https://localhost:9000
-S3_ACCESS_KEY=admin
-S3_SECRET_KEY=password123
+S3_ACCESS_KEY=user
+S3_SECRET_KEY=password
 S3_BUCKET_NAME=images
 
 SENDER_MAIL_PORT=587
@@ -535,9 +549,24 @@ Automated tests can be executed separately for the backend and frontend componen
 
 ##### Prerequisites (backend testing only)
 
-As API and integration backend test sets use real database instances, proper MySQL and MongoDB testing instances must be present and running. To do so, firstly run these Docker commands:
+As API and integration backend test sets use real database instances, proper MinIO, MySQL and MongoDB testing instances must be present and running. To do so, firstly run these Docker commands:
 
 ```bash
+#MinIO
+#Make sure valid certificates are located in docker/minio_https or create new ones (command above)
+docker run -d \
+  --name minio-fricttest \
+  -e MINIO_ROOT_USER=root \
+  -e MINIO_ROOT_PASSWORD=password \
+  -p 9002:9000 \
+  -p 9003:9001 \
+  -v minio_fricttest_data:/data \
+  -v "C:\...\2025-Frict\docker\minio_https\certs:/root/.minio/certs" \
+  minio/minio server /data --console-address ":9001"
+```
+
+```bash
+#MySQL
 docker run -d --name mysql-fricttest \
   -p 3307:3306 \
   -e MYSQL_DATABASE=Frict
@@ -548,24 +577,28 @@ docker run -d --name mysql-fricttest \
 ```
 
 ```bash
-  # Start a MongoDB instance in Replica Set mode (required for change streams)
-  docker run -d \
-    --name mongodb-fricttest \
-    -e MONGO_INITDB_ROOT_USERNAME=root \
-    -e MONGO_INITDB_ROOT_PASSWORD=password \
-    -e MONGO_INITDB_DATABASE=FrictTest \
-    -p 27018:27017 \
-    mongo:8.0 \
-    sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
-  chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
-  /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
-  /data/keyfile --bind_ip_all"
+#MongoDB
+# Start a MongoDB instance in Replica Set mode (required for change streams)
+docker run -d \
+  --name mongodb-fricttest \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  -e MONGO_INITDB_DATABASE=FrictTest \
+  -p 27018:27017 \
+  mongo:8.0 \
+  sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
+/usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
+/data/keyfile --bind_ip_all"
 
-  # Wait few seconds until container had started completely, and then run:
-  docker exec mongodb-fricttest mongosh --username root --password
-  password --authenticationDatabase admin --eval
-  "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+# Wait few seconds until container had started completely, and then run:
+docker exec mongodb-fricttest mongosh --username root --password
+password --authenticationDatabase admin --eval
+"rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
 ```
+
+> ℹ️ **NOTE:** This way, development and testing containers are completely isolated, so tests and existing data do not get corrupted nor affected one another.
+
 After that, make sure they are running by checking the Docker Desktop UI or start them via CLI by running:
 
 ```bash

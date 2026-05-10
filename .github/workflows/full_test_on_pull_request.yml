@@ -13,8 +13,8 @@ env:
   RUNNER_MONGODB_USERNAME: root
   RUNNER_MONGODB_PASSWORD: password
   RUNNER_MINIO_BUCKET_NAME: images
-  RUNNER_MINIO_USER: admin
-  RUNNER_MINIO_PASSWORD: password123
+  RUNNER_MINIO_USER: root
+  RUNNER_MINIO_PASSWORD: password
 
 jobs:
   full-stack-test:
@@ -55,8 +55,8 @@ jobs:
           cp -r $(pwd)/docker/minio_https/certs/* /tmp/minio_certs/
           
           docker run -d \
-            -p 9000:9000 \
-            -p 9001:9001 \
+            -p 9002:9000 \
+            -p 9003:9001 \
             --name minio \
             -v /tmp/minio_certs:/root/.minio/certs \
             -e MINIO_ROOT_USER=${{ env.RUNNER_MINIO_USER }} \
@@ -64,7 +64,7 @@ jobs:
             minio/minio server /data --console-address ":9001"
           
           sleep 5
-          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
+          aws --endpoint-url https://localhost:9002 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
