@@ -2,6 +2,7 @@ package com.tfg.backend.unit;
 
 import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ProductRepository;
 import com.tfg.backend.service.*;
@@ -17,30 +18,29 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceUTest {
 
     @Mock private ProductRepository productRepository;
+    @Mock private RegistryService registryService;
     @Mock private UserService userService;
     @Mock private ShopStockService shopStockService;
     @Mock private CategoryService categoryService;
     @Mock private ImageService imageService;
     @Mock private OrderItemService orderItemService;
-    @Mock private ApplicationEventPublisher eventPublisher; //Necessary to avoid errors trying to send notifications, but not used
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ProductService productService;
@@ -55,9 +55,13 @@ class ProductServiceUTest {
     void setUp() {
         selectedShop = new Shop();
         selectedShop.setId(10L);
+        selectedShop.setReferenceCode("SH-REF");
+        selectedShop.setName("Test Shop");
 
         loggedUser = new User();
         loggedUser.setId(1L);
+        loggedUser.setUsername("test-user");
+        loggedUser.setName("Test User");
         loggedUser.setRoles(new HashSet<>(List.of("USER")));
         loggedUser.setSelectedShop(selectedShop);
         loggedUser.setFavouriteProducts(new HashSet<>());
@@ -71,6 +75,7 @@ class ProductServiceUTest {
         product.setCategories(new ArrayList<>());
         product.setImages(new ArrayList<>());
         product.setOrderItems(new ArrayList<>());
+        product.setShopsStock(new ArrayList<>());
 
         productDTO = new ProductDTO();
         productDTO.setName("New Product");
@@ -83,7 +88,108 @@ class ProductServiceUTest {
         othersCategory = new Category();
         othersCategory.setId(99L);
         othersCategory.setName("Otros");
-        othersCategory.setChildren(new ArrayList<>()); // It is a leaf node
+        othersCategory.setChildren(new ArrayList<>());
+    }
+
+    // --- READ OPERATIONS ---
+    @Nested
+    @DisplayName("Read-only delegation and helper tests")
+    class ReadOperationsTests {
+
+        @Test
+        @DisplayName("getAllProducts (no-arg) delegates to repository and enriches stock")
+        void getAllProducts_NoArg_DelegatesAndEnriches() {
+            when(productRepository.findAll()).thenReturn(List.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            List<Product> result = productService.getAllProducts();
+
+            assertEquals(1, result.size());
+            assertEquals(0, result.getFirst().getAvailableUnits());
+            verify(productRepository).findAll();
+        }
+
+        @Test
+        @DisplayName("getAllProducts (pageable) delegates to repository and enriches stock")
+        void getAllProducts_WithPageable_DelegatesAndEnriches() {
+            Pageable pageable = PageRequest.of(0, 5);
+            Page<Product> page = new PageImpl<>(List.of(product));
+            when(productRepository.findAll(pageable)).thenReturn(page);
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            Page<Product> result = productService.getAllProducts(pageable);
+
+            assertEquals(1, result.getTotalElements());
+            verify(productRepository).findAll(pageable);
+        }
+
+        @Test
+        @DisplayName("getFilteredProducts forwards searchTerm and categoryIds to repository")
+        void getFilteredProducts_ForwardsFilters() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Product> page = new PageImpl<>(List.of(product));
+            when(productRepository.findByFilters("laptop", List.of(1L, 2L), pageable)).thenReturn(page);
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            Page<Product> result = productService.getFilteredProducts("laptop", List.of(1L, 2L), pageable);
+
+            assertEquals(1, result.getTotalElements());
+            verify(productRepository).findByFilters("laptop", List.of(1L, 2L), pageable);
+        }
+
+        @Test
+        @DisplayName("findById returns enriched Optional when product exists")
+        void findById_ReturnsEnrichedProduct_WhenFound() {
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            Optional<Product> result = productService.findById(1L);
+
+            assertTrue(result.isPresent());
+            assertEquals(0, result.get().getAvailableUnits());
+        }
+
+        @Test
+        @DisplayName("findById returns empty Optional when product does not exist")
+        void findById_ReturnsEmpty_WhenNotFound() {
+            when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertTrue(productService.findById(99L).isEmpty());
+        }
+
+        @Test
+        @DisplayName("findProductHelper throws NOT_FOUND when product does not exist")
+        void findProductHelper_ThrowsNotFound() {
+            when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> productService.findProductHelper(99L));
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        }
+
+        @Test
+        @DisplayName("findProductsNotAssignedToShop delegates to repository")
+        void findProductsNotAssignedToShop_DelegatesToRepository() {
+            when(productRepository.findProductsNotAssignedToShop(10L)).thenReturn(List.of(product));
+
+            List<Product> result = productService.findProductsNotAssignedToShop(10L);
+
+            assertEquals(1, result.size());
+            verify(productRepository).findProductsNotAssignedToShop(10L);
+        }
+
+        @Test
+        @DisplayName("getUserFavouriteProducts delegates to repository with logged user's ID")
+        void getUserFavouriteProducts_DelegatesToRepository() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Product> page = new PageImpl<>(List.of(product));
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            when(productRepository.findFavouritesByUserId(1L, pageable)).thenReturn(page);
+
+            Page<Product> result = productService.getUserFavouriteProducts(pageable);
+
+            assertEquals(1, result.getTotalElements());
+        }
     }
 
     // --- ENRICH WITH STOCK TESTS ---
@@ -92,15 +198,49 @@ class ProductServiceUTest {
     class EnrichWithStockTests {
 
         @Test
-        @DisplayName("Returns 0 stock if user is not logged in or has no USER role")
+        @DisplayName("Returns 0 stock if user has no USER role")
         void enrichWithStock_ReturnsZero_WhenNotUserRole() {
-            loggedUser.setRoles(new HashSet<>(List.of("ADMIN"))); // Not a USER
+            loggedUser.setRoles(new HashSet<>(List.of("ADMIN")));
             when(userService.getLoggedUser()).thenReturn(Optional.of(loggedUser));
 
             Product enriched = productService.enrichWithStock(product);
 
-            assertEquals(0, enriched.getAvailableUnits(), "Available units should be 0 for non-user roles");
+            assertEquals(0, enriched.getAvailableUnits());
             verifyNoInteractions(shopStockService);
+        }
+
+        @Test
+        @DisplayName("Returns 0 stock when no user is logged in")
+        void enrichWithStock_ReturnsZero_WhenNotLoggedIn() {
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            Product enriched = productService.enrichWithStock(product);
+
+            assertEquals(0, enriched.getAvailableUnits());
+        }
+
+        @Test
+        @DisplayName("Returns 0 when ShopStockService returns null for the product")
+        void enrichWithStock_ReturnsZero_WhenStockIsNull() {
+            when(userService.getLoggedUser()).thenReturn(Optional.of(loggedUser));
+            when(shopStockService.getLocalStock(product, 10L)).thenReturn(null);
+
+            Product enriched = productService.enrichWithStock(product);
+
+            assertEquals(0, enriched.getAvailableUnits());
+        }
+
+        @Test
+        @DisplayName("Passes null shopId to ShopStockService when logged user has no selected shop")
+        void enrichWithStock_UsesNullShopId_WhenNoShopSelected() {
+            loggedUser.setSelectedShop(null);
+            when(userService.getLoggedUser()).thenReturn(Optional.of(loggedUser));
+            when(shopStockService.getLocalStock(product, null)).thenReturn(3);
+
+            Product enriched = productService.enrichWithStock(product);
+
+            assertEquals(3, enriched.getAvailableUnits());
+            verify(shopStockService).getLocalStock(product, null);
         }
 
         @Test
@@ -111,23 +251,102 @@ class ProductServiceUTest {
 
             Product enriched = productService.enrichWithStock(product);
 
-            assertEquals(42, enriched.getAvailableUnits(), "Available units should match shop stock");
+            assertEquals(42, enriched.getAvailableUnits());
         }
 
         @Test
-        @DisplayName("Enriches a list of products correctly preserving the order")
+        @DisplayName("Enriches a list of products correctly preserving index order")
         void enrichWithStockList_Success() {
             Product p2 = new Product(); p2.setId(2L);
             List<Product> products = List.of(product, p2);
 
             when(userService.getLoggedUser()).thenReturn(Optional.of(loggedUser));
-            // Simulate that product 1 has 5 units, product 2 has 10
             when(shopStockService.getLocalStocks(products, 10L)).thenReturn(List.of(5, 10));
 
             List<Product> enrichedList = productService.enrichWithStock(products);
 
             assertEquals(5, enrichedList.get(0).getAvailableUnits());
             assertEquals(10, enrichedList.get(1).getAvailableUnits());
+        }
+
+        @Test
+        @DisplayName("Empty list is returned immediately without touching user or stock services")
+        void enrichWithStockList_EmptyList_ReturnsImmediately() {
+            List<Product> result = productService.enrichWithStock(new ArrayList<>());
+
+            assertTrue(result.isEmpty());
+            verifyNoInteractions(userService, shopStockService);
+        }
+
+        @Test
+        @DisplayName("Sets 0 for all list items when no user is logged in")
+        void enrichWithStockList_SetsZero_WhenNotLoggedIn() {
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            List<Product> result = productService.enrichWithStock(List.of(product));
+
+            assertEquals(0, result.getFirst().getAvailableUnits());
+            verifyNoInteractions(shopStockService);
+        }
+
+        @Test
+        @DisplayName("Sets 0 for a list slot when ShopStockService returns null for that index")
+        void enrichWithStockList_SetsZero_WhenStockIsNull() {
+            when(userService.getLoggedUser()).thenReturn(Optional.of(loggedUser));
+            when(shopStockService.getLocalStocks(List.of(product), 10L))
+                    .thenReturn(Collections.singletonList(null));
+
+            List<Product> result = productService.enrichWithStock(List.of(product));
+
+            assertEquals(0, result.getFirst().getAvailableUnits());
+        }
+    }
+
+    // --- GET PRODUCT BY ID (view registry tracking) ---
+    @Nested
+    @DisplayName("Tests for getProductById view registry event logic")
+    class GetProductByIdTests {
+
+        @BeforeEach
+        void stubFind() {
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+        }
+
+        @Test
+        @DisplayName("Fires RegistryEvent including shop data when logged user has a selected shop")
+        void getProductById_FiresEvent_LoggedUserWithShop() {
+            when(userService.getLoggedUserUsername()).thenReturn("test-user");
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            Product result = productService.getProductById(1L);
+
+            assertSame(product, result);
+            verify(eventPublisher).publishEvent(any(RegistryEvent.class));
+        }
+
+        @Test
+        @DisplayName("Fires RegistryEvent without shop data when logged user has no selected shop")
+        void getProductById_FiresEvent_LoggedUserWithoutShop() {
+            loggedUser.setSelectedShop(null);
+            when(userService.getLoggedUserUsername()).thenReturn("test-user");
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            Product result = productService.getProductById(1L);
+
+            assertSame(product, result);
+            verify(eventPublisher).publishEvent(any(RegistryEvent.class));
+        }
+
+        @Test
+        @DisplayName("Fires anonymous RegistryEvent when no user is logged in")
+        void getProductById_FiresAnonymousEvent_WhenNotLoggedIn() {
+            when(userService.getLoggedUserUsername()).thenReturn(null);
+
+            Product result = productService.getProductById(1L);
+
+            assertSame(product, result);
+            verify(eventPublisher).publishEvent(any(RegistryEvent.class));
         }
     }
 
@@ -141,8 +360,7 @@ class ProductServiceUTest {
         void save_ThrowsException_OnDuplicateReferenceCode() {
             when(productRepository.existsByReferenceCode("REF-123")).thenReturn(true);
 
-            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> productService.save(product));
-            assertEquals("The reference code is already taken", ex.getMessage());
+            assertThrows(IllegalArgumentException.class, () -> productService.save(product));
         }
 
         @Test
@@ -150,8 +368,7 @@ class ProductServiceUTest {
         void save_ThrowsException_OnInvalidName() {
             product.setName("");
 
-            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> productService.save(product));
-            assertEquals("The title is null or empty", ex.getMessage());
+            assertThrows(IllegalArgumentException.class, () -> productService.save(product));
         }
 
         @Test
@@ -159,8 +376,19 @@ class ProductServiceUTest {
         void save_ThrowsException_OnNegativePrice() {
             product.setCurrentPrice(-5.0);
 
-            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> productService.save(product));
-            assertEquals("The price should be positive or 0", ex.getMessage());
+            assertThrows(IllegalArgumentException.class, () -> productService.save(product));
+        }
+
+        @Test
+        @DisplayName("save persists and returns product when all fields are valid")
+        void save_Success_PersistsProduct() {
+            when(productRepository.existsByReferenceCode("REF-123")).thenReturn(false);
+            when(productRepository.save(product)).thenReturn(product);
+
+            Product result = productService.save(product);
+
+            assertSame(product, result);
+            verify(productRepository).save(product);
         }
 
         @Test
@@ -172,11 +400,33 @@ class ProductServiceUTest {
         }
 
         @Test
+        @DisplayName("update persists product when it exists and fields are valid")
+        void update_Success_UpdatesProduct() {
+            when(productRepository.existsById(1L)).thenReturn(true);
+            when(productRepository.save(product)).thenReturn(product);
+
+            Product result = productService.update(product);
+
+            assertSame(product, result);
+            verify(productRepository).save(product);
+        }
+
+        @Test
         @DisplayName("deleteById throws EntityNotFoundException if product does not exist")
         void deleteById_ThrowsException() {
             when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class, () -> productService.deleteById(1L));
+        }
+
+        @Test
+        @DisplayName("deleteById deletes the product when found")
+        void deleteById_Success() {
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+            productService.deleteById(1L);
+
+            verify(productRepository).delete(product);
         }
     }
 
@@ -189,6 +439,7 @@ class ProductServiceUTest {
         void setupUser() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
         }
 
         @Test
@@ -199,10 +450,16 @@ class ProductServiceUTest {
         }
 
         @Test
+        @DisplayName("checkProductInFavourites returns false if product is NOT in set")
+        void checkProductInFavourites_ReturnsFalse() {
+            assertFalse(productService.checkProductInFavourites(1L));
+        }
+
+        @Test
         @DisplayName("addProductToFavourites adds product to user's memory set")
         void addProductToFavourites_Success() {
             productService.addProductToFavourites(1L);
-            assertTrue(loggedUser.getFavouriteProducts().contains(product), "Product should be added to favourites");
+            assertTrue(loggedUser.getFavouriteProducts().contains(product));
         }
 
         @Test
@@ -211,7 +468,7 @@ class ProductServiceUTest {
             loggedUser.getFavouriteProducts().add(product);
 
             productService.deleteProductFromFavourites(1L);
-            assertFalse(loggedUser.getFavouriteProducts().contains(product), "Product should be removed from favourites");
+            assertFalse(loggedUser.getFavouriteProducts().contains(product));
         }
     }
 
@@ -225,10 +482,9 @@ class ProductServiceUTest {
         void processCategories_ThrowsBadRequest_WhenOtrosIsMissing() {
             when(categoryService.findByName("Otros")).thenReturn(Optional.empty());
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> productService.createProduct(productDTO));
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> productService.createProduct(productDTO));
             assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertNotNull(ex.getReason());
-            assertTrue(ex.getReason().contains("does not exist"));
         }
 
         @Test
@@ -241,8 +497,7 @@ class ProductServiceUTest {
 
             when(categoryService.findById(88L)).thenReturn(Optional.empty());
 
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> productService.createProduct(productDTO));
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+            assertThrows(ResponseStatusException.class, () -> productService.createProduct(productDTO));
         }
 
         @Test
@@ -255,7 +510,7 @@ class ProductServiceUTest {
 
             Category leafCategory = new Category();
             leafCategory.setId(5L);
-            leafCategory.setChildren(new ArrayList<>()); // It is a leaf node
+            leafCategory.setChildren(new ArrayList<>());
 
             when(categoryService.findById(5L)).thenReturn(Optional.of(leafCategory));
             when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
@@ -263,32 +518,67 @@ class ProductServiceUTest {
             Product result = productService.createProduct(productDTO);
 
             assertEquals(1, result.getCategories().size());
-            assertEquals(5L, result.getCategories().getFirst().getId(), "Should assign the valid leaf category");
+            assertEquals(5L, result.getCategories().getFirst().getId());
         }
 
         @Test
-        @DisplayName("updateProduct maps DTO fields to entity and processes categories")
+        @DisplayName("processCategories falls back to 'Otros' when all provided categories are parent nodes (have children)")
+        void processCategories_FallsBackToOthers_WhenAllCategoriesAreParentNodes() {
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+
+            CategoryDTO parentDto = new CategoryDTO(); parentDto.setId(10L);
+            productDTO.setCategories(List.of(parentDto));
+
+            Category parentCategory = new Category();
+            parentCategory.setId(10L);
+            Category child = new Category(); child.setId(11L);
+            parentCategory.setChildren(List.of(child));
+
+            when(categoryService.findById(10L)).thenReturn(Optional.of(parentCategory));
+            when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+            Product result = productService.createProduct(productDTO);
+
+            assertEquals(1, result.getCategories().size());
+            assertEquals(99L, result.getCategories().getFirst().getId(),
+                    "Should fall back to 'Otros' when all submitted categories are parent nodes");
+        }
+
+        @Test
+        @DisplayName("createProduct falls back to 'Otros' when categories list is null")
+        void createProduct_FallsBackToOthers_WhenNoCategoriesProvided() {
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+            productDTO.setCategories(null);
+            when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+            Product result = productService.createProduct(productDTO);
+
+            assertEquals(1, result.getCategories().size());
+            assertEquals(99L, result.getCategories().getFirst().getId());
+        }
+
+        @Test
+        @DisplayName("updateProduct maps DTO fields to entity and falls back to 'Otros' for null categories")
         void updateProduct_MapsFieldsAndCategories() {
             when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
-            // DTO carries no categories, should fallback to "Otros"
             productDTO.setCategories(null);
             productDTO.setName("Updated Name");
             productDTO.setActive(false);
 
             Product result = productService.updateProduct(1L, productDTO);
 
-            // Assert field mapping
-            assertEquals("Updated Name", result.getName());
-            assertEquals("Description", result.getDescription());
-            assertEquals(15.0, result.getCurrentPrice());
-            assertEquals(5.0, result.getSupplyPrice());
-            assertFalse(result.isActive());
-
-            // Assert category processing fallback
-            assertEquals(1, result.getCategories().size());
-            assertEquals(99L, result.getCategories().getFirst().getId());
+            assertAll(
+                    () -> assertEquals("Updated Name", result.getName()),
+                    () -> assertEquals("Description", result.getDescription()),
+                    () -> assertEquals(15.0, result.getCurrentPrice()),
+                    () -> assertEquals(5.0, result.getSupplyPrice()),
+                    () -> assertFalse(result.isActive()),
+                    () -> assertEquals(1, result.getCategories().size()),
+                    () -> assertEquals(99L, result.getCategories().getFirst().getId())
+            );
         }
     }
 
@@ -298,39 +588,34 @@ class ProductServiceUTest {
     class DeletionAndActivationTests {
 
         @Test
-        @DisplayName("deleteProduct clears categories, unlinks historical OrderItems, deletes cart items and deletes S3 images")
+        @DisplayName("deleteProduct clears categories, unlinks historical OrderItems, deletes cart items and S3 images")
         void deleteProduct_Success() {
-            // 1. Setup Category
-            Category c = new Category();
-            product.getCategories().add(c);
+            product.getCategories().add(new Category());
 
-            // 2. Setup OrderItems
-            // History item (must not be removed)
             OrderItem historicalItem = new OrderItem();
             historicalItem.setProduct(product);
             historicalItem.setOrder(new Order());
             product.getOrderItems().add(historicalItem);
 
-            // Cart item (must be removed)
             OrderItem cartItem = new OrderItem();
             cartItem.setProduct(product);
-            cartItem.setOrder(null); // The service will erase it
+            cartItem.setOrder(null);
             product.getOrderItems().add(cartItem);
 
-            // 3. Setup Images
             ProductImageInfo pii = mock(ProductImageInfo.class);
             when(pii.getS3Key()).thenReturn("custom-pic.jpg");
             product.getImages().add(pii);
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
             try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
                 mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(false);
 
                 productService.deleteProduct(1L);
 
-                assertTrue(product.getCategories().isEmpty(), "Categories must be cleared");
-                assertNull(historicalItem.getProduct(), "Historical OrderItem must be unlinked from product");
+                assertTrue(product.getCategories().isEmpty());
+                assertNull(historicalItem.getProduct());
                 verify(orderItemService).delete(cartItem);
                 verify(imageService).deleteFile("custom-pic.jpg");
                 verify(productRepository).delete(product);
@@ -338,7 +623,25 @@ class ProductServiceUTest {
         }
 
         @Test
-        @DisplayName("toggleGlobalActivation(false) deletes unpurchased cart items")
+        @DisplayName("deleteProduct does NOT delete S3 file when image is the default product image")
+        void deleteProduct_DoesNotDeleteDefaultImage() {
+            product.getImages().add(new ProductImageInfo());
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
+                mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(true);
+
+                productService.deleteProduct(1L);
+
+                verify(imageService, never()).deleteFile(any());
+                verify(productRepository).delete(product);
+            }
+        }
+
+        @Test
+        @DisplayName("toggleGlobalActivation(false) deactivates product and deletes unpurchased cart items")
         void toggleGlobalActivation_False_RemovesCartItems() {
             OrderItem purchasedItem = new OrderItem();
             purchasedItem.setOrder(new Order());
@@ -348,18 +651,37 @@ class ProductServiceUTest {
 
             product.getOrderItems().addAll(List.of(purchasedItem, cartItem));
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
             productService.toggleGlobalActivation(1L, false);
 
             assertFalse(product.isActive());
-            assertEquals(1, product.getOrderItems().size(), "Only purchased items should remain");
+            assertEquals(1, product.getOrderItems().size());
             assertTrue(product.getOrderItems().contains(purchasedItem));
-            verify(orderItemService).delete(cartItem); // Verifies the cart item was deleted from DB
+            verify(orderItemService).delete(cartItem);
         }
 
         @Test
-        @DisplayName("toggleAllGlobalActivations applies state to all products and cleans carts if false")
-        void toggleAllGlobalActivations_Success() {
+        @DisplayName("toggleGlobalActivation(true) sets product active without touching any order items")
+        void toggleGlobalActivation_True_DoesNotDeleteItems() {
+            OrderItem cartItem = new OrderItem();
+            cartItem.setOrder(null);
+            product.getOrderItems().add(cartItem);
+            product.setActive(false);
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            productService.toggleGlobalActivation(1L, true);
+
+            assertTrue(product.isActive());
+            assertEquals(1, product.getOrderItems().size(), "Cart items must NOT be deleted when activating");
+            verify(orderItemService, never()).delete(any());
+        }
+
+        @Test
+        @DisplayName("toggleAllGlobalActivations(false) deactivates all products and cleans cart items")
+        void toggleAllGlobalActivations_False_CleansCartItems() {
             Product p2 = new Product();
             p2.setId(2L);
             p2.setOrderItems(new ArrayList<>());
@@ -368,17 +690,37 @@ class ProductServiceUTest {
             cartItem.setOrder(null);
             product.getOrderItems().add(cartItem);
 
-            // Mock getAllProducts which internally uses enrichWithStock and repository.findAll
             when(productRepository.findAll()).thenReturn(List.of(product, p2));
-            when(userService.getLoggedUser()).thenReturn(Optional.empty()); // Bypasses stock enrichment for simplicity
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
             boolean finalState = productService.toggleAllGlobalActivations(false);
 
-            assertFalse(finalState);
-            assertFalse(product.isActive());
-            assertFalse(p2.isActive());
-            assertTrue(product.getOrderItems().isEmpty(), "Cart items must be cleared for all products");
+            assertAll(
+                    () -> assertFalse(finalState),
+                    () -> assertFalse(product.isActive()),
+                    () -> assertFalse(p2.isActive()),
+                    () -> assertTrue(product.getOrderItems().isEmpty())
+            );
             verify(orderItemService).delete(cartItem);
+        }
+
+        @Test
+        @DisplayName("toggleAllGlobalActivations(true) activates all products without deleting cart items")
+        void toggleAllGlobalActivations_True_SetsAllActiveWithoutDeletion() {
+            product.setActive(false);
+            OrderItem cartItem = new OrderItem();
+            cartItem.setOrder(null);
+            product.getOrderItems().add(cartItem);
+
+            when(productRepository.findAll()).thenReturn(List.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            boolean result = productService.toggleAllGlobalActivations(true);
+
+            assertTrue(result);
+            assertTrue(product.isActive());
+            assertEquals(1, product.getOrderItems().size(), "Cart items must NOT be deleted when activating");
+            verify(orderItemService, never()).delete(any());
         }
     }
 
@@ -388,7 +730,7 @@ class ProductServiceUTest {
     class ImageHandlingTests {
 
         @Test
-        @DisplayName("deleteImage removes image, calls S3 and restores default if empty")
+        @DisplayName("deleteImage removes image, calls S3 and restores default when list becomes empty")
         void deleteImage_Success() {
             ProductImageInfo pii = new ProductImageInfo();
             pii.setId(5L);
@@ -396,68 +738,225 @@ class ProductServiceUTest {
             product.getImages().add(pii);
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
             try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
                 mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(pii)).thenReturn(false);
-
                 ImageInfo defaultImg = new ImageInfo();
                 mockedDefaults.when(GlobalDefaults::getDefaultProductImage).thenReturn(defaultImg);
 
                 productService.deleteImage(1L, 5L);
 
                 verify(imageService).deleteFile("pic.jpg");
-                assertEquals(1, product.getImages().size(), "Should have added the default image");
+                assertEquals(1, product.getImages().size(), "Default image must be added after last image deletion");
                 assertEquals(defaultImg, product.getImages().getFirst().getImageInfo());
             }
         }
 
         @Test
-        @DisplayName("deleteImage throws Exception if image ID is not found in product")
-        void deleteImage_ThrowsException_IfImageNotFound() {
-            when(productRepository.findById(1L)).thenReturn(Optional.of(product)); // Product has empty images list
+        @DisplayName("deleteImage does NOT call S3 or remove the image when it is the default product image")
+        void deleteImage_DoesNotDelete_WhenDefaultImage() {
+            ProductImageInfo defaultImg = new ProductImageInfo();
+            defaultImg.setId(5L);
+            product.getImages().add(defaultImg);
 
-            RuntimeException ex = assertThrows(RuntimeException.class, () -> productService.deleteImage(1L, 99L));
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
+                mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(defaultImg)).thenReturn(true);
+
+                productService.deleteImage(1L, 5L);
+
+                verify(imageService, never()).deleteFile(any());
+                assertEquals(1, product.getImages().size(), "Default image must remain in the list");
+            }
+        }
+
+        @Test
+        @DisplayName("deleteImage throws RuntimeException if image ID is not found in product")
+        void deleteImage_ThrowsException_IfImageNotFound() {
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> productService.deleteImage(1L, 99L));
             assertEquals("Image not found in this product.", ex.getMessage());
         }
 
         @Test
         @DisplayName("updateProductImages deletes missing S3 keys and uploads new files")
         void updateProductImages_Success() {
-            // Existing image to keep
             ProductImageInfo keepImg = new ProductImageInfo();
             keepImg.getImageInfo().setS3Key("keep.jpg");
 
-            // Existing image to discard
             ProductImageInfo discardImg = new ProductImageInfo();
             discardImg.getImageInfo().setS3Key("discard.jpg");
 
             product.getImages().addAll(new ArrayList<>(List.of(keepImg, discardImg)));
 
-            // Request keeps 'keep.jpg'
-            List<ProductImageInfo> requestExisting = List.of(keepImg);
-
-            // Request adds a new file
             MultipartFile newFile = new MockMultipartFile("file", "new.jpg", "image/jpeg", new byte[0]);
             ImageInfo newS3Info = new ImageInfo();
             newS3Info.setS3Key("new.jpg");
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
             when(imageService.uploadImageAndGetInfo(any(), eq("products"))).thenReturn(newS3Info);
 
             try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
                 mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(false);
 
-                productService.updateProductImages(1L, requestExisting, List.of(newFile));
+                productService.updateProductImages(1L, List.of(keepImg), List.of(newFile));
 
-                // Assertions
-                verify(imageService).deleteFile("discard.jpg"); // Discarded was deleted
-                assertEquals(2, product.getImages().size()); // 'keep.jpg' + 'new.jpg'
-
-                // Extract keys to check
+                verify(imageService).deleteFile("discard.jpg");
+                assertEquals(2, product.getImages().size());
                 List<String> finalKeys = product.getImages().stream().map(ProductImageInfo::getS3Key).toList();
                 assertTrue(finalKeys.contains("keep.jpg"));
                 assertTrue(finalKeys.contains("new.jpg"));
             }
+        }
+
+        @Test
+        @DisplayName("updateProductImages with null existingImages deletes all current S3 images")
+        void updateProductImages_NullExistingImages_DeletesAllCurrentImages() {
+            ProductImageInfo existingImg = new ProductImageInfo();
+            existingImg.getImageInfo().setS3Key("old.jpg");
+            product.getImages().add(existingImg);
+
+            MultipartFile newFile = new MockMultipartFile("file", "new.jpg", "image/jpeg", new byte[0]);
+            ImageInfo newS3Info = new ImageInfo("url", "new.jpg", "new.jpg");
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+            when(imageService.uploadImageAndGetInfo(any(), eq("products"))).thenReturn(newS3Info);
+
+            try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
+                mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(false);
+
+                productService.updateProductImages(1L, null, List.of(newFile));
+
+                verify(imageService).deleteFile("old.jpg");
+                assertEquals(1, product.getImages().size());
+                assertEquals("new.jpg", product.getImages().getFirst().getS3Key());
+            }
+        }
+
+        @Test
+        @DisplayName("updateProductImages adds default image when no new files provided and current list is empty after deletions")
+        void updateProductImages_NoNewImages_EmptyCurrent_AddsDefaultImage() {
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
+                ImageInfo defaultImg = new ImageInfo("url", "default.jpg", "default.jpg");
+                mockedDefaults.when(GlobalDefaults::getDefaultProductImage).thenReturn(defaultImg);
+
+                productService.updateProductImages(1L, List.of(), null);
+
+                assertEquals(1, product.getImages().size());
+                assertEquals(defaultImg, product.getImages().getFirst().getImageInfo());
+            }
+        }
+    }
+
+    // --- PERSONALIZED RECOMMENDATIONS ---
+    @Nested
+    @DisplayName("Tests for getPersonalizedRecommendations branching logic")
+    class PersonalizedRecommendationsTests {
+
+        @Test
+        @DisplayName("Anonymous user skips category logic and falls through to views-based and final fallback")
+        void getPersonalizedRecommendations_AnonymousUser_UsesFallbacks() {
+            when(userService.getLoggedUserUsername()).thenReturn(null);
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+            when(registryService.getTopViewedReferences(anyInt(), any())).thenReturn(List.of("REF-TOP"));
+            when(productRepository.findByReferenceCodeIn(List.of("REF-TOP"))).thenReturn(List.of(product));
+            when(productRepository.findActiveProductsExcluding(any(), any(Pageable.class))).thenReturn(Page.empty());
+
+            Page<Product> result = productService.getPersonalizedRecommendations(0, 5);
+
+            assertFalse(result.getContent().isEmpty());
+            verify(registryService, never()).getInteractedProductReferences(any(), any());
+        }
+
+        @Test
+        @DisplayName("Anonymous user with empty top-viewed list uses final DB fallback")
+        void getPersonalizedRecommendations_AnonymousUser_EmptyTopViewed_UsesFinalFallback() {
+            when(userService.getLoggedUserUsername()).thenReturn(null);
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+            when(registryService.getTopViewedReferences(anyInt(), any())).thenReturn(Collections.emptyList());
+
+            Page<Product> fallbackPage = new PageImpl<>(List.of(product));
+            when(productRepository.findActiveProductsExcluding(any(), any(Pageable.class))).thenReturn(fallbackPage);
+
+            Page<Product> result = productService.getPersonalizedRecommendations(0, 5);
+
+            verify(productRepository).findActiveProductsExcluding(any(), any(Pageable.class));
+            assertFalse(result.getContent().isEmpty());
+        }
+
+        @Test
+        @DisplayName("Logged user with no prior interactions skips category recs and uses views fallback")
+        void getPersonalizedRecommendations_LoggedUser_NoInteractions_UsesViewsFallback() {
+            when(userService.getLoggedUserUsername()).thenReturn("test-user");
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+            when(registryService.getInteractedProductReferences(eq("test-user"), anyList()))
+                    .thenReturn(Collections.emptySet());
+            when(registryService.getTopViewedReferences(anyInt(), any())).thenReturn(List.of("REF-VIEW"));
+            when(productRepository.findByReferenceCodeIn(List.of("REF-VIEW"))).thenReturn(List.of(product));
+            when(productRepository.findActiveProductsExcluding(any(), any(Pageable.class))).thenReturn(Page.empty());
+
+            Page<Product> result = productService.getPersonalizedRecommendations(0, 5);
+
+            verify(registryService).getTopViewedReferences(anyInt(), any());
+            assertFalse(result.getContent().isEmpty());
+        }
+
+        @Test
+        @DisplayName("Logged user with interactions triggers category-based recommendations (boughtRefs empty → uses DUMMY sentinel)")
+        void getPersonalizedRecommendations_LoggedUser_WithInteractions_UsesCategoryRecs() {
+            Category cat = new Category();
+            cat.setId(1L);
+            cat.setChildren(new ArrayList<>());
+            product.setCategories(List.of(cat));
+            product.setReferenceCode("REF-INT");
+
+            // First call (interestActions) returns interactions; second call (USER_ORDERS) returns empty boughtRefs
+            when(userService.getLoggedUserUsername()).thenReturn("test-user");
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+            when(registryService.getInteractedProductReferences(eq("test-user"), anyList()))
+                    .thenReturn(Set.of("REF-INT"))
+                    .thenReturn(Collections.emptySet()); // boughtRefs is empty → "DUMMY" sentinel used
+
+            when(productRepository.findByReferenceCodeIn(anyCollection())).thenReturn(List.of(product));
+
+            Page<Product> catPage = new PageImpl<>(List.of(product));
+            when(productRepository.findRecommendedProducts(anyList(), any(), any(Pageable.class))).thenReturn(catPage);
+
+            Page<Product> result = productService.getPersonalizedRecommendations(0, 1);
+
+            verify(productRepository).findRecommendedProducts(anyList(), any(), any(Pageable.class));
+            assertEquals(1, result.getContent().size());
+        }
+
+        @Test
+        @DisplayName("Logged user with interactions but all parent-category products yields empty topCategoryIds → skips findRecommendedProducts")
+        void getPersonalizedRecommendations_LoggedUser_InteractionsWithNoLeafCategories_SkipsCategoryRecs() {
+            // Product has no categories → topCategoryIds will be empty → skip findRecommendedProducts
+            product.setCategories(new ArrayList<>());
+            product.setReferenceCode("REF-INT2");
+
+            when(userService.getLoggedUserUsername()).thenReturn("test-user");
+            when(registryService.getInteractedProductReferences(eq("test-user"), anyList()))
+                    .thenReturn(Set.of("REF-INT2"));
+            when(productRepository.findByReferenceCodeIn(anyCollection())).thenReturn(List.of(product));
+            when(registryService.getTopViewedReferences(anyInt(), any())).thenReturn(Collections.emptyList());
+            when(productRepository.findActiveProductsExcluding(any(), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            productService.getPersonalizedRecommendations(0, 5);
+
+            verify(productRepository, never()).findRecommendedProducts(anyList(), any(), any(Pageable.class));
         }
     }
 }

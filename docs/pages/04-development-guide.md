@@ -387,7 +387,7 @@ The application follows a strictly automated versioning and release procedure po
 | Version  | Release Date | High-Level Features & Changelog                                                 |
 |:---------|:-------------|:--------------------------------------------------------------------------------|
 | **v0.1** | 07/04/2026   | Main core systems enablement and basic app features implementation.             |
-| **v0.2** | 11/05/2026   | Async use-data processing systems and intermediate app features implementation. |
+| **v0.2** | 12/05/2026   | Async use-data processing systems and intermediate app features implementation. |
 
 &nbsp;
 
