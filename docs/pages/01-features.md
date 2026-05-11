@@ -60,7 +60,7 @@ Check current system status, last session insights (date, time and duration) and
 - [All detailed views](/docs/pages/01-shop-subsystem.md)
 - Screen flow diagram:
 
-![Shop Subsystem Screens Diagram](/docs/images/v0.1/Frict-0.2-Client.png)
+![Shop Subsystem Screens Diagram](/docs/images/v0.2/Frict-0.2-Client.png)
 
 &nbsp;
 
@@ -69,7 +69,7 @@ Check current system status, last session insights (date, time and duration) and
 - [All detailed views](/docs/pages/01-management-subsystem.md)
 - Screen flow diagram:
 
-![Management Subsystem Screens Diagram](/docs/images/v0.1/Frict-0.2-Management.png)
+![Management Subsystem Screens Diagram](/docs/images/v0.2/Frict-0.2-Management.png)
 
 
 &nbsp;

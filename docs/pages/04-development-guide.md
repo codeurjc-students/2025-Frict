@@ -203,7 +203,7 @@ The backend is built with **Spring Boot**, implementing a robust multi-layered M
 * **Events Layer:** An asynchronous, event-driven layer that reacts to events published by the Business Layer. It handles parallel communication with the non-relational data storage, ensuring high responsiveness and system decoupling.
 * **Data Access Layer:** Utilizes the Repository Pattern (via Spring Data JPA) to abstract database operations and map them directly to the domain entities.
 
-![Relational Backend Architecture](../diagrams/v0.1/relational-backend.png)
+![Relational Backend Architecture](../diagrams/v0.1/backend.png)
 
 ![Non-Relational Backend Architecture](../diagrams/v0.2/nonrelational-backend.png)
 
@@ -251,7 +251,7 @@ Overall project code quality, vulnerabilities, and test coverage are continuousl
 **Overall Project Health:**
 As reflected in the dashboard, the project maintains an excellent **duplication rate of 0.49%**, well below the 3.0% threshold. The coverage on new code has reached **76.96%**, showing steady progress towards the strict 80% target. While the Quality Gate currently shows a **Reliability Rating of D**, this is driven by localized complexities in highly reactive services and infrastructure integrations, rather than structural flaws.
 
-![SonarQube Overall Analysis](../diagrams/v0.2/sonarqube_overall.png)
+![SonarQube Overall Analysis](../images/v0.2/sonarqube_overall.png)
 
 **Risk & Technical Debt Distribution:**
 The bubble chart below correlates **Technical Debt** (X-axis) with **Code Coverage** (Y-axis). The size of each bubble represents the Lines of Code, while the color indicates the combined Reliability and Security rating.
@@ -260,7 +260,7 @@ The bubble chart below correlates **Technical Debt** (X-axis) with **Code Covera
 * **`UserLoginService.java`:** The orange indicator situated on the far left corresponds to the backend authentication core. Its lower coverage rating is a direct result of high cyclomatic complexity. This service simultaneously orchestrates Google OAuth2 verification, database state validations (bans, deletions), dynamic user registration, and direct HTTP response manipulation for secure JWT cookie injection. These external dependencies and static contexts inherently require highly complex mocking strategies that are currently being refined.
 * **`create-edit-shop.component.ts`:** Positioned along the diagonal intersection (at roughly 60% coverage and 20 minutes of technical debt), this outlier reflects the architectural weight of the frontend. Built as an Angular 19 standalone component leveraging signals, it combines advanced RxJS asynchronous streams for reverse geocoding with direct DOM manipulation via the Leaflet map library. The minimal technical debt registered is largely due to the necessary lifecycle workarounds (like `setTimeout`) needed to synchronize the reactive state with the external map rendering engine.
 
-![SonarQube Code Analysis](../diagrams/v0.2/sonarqube_code.png)
+![SonarQube Code Analysis](../images/v0.2/sonarqube_code.png)
 
 &nbsp;
 
@@ -387,7 +387,7 @@ The application follows a strictly automated versioning and release procedure po
 | Version  | Release Date | High-Level Features & Changelog                                                 |
 |:---------|:-------------|:--------------------------------------------------------------------------------|
 | **v0.1** | 07/04/2026   | Main core systems enablement and basic app features implementation.             |
-| **v0.2** | 10/05/2026   | Async use-data processing systems and intermediate app features implementation. |
+| **v0.2** | 11/05/2026   | Async use-data processing systems and intermediate app features implementation. |
 
 &nbsp;
 
@@ -439,21 +439,21 @@ This will create a new container in Docker Desktop that will act as a dedicated 
 **3. Set up the MongoDB noSQL Database**
 On the other hand, we need to instantiate the MongoDB database for use-data collection and analysis. We will also use Docker Desktop running the following command:
 ```bash
-  # Start a MongoDB instance in Replica Set mode (required for change streams)
-  docker run -d \
-    --name mongodb-frict \
-    -e MONGO_INITDB_ROOT_USERNAME=user \
-    -e MONGO_INITDB_ROOT_PASSWORD=password \
-    -e MONGO_INITDB_DATABASE=Frict \
-    -p 27017:27017 \
-    mongo \
-    sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
-  chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
-  /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
-  /data/keyfile --bind_ip_all"
+# Start a MongoDB instance in Replica Set mode (required for change streams)
+docker run -d \
+  --name mongodb-frict \
+  -e MONGO_INITDB_ROOT_USERNAME=user \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  -e MONGO_INITDB_DATABASE=Frict \
+  -p 27017:27017 \
+  mongo \
+  sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
+/usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
+/data/keyfile --bind_ip_all"
 
-  # Wait few seconds until container had started completely, and then run:
-  docker exec mongodb-frict mongosh --username user --password password --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+# Wait few seconds until container had started completely, and then run:
+docker exec mongodb-frict mongosh --username user --password password --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
 ```
 This will create a new container in Docker Desktop that will act as a dedicated noSQL DB. To explore its schema, we can create a new connection in MongoDB Compass, using the data that we provided to Docker for its creation (port 27017, username "admin" and password "password123").
 
