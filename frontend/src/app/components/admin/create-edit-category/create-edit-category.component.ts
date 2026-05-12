@@ -1,5 +1,5 @@
 import {Component, inject, OnInit, signal, ViewChild} from '@angular/core';
-import {NgClass, NgIf} from '@angular/common';
+import {NgClass} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -26,7 +26,7 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
   selector: 'app-create-edit-category',
   standalone: true,
   imports: [
-    Button, ReactiveFormsModule, InputText, FileUpload, NgIf, FormsModule,
+    Button, ReactiveFormsModule, InputText, FileUpload, FormsModule,
     RouterLink, LoadingScreenComponent, OrganizationChart, Editor, Textarea, Select, PrimeTemplate, NgClass, BreadcrumbReloadComponent
   ],
   templateUrl: './create-edit-category.component.html',

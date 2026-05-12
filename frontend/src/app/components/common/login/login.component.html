@@ -23,13 +23,15 @@
           <p class="text-surface-500 text-sm mt-2">Introduce tus datos para acceder a tu cuenta.</p>
         </div>
 
-        <div *ngIf="showErrorMessage" class="flex items-start gap-3 p-4 mb-6 text-sm bg-red-50 border border-red-100 text-red-600 rounded-xl animate-shake">
-          <i class="pi pi-exclamation-circle text-lg mt-0.5"></i>
-          <div>
-            <span class="font-bold block">Error de acceso</span>
-            El usuario o la contraseña no son correctos.
+        @if (showErrorMessage) {
+          <div class="flex items-start gap-3 p-4 mb-6 text-sm bg-red-50 border border-red-100 text-red-600 rounded-xl animate-shake">
+            <i class="pi pi-exclamation-circle text-lg mt-0.5"></i>
+            <div>
+              <span class="font-bold block">Error de acceso</span>
+              El usuario o la contraseña no son correctos.
+            </div>
           </div>
-        </div>
+        }
 
         <div class="w-full mb-4">
           <app-google-auth></app-google-auth>
@@ -56,10 +58,16 @@
               />
             </div>
 
-            <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
-              <span *ngIf="usernameControl?.hasError('userNotFound')">El usuario no existe.</span>
-              <span *ngIf="usernameControl?.hasError('required')">Requerido.</span>
-            </div>
+            @if (usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)) {
+              <div class="text-xs text-red-500 ml-1 mt-1">
+                @if (usernameControl?.hasError('userNotFound')) {
+                  <span>El usuario no existe.</span>
+                }
+                @if (usernameControl?.hasError('required')) {
+                  <span>Requerido.</span>
+                }
+              </div>
+            }
           </div>
 
           <div class="space-y-1.5">

@@ -7,12 +7,14 @@ on:
       - main
 
 env:
-  RUNNER_DB_NAME: FrictTest
-  RUNNER_DB_PASSWORD: p4ssw0rd
-  RUNNER_MINIO_USER: admin
-  RUNNER_MINIO_PASSWORD: password123
-  RUNNER_MINIO_BUCKET_NAME: images
+  RUNNER_MYSQL_NAME: FrictTest
+  RUNNER_MYSQL_PASSWORD: password
   RUNNER_MONGODB_NAME: FrictTest
+  RUNNER_MONGODB_USERNAME: root
+  RUNNER_MONGODB_PASSWORD: password
+  RUNNER_MINIO_BUCKET_NAME: images
+  RUNNER_MINIO_USER: root
+  RUNNER_MINIO_PASSWORD: password
 
 jobs:
   full-stack-test:
@@ -22,10 +24,10 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: ${{ env.RUNNER_DB_NAME }}
-          MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_DB_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.RUNNER_MYSQL_NAME }}
+          MYSQL_ROOT_PASSWORD: ${{ env.RUNNER_MYSQL_PASSWORD }}
         ports:
-          - 3306:3306
+          - 3307:3306
         options: --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
@@ -33,15 +35,15 @@ jobs:
 
       - name: Start MongoDB Replica Set
         run: |
-          docker run -d -p 27017:27017 --name mongodb \
-            -e MONGO_INITDB_ROOT_USERNAME=admin \
-            -e MONGO_INITDB_ROOT_PASSWORD=password123 \
+          docker run -d -p 27018:27017 --name mongodb \
+            -e MONGO_INITDB_ROOT_USERNAME=${{ env.RUNNER_MONGODB_USERNAME }} \
+            -e MONGO_INITDB_ROOT_PASSWORD=${{ env.RUNNER_MONGODB_PASSWORD }} \
             mongo:latest \
             sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile && chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all"
           
           sleep 10
           
-          docker exec mongodb mongosh --username admin --password password123 --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+          docker exec mongodb mongosh --username ${{ env.RUNNER_MONGODB_USERNAME }} --password ${{ env.RUNNER_MONGODB_PASSWORD }} --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
 
       - name: Start MinIO and Create Bucket
         env:
@@ -53,8 +55,8 @@ jobs:
           cp -r $(pwd)/docker/minio_https/certs/* /tmp/minio_certs/
           
           docker run -d \
-            -p 9000:9000 \
-            -p 9001:9001 \
+            -p 9002:9000 \
+            -p 9003:9001 \
             --name minio \
             -v /tmp/minio_certs:/root/.minio/certs \
             -e MINIO_ROOT_USER=${{ env.RUNNER_MINIO_USER }} \
@@ -62,7 +64,7 @@ jobs:
             minio/minio server /data --console-address ":9001"
           
           sleep 5
-          aws --endpoint-url https://localhost:9000 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
+          aws --endpoint-url https://localhost:9002 --no-verify-ssl s3 mb s3://${{ env.RUNNER_MINIO_BUCKET_NAME }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -92,9 +94,18 @@ jobs:
         working-directory: frontend
         run: ng test --watch=false --browsers=ChromeHeadlessNoSandbox
 
+      - name: Generate SSL certs for Angular dev server
+        working-directory: frontend
+        run: |
+          mkdir -p certs
+          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
+            -keyout certs/localhost-key.pem \
+            -out certs/localhost.pem \
+            -subj "/CN=localhost"
+
       - name: Start Angular for E2E Tests
         working-directory: frontend
-        run: ng serve --proxy-config proxy-test.conf.json &
+        run: ng serve &
 
       - name: Run E2E Tests
         working-directory: backend

@@ -1,14 +1,12 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {ProgressSpinner} from 'primeng/progressspinner';
 import {Router, RouterLink} from '@angular/router';
-import {NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-loading-screen',
   imports: [
     ProgressSpinner,
-    RouterLink,
-    NgIf
+    RouterLink
   ],
   templateUrl: './loading-screen.component.html',
   standalone: true,
@@ -16,7 +14,7 @@ import {NgIf} from '@angular/common';
 })
 export class LoadingScreenComponent {
 
-  constructor(private router: Router) {}
+  private router = inject(Router);
 
   @Input() loading: boolean = true;
 

@@ -1,15 +1,16 @@
-import { Injectable, signal, computed, effect, inject, OnDestroy } from '@angular/core';
-import { Notification } from '../models/notification.model';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import {computed, effect, inject, Injectable, OnDestroy, signal} from '@angular/core';
+import {Notification} from '../models/notification.model';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {map, Observable, throwError} from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { PageResponse } from '../models/pageResponse.model';
+import {catchError} from 'rxjs/operators';
+import {PageResponse} from '../models/pageResponse.model';
 import {AuthService} from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService implements OnDestroy {
+
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
@@ -48,7 +49,8 @@ export class NotificationService implements OnDestroy {
   }
 
   private connect() {
-    const wsUrl = 'wss://localhost/api/v1/ws/notifications';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/api/v1/ws/notifications`;
 
     this.socket = new WebSocket(wsUrl);
     this.loadInitialHistory();

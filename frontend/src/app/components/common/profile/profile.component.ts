@@ -61,16 +61,15 @@ import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.
 export class ProfileComponent implements OnInit {
 
   protected uiService = inject(UiService);
-
-  constructor(public authService: AuthService,
-              private userService: UserService,
-              private orderService: OrderService,
-              private reviewService: ReviewService,
-              private shopService: ShopService,
-              private truckService: TruckService,
-              private messageService: MessageService,
-              private confirmationService: ConfirmationService,
-              protected router: Router) {}
+  public authService = inject(AuthService);
+  private userService = inject(UserService);
+  private orderService = inject(OrderService);
+  private reviewService = inject(ReviewService);
+  private shopService = inject(ShopService);
+  private truckService = inject(TruckService);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
+  protected router = inject(Router);
 
   user!: User;
 

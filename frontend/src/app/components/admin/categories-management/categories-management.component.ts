@@ -1,4 +1,4 @@
-import {Component, effect, OnInit, signal} from '@angular/core';
+import {Component, effect, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
@@ -29,6 +29,8 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
 })
 export class CategoriesManagementComponent implements OnInit {
 
+  private categoryService = inject(CategoryService);
+
   displayMode: any[] = [{ label: 'Página', value: false }, { label: 'Todas', value: true }];
   listModeSelected: boolean = false;
 
@@ -56,7 +58,7 @@ export class CategoriesManagementComponent implements OnInit {
   first = 0;
   rows = 5;
 
-  constructor(private categoryService: CategoryService) {
+  constructor() {
 
     // Update charts when treeTableNodes changes
     effect(() => {

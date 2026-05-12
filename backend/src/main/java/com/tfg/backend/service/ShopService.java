@@ -1,11 +1,11 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.*;
 import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.event.ShopEvent;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)

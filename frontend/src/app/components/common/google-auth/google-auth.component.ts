@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, NgZone, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, inject, NgZone, ViewChild} from '@angular/core';
 import {AuthService} from '../../../services/auth.service';
 import {Router} from '@angular/router';
 import {environment} from '../../../../environments/environment';
@@ -13,12 +13,11 @@ declare const google: any;
   styleUrl: './google-auth.component.css'
 })
 export class GoogleAuthComponent implements AfterViewInit {
-  @ViewChild('googleBtn', { static: true }) googleBtn!: ElementRef;
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private ngZone = inject(NgZone);
 
-  constructor(private authService: AuthService,
-              private router: Router,
-              private ngZone: NgZone) {
-  }
+  @ViewChild('googleBtn', { static: true }) googleBtn!: ElementRef;
 
   ngAfterViewInit() {
     this.initGoogleButton();

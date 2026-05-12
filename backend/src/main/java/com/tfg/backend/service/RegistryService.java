@@ -1,10 +1,10 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.PdfReportDTO;
 import com.tfg.backend.dto.EntityType;
+import com.tfg.backend.dto.PdfReportDTO;
 import com.tfg.backend.model.Registry;
-import com.tfg.backend.repository.RegistryRepository;
 import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.repository.RegistryRepository;
 import com.tfg.backend.utils.PdfService;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +42,15 @@ public class RegistryService {
 
     public Map<String, List<String>> getCrossReferences(EntityType entityType, RegistryType dataType) {
         return repository.getCrossReferences(entityType, dataType);
+    }
+
+
+    public Set<String> getInteractedProductReferences(String userId, List<RegistryType> actionTypes) {
+        return repository.getInteractedProductIds(userId, actionTypes);
+    }
+
+    public List<String> getTopViewedReferences(int limit, Collection<String> excludedRefs) {
+        return repository.getMostViewedProductReferences(limit, excludedRefs);
     }
 
 

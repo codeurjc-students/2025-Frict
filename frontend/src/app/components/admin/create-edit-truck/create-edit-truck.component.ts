@@ -1,5 +1,5 @@
-import {AfterViewInit, Component, DestroyRef, Inject, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
-import {isPlatformBrowser, NgIf} from '@angular/common';
+import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -30,7 +30,6 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     InputText,
     InputNumber,
     Select,
-    NgIf,
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
@@ -40,16 +39,17 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 })
 export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
+  private truckService = inject(TruckService);
+  private locationService = inject(LocationService);
+  private shopService = inject(ShopService);
+  private breadcrumbService = inject(BreadcrumbService);
+  private platformId = inject(PLATFORM_ID);
 
-  constructor(private fb: FormBuilder,
-              private router: Router,
-              private messageService: MessageService,
-              private route: ActivatedRoute,
-              private truckService: TruckService,
-              private locationService: LocationService,
-              private shopService: ShopService,
-              private breadcrumbService: BreadcrumbService,
-              @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor() {
 
     this.truckForm = this.fb.group({
       plateNumber: ['', [Validators.required, Validators.minLength(4)]],

@@ -1,7 +1,7 @@
 package com.tfg.backend.config;
 
-import com.tfg.backend.model.Notification;
 import com.tfg.backend.event.NotificationChangeStreamListener;
+import com.tfg.backend.model.Notification;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;

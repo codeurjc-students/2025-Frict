@@ -58,10 +58,16 @@
                        [class.focus:ring-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" />
               </div>
 
-              <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
-                <span *ngIf="usernameControl?.hasError('usernameTaken')">El usuario ya existe.</span>
-                <span *ngIf="usernameControl?.hasError('required')">Requerido.</span>
-              </div>
+              @if (usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)) {
+                <div class="text-xs text-red-500 ml-1 mt-1">
+                  @if (usernameControl?.hasError('usernameTaken')) {
+                    <span>El usuario ya existe.</span>
+                  }
+                  @if (usernameControl?.hasError('required')) {
+                    <span>Requerido.</span>
+                  }
+                </div>
+              }
             </div>
           </div>
 
@@ -77,10 +83,16 @@
                      [class.focus:ring-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"/>
             </div>
 
-            <div *ngIf="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
-              <span *ngIf="emailControl?.hasError('emailTaken')">El correo ya existe.</span>
-              <span *ngIf="emailControl?.hasError('email')">Correo inválido.</span>
-            </div>
+            @if (emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)) {
+              <div class="text-xs text-red-500 ml-1 mt-1">
+                @if (emailControl?.hasError('emailTaken')) {
+                  <span>El correo ya existe.</span>
+                }
+                @if (emailControl?.hasError('email')) {
+                  <span>Correo inválido.</span>
+                }
+              </div>
+            }
           </div>
 
           <div class="space-y-1.5">

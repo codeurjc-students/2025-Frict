@@ -4,14 +4,13 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.tfg.backend.dto.UserSignupDTO;
-import com.tfg.backend.model.User;
 import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.event.UserEvent;
+import com.tfg.backend.model.User;
 import com.tfg.backend.security.GoogleTokenDTO;
 import com.tfg.backend.service.EmailService;
 import com.tfg.backend.service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -103,8 +103,8 @@ public class UserLoginService {
 
 		var newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
 		var newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
-		response.addCookie(buildTokenCookie(TokenType.ACCESS, newAccessToken));
-		response.addCookie(buildTokenCookie(TokenType.REFRESH, newRefreshToken));
+		addTokenCookie(response, TokenType.ACCESS, newAccessToken);
+		addTokenCookie(response, TokenType.REFRESH, newRefreshToken);
 
 		if (existentUser){
 			return new AuthResponse(AuthResponse.Status.SUCCESS, "Successful Google Login");
@@ -129,8 +129,8 @@ public class UserLoginService {
 		var newAccessToken = jwtTokenProvider.generateAccessToken(user);
 		var newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-		response.addCookie(buildTokenCookie(TokenType.ACCESS, newAccessToken));
-		response.addCookie(buildTokenCookie(TokenType.REFRESH, newRefreshToken));
+		addTokenCookie(response, TokenType.ACCESS, newAccessToken);
+		addTokenCookie(response, TokenType.REFRESH, newRefreshToken);
 
 		return new AuthResponse(AuthResponse.Status.SUCCESS, "Auth successful. Tokens are created in cookie.");
 	}
@@ -141,7 +141,7 @@ public class UserLoginService {
 			var claims = jwtTokenProvider.validateToken(refreshToken);
 			UserDetails user = userDetailsService.loadUserByUsername(claims.getSubject());
 			var newAccessToken = jwtTokenProvider.generateAccessToken(user);
-			response.addCookie(buildTokenCookie(TokenType.ACCESS, newAccessToken));
+			addTokenCookie(response, TokenType.ACCESS, newAccessToken);
 			return new AuthResponse(AuthResponse.Status.SUCCESS, "Auth successful. Tokens are created in cookie.");
 
 		} catch (Exception e) {
@@ -152,8 +152,8 @@ public class UserLoginService {
 
 	public AuthResponse logout(HttpServletResponse response) {
 		SecurityContextHolder.clearContext();
-		response.addCookie(removeTokenCookie(TokenType.ACCESS));
-		response.addCookie(removeTokenCookie(TokenType.REFRESH));
+		removeTokenCookie(response, TokenType.ACCESS);
+		removeTokenCookie(response, TokenType.REFRESH);
 		return new AuthResponse(AuthResponse.Status.SUCCESS, "Logout successfully");
 	}
 
@@ -210,21 +210,25 @@ public class UserLoginService {
 	}
 
 	// -- PRIVATE COOKIES METHODS --
-	private Cookie buildTokenCookie(TokenType type, String token) {
-		Cookie cookie = new Cookie(type.cookieName, token);
-		cookie.setMaxAge((int) type.duration.getSeconds());
-		cookie.setHttpOnly(true);
-		cookie.setSecure(true);
-		cookie.setPath("/");
-		return cookie;
+	private void addTokenCookie(HttpServletResponse response, TokenType type, String token) {
+		ResponseCookie cookie = ResponseCookie.from(type.cookieName, token)
+				.maxAge(type.duration)
+				.httpOnly(true)
+				.secure(true)
+				.path("/")
+				.sameSite("None")
+				.build();
+		response.addHeader("Set-Cookie", cookie.toString());
 	}
 
-	private Cookie removeTokenCookie(TokenType type){
-		Cookie cookie = new Cookie(type.cookieName, "");
-		cookie.setMaxAge(0);
-		cookie.setHttpOnly(true);
-		cookie.setSecure(true);
-		cookie.setPath("/");
-		return cookie;
+	private void removeTokenCookie(HttpServletResponse response, TokenType type) {
+		ResponseCookie cookie = ResponseCookie.from(type.cookieName, "")
+				.maxAge(0)
+				.httpOnly(true)
+				.secure(true)
+				.path("/")
+				.sameSite("None")
+				.build();
+		response.addHeader("Set-Cookie", cookie.toString());
 	}
 }

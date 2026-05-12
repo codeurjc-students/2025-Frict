@@ -1,4 +1,4 @@
-import {Component, computed, input} from '@angular/core';
+import {Component, computed, inject, input} from '@angular/core';
 import {Tag} from 'primeng/tag';
 import {Product} from '../../../models/product.model';
 import {getStockTagInfo} from '../../../utils/tagManager.util';
@@ -14,10 +14,9 @@ import {ProductService} from '../../../services/product.service';
   styleUrl: 'stock-tag.component.css'
 })
 export class StockTagComponent {
-  product = input.required<Product>();
+  private productService = inject(ProductService);
 
-  constructor(private productService: ProductService) {
-  }
+  product = input.required<Product>();
 
   tagInfo = computed(() => {
     const p = this.product();

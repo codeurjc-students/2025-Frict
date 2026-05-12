@@ -50,13 +50,9 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 &nbsp;
 
-## ⏩ Project Next Steps (Intermediate Functionality)
+## ⏩ Project Next Steps (remaining Advanced Functionality)
 
-- Users last connection logic
-- In-app notifications
-- Real-time truck positioning
-- Upgraded recommendations system
-- PDF invoices and resumes
+- Trucks location ping while driver connections
 
 &nbsp;
 

@@ -1,18 +1,10 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.ShopDTO;
-import com.tfg.backend.dto.ShopStockDTO;
-import com.tfg.backend.dto.TruckDTO;
-import com.tfg.backend.dto.UserDTO;
+import com.tfg.backend.dto.*;
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.ShopStock;
 import com.tfg.backend.model.Truck;
-import com.tfg.backend.service.UserConnectionService;
-import com.tfg.backend.service.ShopService;
-import com.tfg.backend.service.ShopStockService;
-import com.tfg.backend.service.ShopTruckOrchestrator;
-import com.tfg.backend.service.ShopUserOrchestrator;
+import com.tfg.backend.service.*;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,7 +35,7 @@ public class ShopRestController {
     private final ShopUserOrchestrator shopUserOrchestrator;
 
     // Inject the user connection service for presence enrichment
-    private final UserConnectionService userConnectionService;
+    private final ConnectionService connectionService;
 
     @Operation(summary = "(Manager) Get lightweight list of managed shops (Key-Value)")
     @GetMapping("/references")
@@ -189,7 +181,7 @@ public class ShopRestController {
     private ShopDTO toEnrichedDTO(Shop shop) {
         ShopDTO dto = new ShopDTO(shop);
         if (dto.getAssignedManager() != null) {
-            userConnectionService.enrichWithConnection(dto.getAssignedManager());
+            connectionService.enrichWithConnection(dto.getAssignedManager());
         }
         return dto;
     }
@@ -205,7 +197,7 @@ public class ShopRestController {
                 .filter(Objects::nonNull)
                 .toList();
 
-        userConnectionService.enrichWithConnections(managers);
+        connectionService.enrichWithConnections(managers);
         return dtos;
     }
 
@@ -222,7 +214,7 @@ public class ShopRestController {
                 .filter(Objects::nonNull)
                 .toList();
 
-        userConnectionService.enrichWithConnections(managers);
+        connectionService.enrichWithConnections(managers);
 
         // 3. Return the formatted PageResponse
         return PageFormatter.toPageResponse(dtoPage, dto -> dto);
@@ -235,7 +227,7 @@ public class ShopRestController {
     private TruckDTO toEnrichedTruckDTO(Truck truck) {
         TruckDTO dto = new TruckDTO(truck);
         if (dto.getAssignedDriver() != null) {
-            userConnectionService.enrichWithConnection(dto.getAssignedDriver());
+            connectionService.enrichWithConnection(dto.getAssignedDriver());
         }
         return dto;
     }

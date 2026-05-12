@@ -1,16 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
-import {DatePipe, NgClass, NgForOf, NgIf, UpperCasePipe} from '@angular/common';
-import { LoadingScreenComponent } from '../loading-screen/loading-screen.component';
-import { PageResponse } from '../../../models/pageResponse.model';
-import { Notification } from '../../../models/notification.model';
-import { NotificationService } from '../../../services/notification.service';
+import {Component, inject, OnInit, signal} from '@angular/core';
+import {DatePipe, NgClass, UpperCasePipe} from '@angular/common';
+import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Notification} from '../../../models/notification.model';
+import {NotificationService} from '../../../services/notification.service';
 import {Button} from 'primeng/button';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {Tag} from 'primeng/tag';
 import {MessageService} from 'primeng/api';
 import {Tooltip} from 'primeng/tooltip';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
-import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {UiService} from '../../../utils/ui.service';
 
 @Component({
@@ -25,13 +24,15 @@ import {UiService} from '../../../utils/ui.service';
     Tooltip,
     DatePipe,
     UpperCasePipe,
-    NgIf,
-    NgForOf,
     BreadcrumbReloadComponent,
   ],
   templateUrl: './notifications.component.html'
 })
 export class NotificationsComponent implements OnInit {
+
+  private messageService = inject(MessageService);
+  private notificationService = inject(NotificationService);
+  protected uiService = inject(UiService);
 
   // Pagination and Data
   notificationsPage: PageResponse<Notification> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
@@ -45,12 +46,6 @@ export class NotificationsComponent implements OnInit {
 
   // Selection
   selectedNotification = signal<Notification | null>(null);
-
-  constructor(
-    private messageService: MessageService,
-    private notificationService: NotificationService,
-    protected uiService: UiService
-  ) {}
 
   ngOnInit() {
     this.loadNotifications();

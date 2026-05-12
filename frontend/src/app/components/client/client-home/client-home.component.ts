@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ButtonModule} from 'primeng/button';
 import {RouterLink} from '@angular/router';
@@ -37,6 +37,9 @@ interface ServiceUI {
 })
 export class ClientHomeComponent implements OnInit {
 
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+
   protected readonly responsiveOptions = carouselResponsiveOptions;
 
   public services: ServiceUI[] = [
@@ -48,7 +51,6 @@ export class ClientHomeComponent implements OnInit {
 
   categories: Category[] = [];
   featuredCategoryId: string = '0';
-  recommendedCategoryId: string = '0';
   topSalesCategoryId: string = '0';
   peripheralsCategoryId: string = '0';
 
@@ -64,9 +66,6 @@ export class ClientHomeComponent implements OnInit {
 
   topSalesLoading: boolean = true;
   topSalesError: boolean = false;
-
-  constructor(private productService: ProductService,
-              private categoryService: CategoryService) {}
 
   ngOnInit() {
     this.loadCategories();
@@ -89,7 +88,7 @@ export class ClientHomeComponent implements OnInit {
   private loadFeaturedProducts() {
     this.productService.getProductsByCategoryName("Destacado").subscribe({
       next: (products) => {
-        this.featuredProducts = products.items;
+        this.featuredProducts = products.items || (products as any).content;
         const featuredCategory = this.categories.find(c => c.name.toLowerCase() === 'destacado');
         this.featuredCategoryId = featuredCategory ? featuredCategory.id : '0';
         this.featuredLoading = false;
@@ -104,7 +103,7 @@ export class ClientHomeComponent implements OnInit {
   private loadTopSalesProducts() {
     this.productService.getProductsByCategoryName("Top Ventas").subscribe({
       next: (products) => {
-        this.topSalesProducts = products.items;
+        this.topSalesProducts = products.items || (products as any).content;
         const topSalesCategory = this.categories.find(c => c.name.toLowerCase() === 'top ventas');
         this.topSalesCategoryId = topSalesCategory ? topSalesCategory.id : '0';
         this.topSalesLoading = false;
@@ -117,14 +116,13 @@ export class ClientHomeComponent implements OnInit {
   }
 
   private loadRecommendedProducts() {
-    this.productService.getProductsByCategoryName("Recomendado").subscribe({
-      next: (products) => {
-        this.recommendedProducts = products.items;
-        const recommendedCategory = this.categories.find(c => c.name.toLowerCase() === 'recomendado');
-        this.recommendedCategoryId = recommendedCategory ? recommendedCategory.id : '0';
+    this.productService.getRecommendedProducts(8).subscribe({
+      next: (pageResponse) => {
+        this.recommendedProducts = pageResponse.items;
         this.recommendedLoading = false;
       },
       error: (error) => {
+        console.error('Error al cargar recomendaciones:', error);
         this.recommendedLoading = false;
         this.recommendedError = true;
       }

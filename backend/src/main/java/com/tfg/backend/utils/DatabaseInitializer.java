@@ -218,7 +218,6 @@ public class DatabaseInitializer {
         Category multimedia = new Category("Foto y Video", "pi pi-headphones", "Creadores de contenido", "Cámaras y Accesorios", "Captura el mundo.");
         roots.add(multimedia);
 
-        roots.add(new Category("Recomendado", "", "Nuestra selección", "Calidad precio", "Elegidos por expertos."));
         roots.add(new Category("Destacado", "", "Tendencias", "Lo más nuevo", "Lo que está de moda."));
         roots.add(new Category("Top Ventas", "", "Los más vendidos", "Favoritos de la comunidad", "Éxito garantizado."));
         roots.add(new Category("Otros", "", "No clasificados o pendientes", "", ""));
@@ -239,7 +238,7 @@ public class DatabaseInitializer {
         // --- COMPUTERS ---
         Product p1 = new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad", 1250.50, 980.00);
         p1.setPreviousPrice(1500.00);
-        assignCategories(p1, catMap, "Portátiles", "Recomendado", "Destacado");
+        assignCategories(p1, catMap, "Portátiles", "Destacado");
         products.add(p1);
 
         Product p2 = new Product("Mini PC Industrial", "Potencia compacta", 510.10, 415.00);
@@ -262,7 +261,7 @@ public class DatabaseInitializer {
         products.add(p3);
 
         Product p4 = new Product("Smartwatch con ECG", "Salud en tu muñeca", 220.00, 165.00);
-        assignCategories(p4, catMap, "Smartwatches", "Recomendado");
+        assignCategories(p4, catMap, "Smartwatches");
         products.add(p4);
 
         Product p20 = new Product("Tablet Pro 12.9\"", "Pantalla Liquid Retina XDR", 1100.00, 895.00);
@@ -275,7 +274,7 @@ public class DatabaseInitializer {
         products.add(p5);
 
         Product p6 = new Product("Disco SSD NVMe 2TB", "Velocidad extrema", 155.99, 112.40);
-        assignCategories(p6, catMap, "Almacenamiento", "Recomendado");
+        assignCategories(p6, catMap, "Almacenamiento");
         products.add(p6);
 
         Product p7 = new Product("Pasta Térmica Gold", "Refrigeración eficiente", 12.50, 6.25);
@@ -283,7 +282,7 @@ public class DatabaseInitializer {
         products.add(p7);
 
         Product p21 = new Product("Procesador Intel Core i9", "24 núcleos de potencia pura", 589.90, 495.00);
-        assignCategories(p21, catMap, "Recomendado");
+        assignCategories(p21, catMap, "Destacado");
         products.add(p21);
 
         Product p22 = new Product("Kit RAM DDR5 32GB", "6000MHz RGB", 145.00, 108.00);
@@ -304,7 +303,7 @@ public class DatabaseInitializer {
         products.add(p9);
 
         Product p10 = new Product("Auriculares Cancelación Ruido", "Silencio absoluto", 199.50, 142.00);
-        assignCategories(p10, catMap, "Audio y Sonido", "Recomendado");
+        assignCategories(p10, catMap, "Audio y Sonido");
         products.add(p10);
 
         Product p24 = new Product("Ratón Gaming Inalámbrico", "Sensor óptico 25K DPI", 79.99, 52.30);
@@ -321,7 +320,7 @@ public class DatabaseInitializer {
         products.add(p26);
 
         Product p27 = new Product("Ratón Vertical Ergonómico", "Reduce la fatiga de muñeca", 45.00, 28.50);
-        assignCategories(p27, catMap, "Teclados y Ratones", "Recomendado");
+        assignCategories(p27, catMap, "Teclados y Ratones");
         products.add(p27);
 
         // --- HOME & NETWORK ---

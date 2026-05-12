@@ -1,8 +1,8 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {AuthService} from '../../../services/auth.service';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {NgIf, NgOptimizedImage} from '@angular/common';
+import {NgOptimizedImage} from '@angular/common';
 import {GoogleAuthComponent} from '../google-auth/google-auth.component';
 import {CustomValidators} from '../../../utils/customValidators.util';
 import {UserService} from '../../../services/user.service';
@@ -13,7 +13,6 @@ import {UserService} from '../../../services/user.service';
     ReactiveFormsModule,
     RouterLink,
     NgOptimizedImage,
-    NgIf,
     GoogleAuthComponent,
   ],
   templateUrl: './login.component.html',
@@ -21,6 +20,12 @@ import {UserService} from '../../../services/user.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
+
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private fb = inject(FormBuilder);
 
   loginForm: FormGroup;
   showPassword: boolean = false;
@@ -30,13 +35,7 @@ export class LoginComponent implements OnInit {
 
   get usernameControl() { return this.loginForm.get('username'); }
 
-  constructor(
-    private authService: AuthService,
-    private userService: UserService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private fb: FormBuilder
-  ) {
+  constructor() {
     this.loginForm = this.fb.nonNullable.group({
       username: ['', Validators.required, [CustomValidators.createUsernameExistsValidator(this.userService)]],
       password: ['', Validators.required]

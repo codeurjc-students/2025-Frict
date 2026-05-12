@@ -5,9 +5,9 @@ import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
-import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ShopTruckOrchestrator;
 import com.tfg.backend.service.TruckService;
+import com.tfg.backend.service.ConnectionService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,7 +32,7 @@ public class TruckRestController {
     private final TruckService truckService;
 
     // Inject the user connection service for presence enrichment
-    private final UserConnectionService userConnectionService;
+    private final ConnectionService connectionService;
 
     @Operation(summary = "(Admin) Get all trucks information (paged)")
     @GetMapping("/")
@@ -133,7 +133,7 @@ public class TruckRestController {
     private TruckDTO toEnrichedDTO(Truck truck) {
         TruckDTO dto = new TruckDTO(truck);
         if (dto.getAssignedDriver() != null) {
-            userConnectionService.enrichWithConnection(dto.getAssignedDriver());
+            connectionService.enrichWithConnection(dto.getAssignedDriver());
         }
         return dto;
     }
@@ -149,7 +149,7 @@ public class TruckRestController {
                 .filter(Objects::nonNull)
                 .toList();
 
-        userConnectionService.enrichWithConnections(drivers);
+        connectionService.enrichWithConnections(drivers);
         return dtos;
     }
 
@@ -166,7 +166,7 @@ public class TruckRestController {
                 .filter(Objects::nonNull)
                 .toList();
 
-        userConnectionService.enrichWithConnections(drivers);
+        connectionService.enrichWithConnections(drivers);
 
         // 3. Return the formatted PageResponse (identity function "dto -> dto" as they are already mapped)
         return PageFormatter.toPageResponse(dtoPage, dto -> dto);

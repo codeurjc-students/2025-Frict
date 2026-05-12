@@ -1,10 +1,10 @@
-import { Component, inject, OnInit, Output, EventEmitter, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Breadcrumb } from 'primeng/breadcrumb';
-import { MenuItem } from 'primeng/api';
-import { filter } from 'rxjs';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { Button } from 'primeng/button';
+import {Component, DestroyRef, EventEmitter, inject, OnInit, Output} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {Breadcrumb} from 'primeng/breadcrumb';
+import {MenuItem} from 'primeng/api';
+import {filter} from 'rxjs';
+import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
+import {Button} from 'primeng/button';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {AuthService} from '../../../services/auth.service';
 

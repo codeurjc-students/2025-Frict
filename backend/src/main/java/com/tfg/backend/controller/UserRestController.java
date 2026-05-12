@@ -2,11 +2,10 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.*;
 import com.tfg.backend.model.User;
-import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ShopUserOrchestrator;
+import com.tfg.backend.service.ConnectionService;
 import com.tfg.backend.service.UserService;
 import com.tfg.backend.utils.PageFormatter;
-import com.tfg.backend.dto.StatDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ import java.util.Map;
 public class UserRestController {
 
     private final UserService userService;
-    private final UserConnectionService userConnectionService; //Mongo
+    private final ConnectionService connectionService; //Mongo
     private final ShopUserOrchestrator shopUserOrchestrator;
 
 
@@ -52,7 +51,7 @@ public class UserRestController {
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getLoggedUser() {
         UserDTO loggedUser = new UserDTO(userService.findLoggedUserHelper());
-        userConnectionService.enrichWithConnection(loggedUser);
+        connectionService.enrichWithConnection(loggedUser);
         return ResponseEntity.ok(loggedUser);
     }
 
@@ -61,7 +60,7 @@ public class UserRestController {
     @GetMapping("/drivers/available/")
     public ResponseEntity<List<UserDTO>> getAvailableDrivers() {
         List<UserDTO> dtos = userService.findAvailableDrivers().stream().map(UserDTO::new).toList();
-        userConnectionService.enrichWithConnections(dtos);
+        connectionService.enrichWithConnections(dtos);
         return ResponseEntity.ok(dtos);
     }
 
@@ -70,7 +69,7 @@ public class UserRestController {
     @GetMapping("/role/")
     public ResponseEntity<List<UserDTO>> getAllUsersByRole(@RequestParam String role) {
         List<UserDTO> dtos = userService.findAllByRole(role).stream().map(UserDTO::new).toList();
-        userConnectionService.enrichWithConnections(dtos);
+        connectionService.enrichWithConnections(dtos);
         return ResponseEntity.ok(dtos);
     }
 
@@ -80,7 +79,7 @@ public class UserRestController {
     public ResponseEntity<PageResponse<UserDTO>> getAllUsers(Pageable pageable) {
         Page<User> allUsers = userService.findAll(pageable);
         PageResponse<UserDTO> pageResponse = PageFormatter.toPageResponse(allUsers, UserDTO::new);
-        userConnectionService.enrichWithConnections(pageResponse.getItems());
+        connectionService.enrichWithConnections(pageResponse.getItems());
         return ResponseEntity.ok(pageResponse);
     }
 
@@ -90,7 +89,7 @@ public class UserRestController {
     @PutMapping("/image/{id}")
     public ResponseEntity<UserDTO> uploadUserImage(@PathVariable Long id, @RequestParam("image") MultipartFile image) {
         UserDTO savedUser = new UserDTO(userService.uploadUserImage(id, image));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -101,7 +100,7 @@ public class UserRestController {
     @PutMapping("/anonymize")
     public ResponseEntity<UserDTO> anonymizeLoggedUser() {
         UserDTO savedUser = new UserDTO(userService.anonymizeLoggedUser());
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -110,7 +109,7 @@ public class UserRestController {
     @DeleteMapping("/image")
     public ResponseEntity<UserDTO> deleteUserImage() {
         UserDTO savedUser = new UserDTO(userService.deleteUserImage());
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -119,7 +118,7 @@ public class UserRestController {
     @PutMapping("/data")
     public ResponseEntity<UserDTO> updateLoggedUserData(@RequestBody UserDTO userDTO){
         UserDTO savedUser = new UserDTO(userService.updateLoggedUserData(userDTO));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -128,7 +127,7 @@ public class UserRestController {
     @PostMapping("/addresses")
     public ResponseEntity<UserDTO> createAddress(@RequestBody AddressDTO addressDTO){
         UserDTO savedUser = new UserDTO(userService.createAddress(addressDTO));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -144,7 +143,7 @@ public class UserRestController {
     @PutMapping("/addresses")
     public ResponseEntity<UserDTO> editAddress(@RequestBody AddressDTO addressDTO){
         UserDTO savedUser = new UserDTO(userService.editAddress(addressDTO));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -153,7 +152,7 @@ public class UserRestController {
     @DeleteMapping("/addresses/{id}")
     public ResponseEntity<UserDTO> deleteAddress(@PathVariable Long id){
         UserDTO savedUser = new UserDTO(userService.deleteAddress(id));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -162,7 +161,7 @@ public class UserRestController {
     @PostMapping("/cards")
     public ResponseEntity<UserDTO> createPaymentCard(@RequestBody PaymentCardDTO cardDTO){
         UserDTO savedUser = new UserDTO(userService.createPaymentCard(cardDTO));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -178,7 +177,7 @@ public class UserRestController {
     @PutMapping("/cards")
     public ResponseEntity<UserDTO> editPaymentCard(@RequestBody PaymentCardDTO paymentCardDTO){
         UserDTO savedUser = new UserDTO(userService.editPaymentCard(paymentCardDTO));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -187,7 +186,7 @@ public class UserRestController {
     @DeleteMapping("/cards/{id}")
     public ResponseEntity<UserDTO> deletePaymentCard(@PathVariable Long id){
         UserDTO savedUser = new UserDTO(userService.deletePaymentCard(id));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -219,7 +218,7 @@ public class UserRestController {
     @PutMapping("/ban/{id}")
     public ResponseEntity<UserDTO> toggleUserBanById(@PathVariable Long id, @RequestBody boolean banState){
         UserDTO savedUser = new UserDTO(userService.toggleUserBanById(id, banState));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -236,7 +235,7 @@ public class UserRestController {
     @PutMapping("/anon/{id}")
     public ResponseEntity<UserDTO> anonUserById(@PathVariable Long id){
         UserDTO savedUser = new UserDTO(userService.anonUserById(id));
-        userConnectionService.enrichWithConnection(savedUser);
+        connectionService.enrichWithConnection(savedUser);
         return ResponseEntity.ok(savedUser);
     }
 

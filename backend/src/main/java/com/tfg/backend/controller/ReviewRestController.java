@@ -4,8 +4,8 @@ import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.ReviewDTO;
 import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Review;
-import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.ReviewService;
+import com.tfg.backend.service.ConnectionService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +28,7 @@ public class ReviewRestController {
     private final ReviewService reviewService;
 
     // Inject the user connection service for presence enrichment
-    private final UserConnectionService userConnectionService;
+    private final ConnectionService connectionService;
 
     @Operation(summary = "(Admin) Get user reviews by user ID (paged)")
     @GetMapping("/user/{id}")
@@ -93,7 +93,7 @@ public class ReviewRestController {
         if (dto.getCreatorUsername() != null) {
             UserDTO dummyUser = new UserDTO();
             dummyUser.setUsername(dto.getCreatorUsername());
-            userConnectionService.enrichWithConnection(dummyUser);
+            connectionService.enrichWithConnection(dummyUser);
             dto.setCreatorConnection(dummyUser.getConnection());
         }
         return dto;
@@ -118,7 +118,7 @@ public class ReviewRestController {
         }
 
         // 2. Enrich all unique dummy users in a single batch call to Mongo
-        userConnectionService.enrichWithConnections(new ArrayList<>(uniqueUsersMap.values()));
+        connectionService.enrichWithConnections(new ArrayList<>(uniqueUsersMap.values()));
 
         // 3. Assign the enriched connections back to the review DTOs
         for (ReviewDTO dto : dtos) {
@@ -152,7 +152,7 @@ public class ReviewRestController {
         }
 
         // 3. Enrich all unique dummy users in a single batch query
-        userConnectionService.enrichWithConnections(new ArrayList<>(uniqueUsersMap.values()));
+        connectionService.enrichWithConnections(new ArrayList<>(uniqueUsersMap.values()));
 
         // 4. Assign the enriched connections back to the review DTOs
         for (ReviewDTO dto : dtoPage.getContent()) {

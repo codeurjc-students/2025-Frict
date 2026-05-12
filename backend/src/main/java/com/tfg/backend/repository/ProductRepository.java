@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -22,6 +23,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM User u JOIN u.favouriteProducts p WHERE u.id = :userId")
     Page<Product> findFavouritesByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    List<Product> findByReferenceCodeIn(Collection<String> referenceCodes);
+
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c " +
+            "WHERE c.id IN :categoryIds AND p.referenceCode NOT IN :excludedRefs AND p.active = true")
+    Page<Product> findRecommendedProducts(@Param("categoryIds") Collection<Long> categoryIds,
+                                          @Param("excludedRefs") Collection<String> excludedRefs,
+                                          Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.referenceCode NOT IN :excludedRefs AND p.active = true ORDER BY p.createdAt DESC")
+    Page<Product> findActiveProductsExcluding(@Param("excludedRefs") Collection<String> excludedRefs, Pageable pageable);
 
     @Query("""
     SELECT DISTINCT p FROM Product p

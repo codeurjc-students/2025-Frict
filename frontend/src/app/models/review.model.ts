@@ -1,4 +1,4 @@
-import { Connection } from './connection.model';
+import {Connection} from './connection.model';
 
 export interface Review {
   id: string;

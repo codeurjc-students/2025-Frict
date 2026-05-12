@@ -1,18 +1,16 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {RouterLink} from '@angular/router';
-import {NgIf} from '@angular/common';
 import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-footer',
   imports: [
-    RouterLink,
-    NgIf
+    RouterLink
   ],
   templateUrl: './footer.component.html',
   standalone: true,
   styleUrl: './footer.component.css'
 })
 export class FooterComponent {
-  constructor(protected authService: AuthService) {}
+  protected authService = inject(AuthService);
 }

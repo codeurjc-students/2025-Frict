@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {RouterModule} from '@angular/router';
@@ -20,6 +20,10 @@ import {UserService} from '../../../services/user.service';
 })
 export class RecoverAccountComponent {
 
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
+
   recoverForm: FormGroup;
   loading: boolean = false;
   isEmailSent: boolean = false; // To chenge the view after success
@@ -27,11 +31,7 @@ export class RecoverAccountComponent {
 
   get usernameControl() { return this.recoverForm.get('username'); }
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private userService: UserService
-  ) {
+  constructor() {
     this.recoverForm = this.fb.group({
       username: ['', [Validators.required], [CustomValidators.createUsernameExistsValidator(this.userService)]]
     });

@@ -1,15 +1,11 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.CartSummaryDTO;
-import com.tfg.backend.dto.OrderDTO;
-import com.tfg.backend.dto.OrderItemDTO;
-import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.UserDTO;
+import com.tfg.backend.dto.*;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import com.tfg.backend.model.OrderStatus;
-import com.tfg.backend.service.UserConnectionService;
 import com.tfg.backend.service.OrderService;
+import com.tfg.backend.service.ConnectionService;
 import com.tfg.backend.utils.PageFormatter;
 import com.tfg.backend.utils.SaveResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,7 +34,7 @@ public class OrderRestController {
     private final OrderService orderService;
 
     // Inject the user connection service for presence enrichment
-    private final UserConnectionService userConnectionService;
+    private final ConnectionService connectionService;
 
     @Operation(summary = "(Admin, Manager, Driver) Get orders by role (paged)")
     @GetMapping("/")
@@ -233,7 +229,7 @@ public class OrderRestController {
     private OrderDTO toEnrichedDTO(Order order) {
         OrderDTO dto = new OrderDTO(order);
         if (dto.getUser() != null) {
-            userConnectionService.enrichWithConnection(dto.getUser());
+            connectionService.enrichWithConnection(dto.getUser());
         }
         return dto;
     }
@@ -251,7 +247,7 @@ public class OrderRestController {
                 .filter(Objects::nonNull)
                 .toList();
 
-        userConnectionService.enrichWithConnections(users);
+        connectionService.enrichWithConnections(users);
 
         // 3. Return the formatted PageResponse
         return PageFormatter.toPageResponse(dtoPage, dto -> dto);

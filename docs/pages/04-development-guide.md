@@ -26,24 +26,28 @@ The system is built upon a strictly decoupled Client-Server model, ensuring high
 * **Server (Backend):** A robust Spring Boot application managing the REST API. It strictly adheres to the **Model-View-Controller (MVC)** architecture, keeping controllers completely isolated from any business logic. Furthermore, it implements the **Facade design pattern** through Orchestrators to efficiently manage complex, multi-service transactions.
 
 
-* **Database:** A relational MySQL database with a dynamic schema managed automatically via Spring Data JPA entities and annotations.
+* **Relational Database:** A MySQL database with a dynamic schema managed automatically via Spring Data JPA entities and annotations.
+
+
+* **Non-Relational Database:** A MongoDB database with replica set enabled, which enables change streams features for multiple backend instances communications.
 
 
 * **Object Storage:** MinIO, an AWS S3-compatible storage server, dedicated to handling and serving multimedia assets (such as user and product images) efficiently.
 
+
 To ensure data protection and safe access, the system utilizes **Spring Security** integrated with **JWT (JSON Web Tokens)** for internal session management and **OAuth2** for third-party authentication. Additionally, the API is built with production readiness in mind: it is fully documented using **Swagger (OpenAPI)** to ensure the documentation is always synchronized with the codebase, and relies on **Spring Boot Actuator** to provide real-time health checks and system monitoring.
 
-| Feature | Technologies & Patterns |
-| :--- | :--- |
-| **Architecture & Patterns** | SPA, Strict MVC, Facade Pattern (Service Orchestrators). |
-| **Backend Technologies** | Java, Spring Boot, Spring Security (JWT & OAuth2), Spring Data JPA, Lombok. |
-| **Frontend Technologies** | Angular 19 (Standalone Components, Signals), TypeScript, HTML, Tailwind CSS. |
-| **API & Monitoring** | Swagger (OpenAPI), Spring Boot Actuator. |
-| **Data & Storage** | MySQL, MinIO (S3-compatible Object Storage). |
-| **Testing & QA** | JUnit, Mockito, REST Assured, Jasmine, Selenium, JaCoCo, SonarQube Cloud. |
-| **Tools & IDEs** | IntelliJ IDEA, MySQL Workbench, Git. |
-| **Deployment** | Docker Compose, Amazon Web Services (AWS). |
-| **Development Process** | Feature branches, Pull Requests, GitHub Actions (Strict CI validation). |
+| Feature | Technologies & Patterns                                                             |
+| :--- |:------------------------------------------------------------------------------------|
+| **Architecture & Patterns** | SPA, Strict MVC, Facade Pattern (Service Orchestrators).                            |
+| **Backend Technologies** | Java, Spring Boot, Spring Security (JWT & OAuth2), Spring Data JPA, Lombok.         |
+| **Frontend Technologies** | Angular 19 (Standalone Components, Signals), TypeScript, HTML, Tailwind CSS.        |
+| **API & Monitoring** | Swagger (OpenAPI), Spring Boot Actuator.                                            |
+| **Data & Storage** | MySQL, MongoDB, MinIO (S3-compatible Object Storage).                               |
+| **Testing & QA** | JUnit, Mockito, REST Assured, Jasmine, Selenium, JaCoCo, Istambul, SonarQube Cloud. |
+| **Tools & IDEs** | IntelliJ IDEA, MySQL Workbench, MongoDB Compass, Git.                               |
+| **Deployment** | Docker Compose, Amazon Web Services (AWS).                                          |
+| **Development Process** | Feature branches, Pull Requests, GitHub Actions (Strict CI validation).             |
 
 &nbsp;
 
@@ -75,6 +79,9 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 
 
 - [**MySQL**](https://www.mysql.com/): Relational database engine that provides reliable data persistence and dynamic schema management.
+
+
+- [**MongoDB**](https://www.mongodb.com/): NoSQL document-oriented database that provides high availability, flexible data storage and highly scalable, JSON-like document management.
 
 
 - [**MinIO**](https://min.io/): High-performance, S3-compatible object storage server used for efficiently handling and serving multimedia assets.
@@ -113,7 +120,7 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 - [**Selenium**](https://www.selenium.dev/): Automates web browsers to execute comprehensive End-to-End (E2E) testing.
 
 
-- [**JaCoCo**](https://www.jacoco.org/) & [**SonarQube Cloud**](https://sonarcloud.io/): Provide detailed code coverage and continuous static code analysis to maintain high-quality standards.
+- [**JaCoCo**](https://www.jacoco.org/), [**Istambul**](https://istanbul.js.org/) & [**SonarQube Cloud**](https://sonarcloud.io/): Provide detailed code coverage and continuous static code analysis to maintain high-quality standards.
 
 &nbsp;
 
@@ -142,6 +149,9 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 - [**MySQL Workbench**](https://www.mysql.com/products/workbench/): Facilitates database design and visual modeling for managing the MySQL schema.
 
 
+- [**MongoDB Compass**](https://www.mongodb.com/products/tools/compass): Allows visualizing the different schemas, documents and data collection types within a MongoDB database.
+
+
 - [**Git**](https://git-scm.com/): Enables strict version control and collaboration across the development lifecycle.
 
 
@@ -160,13 +170,17 @@ The application's architecture is designed for high scalability and clear separa
 
 The foundation of the system is built upon a well-defined relational model and a modular package structure that isolates core functionalities into specific business domains.
 
-* **Database Schema:** A relational structure is used to handle complex relationships between entities.
+* **Relational Database Schema:** A relational structure is used to handle complex relationships between entities.
 
-![Database Schema](../diagrams/v0.1/db-diagram.png)
+![Relational Database Schema](../diagrams/v0.1/db-diagram.png)
 
 * **Package Diagram:** Depending on their responsibilities, all entities can be sorted in different packages.
 
 ![Package Diagram](../diagrams/v0.1/package-diagram.png)
+
+* **Non-Relational Database Schema:** An uncoupled document structure for each necessity, using common (connections, notifications) and time series (registries) document types for high request ratio and easier data insights retrieval.
+
+![Non-Relational Database Schema](../diagrams/v0.2/mongodb-diagram.png)
 
 &nbsp;
 
@@ -186,9 +200,12 @@ The backend is built with **Spring Boot**, implementing a robust multi-layered M
 
 * **API Layer:** REST controllers that act as the entry points, receiving and delegating HTTP requests.
 * **Business Layer:** A combination of services and orchestrators (implementing the Facade Pattern to manage circular references) that manage core business rules, service communication, and complex transactional integrity.
+* **Events Layer:** An asynchronous, event-driven layer that reacts to events published by the Business Layer. It handles parallel communication with the non-relational data storage, ensuring high responsiveness and system decoupling.
 * **Data Access Layer:** Utilizes the Repository Pattern (via Spring Data JPA) to abstract database operations and map them directly to the domain entities.
 
-![Backend Architecture](../diagrams/v0.1/backend.png)
+![Relational Backend Architecture](../diagrams/v0.1/backend.png)
+
+![Non-Relational Backend Architecture](../diagrams/v0.2/nonrelational-backend.png)
 
 &nbsp;
 
@@ -200,13 +217,13 @@ The frontend is a modern **Angular** application built with Standalone Component
 * **Shared Architecture:** A core foundation of common UI elements (navigation, authentication flows, loading states) and centralized services that manage application state and backend communication across the entire platform.
 
 ##### Management Components
-![Management Components Architecture](../diagrams/v0.1/frontend-admin.png)
+![Management Components Architecture](../diagrams/v0.2/frontend-admin-0.2.png)
 
 ##### Client Components
-![Client Components Architecture](../diagrams/v0.1/frontend-client.png)
+![Client Components Architecture](../diagrams/v0.2/frontend-client-0.2.png)
 
 ##### Common Components
-![Common Components Architecture](../diagrams/v0.1/frontend-common.png)
+![Common Components Architecture](../diagrams/v0.2/frontend-common-0.2.png)
 
 &nbsp;
 
@@ -229,21 +246,21 @@ The platform's reliability is validated through multiple automated testing layer
 
 #### 📊 Static Code Analysis & Results
 
-Code quality, vulnerabilities, and test coverage are continuously monitored using **SonarQube Cloud** integrated with the **JaCoCo** Maven plugin. Analyzing the initial project scans provides valuable insights into the architecture's health and the current technical debt.
+Overall project code quality, vulnerabilities, and test coverage are continuously monitored using **SonarQube Cloud**, which integrates with **JaCoCo** and **Istanbul** plugins to measure precise coverage indexes. Analyzing the current project state provides a transparent view of the architecture's evolution and the management of technical debt.
 
 **Overall Project Health:**
-As shown in the dashboard below, the project achieves an excellent **Maintainability rating of A**, alongside an exceptionally low code **duplication rate of 0.3%**. The global code **coverage stands at a solid 65.7%**. While the Quality Gate currently flags the Security (E) and Reliability (D) ratings, this is a strictly controlled scenario. The 8 reported security issues are intentional, arising from the hardcoded default passwords and mock credentials required to instantly populate the local seed data upon container startup.
+As reflected in the dashboard, the project maintains an excellent **duplication rate of 0.49%**, well below the 3.0% threshold. The coverage on new code has reached **84.77%**, successfully exceeding the strict 80.0% target. While the Quality Gate currently shows a **Reliability Rating of D**, this is driven by localized complexities in highly reactive services and infrastructure integrations, rather than structural flaws.
 
-![SonarQube Overall Analysis](/docs/images/initial/sonarqube_overall.png)
+![SonarQube Overall Analysis](../images/v0.2/sonarqube_overall.png)
 
 **Risk & Technical Debt Distribution:**
-The bubble chart below correlates Technical Debt (X-axis) with Code Coverage (Y-axis). The visual distribution confirms a highly healthy core system: the vast majority of the application's components (represented by the cluster of green bubbles) successfully maintain zero technical debt with varying levels of high test coverage.
+The bubble chart below correlates **Technical Debt** (X-axis) with **Code Coverage** (Y-axis). The size of each bubble represents the Lines of Code, while the color indicates the combined Reliability and Security rating.
 
-The single, prominent outlier — the red bubble indicating over 5 hours of technical debt and near-zero coverage — corresponds exclusively to the `DatabaseInitializer.java` class. Because this class acts solely as a static data injector for local testing environments, it inherently triggers security rules and is intentionally excluded from the standard unit testing scope.
+* **Core Stability:** The vast majority of the application's components (the dense green cluster in the bottom-left corner) are securely positioned in the high-coverage, zero-to-low debt quadrant. This confirms a highly maintainable and well-tested core system.
+* **`UserLoginService.java`:** The orange indicator situated on the far left corresponds to the backend authentication core. Its lower coverage rating is a direct result of high cyclomatic complexity. This service simultaneously orchestrates Google OAuth2 verification, database state validations (bans, deletions), dynamic user registration, and direct HTTP response manipulation for secure JWT cookie injection. These external dependencies and static contexts inherently require highly complex mocking strategies that are currently being refined.
+* **`create-edit-shop.component.ts`:** Positioned along the diagonal intersection (at roughly 60% coverage and 20 minutes of technical debt), this outlier reflects the architectural weight of the frontend. Built as an Angular 19 standalone component leveraging signals, it combines advanced RxJS asynchronous streams for reverse geocoding with direct DOM manipulation via the Leaflet map library. The minimal technical debt registered is largely due to the necessary lifecycle workarounds (like `setTimeout`) needed to synchronize the reactive state with the external map rendering engine.
 
-![SonarQube Code Analysis](/docs/images/initial/sonarqube_code.png)
-
-&nbsp;
+![SonarQube Code Analysis](../images/v0.2/sonarqube_code.png)
 
 
 
@@ -254,7 +271,7 @@ The single, prominent outlier — the red bubble indicating over 5 hours of tech
 The application's deployment strategy is designed for portability, automation, and a seamless transition to cloud environments.
 
 * **Single Docker Image:** The entire application is packaged into a unified Docker image. This encapsulates both the compiled Angular client (frontend) and the Spring Boot server (backend), eliminating version mismatches and drastically simplifying the distribution process.
-* **Compose Orchestration:** The execution of the application container, alongside its required external services (MySQL and MinIO), is coordinated locally using **Docker Compose**.
+* **Compose Orchestration:** The execution of the application container, alongside its required external services (MySQL, MongoDB and MinIO), is coordinated locally using **Docker Compose**.
 * **Artifact Distribution:** The packaging process is fully automated via GitHub Actions workflows. The compiled Docker images and OCI artifacts are distributed publicly through DockerHub. You can access and pull the application artifacts directly from:
 **[Frict DockerHub](https://hub.docker.com/r/mjpulido/frict)**
 
@@ -365,9 +382,10 @@ The application follows a strictly automated versioning and release procedure po
 
 **Version History:**
 
-| Version    | Release Date | High-Level Features & Changelog                                     |
-|:-----------|:-------------|:--------------------------------------------------------------------|
-| **v0.1**   | 07/04/2026  | Main core systems enablement and basic app features implementation. |
+| Version  | Release Date | High-Level Features & Changelog                                                 |
+|:---------|:-------------|:--------------------------------------------------------------------------------|
+| **v0.1** | 07/04/2026   | Main core systems enablement and basic app features implementation.             |
+| **v0.2** | 12/05/2026   | Async use-data processing systems and intermediate app features implementation. |
 
 &nbsp;
 
@@ -382,8 +400,9 @@ In order to be able to run this project locally, ensure you have the following t
 - **Angular CLI**
 - **Java JDK** (version compatible with your Spring Boot setup)
 - **Maven** (optional, as the repository includes the Maven Wrapper)
-- **Docker** (for deploying the MinIO object storage container)
-- **MySQL Server & MySQL Workbench** (for local database management)
+- **Docker Desktop** (for deploying MinIO, MySQL and MongoDB containers)
+- **MySQL Workbench** (for local SQL database management)
+- **MongoDB Compass** (for local noSQL database management)
 
 &nbsp;
 
@@ -399,22 +418,63 @@ git clone https://github.com/codeurjc-students/2025-2025-Frict.git Frict
 cd Frict
 ```
 
-**2. Set up the MySQL Database**
-The application requires a relational database to store its data. We will use MySQL Workbench to create it:
-1. Open **MySQL Workbench** and connect to your local MySQL Server instance.
-2. Open a new SQL tab and execute the following command to create the schema:
-   ```sql
-   CREATE SCHEMA `Frict` ;
-   ```
-3. Take note of your local MySQL connection URL (usually `jdbc:mysql://localhost:3306/Frict`), username, and password, as you will need them for the environment configuration.
 
-**3. Deploy the MinIO Object Storage**
+**2. Set up the MySQL relational database**
+The application requires a relational database to store its data. We will use Docker Desktop to easily create an instance by opening a new terminal (requires adding Docker to PATH), or opening **Docker Desktop** and running the following command in its integrated terminal:
+```bash
+docker run -d --name mysql-frict \
+  -p 3306:3306 \
+  -e MYSQL_DATABASE=Frict
+  -e MYSQL_ROOT_PASSWORD=password \
+  -e MYSQL_USER=user \
+  -e MYSQL_PASSWORD=password
+  mysql:8.0
+```
+This will create a new container in Docker Desktop that will act as a dedicated SQL DB. To explore its schema, we can create a new connection in MySQL Workbench, using the data that we provided to Docker for its creation (port 3306, username "user" and password "password").
+
+
+**3. Set up the MongoDB noSQL Database**
+On the other hand, we need to instantiate the MongoDB database for use-data collection and analysis. We will also use Docker Desktop running the following command:
+```bash
+# Start a MongoDB instance in Replica Set mode (required for change streams)
+docker run -d \
+  --name mongodb-frict \
+  -e MONGO_INITDB_ROOT_USERNAME=user \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  -e MONGO_INITDB_DATABASE=Frict \
+  -p 27017:27017 \
+  mongo \
+  sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
+/usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
+/data/keyfile --bind_ip_all"
+
+# Wait few seconds until container had started completely, and then run:
+docker exec mongodb-frict mongosh --username user --password password --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+```
+This will create a new container in Docker Desktop that will act as a dedicated noSQL DB. To explore its schema, we can create a new connection in MongoDB Compass, using the data that we provided to Docker for its creation (port 27017, username "user" and password "password").
+
+**4. Deploy the MinIO Object Storage**
 The system uses MinIO for handling image uploads. Spin up a local container using Docker:
 ```bash
-docker run -d --name minio \
-  -p 9000:9000 -p 9001:9001 \
-  -e MINIO_ROOT_USER=admin \
-  -e MINIO_ROOT_PASSWORD=adminpass \
+# Create self-signed certificates to serve images via HTTPS (if they do not exist)
+docker run --rm `
+  -v "C:\...\2025-Frict\docker\minio_https\certs:/certs" `
+  alpine/openssl req -x509 -nodes -days 365 -newkey rsa:2048 `
+  -keyout /certs/private.key `
+  -out /certs/public.crt `
+  -subj "/CN=minio" `
+  -addext "subjectAltName = DNS:minio, DNS:localhost, IP:127.0.0.1"
+
+# Create and start a MinIO container that uses the certificates
+docker run -d \
+  --name minio-frict \
+  -e MINIO_ROOT_USER=user \
+  -e MINIO_ROOT_PASSWORD=password \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -v minio_frict_data:/data \
+  -v "C:\...\2025-Frict\docker\minio_https\certs:/root/.minio/certs" \
   minio/minio server /data --console-address ":9001"
 ```
 
@@ -422,27 +482,36 @@ docker run -d --name minio \
 Thanks to the `spring.config.import` property, Spring Boot natively parses `.env` files. Create a file named `.env` inside the `backend` folder and populate it with the following required variables:
 
 ```env
-# Database Credentials
-DATASOURCE_URL=jdbc:mysql://localhost:3306/Frict
-DATASOURCE_PASSWORD=your_mysql_password
+MYSQL_URL=jdbc:mysql://localhost:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+MYSQL_USERNAME=user
+MYSQL_PASSWORD=password
 
-# Security Keys
-JWT_SECRET=your_super_secret_jwt_key_here
-CARDS_DB_KEY=your_encryption_key_for_cards
+MONGODB_URI=localhost:27017/Frict?authSource=admin&directConnection=true
+MONGODB_USERNAME=user
+MONGODB_PASSWORD=password
 
-# MinIO Storage Settings
-S3_ENDPOINT=http://localhost:9000
-S3_PUBLIC_URL=http://localhost:9000
-S3_ACCESS_KEY=admin
-S3_SECRET_KEY=adminpass
-S3_BUCKET_NAME=frict-bucket
+JWT_SECRET=A3F7B2E8C1D4F6A9B0E3C2D5F8A1B4E7C0D3F6A9B2E5C8D1F4A7B0E3C6D9F2A5
+DB_ENCRYPTION_KEY=a1b2c3d4e5f6g7h8a1b2c3d4e5f6g7h8
 
-# Email & Auth Setup
+CORS_ALLOWED_ORIGIN=https://localhost:4202
+
+S3_ENDPOINT=https://localhost:9000
+S3_PUBLIC_URL=https://localhost:9000
+S3_ACCESS_KEY=user
+S3_SECRET_KEY=password
+S3_BUCKET_NAME=images
+
 SENDER_MAIL_PORT=587
-SENDER_MAIL_ADDRESS=your_email@example.com
-SENDER_MAIL_PASSWORD=your_app_password
-GOOGLE_AUTH_CLIENT_ID=your_google_client_id
+SENDER_MAIL_ADDRESS=address@domain.com
+SENDER_MAIL_PASSWORD=aaaa aaaa aaaa aaaa
+GOOGLE_AUTH_CLIENT_ID=123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com
+
+DOCKERHUB_USERNAME=user
+DOCKERHUB_TOKEN=dckr_pat_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678
+
+SONAR_TOKEN=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
 ```
+
 > ℹ️ **NOTE:** If you run the application directly via your IDE's "Run" button instead of Maven, you might need to install an EnvFile plugin (like the one available in IntelliJ IDEA) to inject these variables during execution.
 
 **5. Run the Backend Component**
@@ -458,7 +527,7 @@ Open a new terminal window in the frontend directory, install the required depen
 ```bash
 cd frontend
 npm install
-ng serve --proxy-config proxy.conf.json
+ng serve
 ```
 
 **7. Open the application in your browser**
@@ -474,13 +543,80 @@ Once both servers are running, open your preferred web browser and navigate to:
 
 Automated tests can be executed separately for the backend and frontend components.
 
+
+##### Prerequisites (backend testing only)
+
+As API and integration backend test sets use real database instances, proper MinIO, MySQL and MongoDB testing instances must be present and running. To do so, firstly run these Docker commands:
+
+```bash
+#MinIO
+#Make sure valid certificates are located in docker/minio_https or create new ones (command above)
+docker run -d \
+  --name minio-fricttest \
+  -e MINIO_ROOT_USER=root \
+  -e MINIO_ROOT_PASSWORD=password \
+  -p 9002:9000 \
+  -p 9003:9001 \
+  -v minio_fricttest_data:/data \
+  -v "C:\...\2025-Frict\docker\minio_https\certs:/root/.minio/certs" \
+  minio/minio server /data --console-address ":9001"
+```
+
+```bash
+#MySQL
+docker run -d --name mysql-fricttest \
+  -p 3307:3306 \
+  -e MYSQL_DATABASE=Frict
+  -e MYSQL_ROOT_PASSWORD=password \
+  -e MYSQL_USER=user \
+  -e MYSQL_PASSWORD=password
+  mysql:8.0
+```
+
+```bash
+#MongoDB
+# Start a MongoDB instance in Replica Set mode (required for change streams)
+docker run -d \
+  --name mongodb-fricttest \
+  -e MONGO_INITDB_ROOT_USERNAME=root \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  -e MONGO_INITDB_DATABASE=FrictTest \
+  -p 27018:27017 \
+  mongo:8.0 \
+  sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
+chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
+/usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --keyFile
+/data/keyfile --bind_ip_all"
+
+# Wait few seconds until container had started completely, and then run:
+docker exec mongodb-fricttest mongosh --username root --password
+password --authenticationDatabase admin --eval
+"rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+```
+
+> ℹ️ **NOTE:** This way, development and testing containers are completely isolated, so tests and existing data do not get corrupted nor affected one another.
+
+After that, make sure they are running by checking the Docker Desktop UI or start them via CLI by running:
+
+```bash
+# Start containers
+docker start mysql-fricttest
+docker start mongodb-fricttest
+```
+
+```bash
+# Stop containers
+docker stop mysql-fricttest
+docker stop mongodb-fricttest
+```
+
 ##### Backend Testing
 ```bash
 # Access backend project
 cd backend
 
 # Run all server tests
-./mvnw test
+./mvnw verify
 ```
 > ℹ️ **NOTE:** End-to-End (E2E) tests, such as `ProductWebE2ETest`, automate real browser interactions. Therefore, the Angular frontend development server using test Angular proxy (`ng serve -configuration testing`) must be running in a separate terminal before executing the backend tests for them to complete successfully.
 
@@ -495,6 +631,9 @@ cd frontend
 ng test --watch=false
 ```
 &nbsp;
+
+> ℹ️ **NOTE:** If all backend / frontend tests are completed successfully, then a code coverage report will be generated and accessible in backend/target/site/index.html (backend, JaCoCo) and frontend/coverage/index.html (frontend, Istambul).
+
 
 #### Using API Endpoints
 

@@ -1,12 +1,10 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.dto.*;
-import com.tfg.backend.model.*;
-import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.event.UserEvent;
+import com.tfg.backend.model.*;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.utils.GlobalDefaults;
-import com.tfg.backend.dto.StatDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -23,7 +21,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)

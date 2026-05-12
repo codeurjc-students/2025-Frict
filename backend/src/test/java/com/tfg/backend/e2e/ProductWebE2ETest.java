@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         classes = BackendApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
         properties = {
-                "server.port=8443", // WARNING: Angular must be running with: ng s -c testing
+                // WARNING: Angular must be running with: ng s
                 "app.db.init=users, categories"
         }
 )

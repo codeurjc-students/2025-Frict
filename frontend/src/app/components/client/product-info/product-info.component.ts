@@ -1,4 +1,4 @@
-import {Component, OnInit, inject, LOCALE_ID} from '@angular/core';
+import {Component, inject, LOCALE_ID, OnInit} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
 import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
@@ -78,6 +78,19 @@ import {DatePicker} from 'primeng/datepicker';
 })
 export class ProductInfoComponent implements OnInit {
 
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+  private reviewService = inject(ReviewService);
+  private orderService = inject(OrderService);
+  private shopService = inject(ShopService);
+  protected authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private breadcrumbService = inject(BreadcrumbService);
+  private registryService = inject(RegistryService);
+  private locale = inject(LOCALE_ID);
+
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;
   protected readonly formatPrice = formatPrice;
@@ -115,10 +128,6 @@ export class ProductInfoComponent implements OnInit {
 
   protected loggedUserInfo!: LoginInfo;
 
-  // --- NUEVAS VARIABLES PARA VISUALIZACIONES ---
-  private registryService = inject(RegistryService);
-  private locale = inject(LOCALE_ID);
-
   protected viewsToday: number = 0;
   protected isViewsLoading: boolean = false;
 
@@ -134,17 +143,6 @@ export class ProductInfoComponent implements OnInit {
   ];
   protected viewsChartData: any;
   protected viewsChartOptions: any;
-
-  constructor(private productService: ProductService,
-              private categoryService: CategoryService,
-              private reviewService: ReviewService,
-              private orderService: OrderService,
-              private shopService: ShopService,
-              protected authService: AuthService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private messageService: MessageService,
-              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
     this.route.params.subscribe(() => {
@@ -246,7 +244,7 @@ export class ProductInfoComponent implements OnInit {
           this.loadShopStocks();
           this.loadReviews();
 
-          // --- Cargar Analíticas ---
+          // --- Load analytics ---
           this.loadTodayViews();
           this.loadViewsData();
         },
@@ -258,7 +256,7 @@ export class ProductInfoComponent implements OnInit {
     }
   }
 
-  // --- MÉTODOS PARA LA GRÁFICA DE VISUALIZACIONES ---
+  // --- VIEWS CHART VISUALIZATION METHODS ---
   protected loadTodayViews() {
     const today = new Date();
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
@@ -338,7 +336,7 @@ export class ProductInfoComponent implements OnInit {
       }
     };
   }
-  // ---------------------------------------------------
+
 
   protected loadCartItemUnits(){
     this.orderService.getCartItemByProductId(this.product.id).subscribe({
@@ -376,16 +374,17 @@ export class ProductInfoComponent implements OnInit {
 
   protected loadRelatedProducts() {
     const currentProductId = this.route.snapshot.paramMap.get('id');
-    this.productService.getProductsByCategoryName(this.productCategory.name).subscribe({
-      next: (products) => {
-        this.relatedProducts = products.items.filter(p => p.id.toString() !== currentProductId?.toString());
+
+    this.productService.getRecommendedProducts(10).subscribe({
+      next: (pageResponse) => {
+        this.relatedProducts = pageResponse.items.filter((p: Product) => p.id.toString() !== currentProductId?.toString());
         this.relatedLoading = false;
       },
-      error: () => {
+      error: (err) => {
         this.relatedLoading = false;
         this.relatedError = true;
       }
-    })
+    });
   }
 
   protected showShippingDialog() {

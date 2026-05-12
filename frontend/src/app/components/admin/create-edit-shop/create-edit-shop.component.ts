@@ -1,15 +1,5 @@
-import {
-  AfterViewInit,
-  Component,
-  DestroyRef,
-  Inject,
-  inject,
-  OnInit,
-  PLATFORM_ID,
-  signal,
-  ViewChild
-} from '@angular/core';
-import {isPlatformBrowser, NgIf} from '@angular/common';
+import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal, ViewChild} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -39,7 +29,6 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     InputText,
     InputNumber,
     FileUpload,
-    NgIf,
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
@@ -50,16 +39,17 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 })
 export class CreateEditShopComponent implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
+  private shopService = inject(ShopService);
+  private sanitizer = inject(DomSanitizer);
+  private locationService = inject(LocationService);
+  private breadcrumbService = inject(BreadcrumbService);
+  private platformId = inject(PLATFORM_ID);
 
-  constructor(private fb: FormBuilder,
-              private router: Router,
-              private messageService: MessageService,
-              private route: ActivatedRoute,
-              private shopService: ShopService,
-              private sanitizer: DomSanitizer,
-              private locationService: LocationService,
-              private breadcrumbService: BreadcrumbService,
-              @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor() {
 
     this.shopForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],

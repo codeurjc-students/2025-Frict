@@ -18,7 +18,8 @@ module.exports = function (config) {
       subdir: '.',
       reporters: [
         { type: 'html' },
-        { type: 'text-summary' }
+        { type: 'text-summary' },
+        { type: 'lcovonly' }
       ]
     },
     reporters: ['progress', 'kjhtml'],
@@ -33,5 +34,22 @@ module.exports = function (config) {
     },
 
     restartOnFileChange: true
+  });
+
+  // Angular 19's esbuild karma builder calls config.set(cliOptions) AFTER loading
+  // karma.conf.js, replacing the reporters array with [html, text-summary] and
+  // removing lcovonly (needed by SonarCloud). Freeze the property so lodash's
+  // mergeWith assignment is silently ignored while the getter always returns the
+  // full reporters list.
+  const coverageReporters = [
+    { type: 'html' },
+    { type: 'text-summary' },
+    { type: 'lcovonly' }
+  ];
+  Object.defineProperty(config.coverageReporter, 'reporters', {
+    get: () => coverageReporters,
+    set: () => {},
+    configurable: true,
+    enumerable: true
   });
 };

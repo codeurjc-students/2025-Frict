@@ -1,5 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import {computed, Injectable, signal} from '@angular/core';
+import {MenuItem} from 'primeng/api';
 
 @Injectable({
   providedIn: 'root'

@@ -19,7 +19,7 @@
 
       <div class="p-8 md:p-10">
 
-        <ng-container *ngIf="!isEmailSent">
+        @if (!isEmailSent) {
           <div class="text-center mb-8">
             <div class="w-16 h-16 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-100">
               <i class="pi pi-lock text-2xl"></i>
@@ -30,10 +30,12 @@
             </p>
           </div>
 
-          <div *ngIf="errorMessage" class="flex items-center gap-3 p-3 mb-6 text-sm bg-red-50 border border-red-100 text-red-600 rounded-xl animate-shake">
-            <i class="pi pi-exclamation-circle text-lg"></i>
-            <span>{{ errorMessage }}</span>
-          </div>
+          @if (errorMessage) {
+            <div class="flex items-center gap-3 p-3 mb-6 text-sm bg-red-50 border border-red-100 text-red-600 rounded-xl animate-shake">
+              <i class="pi pi-exclamation-circle text-lg"></i>
+              <span>{{ errorMessage }}</span>
+            </div>
+          }
 
           <form [formGroup]="recoverForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
@@ -48,22 +50,34 @@
                        [class.focus:ring-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
                 />
               </div>
-              <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)" class="text-xs text-red-500 ml-1 mt-1">
-                <span *ngIf="usernameControl?.hasError('userNotFound')">El usuario no existe.</span>
-                <span *ngIf="usernameControl?.hasError('required')">Requerido.</span>
-              </div>
+              @if (usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)) {
+                <div class="text-xs text-red-500 ml-1 mt-1">
+                  @if (usernameControl?.hasError('userNotFound')) {
+                    <span>El usuario no existe.</span>
+                  }
+                  @if (usernameControl?.hasError('required')) {
+                    <span>Requerido.</span>
+                  }
+                </div>
+              }
             </div>
 
             <button type="submit" [disabled]="!recoverForm.valid || loading"
                     class="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl py-3.5 shadow-lg shadow-primary-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2">
-              <i *ngIf="loading" class="pi pi-spin pi-spinner"></i>
-              <span *ngIf="!loading">Enviar instrucciones</span>
-              <span *ngIf="loading">Procesando...</span>
+              @if (loading) {
+                <i class="pi pi-spin pi-spinner"></i>
+              }
+              @if (!loading) {
+                <span>Enviar instrucciones</span>
+              }
+              @if (loading) {
+                <span>Procesando...</span>
+              }
             </button>
           </form>
-        </ng-container>
+        }
 
-        <ng-container *ngIf="isEmailSent">
+        @if (isEmailSent) {
           <div class="text-center animate-fade-in-up">
             <div class="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-100 shadow-sm relative">
               <div class="absolute inset-0 bg-green-400/20 rounded-full animate-ping opacity-75"></div>
@@ -83,16 +97,18 @@
               Probar con otro usuario
             </button>
           </div>
-        </ng-container>
+        }
 
       </div>
 
-      <div *ngIf="!isEmailSent" class="bg-surface-50/50 p-6 border-t border-surface-100 text-center">
-        <a routerLink="/login" class="text-sm text-surface-500 hover:text-surface-700 font-medium flex items-center justify-center gap-2 transition-colors group">
-          <i class="pi pi-arrow-left text-xs group-hover:-translate-x-1 transition-transform"></i>
-          Volver a Iniciar Sesión
-        </a>
-      </div>
+      @if (!isEmailSent) {
+        <div class="bg-surface-50/50 p-6 border-t border-surface-100 text-center">
+          <a routerLink="/login" class="text-sm text-surface-500 hover:text-surface-700 font-medium flex items-center justify-center gap-2 transition-colors group">
+            <i class="pi pi-arrow-left text-xs group-hover:-translate-x-1 transition-transform"></i>
+            Volver a Iniciar Sesión
+          </a>
+        </div>
+      }
 
     </div>
   </div>

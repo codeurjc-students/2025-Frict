@@ -1,9 +1,9 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AuthService} from '../../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
 import {UserService} from '../../../services/user.service';
-import {NgIf, NgOptimizedImage} from '@angular/common';
+import {NgOptimizedImage} from '@angular/common';
 import {GoogleAuthComponent} from '../google-auth/google-auth.component';
 import {CustomValidators} from '../../../utils/customValidators.util';
 
@@ -13,14 +13,18 @@ import {CustomValidators} from '../../../utils/customValidators.util';
     ReactiveFormsModule,
     RouterLink,
     NgOptimizedImage,
-    GoogleAuthComponent,
-    NgIf
+    GoogleAuthComponent
   ],
   templateUrl: './signup.component.html',
   standalone: true,
   styleUrl: './signup.component.css'
 })
 export class SignupComponent {
+
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private router = inject(Router);
 
   registerForm: FormGroup;
   showPassword = false;
@@ -29,10 +33,7 @@ export class SignupComponent {
   get usernameControl() { return this.registerForm.get('username'); }
   get emailControl() { return this.registerForm.get('email'); }
 
-  constructor(private fb: FormBuilder,
-              private authService: AuthService,
-              private userService: UserService,
-              private router: Router) {
+  constructor() {
 
     this.registerForm = this.fb.nonNullable.group({
       name: ['', Validators.required],

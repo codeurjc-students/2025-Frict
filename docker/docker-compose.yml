@@ -24,13 +24,13 @@ services:
     image: mysql:8.0
     container_name: db-latest
     restart: unless-stopped
-    ports:
-      - "3307:3306"
+    expose:
+      - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: Frict
-      MYSQL_USER: user_latest
-      MYSQL_PASSWORD: password_latest
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
     volumes:
       - mysql_data_latest:/var/lib/mysql
     healthcheck:
@@ -47,11 +47,11 @@ services:
     image: mongo:latest
     container_name: frict-mongo-latest
     restart: unless-stopped
-    ports:
-      - "27017:27017"
+    expose:
+      - "27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password123
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
     command: >
       sh -c "echo 'frictSuperSecretReplicaKey123456' > /data/keyfile &&
       chmod 400 /data/keyfile &&
@@ -61,7 +61,7 @@ services:
       - mongodb_data_latest:/data/db
     healthcheck:
       test: >
-        mongosh --username admin --password password123 --authenticationDatabase admin 
+        mongosh --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin
         --eval "try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" --quiet
       interval: 10s
       timeout: 5s
@@ -79,8 +79,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "password123"
+      MINIO_ROOT_USER: "user"
+      MINIO_ROOT_PASSWORD: "password"
       MINIO_SERVER_URL: "https://localhost:9000"
       MINIO_BROWSER_REDIRECT_URL: "https://localhost:9001"
     command: server /data --console-address ":9001"
@@ -108,23 +108,26 @@ services:
 
     environment:
       # --- MySQL Database ---
-      DATASOURCE_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
-      DATASOURCE_USERNAME: user_latest
-      DATASOURCE_PASSWORD: password_latest
+      MYSQL_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+      MYSQL_USERNAME: user
+      MYSQL_PASSWORD: password
 
       # --- MongoDB Database ---
-      MONGODB_URI: mongodb://admin:password123@mongodb:27017/Frict?authSource=admin&replicaSet=rs0
+      MONGODB_URI: mongodb:27017/Frict?authSource=admin&replicaSet=rs0
+      MONGODB_USERNAME: user
+      MONGODB_PASSWORD: password
 
       # --- MinIO ---
       S3_ENDPOINT: https://minio:9000
       S3_PUBLIC_URL: https://localhost:9000
-      S3_ACCESS_KEY: admin
-      S3_SECRET_KEY: password123
+      S3_ACCESS_KEY: user
+      S3_SECRET_KEY: password
       S3_BUCKET_NAME: images
 
       # --- Security (Test values) ---
       JWT_SECRET: c3VwZXJfc2VjcmV0X2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXNfb25seV8xMjM0NTY3ODkw
       CARDS_DB_KEY: 1234567890123456
+      CORS_ALLOWED_ORIGIN: https://localhost
 
       # --- Email and Auth (Real variables required) ---
       SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}

@@ -1,9 +1,11 @@
 package com.tfg.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tfg.backend.model.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +30,9 @@ public class ProductDTO {
     private int shopsWithStock;
     private double averageRating;
     private int totalReviews;
+
+    @JsonFormat(pattern = "dd/MM/yy HH:mm")
+    private LocalDateTime createdAt;
 
     public ProductDTO() { //Used by Spring to achieve conversion between JSON responses that do not include all fields
     }
@@ -79,5 +84,7 @@ public class ProductDTO {
             this.averageRating = totalRating / reviews.size();
         }
         else this.averageRating = totalRating;
+
+        this.createdAt = p.getCreatedAt();
     }
 }

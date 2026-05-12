@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {OrderService} from '../../../services/order.service';
@@ -29,6 +29,11 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
 })
 export class CartComponent implements OnInit, OnDestroy {
 
+  private orderService = inject(OrderService);
+  private productService = inject(ProductService);
+  private authService = inject(AuthService);
+  private shopService = inject(ShopService);
+
   protected readonly formatPrice = formatPrice;
 
   loading: boolean = true;
@@ -49,11 +54,6 @@ export class CartComponent implements OnInit, OnDestroy {
 
   //Selected shop information
   protected selectedShop: Shop | null = null;
-
-  constructor(private orderService: OrderService,
-              private productService: ProductService,
-              private authService: AuthService,
-              private shopService: ShopService) {}
 
   ngOnInit(){
     this.quantityUpdateSubject.pipe(

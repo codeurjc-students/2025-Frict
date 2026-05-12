@@ -1,8 +1,7 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ProductService} from '../../../services/product.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
-import {NgForOf, NgIf} from '@angular/common';
 import {ProductCardComponent} from '../../client/product-card/product-card.component';
 import {Select} from 'primeng/select';
 import {Button} from 'primeng/button';
@@ -26,9 +25,7 @@ interface SortOption {
   standalone: true,
   imports: [
     Paginator,
-    NgIf,
     ProductCardComponent,
-    NgForOf,
     Select,
     FormsModule,
     Button,
@@ -41,6 +38,11 @@ interface SortOption {
   styleUrl: './search.component.css'
 })
 export class SearchComponent implements OnInit {
+
+  private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   searchQuery: string | null = null;
   foundProducts: PageResponse<Product> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
@@ -61,14 +63,6 @@ export class SearchComponent implements OnInit {
   visibleDrawer: boolean = false;
   loading: boolean = true;
   error: boolean = false;
-
-  constructor(
-    private productService: ProductService,
-    private categoryService: CategoryService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {}
-
 
   ngOnInit(): void {
     // Le decimos que SÍ es la carga inicial

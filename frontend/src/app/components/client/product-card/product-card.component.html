@@ -29,13 +29,17 @@
       <div class="mt-auto pt-2">
         <div class="flex items-center gap-2 mb-1">
           <span class="text-surface-900 text-xl font-bold tracking-tight">{{ formatPrice(product.currentPrice) }}</span>
-          <span *ngIf="product.previousPrice > 0 && product.previousPrice > product.currentPrice" class="text-surface-400 line-through text-xs font-medium">
-            {{ formatPrice(product.previousPrice) }}
-          </span>
+          @if (product.previousPrice > 0 && product.previousPrice > product.currentPrice) {
+            <span class="text-surface-400 line-through text-xs font-medium">
+              {{ formatPrice(product.previousPrice) }}
+            </span>
+          }
 
-          <span *ngIf="product.discount.startsWith('-')" class="text-[0.65rem] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
-            {{ product.discount }}
-          </span>
+          @if (product.discount.startsWith('-')) {
+            <span class="text-[0.65rem] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
+              {{ product.discount }}
+            </span>
+          }
         </div>
 
         <div class="flex items-center gap-1 text-xs mt-2">

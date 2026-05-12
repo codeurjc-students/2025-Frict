@@ -1,5 +1,4 @@
 import {Component, Input} from '@angular/core';
-import {NgIf} from '@angular/common';
 import {ProgressSpinner} from 'primeng/progressspinner';
 
 //Handles the loading, the error and the no elements skeletons
@@ -7,7 +6,6 @@ import {ProgressSpinner} from 'primeng/progressspinner';
   selector: 'app-loading',
   standalone: true,
   imports: [
-    NgIf,
     ProgressSpinner
   ],
   templateUrl: './loading-section.component.html',

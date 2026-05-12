@@ -156,4 +156,14 @@ public class ProductRestController {
         Product updatedProduct = productService.deleteImage(productId, imageId);
         return ResponseEntity.ok(new ProductDTO(updatedProduct));
     }
+
+    @Operation(summary = "(All) Get recommended products (paged)")
+    @GetMapping("/recommendations")
+    public ResponseEntity<PageResponse<ProductDTO>> getRecommendedProducts(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "8") int size
+    ) {
+        Page<Product> recommendations = productService.getPersonalizedRecommendations(page, size);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(recommendations, ProductDTO::new));
+    }
 }

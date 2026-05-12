@@ -1,17 +1,12 @@
 package com.tfg.backend.unit;
 
-import com.tfg.backend.model.Shop;
-import com.tfg.backend.model.User;
-import com.tfg.backend.model.Truck;
-import com.tfg.backend.model.Order;
-import com.tfg.backend.model.OrderStatus;
-import com.tfg.backend.model.ImageInfo;
-import com.tfg.backend.dto.ShopDTO;
 import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.ShopDTO;
+import com.tfg.backend.model.*;
+import com.tfg.backend.service.ImageService;
 import com.tfg.backend.service.ShopService;
 import com.tfg.backend.service.ShopUserOrchestrator;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.service.ImageService;
 import com.tfg.backend.utils.GlobalDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,11 +1,11 @@
 package com.tfg.backend.integration;
 
+import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.model.Shop;
 import com.tfg.backend.model.User;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.repository.UserRepository;
 import com.tfg.backend.service.StatService;
-import com.tfg.backend.dto.StatDTO;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

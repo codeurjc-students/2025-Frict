@@ -1,8 +1,5 @@
 package com.tfg.backend.utils;
 
-import com.tfg.backend.dto.PdfReportDTO;
-import com.tfg.backend.model.Order;
-import com.tfg.backend.model.OrderItem;
 import com.itextpdf.barcodes.BarcodeQRCode;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
@@ -33,6 +30,9 @@ import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
+import com.tfg.backend.dto.PdfReportDTO;
+import com.tfg.backend.model.Order;
+import com.tfg.backend.model.OrderItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -7,9 +7,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +70,11 @@ public class Product {
     //In-memory only field: Allows passing the selected local stock calculations back to ProductDTO entities
     @Transient
     private Integer availableUnits;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private LocalDateTime createdAt;
 
     public Product() {
     }

@@ -1,9 +1,9 @@
 package com.tfg.backend.utils;
 
-import com.tfg.backend.model.OrderStatus;
-import com.tfg.backend.model.TruckStatus;
 import com.tfg.backend.dto.EntityType;
+import com.tfg.backend.model.OrderStatus;
 import com.tfg.backend.model.RegistryType;
+import com.tfg.backend.model.TruckStatus;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 

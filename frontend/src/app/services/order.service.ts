@@ -136,7 +136,7 @@ export class OrderService {
 
   downloadOrderInvoice(orderId: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${orderId}/invoice`, {
-      responseType: 'blob' // CRÍTICO: Indica que esperamos un archivo binario, no un JSON
+      responseType: 'blob' // Indicates that a binary file is expected (not a JSON)
     });
   }
 

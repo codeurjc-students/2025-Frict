@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, inject, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 
@@ -38,6 +38,11 @@ import {Dialog} from 'primeng/dialog';
 })
 export class OrderDetailsComponent implements OnInit {
 
+  private orderService = inject(OrderService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private breadcrumbService = inject(BreadcrumbService);
+
   order!: Order;
   orderId: string | null = null;
 
@@ -57,11 +62,6 @@ export class OrderDetailsComponent implements OnInit {
     { status: 'Completado', icon: 'pi pi-check' },
     { status: 'Cancelado', icon: 'pi pi-ban' }
   ];
-
-  constructor(private orderService: OrderService,
-              private route: ActivatedRoute,
-              private router: Router,
-              private breadcrumbService: BreadcrumbService) {}
 
   ngOnInit() {
     this.orderId = this.route.snapshot.paramMap.get('id');

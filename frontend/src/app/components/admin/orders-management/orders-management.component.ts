@@ -1,4 +1,4 @@
-import {Component, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {forkJoin, of} from 'rxjs';
@@ -53,6 +53,11 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
 })
 export class OrdersManagementComponent implements OnInit {
 
+  private messageService = inject(MessageService);
+  private orderService = inject(OrderService);
+  private shopService = inject(ShopService);
+  private truckService = inject(TruckService);
+
   ordersPage: PageResponse<Order> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   first = 0;
   rows = 10;
@@ -100,13 +105,6 @@ export class OrdersManagementComponent implements OnInit {
   activeTab: string = '0';
   private orderMap: L.Map | undefined;
   private markersGroup: L.FeatureGroup | undefined;
-
-  constructor(
-    private messageService: MessageService,
-    private orderService: OrderService,
-    private shopService: ShopService,
-    private truckService: TruckService
-  ) {}
 
   ngOnInit() {
     this.loadOrdersPage();

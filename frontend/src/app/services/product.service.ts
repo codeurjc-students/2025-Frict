@@ -58,6 +58,11 @@ export class ProductService {
     return this.http.get<Product[]>(this.apiUrl + `/available/${shopId}`);
   }
 
+  //Using use-data from MongoDB
+  public getRecommendedProducts(size: number = 8): Observable<PageResponse<Product>> {
+    return this.http.get<PageResponse<Product>>(`${this.apiUrl}/recommendations?size=${size}`);
+  }
+
   public getFilteredProducts(
     page: number,
     size: number,

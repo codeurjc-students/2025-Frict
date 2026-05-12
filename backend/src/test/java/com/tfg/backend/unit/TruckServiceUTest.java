@@ -1,12 +1,12 @@
 package com.tfg.backend.unit;
 
 import com.tfg.backend.dto.AddressDTO;
+import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.UserService;
-import com.tfg.backend.dto.StatDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,7 +26,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TruckServiceUTest {

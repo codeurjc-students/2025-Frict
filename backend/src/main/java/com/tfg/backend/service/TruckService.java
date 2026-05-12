@@ -1,12 +1,12 @@
 package com.tfg.backend.service;
 
 import com.tfg.backend.dto.AddressDTO;
-import com.tfg.backend.dto.TruckDTO;
-import com.tfg.backend.model.*;
 import com.tfg.backend.dto.EventAction;
-import com.tfg.backend.event.TruckEvent;
-import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.dto.StatDTO;
+import com.tfg.backend.dto.TruckDTO;
+import com.tfg.backend.event.TruckEvent;
+import com.tfg.backend.model.*;
+import com.tfg.backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
