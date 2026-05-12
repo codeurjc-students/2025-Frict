@@ -99,6 +99,15 @@ Maintain detailed tracking of your order status and any updates provided by mana
 &nbsp;
 
 
+**Show QR Menu**
+
+Shows the confirmation QR code for the selected order. After being scanned by the assigned delivery driver, the order will be marked as completed.
+
+![Show QR Menu](/docs/images/v0.2/show-qr-menu.png)
+
+&nbsp;
+
+
 **Error Page**
 
 Review the error details and restart the loading process to resolve the issue.

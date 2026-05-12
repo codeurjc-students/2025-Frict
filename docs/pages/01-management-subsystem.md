@@ -205,3 +205,12 @@ Handle pickups and deliveries at destination, including customer reference code 
 ![Order Delivery Page](/docs/images/v0.2/order-delivery.png)
 
 &nbsp;
+
+
+**Scan QR Menu**
+
+Scan customers QR codes to confirm that they have recieved their order. Once scanned, orders will be marked as completed automatically.
+
+![Scan QR Menu](/docs/images/v0.2/scan-qr-menu.png)
+
+&nbsp;

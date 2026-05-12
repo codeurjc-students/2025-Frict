@@ -249,7 +249,7 @@ The platform's reliability is validated through multiple automated testing layer
 Overall project code quality, vulnerabilities, and test coverage are continuously monitored using **SonarQube Cloud**, which integrates with **JaCoCo** and **Istanbul** plugins to measure precise coverage indexes. Analyzing the current project state provides a transparent view of the architecture's evolution and the management of technical debt.
 
 **Overall Project Health:**
-As reflected in the dashboard, the project maintains an excellent **duplication rate of 0.49%**, well below the 3.0% threshold. The coverage on new code has reached **76.96%**, showing steady progress towards the strict 80% target. While the Quality Gate currently shows a **Reliability Rating of D**, this is driven by localized complexities in highly reactive services and infrastructure integrations, rather than structural flaws.
+As reflected in the dashboard, the project maintains an excellent **duplication rate of 0.49%**, well below the 3.0% threshold. The coverage on new code has reached **84.77%**, successfully exceeding the strict 80.0% target. While the Quality Gate currently shows a **Reliability Rating of D**, this is driven by localized complexities in highly reactive services and infrastructure integrations, rather than structural flaws.
 
 ![SonarQube Overall Analysis](../images/v0.2/sonarqube_overall.png)
 
@@ -261,8 +261,6 @@ The bubble chart below correlates **Technical Debt** (X-axis) with **Code Covera
 * **`create-edit-shop.component.ts`:** Positioned along the diagonal intersection (at roughly 60% coverage and 20 minutes of technical debt), this outlier reflects the architectural weight of the frontend. Built as an Angular 19 standalone component leveraging signals, it combines advanced RxJS asynchronous streams for reverse geocoding with direct DOM manipulation via the Leaflet map library. The minimal technical debt registered is largely due to the necessary lifecycle workarounds (like `setTimeout`) needed to synchronize the reactive state with the external map rendering engine.
 
 ![SonarQube Code Analysis](../images/v0.2/sonarqube_code.png)
-
-&nbsp;
 
 
 
@@ -402,9 +400,9 @@ In order to be able to run this project locally, ensure you have the following t
 - **Angular CLI**
 - **Java JDK** (version compatible with your Spring Boot setup)
 - **Maven** (optional, as the repository includes the Maven Wrapper)
-- **Docker** (for deploying the MinIO object storage container)
-- **MySQL Server & MySQL Workbench** (for local SQL database management)
-- **MongoDB & MongoDB Compass** (for local noSQL database management)
+- **Docker Desktop** (for deploying MinIO, MySQL and MongoDB containers)
+- **MySQL Workbench** (for local SQL database management)
+- **MongoDB Compass** (for local noSQL database management)
 
 &nbsp;
 
@@ -422,8 +420,7 @@ cd Frict
 
 
 **2. Set up the MySQL relational database**
-The application requires a relational database to store its data. We will use Docker Desktop to easily create an instance:
-1. Open a new terminal (requires adding Docker to PATH) or open **Docker Desktop** and, in its integrated terminal, run the following command:
+The application requires a relational database to store its data. We will use Docker Desktop to easily create an instance by opening a new terminal (requires adding Docker to PATH), or opening **Docker Desktop** and running the following command in its integrated terminal:
 ```bash
 docker run -d --name mysql-frict \
   -p 3306:3306 \
@@ -455,12 +452,12 @@ chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec
 # Wait few seconds until container had started completely, and then run:
 docker exec mongodb-frict mongosh --username user --password password --authenticationDatabase admin --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
 ```
-This will create a new container in Docker Desktop that will act as a dedicated noSQL DB. To explore its schema, we can create a new connection in MongoDB Compass, using the data that we provided to Docker for its creation (port 27017, username "admin" and password "password123").
+This will create a new container in Docker Desktop that will act as a dedicated noSQL DB. To explore its schema, we can create a new connection in MongoDB Compass, using the data that we provided to Docker for its creation (port 27017, username "user" and password "password").
 
 **4. Deploy the MinIO Object Storage**
 The system uses MinIO for handling image uploads. Spin up a local container using Docker:
 ```bash
-# Create self-signed certificates to serve images via HTTPS (if not exists)
+# Create self-signed certificates to serve images via HTTPS (if they do not exist)
 docker run --rm `
   -v "C:\...\2025-Frict\docker\minio_https\certs:/certs" `
   alpine/openssl req -x509 -nodes -days 365 -newkey rsa:2048 `
@@ -619,7 +616,7 @@ docker stop mongodb-fricttest
 cd backend
 
 # Run all server tests
-./mvnw test
+./mvnw verify
 ```
 > ℹ️ **NOTE:** End-to-End (E2E) tests, such as `ProductWebE2ETest`, automate real browser interactions. Therefore, the Angular frontend development server using test Angular proxy (`ng serve -configuration testing`) must be running in a separate terminal before executing the backend tests for them to complete successfully.
 
