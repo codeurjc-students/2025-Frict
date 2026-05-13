@@ -151,6 +151,8 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         this.updateMarker(coords.latitude, coords.longitude);
         if (this.map) this.map.setView([coords.latitude, coords.longitude], 16);
         this.messageService.add({ severity: 'info', summary: 'Ubicación actualizada', detail: 'Se ha movido el marcador según la dirección ingresada.' });
+      } else {
+        this.messageService.add({ severity: 'warn', summary: 'Dirección no encontrada', detail: 'No se encontraron coordenadas para la dirección indicada.' });
       }
     });
   }
@@ -318,6 +320,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
           setTimeout(() => { this.isGeocodingActive = true; }, 50);
         } else {
           this.isGeocodingActive = true;
+          this.messageService.add({ severity: 'warn', summary: 'Dirección no encontrada', detail: 'No se encontró ninguna dirección para la ubicación indicada.' });
         }
       },
       error: (err) => {

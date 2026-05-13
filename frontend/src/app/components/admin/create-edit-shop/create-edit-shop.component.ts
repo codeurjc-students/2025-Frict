@@ -166,6 +166,12 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           summary: 'Ubicación actualizada',
           detail: 'Se ha movido el marcador según la dirección ingresada.'
         });
+      } else {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Dirección no encontrada',
+          detail: 'No se encontraron coordenadas para la dirección indicada.'
+        });
       }
     });
   }
@@ -316,6 +322,11 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           }, 50);
         } else {
           this.isGeocodingActive = true;
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Dirección no encontrada',
+            detail: 'No se encontró ninguna dirección para la ubicación indicada.'
+          });
         }
       },
       error: (err) => {
