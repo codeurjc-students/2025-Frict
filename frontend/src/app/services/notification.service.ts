@@ -1,7 +1,7 @@
 import {computed, effect, inject, Injectable, OnDestroy, signal} from '@angular/core';
 import {Notification} from '../models/notification.model';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {map, Observable, throwError} from 'rxjs';
+import {map, Observable, Subject, throwError} from 'rxjs';
 import {catchError} from 'rxjs/operators';
 import {PageResponse} from '../models/pageResponse.model';
 import {AuthService} from './auth.service';
@@ -16,12 +16,17 @@ export class NotificationService implements OnDestroy {
 
   private socket: WebSocket | null = null;
   private notificationsSignal = signal<Notification[]>([]);
+  private socketOpenSignal = signal(false);
+  private beforeDisconnectSubject = new Subject<void>();
 
   public unreadNotifications = computed(() =>
     this.notificationsSignal().filter(n => !n.read)
   );
 
   public unreadCount = computed(() => this.unreadNotifications().length);
+  public isSocketOpen = computed(() => this.socketOpenSignal());
+  // Fires synchronously right before the socket is closed, while it is still OPEN.
+  public beforeDisconnect$ = this.beforeDisconnectSubject.asObservable();
 
   constructor() {
     effect(() => {
@@ -33,6 +38,11 @@ export class NotificationService implements OnDestroy {
         this.disconnect();
       }
     });
+
+    // Capture tab/browser close so subscribers can flush a final message via WS
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => this.disconnect());
+    }
   }
 
   ngOnDestroy() {
@@ -53,6 +63,8 @@ export class NotificationService implements OnDestroy {
     const wsUrl = `${protocol}//${window.location.host}/api/v1/ws/notifications`;
 
     this.socket = new WebSocket(wsUrl);
+    this.socket.onopen = () => this.socketOpenSignal.set(true);
+    this.socket.onclose = () => this.socketOpenSignal.set(false);
     this.loadInitialHistory();
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -125,13 +137,26 @@ export class NotificationService implements OnDestroy {
 
   private disconnect() {
     if (this.socket) {
+      // Notify subscribers BEFORE closing so they can push a last frame while the socket is OPEN
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.beforeDisconnectSubject.next();
+      }
       this.socket.close();
       this.socket = null;
     }
+    this.socketOpenSignal.set(false);
     this.notificationsSignal.set([]);
   }
 
   public triggerTest(): Observable<any> {
     return this.http.post('/api/v1/notifications/test', {});
+  }
+
+  public send(payload: object): boolean {
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(payload));
+      return true;
+    }
+    return false;
   }
 }

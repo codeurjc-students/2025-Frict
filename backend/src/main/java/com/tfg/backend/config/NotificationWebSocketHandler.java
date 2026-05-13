@@ -1,7 +1,10 @@
 package com.tfg.backend.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tfg.backend.model.Connection;
 import com.tfg.backend.repository.ConnectionRepository;
+import com.tfg.backend.service.DriverLocationPingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,6 +28,8 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
 
     // Inject Mongo connections repository
     private final ConnectionRepository connectionRepository;
+    private final DriverLocationPingService driverLocationPingService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -54,6 +59,48 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
                 log.error("Error logging out", e);
             }
         }
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        String username = (String) session.getAttributes().get("userId");
+        if (username == null) {
+            return;
+        }
+
+        JsonNode payload;
+        try {
+            payload = objectMapper.readTree(message.getPayload());
+        } catch (IOException e) {
+            log.warn("Could not parse incoming WS message from {}: {}", username, e.getMessage());
+            return;
+        }
+
+        String topic = payload.path("topic").asText("");
+        switch (topic) {
+            case "GPS_PING" -> handleGpsPing(username, payload);
+            default -> log.debug("Ignoring WS message with topic '{}' from {}", topic, username);
+        }
+    }
+
+    private void handleGpsPing(String username, JsonNode payload) {
+        JsonNode latNode = payload.path("lat");
+        JsonNode lngNode = payload.path("lng");
+        if (!latNode.isNumber() || !lngNode.isNumber()) {
+            log.warn("Discarding malformed GPS_PING from {}: missing numeric lat/lng", username);
+            return;
+        }
+        double latitude = latNode.asDouble();
+        double longitude = lngNode.asDouble();
+
+        // Execute in a virtual thread to avoid blocking the WebSocket pipeline
+        Thread.startVirtualThread(() -> {
+            try {
+                driverLocationPingService.recordPing(username, latitude, longitude);
+            } catch (Exception e) {
+                log.error("Error recording GPS ping for user {}", username, e);
+            }
+        });
     }
 
     @Override
