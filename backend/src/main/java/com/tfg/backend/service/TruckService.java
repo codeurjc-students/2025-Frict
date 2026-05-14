@@ -6,6 +6,7 @@ import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.event.TruckEvent;
 import com.tfg.backend.model.*;
+import com.tfg.backend.repository.DriverLocationRepository;
 import com.tfg.backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,6 +28,7 @@ public class TruckService {
 
     private final UserService userService;
     private final TruckRepository truckRepository;
+    private final DriverLocationRepository driverLocationRepository;
     private final ApplicationEventPublisher eventPublisher;
 
 
@@ -49,6 +51,15 @@ public class TruckService {
     public Truck findTruckHelper(Long id) {
         return this.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
+    }
+
+    public TruckDTO toTruckDTO(Truck truck) {
+        TruckDTO dto = new TruckDTO(truck);
+        if (truck.getAssignedDriver() != null) {
+            driverLocationRepository.findById(truck.getAssignedDriver().getUsername())
+                    .ifPresent(dto::setDriverLocation);
+        }
+        return dto;
     }
 
     // --- WRITING METHODS (override Transactional) ---
@@ -74,6 +85,20 @@ public class TruckService {
         } else {
             driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
             truck.setAssignedDriver(null);
+            // Copy the driver's last GPS position to truck.address so location is preserved after unassignment
+            if (driverUsername != null) {
+                driverLocationRepository.findById(driverUsername).ifPresent(dl -> {
+                    AddressSnapshot snap = dl.getAddress();
+                    Address updated = new Address(
+                            "Última posición GPS",
+                            snap.getStreet(), snap.getNumber(), "",
+                            snap.getPostalCode(), snap.getCity(), snap.getCountry()
+                    );
+                    updated.setLatitude(snap.getLatitude());
+                    updated.setLongitude(snap.getLongitude());
+                    truck.setAddress(updated);
+                });
+            }
         }
 
         //Send in-app notifications

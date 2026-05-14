@@ -4,6 +4,7 @@ import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.model.*;
+import com.tfg.backend.repository.DriverLocationRepository;
 import com.tfg.backend.repository.TruckRepository;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.UserService;
@@ -37,6 +38,9 @@ class TruckServiceUTest {
 
     @Mock
     private TruckRepository truckRepository;
+
+    @Mock
+    private DriverLocationRepository driverLocationRepository;
 
     @Mock
     private ApplicationEventPublisher eventPublisher; //Necessary to avoid errors trying to send notifications, but not used

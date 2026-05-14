@@ -1,5 +1,6 @@
 package com.tfg.backend.dto;
 
+import com.tfg.backend.model.DriverLocation;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatusLog;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class TruckDTO {
     private Long shopId;
     private UserDTO assignedDriver;
     private AddressDTO address;
+    private DriverLocation driverLocation;
     private int ordersToDeliver;
     private int maxOrderCapacity;
 
@@ -37,7 +39,9 @@ public class TruckDTO {
         if (t.getAssignedDriver() != null){
             this.assignedDriver = new UserDTO(t.getAssignedDriver());
         }
-        this.address = new AddressDTO(t.getAddress());
+        if (t.getAddress() != null){
+            this.address = new AddressDTO(t.getAddress());
+        }
         this.ordersToDeliver = t.getOrdersToDeliver().size();
         this.maxOrderCapacity = t.getMaxOrderCapacity();
     }

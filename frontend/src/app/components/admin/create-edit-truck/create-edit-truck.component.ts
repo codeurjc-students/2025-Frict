@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
-import {isPlatformBrowser} from '@angular/common';
+import {DatePipe, DecimalPipe, isPlatformBrowser} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -33,7 +33,9 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    DatePipe,
+    DecimalPipe
   ],
   templateUrl: './create-edit-truck.component.html'
 })
@@ -86,6 +88,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   // Leaflet
   private map: L.Map | undefined;
   private marker: L.Marker | undefined;
+  private locationMap: L.Map | undefined;
   private lastAddressCheck: string = '';
   private isGeocodingActive: boolean = false;
 
@@ -112,6 +115,10 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
       this.map.remove();
       this.map = undefined;
       this.marker = undefined;
+    }
+    if (this.locationMap) {
+      this.locationMap.remove();
+      this.locationMap = undefined;
     }
 
     // 2. Creation mode: Clean TS memory
@@ -195,6 +202,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
             this.syncAddressMemory();
             this.isGeocodingActive = true;
             this.initMap();
+            this.initLocationMap();
           }, 100);
         },
         error: () => {
@@ -329,6 +337,45 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudo recuperar la dirección automática.' });
       }
     });
+  }
+
+  private initLocationMap(): void {
+    const loc = this.truck()?.driverLocation;
+    if (!loc?.address) return;
+
+    const container = document.getElementById('location-map');
+    if (!container) return;
+
+    if (this.locationMap) {
+      this.locationMap.remove();
+      this.locationMap = undefined;
+    }
+
+    const lat = loc.address.latitude;
+    const lng = loc.address.longitude;
+
+    this.locationMap = L.map('location-map', {
+      zoomControl: true,
+      dragging: false,
+      scrollWheelZoom: false
+    }).setView([lat, lng], 15);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(this.locationMap);
+
+    this.locationMap.attributionControl.setPrefix('Leaflet');
+
+    const icon = L.icon({
+      iconUrl: './location-pointer.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    L.marker([lat, lng], { icon }).addTo(this.locationMap);
   }
 
   onSubmit() {

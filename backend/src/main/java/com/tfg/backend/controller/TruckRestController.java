@@ -131,7 +131,7 @@ public class TruckRestController {
      * Converts a Truck entity to a DTO and enriches its driver (if assigned).
      */
     private TruckDTO toEnrichedDTO(Truck truck) {
-        TruckDTO dto = new TruckDTO(truck);
+        TruckDTO dto = truckService.toTruckDTO(truck);
         if (dto.getAssignedDriver() != null) {
             connectionService.enrichWithConnection(dto.getAssignedDriver());
         }
@@ -142,7 +142,7 @@ public class TruckRestController {
      * Converts a list of Truck entities to DTOs and enriches all drivers in batch.
      */
     private List<TruckDTO> toEnrichedDTOList(List<Truck> trucks) {
-        List<TruckDTO> dtos = trucks.stream().map(TruckDTO::new).toList();
+        List<TruckDTO> dtos = trucks.stream().map(truckService::toTruckDTO).toList();
 
         List<UserDTO> drivers = dtos.stream()
                 .map(TruckDTO::getAssignedDriver)
@@ -158,7 +158,7 @@ public class TruckRestController {
      */
     private PageResponse<TruckDTO> toEnrichedPageResponse(Page<Truck> trucks) {
         // 1. Map the pure entity page to a DTO page
-        Page<TruckDTO> dtoPage = trucks.map(TruckDTO::new);
+        Page<TruckDTO> dtoPage = trucks.map(truckService::toTruckDTO);
 
         // 2. Extract drivers from the current page and enrich them in a single batch query
         List<UserDTO> drivers = dtoPage.getContent().stream()

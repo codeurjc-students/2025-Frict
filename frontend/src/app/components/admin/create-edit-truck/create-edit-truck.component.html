@@ -153,6 +153,64 @@
         </div>
 
       </form>
+
+      @if (truck()?.driverLocation; as loc) {
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-start-2 lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3">
+              <h2 class="text-lg font-bold text-slate-800">Posición GPS en Tiempo Real</h2>
+              <div class="flex items-center gap-2">
+                <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <i class="pi pi-user text-xs"></i> {{ loc.driverName }}
+                </span>
+                <span class="bg-blue-50 text-blue-600 text-xs font-mono px-3 py-1 rounded-full">
+                  {{ loc.pingDateTime | date:'dd/MM/yy HH:mm' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="relative w-full h-[260px] rounded-xl overflow-hidden border border-slate-200 shadow-inner mb-5">
+              <div id="location-map" class="w-full h-full z-0"></div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100 md:col-span-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Calle</span>
+                <span class="text-sm font-medium text-slate-700">{{ loc.address.street }} {{ loc.address.number }}</span>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ciudad</span>
+                <span class="text-sm font-medium text-slate-700">{{ loc.address.city }}</span>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Código Postal</span>
+                <span class="text-sm font-medium text-slate-700">{{ loc.address.postalCode }}</span>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">País</span>
+                <span class="text-sm font-medium text-slate-700">{{ loc.address.country }}</span>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Latitud</span>
+                <span class="text-sm font-mono text-slate-700">{{ loc.address.latitude | number:'1.6-6' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (truck() && !truck()?.driverLocation && truck()?.assignedDriver) {
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-start-2 lg:col-span-2 bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-6 flex items-center gap-4 text-slate-400">
+            <i class="pi pi-map-marker text-2xl"></i>
+            <div>
+              <p class="text-sm font-semibold">Sin datos GPS disponibles</p>
+              <p class="text-xs mt-0.5">El conductor asignado aún no ha enviado ningún ping de ubicación.</p>
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
   </div>
 }
