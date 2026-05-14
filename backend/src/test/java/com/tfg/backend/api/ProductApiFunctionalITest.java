@@ -1,9 +1,12 @@
 package com.tfg.backend.api;
 
 import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.ProductSpecDTO;
 import com.tfg.backend.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -131,5 +134,51 @@ public class ProductApiFunctionalITest extends BaseApiFunctionalITest {
                 .pathParam("id", testProduct.getId())
                 .when().delete("/{id}")
                 .then().statusCode(200);
+    }
+
+    @Test
+    public void getSpecsCatalog_ReturnsMapObject() {
+        given().spec(getSpec(BASE_URL_PRODUCTS, null))
+                .when().get("/specs")
+                .then().statusCode(200).body("$", notNullValue());
+    }
+
+    @Test
+    public void createProduct_WithSpecs_ReturnsSpecsInResponse() {
+        ProductDTO newProduct = new ProductDTO();
+        newProduct.setName("Product With Specs");
+        newProduct.setSupplyPrice(10.0);
+        newProduct.setCurrentPrice(20.0);
+        newProduct.setActive(true);
+        newProduct.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Rojo", "Azul"))));
+
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .body(newProduct)
+                .when().post()
+                .then().statusCode(201)
+                .body("specifications", hasSize(1))
+                .body("specifications[0].name", equalTo("Color"))
+                .body("specifications[0].values", hasItems("Rojo", "Azul"));
+    }
+
+    @Test
+    public void getFilteredProducts_BySpecFilter_ReturnsMatchingProduct() {
+        ProductDTO specProduct = new ProductDTO();
+        specProduct.setName("Spec Filter Test");
+        specProduct.setSupplyPrice(10.0);
+        specProduct.setCurrentPrice(20.0);
+        specProduct.setActive(true);
+        specProduct.setSpecifications(List.of(new ProductSpecDTO("Material", List.of("Madera"))));
+
+        given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
+                .body(specProduct)
+                .when().post()
+                .then().statusCode(201);
+
+        given().spec(getSpec(BASE_URL_PRODUCTS, null))
+                .queryParam("specFilter", "Material:Madera")
+                .when().get("/filter")
+                .then().statusCode(200)
+                .body("items.name", hasItem("Spec Filter Test"));
     }
 }

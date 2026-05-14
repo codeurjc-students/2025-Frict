@@ -1,6 +1,8 @@
 package com.tfg.backend.integration;
 
 import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.ProductSpecDTO;
+import com.tfg.backend.dto.SpecFilterDTO;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.*;
 import com.tfg.backend.service.ImageService;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -139,10 +142,10 @@ public class ProductServiceITest {
     }
 
     @Test
-    @DisplayName("Repository: findByFilters retrieves products accurately by name matching and category")
+    @DisplayName("Repository: getFilteredProducts retrieves products accurately by name matching and category")
     void testFindByFilters() {
         // Search by partial text "smart" and category Tech
-        Page<Product> result = productService.getFilteredProducts("smart", List.of(categoryTech.getId()), PageRequest.of(0, 10));
+        Page<Product> result = productService.getFilteredProducts("smart", List.of(categoryTech.getId()), List.of(), PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Smartphone XYZ", result.getContent().getFirst().getName());
@@ -209,6 +212,117 @@ public class ProductServiceITest {
         // Check Laptop (Purchased Item) -> Should remain intact
         Optional<OrderItem> keptPurchasedItem = orderItemRepository.findById(purchasedItemLaptop.getId());
         assertTrue(keptPurchasedItem.isPresent(), "Purchased items must NOT be deleted when a product is deactivated");
+    }
+
+    @Test
+    @DisplayName("Create Product: Specifications are persisted in DB with correct names and values")
+    void testCreateProduct_WithSpecs_PersistsSpecs() {
+        ProductDTO dto = new ProductDTO();
+        dto.setName("Spec Product");
+        dto.setSupplyPrice(20.0);
+        dto.setCurrentPrice(30.0);
+        dto.setCategories(new ArrayList<>());
+        dto.setSpecifications(List.of(
+                new ProductSpecDTO("Color", List.of("Rojo", "Azul")),
+                new ProductSpecDTO("Talla", List.of("M", "XL"))
+        ));
+
+        Product created = productService.createProduct(dto);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Product dbProduct = productRepository.findById(created.getId()).orElseThrow();
+        assertEquals(2, dbProduct.getSpecifications().size());
+
+        ProductSpec colorSpec = dbProduct.getSpecifications().stream()
+                .filter(s -> s.getName().equals("Color")).findFirst().orElseThrow();
+        assertTrue(colorSpec.getValues().containsAll(List.of("Rojo", "Azul")));
+    }
+
+    @Test
+    @DisplayName("Update Product: Existing specifications are fully replaced by the new ones from DTO")
+    void testUpdateProduct_WithSpecs_ReplacesSpecs() {
+        ProductDTO createDto = new ProductDTO();
+        createDto.setName("Spec Update Test");
+        createDto.setSupplyPrice(10.0);
+        createDto.setCurrentPrice(20.0);
+        createDto.setCategories(new ArrayList<>());
+        createDto.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Verde"))));
+        Product created = productService.createProduct(createDto);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        ProductDTO updateDto = new ProductDTO();
+        updateDto.setName("Spec Update Test");
+        updateDto.setSupplyPrice(10.0);
+        updateDto.setCurrentPrice(20.0);
+        updateDto.setCategories(new ArrayList<>());
+        updateDto.setSpecifications(List.of(new ProductSpecDTO("Talla", List.of("S", "M"))));
+        productService.updateProduct(created.getId(), updateDto);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Product dbProduct = productRepository.findById(created.getId()).orElseThrow();
+        assertEquals(1, dbProduct.getSpecifications().size());
+        assertEquals("Talla", dbProduct.getSpecifications().getFirst().getName());
+        assertTrue(dbProduct.getSpecifications().stream().noneMatch(s -> s.getName().equals("Color")),
+                "Old 'Color' spec must be replaced by orphanRemoval");
+    }
+
+    @Test
+    @DisplayName("Repository: getFilteredProducts with spec filter returns only products whose spec matches")
+    void testGetFilteredProducts_BySpec_FiltersCorrectly() {
+        ProductDTO dtoRojo = new ProductDTO();
+        dtoRojo.setName("Producto Rojo");
+        dtoRojo.setSupplyPrice(10.0);
+        dtoRojo.setCurrentPrice(20.0);
+        dtoRojo.setCategories(new ArrayList<>());
+        dtoRojo.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Rojo"))));
+        Product prodRojo = productService.createProduct(dtoRojo);
+
+        ProductDTO dtoAzul = new ProductDTO();
+        dtoAzul.setName("Producto Azul");
+        dtoAzul.setSupplyPrice(10.0);
+        dtoAzul.setCurrentPrice(20.0);
+        dtoAzul.setCategories(new ArrayList<>());
+        dtoAzul.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Azul"))));
+        productService.createProduct(dtoAzul);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        List<SpecFilterDTO> filters = List.of(new SpecFilterDTO("Color", List.of("Rojo")));
+        Page<Product> result = productService.getFilteredProducts(null, null, filters, PageRequest.of(0, 10));
+
+        assertEquals(1, result.getTotalElements(), "Only the product with Color=Rojo should match");
+        assertEquals(prodRojo.getId(), result.getContent().getFirst().getId());
+    }
+
+    @Test
+    @DisplayName("getSpecsCatalog returns all distinct spec names and their values from DB")
+    void testGetSpecsCatalog_ReturnsKnownSpecs() {
+        ProductDTO dto = new ProductDTO();
+        dto.setName("Catalogo Test");
+        dto.setSupplyPrice(5.0);
+        dto.setCurrentPrice(10.0);
+        dto.setCategories(new ArrayList<>());
+        dto.setSpecifications(List.of(
+                new ProductSpecDTO("Color", List.of("Rojo", "Azul")),
+                new ProductSpecDTO("Talla", List.of("M"))
+        ));
+        productService.createProduct(dto);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Map<String, List<String>> catalog = productService.getSpecsCatalog();
+
+        assertTrue(catalog.containsKey("Color"), "Catalog must include 'Color'");
+        assertTrue(catalog.get("Color").containsAll(List.of("Rojo", "Azul")));
+        assertTrue(catalog.containsKey("Talla"), "Catalog must include 'Talla'");
     }
 
     @Test

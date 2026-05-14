@@ -89,7 +89,7 @@
           <p-tabs value="0">
             <p-tablist class="!border-b !border-surface-200 mb-6">
               <p-tab value="0" class="!font-bold">Información</p-tab>
-              <p-tab disabled value="1" class="!font-bold">Especificaciones</p-tab>
+              <p-tab value="1" class="!font-bold">Especificaciones</p-tab>
               <!-- NUEVA PESTAÑA: VISUALIZACIONES -->
               <p-tab value="2" class="!font-bold">Visualizaciones</p-tab>
             </p-tablist>
@@ -98,7 +98,26 @@
               <p-tabpanel value="0">
                 <div class="prose prose-slate max-w-none text-surface-600 leading-relaxed" [innerHTML]="product.description"></div>
               </p-tabpanel>
-              <p-tabpanel value="1">Coming soon...</p-tabpanel>
+              <p-tabpanel value="1">
+                @if (product.specifications?.length) {
+                  <p-table [value]="product.specifications" styleClass="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th class="w-1/3">Especificación</th>
+                        <th>Valores</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-spec>
+                      <tr>
+                        <td class="font-semibold text-surface-700">{{ spec.name }}</td>
+                        <td class="text-surface-600">{{ spec.values.join(', ') }}</td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                } @else {
+                  <p class="text-surface-400 italic text-sm">Este producto no tiene especificaciones técnicas registradas.</p>
+                }
+              </p-tabpanel>
 
               <!-- NUEVO PANEL: VISUALIZACIONES -->
 

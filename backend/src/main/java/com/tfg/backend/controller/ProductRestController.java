@@ -1,8 +1,7 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.dto.*;
 import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.ProductDTO;
-import com.tfg.backend.dto.ShopStockDTO;
 import com.tfg.backend.model.Product;
 import com.tfg.backend.model.ProductImageInfo;
 import com.tfg.backend.service.ProductService;
@@ -20,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -41,9 +41,20 @@ public class ProductRestController {
     public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(
             Pageable pageable,
             @RequestParam(value = "query", required = false) String searchTerm,
-            @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
-        Page<Product> products = productService.getFilteredProducts(searchTerm, categoryIds, pageable);
+            @RequestParam(value = "categoryId", required = false) List<Long> categoryIds,
+            @RequestParam(value = "specFilter", required = false, defaultValue = "") List<String> specFilter) {
+        List<SpecFilterDTO> specs = specFilter.stream()
+                .filter(s -> !s.isBlank())
+                .map(SpecFilterDTO::fromString)
+                .toList();
+        Page<Product> products = productService.getFilteredProducts(searchTerm, categoryIds, specs, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
+    }
+
+    @Operation(summary = "(All) Get all distinct spec names and their values (for autocomplete)")
+    @GetMapping("/specs")
+    public ResponseEntity<Map<String, List<String>>> getSpecsCatalog() {
+        return ResponseEntity.ok(productService.getSpecsCatalog());
     }
 
     @Operation(summary = "(User) Get logged user favourite products (paged)")

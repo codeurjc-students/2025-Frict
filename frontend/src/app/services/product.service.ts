@@ -3,6 +3,7 @@ import {Injectable, signal} from '@angular/core';
 import {catchError, Observable, switchMap, throwError} from 'rxjs';
 import {CategoryService} from './category.service';
 import {Product} from '../models/product.model';
+import {ProductSpec} from '../models/product-spec.model';
 import {PageResponse} from '../models/pageResponse.model';
 import {ShopStock} from '../models/shopStock.model';
 
@@ -68,7 +69,8 @@ export class ProductService {
     size: number,
     searchTerm: string,
     categoryIds: number[],
-    sort: string
+    sort: string,
+    specFilters: ProductSpec[] = []
   ): Observable<PageResponse<Product>> {
 
     let params = new HttpParams();
@@ -89,7 +91,15 @@ export class ProductService {
       params = params.append('categoryId', id.toString());
     });
 
+    specFilters.forEach(f => {
+      params = params.append('specFilter', `${f.name}:${f.values.join(',')}`);
+    });
+
     return this.http.get<PageResponse<Product>>(this.apiUrl + `/filter`, { params });
+  }
+
+  public getSpecsCatalog(): Observable<Record<string, string[]>> {
+    return this.http.get<Record<string, string[]>>(this.apiUrl + `/specs`);
   }
 
   public getProductsByCategoryId(id: string): Observable<PageResponse<Product>> {

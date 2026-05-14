@@ -1,9 +1,7 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.CategoryDTO;
-import com.tfg.backend.dto.EntityType;
-import com.tfg.backend.dto.EventAction;
-import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.*;
+import com.tfg.backend.utils.ProductSpecifications;
 import com.tfg.backend.event.ProductEvent;
 import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.model.*;
@@ -51,10 +49,28 @@ public class ProductService {
         return productsPage;
     }
 
-    public Page<Product> getFilteredProducts(String searchTerm, List<Long> categoryIds, Pageable pageInfo) {
-        Page<Product> productsPage = productRepository.findByFilters(searchTerm, categoryIds, pageInfo);
+    public Page<Product> getFilteredProducts(String searchTerm, List<Long> categoryIds,
+                                             List<SpecFilterDTO> specFilters, Pageable pageInfo) {
+        var spec = org.springframework.data.jpa.domain.Specification
+                .where(ProductSpecifications.hasSearchTerm(searchTerm))
+                .and(ProductSpecifications.hasCategories(categoryIds));
+        if (specFilters != null) {
+            for (SpecFilterDTO f : specFilters) {
+                spec = spec.and(ProductSpecifications.hasSpec(f));
+            }
+        }
+        Page<Product> productsPage = productRepository.findAll(spec, pageInfo);
         enrichWithStock(productsPage.getContent());
         return productsPage;
+    }
+
+    public Map<String, List<String>> getSpecsCatalog() {
+        List<String> names = productRepository.findAllDistinctSpecNames();
+        Map<String, List<String>> catalog = new LinkedHashMap<>();
+        for (String name : names) {
+            catalog.put(name, productRepository.findDistinctValuesBySpecName(name));
+        }
+        return catalog;
     }
 
     public Optional<Product> findById(Long id) {
@@ -211,6 +227,7 @@ public class ProductService {
     public Product createProduct(ProductDTO dto){
         Product product = new Product(dto.getName(), dto.getDescription(), dto.getCurrentPrice(), dto.getSupplyPrice());
         product.setCategories(processCategories(dto.getCategories()));
+        applySpecifications(product, dto.getSpecifications());
 
         //Send notifications
         List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
@@ -231,6 +248,7 @@ public class ProductService {
         product.setActive(dto.isActive());
 
         product.setCategories(processCategories(dto.getCategories()));
+        applySpecifications(product, dto.getSpecifications());
 
         //Send notifications
         List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
@@ -407,6 +425,16 @@ public class ProductService {
         }
 
         return categories;
+    }
+
+    private void applySpecifications(Product product, List<ProductSpecDTO> dtos) {
+        product.getSpecifications().clear();
+        if (dtos == null) return;
+        for (ProductSpecDTO dto : dtos) {
+            if (dto.getName() != null && !dto.getName().isBlank() && dto.getValues() != null && !dto.getValues().isEmpty()) {
+                product.getSpecifications().add(new ProductSpec(dto.getName(), dto.getValues(), product));
+            }
+        }
     }
 
     private void checkProductFields(Product p){

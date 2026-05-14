@@ -10,6 +10,7 @@ import {FileUpload} from 'primeng/fileupload';
 import {ToggleSwitch} from 'primeng/toggleswitch';
 import {MessageService, TreeNode} from 'primeng/api';
 import {TreeSelect} from 'primeng/treeselect';
+import {AutoComplete} from 'primeng/autocomplete';
 import {DomSanitizer} from '@angular/platform-browser';
 
 import {ProductService} from '../../../services/product.service';
@@ -17,6 +18,7 @@ import {CategoryService} from '../../../services/category.service';
 import {fixKeys, mapToCategories, mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {Product} from '../../../models/product.model';
+import {ProductSpec} from '../../../models/product-spec.model';
 import {ImageInfo} from '../../../models/imageInfo.model';
 import {LocalImage} from '../../../models/localImage.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
@@ -36,6 +38,7 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     ToggleSwitch,
     FileUpload,
     TreeSelect,
+    AutoComplete,
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
@@ -72,11 +75,18 @@ export class CreateEditProductComponent implements OnInit {
   product = signal<Product | null>(null);
   existingImages = signal<ImageInfo[]>([]);
   newImages = signal<LocalImage[]>([]);
+  specs = signal<ProductSpec[]>([]);
 
   protected readonly MAX_SIZE = 5000000;
   productForm: FormGroup;
   categories: TreeNode[] = [];
   selectedCategories: TreeNode[] = [];
+
+  pendingSpecName = '';
+  pendingSpecValue = '';
+  allSpecs: Record<string, string[]> = {};
+  filteredSpecNames: string[] = [];
+  filteredSpecValues: string[] = [];
 
   loading: boolean = true;
   error: boolean = false;
@@ -94,6 +104,7 @@ export class CreateEditProductComponent implements OnInit {
       this.selectedCategories = [];
       this.existingImages.set([]);
       this.newImages.set([]);
+      this.specs.set([]);
     }
     this.loadData();
   }
@@ -131,6 +142,8 @@ export class CreateEditProductComponent implements OnInit {
           this.product.set(product);
           this.productForm.patchValue(product);
           this.existingImages.set(product.imagesInfo);
+          this.specs.set(product.specifications ?? []);
+          this.loadSpecsCatalog();
 
           // Map selection to treeSelect
           if (this.categories.length > 0 && this.selectedCategories.length > 0) {
@@ -149,6 +162,8 @@ export class CreateEditProductComponent implements OnInit {
         { label: 'Gestor de Productos', routerLink: '/admin/products' }
       ]);
       // CREATE
+      this.specs.set([]);
+      this.loadSpecsCatalog();
       this.categoryService.getAllCategories().subscribe({
         next: (list) => {
           const cleanCategories = this.removeOthersCategoryFromTree(list || []);
@@ -219,6 +234,43 @@ export class CreateEditProductComponent implements OnInit {
     this.existingImages.update(imgs => imgs.filter((_, i) => i !== index));
   }
 
+  private loadSpecsCatalog() {
+    this.productService.getSpecsCatalog().subscribe(s => this.allSpecs = s);
+  }
+
+  searchSpecNames(query: string) {
+    this.filteredSpecNames = Object.keys(this.allSpecs)
+      .filter(n => n.toLowerCase().includes(query.toLowerCase()));
+  }
+
+  searchSpecValues(query: string) {
+    const known = this.allSpecs[this.pendingSpecName] ?? [];
+    this.filteredSpecValues = known.filter(v => v.toLowerCase().includes(query.toLowerCase()));
+  }
+
+  addSpec() {
+    if (!this.pendingSpecName.trim() || !this.pendingSpecValue.trim()) return;
+    const name = this.pendingSpecName.trim();
+    const value = this.pendingSpecValue.trim();
+    this.specs.update(s => {
+      const existing = s.find(e => e.name === name);
+      if (existing) {
+        if (!existing.values.includes(value)) existing.values = [...existing.values, value];
+        return [...s];
+      }
+      return [...s, { name, values: [value] }];
+    });
+    this.pendingSpecName = '';
+    this.pendingSpecValue = '';
+  }
+
+  removeSpecValue(specName: string, value: string) {
+    this.specs.update(s =>
+      s.map(e => e.name === specName ? { ...e, values: e.values.filter(v => v !== value) } : e)
+       .filter(e => e.values.length > 0)
+    );
+  }
+
   onSubmit() {
     if (this.productForm.invalid) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Completa los campos requeridos.' });
@@ -237,7 +289,8 @@ export class CreateEditProductComponent implements OnInit {
         const productData: Product = {
           ...cleanFormValue,
           categories: mapToCategories(selectedCategories),
-          images: this.existingImages()
+          images: this.existingImages(),
+          specifications: this.specs()
         };
 
         this.productService.updateProduct(editingProduct.id, productData).subscribe({
@@ -255,7 +308,8 @@ export class CreateEditProductComponent implements OnInit {
       const productData: Product = {
         ...cleanFormValue,
         categories: mapToCategories(selectedCategories),
-        images: this.existingImages()
+        images: this.existingImages(),
+        specifications: this.specs()
       };
 
       this.productService.createProduct(productData).subscribe({

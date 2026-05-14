@@ -25,6 +25,7 @@ public class ProductDTO {
     private boolean active;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
+    private List<ProductSpecDTO> specifications = new ArrayList<>();
     private int totalUnits; // Sum of all stock from all shops
     private int availableUnits; // Purchasable units from selected shop (registered users only, other roles will display 0 to avoid unexpected purchases)
     private int shopsWithStock;
@@ -59,6 +60,10 @@ public class ProductDTO {
             dtos.add(new CategoryDTO(c));
         }
         this.categories = dtos;
+
+        for (ProductSpec s : p.getSpecifications()) {
+            this.specifications.add(new ProductSpecDTO(s.getName(), new ArrayList<>(s.getValues())));
+        }
 
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {

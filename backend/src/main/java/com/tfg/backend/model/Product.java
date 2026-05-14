@@ -67,6 +67,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShopStock> shopsStock = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductSpec> specifications = new ArrayList<>();
+
     //In-memory only field: Allows passing the selected local stock calculations back to ProductDTO entities
     @Transient
     private Integer availableUnits;

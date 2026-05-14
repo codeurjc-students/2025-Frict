@@ -4,6 +4,7 @@ import {ProductService} from '../../../services/product.service';
 import {Paginator, PaginatorState} from 'primeng/paginator';
 import {ProductCardComponent} from '../../client/product-card/product-card.component';
 import {Select} from 'primeng/select';
+import {MultiSelect} from 'primeng/multiselect';
 import {Button} from 'primeng/button';
 import {FormsModule} from '@angular/forms';
 import {CategoryService} from '../../../services/category.service';
@@ -12,6 +13,7 @@ import {PrimeTemplate, TreeNode} from 'primeng/api';
 import {Tree} from 'primeng/tree';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
+import {ProductSpec} from '../../../models/product-spec.model';
 import {mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 
@@ -27,6 +29,7 @@ interface SortOption {
     Paginator,
     ProductCardComponent,
     Select,
+    MultiSelect,
     FormsModule,
     Button,
     Drawer,
@@ -57,6 +60,14 @@ export class SearchComponent implements OnInit {
   categories: TreeNode[] = [];
   selectedCategories: TreeNode[] = [];
 
+  allSpecs: Record<string, string[]> = {};
+  activeSpecFilters: ProductSpec[] = [];
+  pendingSpecName: string | null = null;
+  pendingSpecValues: string[] = [];
+  availableSpecValues: string[] = [];
+
+  get specNameOptions(): string[] { return Object.keys(this.allSpecs); }
+
   first: number = 0;
   rows: number = 10;
 
@@ -65,6 +76,7 @@ export class SearchComponent implements OnInit {
   error: boolean = false;
 
   ngOnInit(): void {
+    this.productService.getSpecsCatalog().subscribe(s => this.allSpecs = s);
     // Le decimos que SÍ es la carga inicial
     this.getAllCategories(true);
   }
@@ -145,6 +157,15 @@ export class SearchComponent implements OnInit {
       this.selectedCategories = [];
     }
 
+    const rawSpecFilters: string[] = params.getAll('specFilter');
+    this.activeSpecFilters = rawSpecFilters
+      .filter(s => s.includes(':'))
+      .map(s => {
+        const [name, valsPart] = s.split(':', 2);
+        return { name, values: valsPart ? valsPart.split(',') : [] };
+      })
+      .filter(f => f.values.length > 0);
+
     this.loadProducts();
   }
 
@@ -168,6 +189,9 @@ export class SearchComponent implements OnInit {
     const categoriesToUse = overrideCategories ?? this.selectedCategories ?? [];
 
     const categoryIds = categoriesToUse.map(node => node.data);
+    const specFilterParams = this.activeSpecFilters.length > 0
+      ? this.activeSpecFilters.map(f => `${f.name}:${f.values.join(',')}`)
+      : null;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -175,12 +199,38 @@ export class SearchComponent implements OnInit {
         query: this.searchQuery || null,
         sort: this.selectedSortOption.value,
         categories: categoryIds.length > 0 ? categoryIds.join(',') : null,
+        specFilter: specFilterParams,
         page: (this.first / this.rows),
         size: this.rows,
         ...extraParams
       },
       queryParamsHandling: 'merge',
     });
+  }
+
+  onPendingSpecNameChange() {
+    this.pendingSpecValues = [];
+    this.availableSpecValues = this.allSpecs[this.pendingSpecName ?? ''] ?? [];
+  }
+
+  addSpecFilter() {
+    if (!this.pendingSpecName || !this.pendingSpecValues.length) return;
+    const existing = this.activeSpecFilters.find(f => f.name === this.pendingSpecName);
+    if (existing) {
+      existing.values = [...new Set([...existing.values, ...this.pendingSpecValues])];
+    } else {
+      this.activeSpecFilters.push({ name: this.pendingSpecName, values: [...this.pendingSpecValues] });
+    }
+    this.pendingSpecName = null;
+    this.pendingSpecValues = [];
+    this.first = 0;
+    this.updateQueryParams({ page: 0 });
+  }
+
+  removeSpecFilter(name: string) {
+    this.activeSpecFilters = this.activeSpecFilters.filter(f => f.name !== name);
+    this.first = 0;
+    this.updateQueryParams({ page: 0 });
   }
 
   loadProducts() {
@@ -194,7 +244,8 @@ export class SearchComponent implements OnInit {
       this.rows,
       this.searchQuery ?? '',
       idsToSend,
-      this.selectedSortOption.value
+      this.selectedSortOption.value,
+      this.activeSpecFilters
     ).subscribe({
       next: (page) => {
         this.foundProducts = page;
