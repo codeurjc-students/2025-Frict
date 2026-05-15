@@ -3,6 +3,7 @@ package com.tfg.backend.unit;
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.ShopDTO;
 import com.tfg.backend.dto.StatDTO;
+import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.service.ImageService;
@@ -234,6 +235,16 @@ class ShopServiceUTest {
 
             // Assert Shop Budget modification
             assertEquals(800.0, shop.getAssignedBudget()); // 1000.0 original - 200.0 cost
+        }
+
+        @Test
+        @DisplayName("Publishes a ShopStockEvent.RESTOCKED event after a successful restock")
+        void restockProduct_Success_PublishesShopStockEvent() {
+            when(shopStockService.findShopStockHelper(5L)).thenReturn(stock);
+
+            shopService.restockProduct(5L, 20);
+
+            verify(eventPublisher).publishEvent(any(ShopStockEvent.class));
         }
     }
 

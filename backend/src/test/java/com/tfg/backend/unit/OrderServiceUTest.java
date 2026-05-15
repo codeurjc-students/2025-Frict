@@ -4,11 +4,13 @@ import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.event.OrderEvent;
 import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -54,6 +56,8 @@ class OrderServiceUTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(orderService, "lowStockThreshold", 5);
+
         selectedShop = new Shop();
         selectedShop.setId(10L);
         selectedShop.setReferenceCode("SH-TEST");
@@ -388,6 +392,78 @@ class OrderServiceUTest {
                     () -> orderService.createOrder(100L, 200L));
             assertEquals(HttpStatus.METHOD_NOT_ALLOWED, exception.getStatusCode());
             assertTrue(exception.getReason().contains("No hay suficiente stock"));
+        }
+
+        @Test
+        @DisplayName("createOrder publishes ShopStockEvent.LOW_STOCK when stock crosses the threshold")
+        void createOrder_PublishesLowStockEvent_WhenThresholdCrossed() {
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            selectedShop.setAssignedBudget(5000.0);
+            when(shopService.findShopHelper(10L)).thenReturn(selectedShop);
+
+            Product product = new Product();
+            product.setId(1L);
+            product.setName("Cola");
+            product.setReferenceCode("PRD-001");
+            product.setCurrentPrice(2.0);
+            ProductImageInfo img = new ProductImageInfo();
+            img.setImageInfo(new ImageInfo());
+            product.setImages(List.of(img));
+
+            // 7 units in stock, buying 4 → 3 remaining (crosses threshold of 5)
+            ShopStock localStock = new ShopStock(selectedShop, product, 7);
+            product.setShopsStock(List.of(localStock));
+
+            OrderItem cartItem = new OrderItem();
+            cartItem.setProduct(product);
+            cartItem.setQuantity(4);
+
+            when(orderItemService.findUserCartItemsList(1L)).thenReturn(List.of(cartItem));
+
+            Order savedOrder = new Order();
+            savedOrder.setReferenceCode("ORD-LOW");
+            savedOrder.setTotalCost(8.0);
+            when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+            orderService.createOrder(100L, 200L);
+
+            verify(eventPublisher).publishEvent(any(ShopStockEvent.class));
+        }
+
+        @Test
+        @DisplayName("createOrder does not publish ShopStockEvent.LOW_STOCK when stock stays at or above threshold")
+        void createOrder_DoesNotPublishLowStockEvent_WhenThresholdNotCrossed() {
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            selectedShop.setAssignedBudget(5000.0);
+            when(shopService.findShopHelper(10L)).thenReturn(selectedShop);
+
+            Product product = new Product();
+            product.setId(2L);
+            product.setName("Chips");
+            product.setReferenceCode("PRD-002");
+            product.setCurrentPrice(2.0);
+            ProductImageInfo img = new ProductImageInfo();
+            img.setImageInfo(new ImageInfo());
+            product.setImages(List.of(img));
+
+            // 10 units in stock, buying 3 → 7 remaining (still above threshold of 5)
+            ShopStock localStock = new ShopStock(selectedShop, product, 10);
+            product.setShopsStock(List.of(localStock));
+
+            OrderItem cartItem = new OrderItem();
+            cartItem.setProduct(product);
+            cartItem.setQuantity(3);
+
+            when(orderItemService.findUserCartItemsList(1L)).thenReturn(List.of(cartItem));
+
+            Order savedOrder = new Order();
+            savedOrder.setReferenceCode("ORD-OK");
+            savedOrder.setTotalCost(6.0);
+            when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+            orderService.createOrder(100L, 200L);
+
+            verify(eventPublisher, never()).publishEvent(any(ShopStockEvent.class));
         }
     }
 
