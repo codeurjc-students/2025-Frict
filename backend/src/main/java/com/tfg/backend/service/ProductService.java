@@ -199,7 +199,7 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteById(Long id) {
+    private void deleteById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("The product that is being deleted does not exist"));
         productRepository.delete(product);

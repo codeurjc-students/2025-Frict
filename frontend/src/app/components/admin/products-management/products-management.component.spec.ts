@@ -29,6 +29,7 @@ const mockProduct: Product = {
   shopsWithStock: 3,
   averageRating: 4.0,
   totalReviews: 5,
+  specifications: [],
   createdAt: '2025-01-01'
 };
 
@@ -49,6 +50,7 @@ const mockProduct2: Product = {
   shopsWithStock: 1,
   averageRating: 3.5,
   totalReviews: 2,
+  specifications: [],
   createdAt: '2025-01-02'
 };
 

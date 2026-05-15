@@ -48,6 +48,7 @@ const mockProduct: Product = {
   shopsWithStock: 3,
   averageRating: 4.5,
   totalReviews: 10,
+  specifications: [],
   createdAt: '2025-01-01'
 };
 
@@ -102,7 +103,7 @@ describe('CreateEditProductComponent', () => {
     routerEvents$ = new Subject<any>();
 
     productServiceSpy = jasmine.createSpyObj('ProductService', [
-      'getProductById', 'createProduct', 'updateProduct', 'updateProductImages'
+      'getProductById', 'createProduct', 'updateProduct', 'updateProductImages', 'getSpecsCatalog'
     ]);
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getAllCategories']);
     messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
@@ -121,6 +122,7 @@ describe('CreateEditProductComponent', () => {
     productServiceSpy.createProduct.and.callFake(() => of({ ...mockProduct }));
     productServiceSpy.updateProduct.and.callFake(() => of({ ...mockProduct }));
     productServiceSpy.updateProductImages.and.callFake(() => of({ ...mockProduct }));
+    productServiceSpy.getSpecsCatalog.and.callFake(() => of({}));
 
     await buildTestBed(null);
 

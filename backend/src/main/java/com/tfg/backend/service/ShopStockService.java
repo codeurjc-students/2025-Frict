@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class ShopStockService {
 
     public void saveAll(List<ShopStock> l){ this.shopStockRepository.saveAll(l); }
 
+    @Transactional
     public void deleteById(Long id){ this.shopStockRepository.deleteById(id); }
 
     public ShopStock findShopStockHelper(Long id) {

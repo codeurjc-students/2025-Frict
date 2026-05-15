@@ -436,7 +436,7 @@ class ProductServiceUTest {
         void deleteById_ThrowsException() {
             when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> productService.deleteById(1L));
+            assertThrows(ResponseStatusException.class, () -> productService.deleteProduct(1L));
         }
 
         @Test
@@ -444,7 +444,7 @@ class ProductServiceUTest {
         void deleteById_Success() {
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-            productService.deleteById(1L);
+            productService.deleteProduct(1L);
 
             verify(productRepository).delete(product);
         }

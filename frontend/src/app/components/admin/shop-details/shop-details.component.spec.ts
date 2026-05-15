@@ -83,6 +83,7 @@ const mockProduct: Product = {
   shopsWithStock: 3,
   averageRating: 4.5,
   totalReviews: 10,
+  specifications: [],
   createdAt: '2025-01-01'
 };
 

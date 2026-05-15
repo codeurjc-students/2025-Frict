@@ -86,6 +86,7 @@ describe('ProductInfoComponent', () => {
     shopsWithStock: 3,
     averageRating: 4.5,
     totalReviews: 0,
+    specifications: [],
     createdAt: '2026-05-08'
   };
 

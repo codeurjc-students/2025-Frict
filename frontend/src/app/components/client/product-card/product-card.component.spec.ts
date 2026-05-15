@@ -42,6 +42,7 @@ describe('ProductCardComponent', () => {
     shopsWithStock: 3,
     averageRating: 4.5,
     totalReviews: 12,
+    specifications: [],
     createdAt: '2026-05-08'
   };
 

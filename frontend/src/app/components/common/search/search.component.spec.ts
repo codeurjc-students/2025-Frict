@@ -20,7 +20,7 @@ const STUB_PRODUCT: Product = {
   imagesInfo: [{ id: '1', imageUrl: '/laptop.jpg', s3Key: '', fileName: '' }],
   description: 'A laptop', supplyPrice: 100, previousPrice: 120, currentPrice: 100,
   active: true, discount: '0%', categories: [], totalUnits: 10, availableUnits: 10,
-  shopsWithStock: 1, averageRating: 4.5, totalReviews: 10, createdAt: '2025-01-01'
+  shopsWithStock: 1, averageRating: 4.5, totalReviews: 10, specifications: [], createdAt: '2025-01-01'
 };
 
 const STUB_PAGE: PageResponse<Product> = {
@@ -48,8 +48,9 @@ describe('SearchComponent', () => {
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    productServiceSpy = jasmine.createSpyObj('ProductService', ['getFilteredProducts']);
+    productServiceSpy = jasmine.createSpyObj('ProductService', ['getFilteredProducts', 'getSpecsCatalog']);
     productServiceSpy.getFilteredProducts.and.callFake(() => of({ ...STUB_PAGE, items: [{ ...STUB_PRODUCT }] }));
+    productServiceSpy.getSpecsCatalog.and.callFake(() => of({}));
     (productServiceSpy as any).searchScope = jasmine.createSpy('searchScope').and.returnValue('GLOBAL');
 
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getAllCategories']);
@@ -240,19 +241,19 @@ describe('SearchComponent', () => {
   describe('loadProducts', () => {
     it('should call getFilteredProducts with default args', () => {
       component.loadProducts();
-      expect(productServiceSpy.getFilteredProducts).toHaveBeenCalledWith(0, 10, '', [], 'name,asc');
+      expect(productServiceSpy.getFilteredProducts).toHaveBeenCalledWith(0, 10, '', [], 'name,asc', []);
     });
 
     it('should pass searchQuery as the query arg', () => {
       component.searchQuery = 'laptop';
       component.loadProducts();
-      expect(productServiceSpy.getFilteredProducts).toHaveBeenCalledWith(0, 10, 'laptop', [], 'name,asc');
+      expect(productServiceSpy.getFilteredProducts).toHaveBeenCalledWith(0, 10, 'laptop', [], 'name,asc', []);
     });
 
     it('should pass selected category data ids', () => {
       component.selectedCategories = [{ key: '0', label: 'Electronics', data: 10 }];
       component.loadProducts();
-      expect(productServiceSpy.getFilteredProducts).toHaveBeenCalledWith(0, 10, '', [10], 'name,asc');
+      expect(productServiceSpy.getFilteredProducts).toHaveBeenCalledWith(0, 10, '', [10], 'name,asc', []);
     });
 
     it('should set loading=true before the response arrives', () => {

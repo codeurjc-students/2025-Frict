@@ -77,7 +77,7 @@ describe('CategoryInfoComponent', () => {
     description: 'Cámara de alta definición', imagesInfo: [mockImageInfo],
     supplyPrice: 30, previousPrice: 100, currentPrice: 79, active: true, discount: '-21%',
     categories: [], totalUnits: 50, availableUnits: 20, shopsWithStock: 2,
-    averageRating: 4.3, totalReviews: 8, createdAt: '2026-05-08'
+    averageRating: 4.3, totalReviews: 8, specifications: [], createdAt: '2026-05-08'
   };
 
   const mockProductPage: PageResponse<Product> = {

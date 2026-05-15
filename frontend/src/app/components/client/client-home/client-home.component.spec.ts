@@ -38,7 +38,7 @@ describe('ClientHomeComponent', () => {
     description: 'Un gran ratón', imagesInfo: [mockImageInfo],
     supplyPrice: 20, previousPrice: 80, currentPrice: 59, active: true, discount: '-25%',
     categories: [], totalUnits: 100, availableUnits: 50, shopsWithStock: 3,
-    averageRating: 4.5, totalReviews: 12, createdAt: '2026-05-08'
+    averageRating: 4.5, totalReviews: 12, specifications: [], createdAt: '2026-05-08'
   };
 
   const mockProductPage: PageResponse<Product> = {

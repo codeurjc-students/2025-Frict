@@ -59,7 +59,7 @@ describe('OrderSummaryComponent', () => {
       imagesInfo: [{ id: 'img-1', imageUrl: 'http://img.test/prod.png', s3Key: 'key', fileName: 'prod.png' }],
       supplyPrice: 30, previousPrice: 70, currentPrice: 59, active: true, discount: '-15%',
       categories: [], totalUnits: 100, availableUnits: 50, shopsWithStock: 2,
-      averageRating: 4, totalReviews: 5, createdAt: '2026-05-08'
+      averageRating: 4, totalReviews: 5, specifications: [], createdAt: '2026-05-08'
     },
     productName: 'Producto Test', productImageUrl: 'http://img.test/prod.png',
     productPrice: 59, userId: 'user-1', quantity: 2, itemsCost: 118

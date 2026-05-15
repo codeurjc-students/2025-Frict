@@ -379,11 +379,19 @@ public class UserService {
             user.setAssignedTruck(null);
         }
 
+        // 3. Nullify address references in orders before cascade-deleting addresses
+        // (prevents FK violation: orders.full_sending_address_id → addresses.id with RESTRICT)
+        if (user.getRegisteredOrders() != null) {
+            for (Order order : user.getRegisteredOrders()) {
+                order.setFullSendingAddress(null);
+            }
+        }
+
         //Send notifications
         UserEvent userEvent = new UserEvent(EventAction.DELETED, user.getUsername());
         eventPublisher.publishEvent(userEvent);
 
-        // 3. Cascade delete (cart items, favourite items, orders, reviews, addresses and cards)
+        // 4. Cascade delete (cart items, favourite items, orders, reviews, addresses and cards)
         userRepository.delete(user);
         return true;
     }
