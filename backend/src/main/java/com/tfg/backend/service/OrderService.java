@@ -6,11 +6,13 @@ import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.event.OrderEvent;
 import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
 import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +37,9 @@ public class OrderService {
     private final ProductService productService;
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Value("${notifications.stock.low-threshold:5}")
+    private int lowStockThreshold;
 
     // --- READ-ONLY METHODS ---
 
@@ -179,6 +184,8 @@ public class OrderService {
         //Stores product references for later registries
         Map<OrderItem, String> productRefMap = new HashMap<>();
 
+        String managerUsernameForStockEvents = Optional.ofNullable(selectedShop.getAssignedManager()).map(User::getUsername).orElse(null);
+
         // Validate AND reduce stock in a single pass
         for (OrderItem i : cartItems) {
             ShopStock localStock = i.getProduct().getShopsStock().stream()
@@ -191,7 +198,22 @@ public class OrderService {
             }
 
             // Decrease stock (Safe because @Transactional will roll this back if a later item throws an exception)
-            localStock.setUnits(localStock.getUnits() - i.getQuantity());
+            int oldUnits = localStock.getUnits();
+            int newUnits = oldUnits - i.getQuantity();
+            localStock.setUnits(newUnits);
+
+            // Publish LOW_STOCK when crossing the configured threshold (AFTER_COMMIT listener guarantees rollback safety)
+            if (oldUnits >= lowStockThreshold && newUnits < lowStockThreshold) {
+                Product p = i.getProduct();
+                ShopStockEvent lowStockEvent = new ShopStockEvent(
+                        ShopStockEvent.StockAction.LOW_STOCK,
+                        selectedShop.getId(), selectedShop.getName(), selectedShop.getReferenceCode(),
+                        p.getId(), p.getName(), p.getReferenceCode(),
+                        oldUnits, newUnits, lowStockThreshold,
+                        managerUsernameForStockEvents
+                );
+                eventPublisher.publishEvent(lowStockEvent);
+            }
 
             //Save the product reference
             productRefMap.put(i, i.getProduct().getReferenceCode());

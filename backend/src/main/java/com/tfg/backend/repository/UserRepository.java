@@ -42,4 +42,27 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT DISTINCT u.username FROM User u JOIN u.allOrderItems oi WHERE oi.product.id = :productId")
     List<String> findUsernamesByProductInCart(@Param("productId") Long productId);
+
+    @Query("""
+            SELECT u.username FROM User u
+            JOIN u.favouriteProducts p
+            WHERE u.selectedShop.id = :shopId
+              AND p.id = :productId
+              AND u.isBanned = false
+              AND u.isDeleted = false
+            """)
+    List<String> findUsernamesByFavoritedProductAndSelectedShop(@Param("shopId") Long shopId,
+                                                                @Param("productId") Long productId);
+
+    @Query("""
+            SELECT DISTINCT u.username FROM User u
+            LEFT JOIN u.favouriteProducts fp
+            LEFT JOIN u.allOrderItems oi
+            WHERE u.selectedShop.id = :shopId
+              AND (fp.id = :productId OR oi.product.id = :productId)
+              AND u.isBanned = false
+              AND u.isDeleted = false
+            """)
+    List<String> findUsernamesBySelectedShopAndProductInFavoritesOrCart(@Param("shopId") Long shopId,
+                                                                       @Param("productId") Long productId);
 }

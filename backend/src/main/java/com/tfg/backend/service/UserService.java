@@ -86,6 +86,16 @@ public class UserService {
         return userRepository.findUsernamesByProductInCart(productId);
     }
 
+    public List<String> getUsernamesByFavoritedProductAndSelectedShop(Long shopId, Long productId) {
+        if (shopId == null || productId == null) return List.of();
+        return userRepository.findUsernamesByFavoritedProductAndSelectedShop(shopId, productId);
+    }
+
+    public List<String> getUsernamesBySelectedShopAndProductInFavoritesOrCart(Long shopId, Long productId) {
+        if (shopId == null || productId == null) return List.of();
+        return userRepository.findUsernamesBySelectedShopAndProductInFavoritesOrCart(shopId, productId);
+    }
+
 
 
 
