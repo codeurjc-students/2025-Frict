@@ -11,7 +11,7 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-8">
 
         <div class="flex items-center gap-6">
-          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-surface-50 border border-surface-200 p-2 flex items-center justify-center shadow-inner shrink-0">
+          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white border border-surface-200 p-2 flex items-center justify-center shadow-inner shrink-0">
             <img [src]="mainCategory.imageInfo.imageUrl"
                  [alt]="mainCategory.name"
                  class="max-w-full max-h-full object-contain mix-blend-multiply">
@@ -27,7 +27,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-6 bg-surface-50 p-4 rounded-xl border border-surface-100 shrink-0 self-stretch md:self-auto justify-between md:justify-end">
+        <div class="flex items-center gap-6 bg-white p-4 rounded-xl border border-surface-100 shrink-0 self-stretch md:self-auto justify-between md:justify-end shadow-inner">
           <div class="text-right">
             <span class="block text-2xl font-black text-primary-600 leading-none mb-1">
               {{ totalProductsCount }}
@@ -49,41 +49,41 @@
   </header>
 
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto mt-8">
-    <div class="flex flex-col lg:flex-row gap-8 items-start relative overflow-hidden">
+    <div class="flex flex-col lg:flex-row gap-8 items-start relative">
 
-      <div class="w-full transition-all duration-500" [ngClass]="statsExpanded ? 'lg:w-3/4' : 'lg:w-full'">
+      <div class="w-full lg:w-2/3 flex flex-col gap-8">
 
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-1.5 h-6 bg-primary-500 rounded-full"></div>
-          <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Información</h2>
-        </div>
-
-        <div class="bg-white rounded-3xl border border-surface-200 overflow-hidden shadow-sm">
-
-          <div class="grid grid-cols-3 bg-surface-50/50 border-b border-surface-100 divide-x divide-surface-100">
-            <div class="p-6 text-center">
-              <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Ventas Totales</span>
-              <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalSalesCount | number }}</span>
-            </div>
-            <div class="p-6 text-center">
-              <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Visualizaciones Totales</span>
-              <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalViewsCount | number }}</span>
-            </div>
-            <div class="p-6 text-center">
-              <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Tiendas Activas Totales</span>
-              <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalShopsCount }}</span>
-            </div>
+        <div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-1.5 h-6 bg-primary-500 rounded-full"></div>
+            <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Información</h2>
           </div>
 
-          <div class="p-8 md:p-10">
-            <div class="prose prose-sm max-w-none text-surface-600 leading-relaxed whitespace-pre-line">
-              {{ mainCategory.longDescription }}
+          <div class="bg-white rounded-3xl border border-surface-200 overflow-hidden shadow-sm">
+            <div class="grid grid-cols-3 bg-surface-50/50 border-b border-surface-100 divide-x divide-surface-100">
+              <div class="p-6 text-center">
+                <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Ventas Totales</span>
+                <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalSalesCount | number }}</span>
+              </div>
+              <div class="p-6 text-center">
+                <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Visualizaciones Totales</span>
+                <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalViewsCount | number }}</span>
+              </div>
+              <div class="p-6 text-center">
+                <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Tiendas Activas Totales</span>
+                <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalShopsCount }}</span>
+              </div>
+            </div>
+
+            <div class="p-8 md:p-10">
+              <div class="prose prose-sm max-w-none text-surface-600 leading-relaxed whitespace-pre-line">
+                {{ mainCategory.longDescription }}
+              </div>
             </div>
           </div>
         </div>
 
-        <section class="mt-10" *ngIf="subCategories.length > 0">
-
+        <section *ngIf="subCategories.length > 0">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-1.5 h-8 bg-cyan-500 rounded-full"></div>
             <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Subcategorías</h2>
@@ -100,8 +100,8 @@
                 </div>
 
                 <span class="text-xs font-bold text-surface-700 group-hover:text-primary-600 text-center truncate w-full">
-          {{ sub.name }}
-        </span>
+                  {{ sub.name }}
+                </span>
 
               </div>
             }
@@ -109,15 +109,9 @@
         </section>
       </div>
 
-      <div class="w-full lg:w-1/3 transition-all duration-500 shrink-0 sticky top-6 flex flex-col gap-6"
-           [ngClass]="statsExpanded ? 'block opacity-100 visible' : 'hidden opacity-0 invisible overflow-hidden !w-0'">
+      <div class="w-full lg:w-1/3 shrink-0 sticky top-6 flex flex-col gap-6">
 
-        <div class="bg-white rounded-3xl border border-surface-200 p-6 shadow-sm relative min-w-[300px]">
-
-          <button (click)="toggleStats()"
-                  class="absolute -left-3 top-6 bg-white border border-surface-200 w-6 h-6 rounded-full flex items-center justify-center shadow-md hover:bg-surface-50 transition-colors z-20">
-            <i class="pi pi-chevron-right text-[10px] text-surface-500"></i>
-          </button>
+        <div class="bg-white rounded-3xl border border-surface-200 p-6 shadow-sm min-w-[300px]">
 
           <h3 class="font-bold text-surface-900 text-sm uppercase tracking-wider mb-6 flex items-center gap-2">
             <i class="pi pi-chart-line text-primary-500"></i> Estadísticas
@@ -164,13 +158,7 @@
         </div>
       </div>
 
-      <button *ngIf="!statsExpanded" (click)="toggleStats()"
-              class="fixed right-0 top-1/2 -translate-y-1/2 bg-white border border-r-0 border-surface-300 p-3 rounded-l-2xl shadow-2xl hover:bg-surface-50 transition-all z-50 animate-fade-in">
-        <i class="pi pi-chart-bar text-primary-600 text-lg"></i>
-      </button>
-
     </div>
-
     <section class="mt-16">
       <div class="flex items-center gap-3 mb-6">
         <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>

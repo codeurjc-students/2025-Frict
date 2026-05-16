@@ -1,7 +1,9 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.StatDTO;
+import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.event.ShopEvent;
 import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
@@ -115,6 +117,9 @@ public class ShopService {
         );
         eventPublisher.publishEvent(stockEvent);
 
+        Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, (double) units, restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+        eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
+
         return targetStock;
     }
 
@@ -122,19 +127,21 @@ public class ShopService {
     public ShopStock setAssignedStock(Long shopId, Long stockId, boolean state){
         Shop shop = this.findShopHelper(shopId);
         ShopStock targetStock;
+        Product product = productService.findProductHelper(stockId);
 
         if (state) {
-            Product product = productService.findProductHelper(stockId);
             targetStock = this.shopStockService.save(new ShopStock(shop, product, 0));
         } else {
             targetStock = shopStockService.findShopStockHelper(stockId);
             this.shopStockService.deleteById(stockId);
+
+            Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, - (double) targetStock.getUnits(), shop.getReferenceCode(), shop.getName(), shop.getAssignedManager().getUsername(), shop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+            eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
         }
 
         //Send notifications
         ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(targetStock.getId()), false, null, null);
         eventPublisher.publishEvent(shopEvent);
-
 
         return targetStock;
     }

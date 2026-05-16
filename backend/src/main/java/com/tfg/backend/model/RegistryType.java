@@ -12,7 +12,8 @@ public enum RegistryType {
     ORDERS_CANCELLED("Pedidos Cancelados"),
     USER_ORDERS("Pedidos"),
     USER_REVIEWS("Reseñas"),
-    SHOP_BUDGET("Presupuesto");
+    SHOP_BUDGET("Presupuesto"),
+    SHOP_STOCK("Stock");
 
     private final String translation;
 

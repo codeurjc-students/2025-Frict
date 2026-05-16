@@ -51,9 +51,7 @@ public class ProductService {
 
     public Page<Product> getFilteredProducts(String searchTerm, List<Long> categoryIds,
                                              List<SpecFilterDTO> specFilters, Pageable pageInfo) {
-        var spec = org.springframework.data.jpa.domain.Specification
-                .where(ProductSpecifications.hasSearchTerm(searchTerm))
-                .and(ProductSpecifications.hasCategories(categoryIds));
+        var spec = ProductSpecifications.hasSearchTerm(searchTerm).and(ProductSpecifications.hasCategories(categoryIds));
         if (specFilters != null) {
             for (SpecFilterDTO f : specFilters) {
                 spec = spec.and(ProductSpecifications.hasSpec(f));

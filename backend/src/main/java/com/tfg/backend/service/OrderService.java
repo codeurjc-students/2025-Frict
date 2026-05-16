@@ -243,7 +243,11 @@ public class OrderService {
         for (OrderItem i : cartItems) {
             Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), productRefMap.get(i), i.getProductName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
             eventPublisher.publishEvent(new RegistryEvent(unitsSoldRegistry));
+
+            Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, - (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), productRefMap.get(i), i.getProductName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+            eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
         }
+
         Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
 

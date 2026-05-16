@@ -49,7 +49,6 @@ export class CategoryInfoComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private breadcrumbService = inject(BreadcrumbService);
-  private registryService = inject(RegistryService);
   private locale = inject(LOCALE_ID);
 
   // Estados generales
@@ -60,9 +59,6 @@ export class CategoryInfoComponent implements OnInit {
   mainCategory!: Category;
   similarCategories: Category[] = [];
   subCategories: Category[] = [];
-
-  // Control del panel lateral
-  statsExpanded: boolean = true;
 
   // Expositor de Top Ventas
   topSalesProducts: Product[] = [];
@@ -276,9 +272,5 @@ export class CategoryInfoComponent implements OnInit {
         this.topSalesLoading = false;
       }
     });
-  }
-
-  toggleStats() {
-    this.statsExpanded = !this.statsExpanded;
   }
 }
