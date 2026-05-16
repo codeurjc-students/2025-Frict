@@ -9,6 +9,9 @@ import com.tfg.backend.utils.PdfService;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -53,6 +56,9 @@ public class RegistryService {
         return repository.getMostViewedProductReferences(limit, excludedRefs);
     }
 
+    public List<String> getTopSalesProductReferencesInList(Collection<String> productRefs, int limit) {
+        return repository.getTopSalesProductReferencesInList(productRefs, limit);
+    }
 
     public Double calculateNextTotal(EntityType entityType, String entityId, RegistryType dataType, Double variation) {
         if (variation == null) return null;
@@ -74,5 +80,18 @@ public class RegistryService {
                 request.getOrderIds(), 0, Integer.MAX_VALUE);
 
         return pdfService.generateCustomPdfReport(allData.getContent(), request);
+    }
+
+    public List<org.bson.Document> getProductsTimelineStats(Collection<String> productRefs, String dataType, int days) {
+        return repository.getProductsTimelineStats(productRefs, dataType, days);
+    }
+
+
+    public long getTotalViewsForProducts(Collection<String> productRefs) {
+        return repository.getTotalViewsForProductReferences(productRefs);
+    }
+
+    public long getTotalSalesForProducts(Collection<String> productRefs) {
+        return repository.getTotalSalesForProductReferences(productRefs);
     }
 }

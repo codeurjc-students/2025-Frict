@@ -156,6 +156,98 @@ public class ProductService {
     }
 
 
+    public Page<Product> getTopSalesByCategory(Long categoryId, int page, int size) {
+
+        Category rootCategory = categoryService.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("La categoría no existe"));
+
+        Set<Long> familyCategoryIds = categoryService.findFamilyCategoryIds(categoryId);
+
+        Set<String> categoryProductRefs = productRepository.findReferenceCodesByCategoryIds(familyCategoryIds);
+
+        List<Product> finalProducts = new ArrayList<>();
+
+        if (!categoryProductRefs.isEmpty()) {
+            List<String> topSalesRefs = registryService.getTopSalesProductReferencesInList(categoryProductRefs, size);
+
+            if (!topSalesRefs.isEmpty()) {
+                List<Product> topProductsFromDb = productRepository.findByReferenceCodeIn(topSalesRefs);
+
+                Map<String, Product> productMap = topProductsFromDb.stream()
+                        .collect(Collectors.toMap(Product::getReferenceCode, p -> p));
+
+                for (String ref : topSalesRefs) {
+                    if (productMap.containsKey(ref)) {
+                        finalProducts.add(productMap.get(ref));
+                    }
+                }
+            }
+        }
+
+        if (finalProducts.size() < size) {
+            int missingCount = size - finalProducts.size();
+
+            Set<String> alreadySelectedRefs = finalProducts.stream()
+                    .map(Product::getReferenceCode)
+                    .collect(Collectors.toSet());
+
+            if (alreadySelectedRefs.isEmpty()) {
+                alreadySelectedRefs.add("");
+            }
+
+            Pageable fallbackPageable = PageRequest.of(0, missingCount);
+            List<Product> fallbackProducts = productRepository.findActiveProductsByCategoryIdsExcluding(
+                    familyCategoryIds, alreadySelectedRefs, fallbackPageable).getContent();
+
+            finalProducts.addAll(fallbackProducts);
+        }
+
+        enrichWithStock(finalProducts);
+
+        return new PageImpl<>(finalProducts, PageRequest.of(page, size), finalProducts.size());
+    }
+
+
+    public List<org.bson.Document> getCategoryTimeline(Long categoryId, String dataType, int days) {
+        Category rootCategory = categoryService.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("La categoría no existe"));
+        Set<Long> familyCategoryIds = categoryService.findFamilyCategoryIds(categoryId);
+        Set<String> productRefs = productRepository.findReferenceCodesByCategoryIds(familyCategoryIds);
+
+        return registryService.getProductsTimelineStats(productRefs, dataType, days);
+    }
+
+
+    public Map<String, Object> getCategoryGlobalMetrics(Long categoryId) {
+        if (!productRepository.existsById(categoryId)) { // O con tu categoryRepository según corresponda
+            throw new EntityNotFoundException("La categoría no existe");
+        }
+
+        Set<Long> familyCategoryIds = categoryService.findFamilyCategoryIds(categoryId);
+        Set<String> productRefs = productRepository.findReferenceCodesByCategoryIds(familyCategoryIds);
+
+        if (productRefs.isEmpty()) {
+            return Map.of(
+                    "totalShops", 0L,
+                    "totalViews", 0L,
+                    "totalSales", 0L,
+                    "totalProducts", 0L
+            );
+        }
+
+        long shopsCount = productRepository.countDistinctShopsByProductReferences(productRefs);
+        long viewsCount = registryService.getTotalViewsForProducts(productRefs);
+        long salesCount = registryService.getTotalSalesForProducts(productRefs);
+        long productsCount = productRefs.size();
+
+        return Map.of(
+                "totalShops", shopsCount,
+                "totalViews", viewsCount,
+                "totalSales", salesCount,
+                "totalProducts", productsCount
+        );
+    }
+
 
     // --- WRITING METHODS (override Transactional) ---
 
@@ -199,7 +291,7 @@ public class ProductService {
     }
 
     @Transactional
-    private void deleteById(Long id) {
+    protected void deleteById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("The product that is being deleted does not exist"));
         productRepository.delete(product);

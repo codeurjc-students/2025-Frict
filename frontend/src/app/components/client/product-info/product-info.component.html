@@ -99,7 +99,7 @@
                 <div class="prose prose-slate max-w-none text-surface-600 leading-relaxed" [innerHTML]="product.description"></div>
               </p-tabpanel>
               <p-tabpanel value="1">
-                @if (product.specifications?.length) {
+                @if (product.specifications.length) {
                   <p-table [value]="product.specifications" styleClass="p-datatable-sm">
                     <ng-template pTemplate="header">
                       <tr>

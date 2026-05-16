@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
@@ -30,4 +31,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT DISTINCT c FROM Category c LEFT JOIN FETCH c.children WHERE c IN :categories")
     List<Category> fetchChildrenFor(@Param("categories") List<Category> categories);
+
+    @Query(value = "WITH RECURSIVE CategoryTree AS (SELECT id FROM categories WHERE id = :rootId UNION ALL SELECT c.id FROM categories c INNER JOIN CategoryTree ct ON c.parent_id = ct.id) SELECT id FROM CategoryTree", nativeQuery = true)
+    Set<Long> findFamilyCategoryIds(@Param("rootId") Long rootId);
 }

@@ -86,7 +86,7 @@ public class RegistryRestController {
                 .toList();
     }
 
-    @Operation(summary = "(Admin) Get metrics from an entity")
+    @Operation(summary = "(Admin) Get metric names from an entity")
     @GetMapping("/private/metrics")
     public List<RegistryType> getAvailableMetrics(@RequestParam EntityType entityType) {
         return registryService.getActiveDataTypes(entityType).stream()
@@ -114,4 +114,5 @@ public class RegistryRestController {
 
         return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }
+
 }

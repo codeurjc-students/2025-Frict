@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
@@ -41,4 +42,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT DISTINCT v FROM ProductSpec s JOIN s.values v WHERE s.name = :name ORDER BY v")
     List<String> findDistinctValuesBySpecName(@Param("name") String name);
+
+    @Query("SELECT p.referenceCode FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds AND p.active = true")
+    Set<String> findReferenceCodesByCategoryIds(@Param("categoryIds") Collection<Long> categoryIds);
+
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds AND p.referenceCode NOT IN :excludedRefs AND p.active = true ORDER BY p.createdAt DESC")
+    Page<Product> findActiveProductsByCategoryIdsExcluding(@Param("categoryIds") Collection<Long> categoryIds, @Param("excludedRefs") Collection<String> excludedRefs, Pageable pageable);
+
+    @Query("SELECT COUNT(DISTINCT ss.shop.id) FROM Product p JOIN p.shopsStock ss WHERE p.referenceCode IN :productRefs AND p.active = true AND ss.units > 0")
+    long countDistinctShopsByProductReferences(@Param("productRefs") Collection<String> productRefs);
 }

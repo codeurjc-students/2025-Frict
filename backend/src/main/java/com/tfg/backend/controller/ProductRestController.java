@@ -177,4 +177,33 @@ public class ProductRestController {
         Page<Product> recommendations = productService.getPersonalizedRecommendations(page, size);
         return ResponseEntity.ok(PageFormatter.toPageResponse(recommendations, ProductDTO::new));
     }
+
+    @Operation(summary = "(All) Get top sales products by category ID (paged)")
+    @GetMapping("/category/{categoryId}/top-sales")
+    public ResponseEntity<PageResponse<ProductDTO>> getCategoryTopSales(
+            @PathVariable Long categoryId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        Page<Product> topSales = productService.getTopSalesByCategory(categoryId, page, size);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(topSales, ProductDTO::new));
+    }
+
+
+    @Operation(summary = "(All) Get timeline stats for a category")
+    @GetMapping("/category/{categoryId}/timeline")
+    public ResponseEntity<List<org.bson.Document>> getCategoryTimeline(
+            @PathVariable Long categoryId,
+            @RequestParam String dataType,
+            @RequestParam int days) {
+
+        return ResponseEntity.ok(productService.getCategoryTimeline(categoryId, dataType, days));
+    }
+
+
+    @Operation(summary = "(All) Get global metrics for a category")
+    @GetMapping("/category/{categoryId}/metrics")
+    public ResponseEntity<Map<String, Object>> getCategoryMetrics(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(productService.getCategoryGlobalMetrics(categoryId));
+    }
 }

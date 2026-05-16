@@ -177,4 +177,26 @@ export class ProductService {
     return this.http.put<Product>(this.apiUrl + `/${id}/images`, formData);
   }
 
+
+  public getCategoryTopSales(categoryId: string, size: number = 10): Observable<PageResponse<Product>> {
+    let params = new HttpParams()
+      .set('size', size.toString());
+
+    return this.http.get<PageResponse<Product>>(`${this.apiUrl}/category/${categoryId}/top-sales`, { params });
+  }
+
+
+  public getCategoryTimeline(categoryId: string, dataType: string, days: number): Observable<any[]> {
+    let params = new HttpParams()
+      .set('dataType', dataType)
+      .set('days', days.toString());
+
+    return this.http.get<any[]>(`${this.apiUrl}/category/${categoryId}/timeline`, { params });
+  }
+
+
+  public getCategoryMetrics(categoryId: string): Observable<{totalShops: number, totalViews: number, totalSales: number}> {
+    return this.http.get<any>(`${this.apiUrl}/category/${categoryId}/metrics`);
+  }
+
 }

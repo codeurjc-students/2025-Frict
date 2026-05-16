@@ -84,7 +84,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/favourites/*").hasAuthority("USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/available/*").hasAuthority("MANAGER") // (Manager)
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/recommendations").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/category/*/top-sales").permitAll() //Get top sales products given a category
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/category/*/timeline").permitAll() //Get total count of views / sales given a category
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/category/*/metrics").permitAll() //Get category metrics information
                         .requestMatchers("/api/v1/products/**").hasAuthority("ADMIN") // (Admin) for CRUD, images and activations
+
 
                         // --- 4. ORDERS & CART (OrderRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart/**").hasAuthority("USER") // (User)
