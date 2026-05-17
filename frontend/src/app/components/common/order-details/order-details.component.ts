@@ -190,15 +190,58 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
       this.orderMap.fitBounds(markersGroup.getBounds(), { padding: [40, 40], maxZoom: 15 });
     }
 
-    // Draw route from truck to destination
-    if (truckLat !== undefined && truckLng !== undefined &&
-        this.order.sendingAddress?.latitude && this.order.sendingAddress?.longitude) {
-      this.locationService.getRoute(truckLat, truckLng, this.order.sendingAddress.latitude, this.order.sendingAddress.longitude).subscribe(route => {
-        if (!route || !this.orderMap) return;
-        const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
-        L.polyline(latlngs, { color: '#f59e0b', weight: 5, opacity: 0.8 }).addTo(this.orderMap!);
-        this.routeEta = formatDuration(route.durationSeconds);
+    this.routeEta = null;
+
+    if (truckLat === undefined || truckLng === undefined) return;
+
+    const truckStatus = this.truck?.history?.length
+      ? this.truck.history[this.truck.history.length - 1].status
+      : '';
+    const isActiveOrder = this.truck?.selectedOrderId === this.order?.id;
+
+    if (truckStatus === 'Descanso' || truckStatus === 'Fuera de servicio') return;
+
+    if (truckStatus === 'En ruta a la tienda'
+        && this.shop?.address?.latitude && this.shop?.address?.longitude
+        && this.order?.sendingAddress?.latitude && this.order?.sendingAddress?.longitude) {
+
+      const shopLat = this.shop.address.latitude;
+      const shopLng = this.shop.address.longitude;
+      const destLat = this.order.sendingAddress.latitude;
+      const destLng = this.order.sendingAddress.longitude;
+
+      forkJoin({
+        leg1: this.locationService.getRoute(truckLat, truckLng, shopLat, shopLng),
+        leg2: this.locationService.getRoute(shopLat, shopLng, destLat, destLng)
+      }).subscribe(({ leg1, leg2 }) => {
+        if (!this.orderMap) return;
+        if (leg1) {
+          const ll1: L.LatLngTuple[] = leg1.coordinates.map(([lng, lat]) => [lat, lng]);
+          L.polyline(ll1, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.orderMap!);
+        }
+        if (leg2) {
+          const ll2: L.LatLngTuple[] = leg2.coordinates.map(([lng, lat]) => [lat, lng]);
+          const dashArray = isActiveOrder ? undefined : '8, 8';
+          L.polyline(ll2, { color: '#8b5cf6', weight: 5, opacity: 0.75, dashArray }).addTo(this.orderMap!);
+        }
+        if (leg1 && leg2) {
+          const eta = formatDuration(leg1.durationSeconds + leg2.durationSeconds);
+          this.routeEta = isActiveOrder ? eta : '>= ' + eta;
+        }
       });
+
+    } else if (truckStatus === 'En Reparto'
+        && this.order?.sendingAddress?.latitude && this.order?.sendingAddress?.longitude) {
+
+      this.locationService.getRoute(truckLat, truckLng, this.order.sendingAddress.latitude, this.order.sendingAddress.longitude)
+        .subscribe(route => {
+          if (!route || !this.orderMap) return;
+          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+          const dashArray = isActiveOrder ? undefined : '8, 8';
+          L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.8, dashArray }).addTo(this.orderMap!);
+          const eta = formatDuration(route.durationSeconds);
+          this.routeEta = isActiveOrder ? eta : '>= ' + eta;
+        });
     }
   }
 

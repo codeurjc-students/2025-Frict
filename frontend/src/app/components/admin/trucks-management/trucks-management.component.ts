@@ -170,6 +170,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
             this.initMap();
           }
           this.renderTruckMarkers();
+          this.renderDriverMarkers();
         }, 50);
       },
       error: () => {
@@ -331,7 +332,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
           .bindPopup(`<strong>Destino de entrega</strong><br><span class="text-xs">${truck.plateNumber}</span>`);
         this.markers.push(destMarker);
         bounds.extend([truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude]);
-        this.drawRouteOnMap(pos.lat, pos.lng, truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude, '#f59e0b', marker);
+        this.drawRouteOnMap(pos.lat, pos.lng, truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude, '#8b5cf6', marker);
       }
     });
     if (hasCoords) this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });

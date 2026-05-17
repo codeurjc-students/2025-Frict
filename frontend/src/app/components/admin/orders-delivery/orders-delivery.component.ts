@@ -282,7 +282,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
         this.locationService.getRoute(truckLat, truckLng, activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude).subscribe(route => {
           if (!route || !this.map) return;
           const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
-          this.routePolyline = L.polyline(latlngs, { color: '#f59e0b', weight: 5, opacity: 0.75 }).addTo(this.map!);
+          this.routePolyline = L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.75 }).addTo(this.map!);
           this.deliveryMapEta = formatDuration(route.durationSeconds);
         });
       }
