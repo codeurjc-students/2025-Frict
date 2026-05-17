@@ -10,6 +10,7 @@ import {OrderItem} from '../../../models/orderItem.model';
 import {catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap} from 'rxjs';
 import {CartSummary} from '../../../models/cartSummary.model';
 import {Button} from 'primeng/button';
+import {Tag} from 'primeng/tag';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
@@ -23,7 +24,7 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip, StockTagComponent, BreadcrumbReloadComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Paginator, Button, LoadingScreenComponent, Tooltip, StockTagComponent, BreadcrumbReloadComponent, Tag],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
@@ -155,6 +156,15 @@ export class CartComponent implements OnInit, OnDestroy {
     return this.foundItems?.items?.some(item => item.product.id === productId) ?? false;
   }
 
+  isProductInFavorites(productId: string): boolean {
+    return this.foundProducts?.items?.some(product => product.id === productId) ?? false;
+  }
+
+  get hasUnavailableItems(): boolean {
+    return this.selectedShop !== null &&
+           this.foundItems.items.some(item => item.product.availableUnits === 0);
+  }
+
   protected clearCart() {
     this.orderService.clearUserCartItems().subscribe({
       next: (summary) => {
@@ -223,6 +233,15 @@ export class CartComponent implements OnInit, OnDestroy {
         this.removeFavorite(id);
         this.getUserCartItemsPage();
         this.getUserCartSummary();
+      }
+    })
+  }
+
+  protected moveToFavorites(item: OrderItem) {
+    this.productService.addProductToFavourites(item.product.id).subscribe({
+      next: () => {
+        this.removeItem(item.id);
+        this.getUserFavouriteProducts();
       }
     })
   }

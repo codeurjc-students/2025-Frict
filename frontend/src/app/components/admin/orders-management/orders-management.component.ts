@@ -37,6 +37,7 @@ import {TruckService} from '../../../services/truck.service';
 import {LocationService} from '../../../services/location.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
+import {getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass} from '../../../utils/tagManager.util';
 
 import * as L from 'leaflet';
 import {ProgressBar} from 'primeng/progressbar';
@@ -85,6 +86,8 @@ export class OrdersManagementComponent implements OnInit {
   displayOrderDialog = false;
   selectedOrder: Order | null = null;
   newComment: string = '';
+  orderStatuses: string[] = ['Pedido Realizado', 'Enviado', 'En Reparto', 'Completado', 'Cancelado'];
+  selectedStatusForUpdate: string = '';
   selectedShop: Shop | null = null;
   selectedTruck: Truck | null = null;
 
@@ -142,6 +145,7 @@ export class OrdersManagementComponent implements OnInit {
   openOrderDetails(order: Order) {
     this.selectedOrder = order;
     this.newComment = '';
+    this.selectedStatusForUpdate = this.getCurrentStatus(order);
     this.selectedShop = null;
     this.selectedTruck = null;
     this.availableTrucks = [];
@@ -395,14 +399,15 @@ export class OrdersManagementComponent implements OnInit {
 
   addComment() {
     if (!this.newComment.trim() || !this.selectedOrder) return;
-    const currentStatus = this.getCurrentStatus(this.selectedOrder);
+    const statusToUse = this.listModeSelected ? this.selectedStatusForUpdate : this.getCurrentStatus(this.selectedOrder);
 
-    this.orderService.commentAndOrUpdateOrderStatus(this.selectedOrder.id, currentStatus, this.newComment.trim()).subscribe({
+    this.orderService.commentAndOrUpdateOrderStatus(this.selectedOrder.id, statusToUse, this.newComment.trim()).subscribe({
       next: (updatedOrder) => {
         this.removeOrderFromAllSignals(updatedOrder.id);
         this.addOrderToCorrectSignal(updatedOrder);
         this.selectedOrder = updatedOrder;
         this.newComment = '';
+        this.selectedStatusForUpdate = this.getCurrentStatus(updatedOrder);
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Actualización registrada.' });
       }
     });
@@ -501,21 +506,6 @@ export class OrdersManagementComponent implements OnInit {
     }
   }
 
-  getIconForStatus(status: string): string {
-    const icons: Record<string, string> = { 'Pedido Realizado': 'pi pi-shopping-cart', 'Enviado': 'pi pi-box', 'En Reparto': 'pi pi-truck', 'Completado': 'pi pi-check', 'Cancelado': 'pi pi-times' };
-    return icons[status] || 'pi pi-info-circle';
-  }
-
-  getStatusColor(status: string): string {
-    const colors: Record<string, string> = { 'Pedido Realizado': 'text-blue-500', 'Enviado': 'text-purple-500', 'En Reparto': 'text-orange-500', 'Completado': 'text-green-500', 'Cancelado': 'text-red-500' };
-    return colors[status] || 'text-slate-400';
-  }
-
-  getStatusBgColor(status: string): string {
-    const colors: Record<string, string> = { 'Pedido Realizado': 'bg-blue-100 text-blue-700', 'Enviado': 'bg-purple-100 text-purple-700', 'En Reparto': 'bg-orange-100 text-orange-700', 'Completado': 'bg-green-100 text-green-700', 'Cancelado': 'bg-red-100 text-red-700' };
-    return colors[status] || 'bg-slate-100 text-slate-700';
-  }
-
   getItemName(item: any): string {
     return item.productName || item.product?.name || 'Producto ID: ' + (item.productId || 'N/A');
   }
@@ -548,4 +538,7 @@ export class OrdersManagementComponent implements OnInit {
   protected readonly formatPrice = formatPrice;
   protected readonly formatAddress = formatAddress;
   protected readonly formatDuration = formatDuration;
+  protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
+  protected readonly getOrderStatusColorClass = getOrderStatusColorClass;
+  protected readonly getOrderStatusBgColorClass = getOrderStatusBgColorClass;
 }

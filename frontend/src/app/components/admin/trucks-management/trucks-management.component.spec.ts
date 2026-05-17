@@ -1,5 +1,6 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
 import {TrucksManagementComponent} from './trucks-management.component';
+import {getTruckHistoryStatusTagInfo} from '../../../utils/tagManager.util';
 import {TruckService} from '../../../services/truck.service';
 import {UserService} from '../../../services/user.service';
 import {ConfirmationService, MessageService} from 'primeng/api';
@@ -338,44 +339,38 @@ describe('TrucksManagementComponent', () => {
     expect(component.getCurrentStatus(null as any)).toBe('Disponible');
   });
 
-  // ─── getStatusSeverity ────────────────────────────────────────────────────────
+  // ─── getTruckHistoryStatusTagInfo (tagManager) ───────────────────────────────
 
-  it('should return "success" for "disponible" status', () => {
-    expect(component.getStatusSeverity('Disponible')).toBe('success');
+  it('should return success severity for Descanso', () => {
+    expect(getTruckHistoryStatusTagInfo('Descanso').severity).toBe('success');
   });
 
-  it('should return "info" for "En reparto" status', () => {
-    expect(component.getStatusSeverity('En reparto')).toBe('info');
+  it('should return info severity for En ruta a la tienda', () => {
+    expect(getTruckHistoryStatusTagInfo('En ruta a la tienda').severity).toBe('info');
   });
 
-  it('should return "warn" for "En mantenimiento" status', () => {
-    expect(component.getStatusSeverity('En mantenimiento')).toBe('warn');
+  it('should return warn severity for En Reparto', () => {
+    expect(getTruckHistoryStatusTagInfo('En Reparto').severity).toBe('warn');
   });
 
-  it('should return "danger" for "Fuera de servicio" status', () => {
-    expect(component.getStatusSeverity('Fuera de servicio')).toBe('danger');
+  it('should return danger severity for Fuera de servicio', () => {
+    expect(getTruckHistoryStatusTagInfo('Fuera de servicio').severity).toBe('danger');
   });
 
-  it('should return "secondary" for unknown status', () => {
-    expect(component.getStatusSeverity('Desconocido')).toBe('secondary');
+  it('should return secondary severity for unknown status', () => {
+    expect(getTruckHistoryStatusTagInfo('Desconocido').severity).toBe('secondary');
   });
 
-  // ─── getIconForStatus ─────────────────────────────────────────────────────────
-
-  it('should return check-circle icon for "disponible"', () => {
-    expect(component.getIconForStatus('Disponible')).toBe('pi pi-check-circle');
+  it('should return moon icon for Descanso', () => {
+    expect(getTruckHistoryStatusTagInfo('Descanso').icon).toBe('pi pi-moon');
   });
 
-  it('should return send icon for "En reparto"', () => {
-    expect(component.getIconForStatus('En reparto')).toBe('pi pi-send');
+  it('should return send icon for En Reparto', () => {
+    expect(getTruckHistoryStatusTagInfo('En Reparto').icon).toBe('pi pi-send');
   });
 
-  it('should return wrench icon for "En mantenimiento"', () => {
-    expect(component.getIconForStatus('En mantenimiento')).toBe('pi pi-wrench');
-  });
-
-  it('should return times-circle icon for "Fuera de servicio"', () => {
-    expect(component.getIconForStatus('Fuera de servicio')).toBe('pi pi-times-circle');
+  it('should return times-circle icon for Fuera de servicio', () => {
+    expect(getTruckHistoryStatusTagInfo('Fuera de servicio').icon).toBe('pi pi-times-circle');
   });
 
   // ─── getLoadPercentage ────────────────────────────────────────────────────────

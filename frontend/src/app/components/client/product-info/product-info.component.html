@@ -547,8 +547,9 @@
 
             <div class="shrink-0 text-right min-w-[5rem]">
               <p-tag
-                [value]="stock.units > 1 ? stock.units + ' unidades' : (stock.units === 1 ? '1 unidad' : 'Agotado')"
-                [severity]="stock.units > 5 ? 'success' : (stock.units > 0 ? 'warning' : 'danger')"
+                [value]="getStockLevelTagInfo(stock.units).message"
+                [severity]="getStockLevelTagInfo(stock.units).severity"
+                [icon]="getStockLevelTagInfo(stock.units).icon"
                 [rounded]="true">
               </p-tag>
             </div>

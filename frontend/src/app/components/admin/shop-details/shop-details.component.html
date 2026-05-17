@@ -112,9 +112,9 @@
                 <!-- Estado del camión (desde historial) -->
                 <td class="text-center py-3">
                   <p-tag
-                    [icon]="getTruckStatusIcon(getTruckHistoryStatus(truck))"
-                    [value]="getTruckHistoryStatus(truck)"
-                    [severity]="getTruckStatusSeverity(getTruckHistoryStatus(truck))"
+                    [icon]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(truck)).icon"
+                    [value]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(truck)).message"
+                    [severity]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(truck)).severity"
                     [rounded]="true"
                     styleClass="text-[10px] uppercase whitespace-nowrap">
                   </p-tag>
@@ -267,11 +267,12 @@
 
                 <td class="text-center py-3">
                   <p-tag
-                    [severity]="getStockSeverity(stock.units)"
-                    [value]="stock.units + ' uds.'"
+                    [severity]="getStockLevelTagInfo(stock.units).severity"
+                    [value]="getStockLevelTagInfo(stock.units).message"
+                    [icon]="getStockLevelTagInfo(stock.units).icon"
                     [rounded]="true"
                     styleClass="text-xs"
-                    [pTooltip]="stock.units <= 4 ? 'Stock crítico' : stock.units <= 20 ? 'Stock bajo' : 'Stock correcto'">
+                    [pTooltip]="stock.units === 0 ? 'Sin stock' : stock.units <= 5 ? 'Stock crítico' : stock.units <= 20 ? 'Stock bajo' : 'Stock correcto'">
                   </p-tag>
                 </td>
 

@@ -22,6 +22,7 @@ import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Tooltip} from 'primeng/tooltip';
 import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
+import {getTruckHistoryStatusTagInfo, getStockLevelTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
@@ -492,32 +493,13 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
   goBack() { this.router.navigate(['/admin/shops']); }
 
-  getTruckHistoryStatus(truck: Truck): string {
+  getTruckCurrentStatus(truck: Truck): string {
     if (!truck.history?.length) return 'Descanso';
     return truck.history[truck.history.length - 1].status;
   }
 
-  getTruckStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    if (status === 'Descanso') return 'success';
-    if (status === 'En ruta a la tienda') return 'info';
-    if (status === 'En Reparto') return 'warn';
-    if (status === 'Fuera de servicio') return 'danger';
-    return 'secondary';
-  }
-
-  getTruckStatusIcon(status: string): string {
-    if (status === 'Descanso') return 'pi pi-moon';
-    if (status === 'En ruta a la tienda') return 'pi pi-map-marker';
-    if (status === 'En Reparto') return 'pi pi-send';
-    if (status === 'Fuera de servicio') return 'pi pi-times-circle';
-    return 'pi pi-question-circle';
-  }
-
-  getStockSeverity(units: number): 'success' | 'warn' | 'danger' {
-    if (units > 20) return 'success';
-    if (units >= 5) return 'warn';
-    return 'danger';
-  }
+  protected readonly getTruckHistoryStatusTagInfo = getTruckHistoryStatusTagInfo;
+  protected readonly getStockLevelTagInfo = getStockLevelTagInfo;
 
   formatLastSeen(dateStr: string | null | undefined): string {
     if (!dateStr) return '—';

@@ -31,6 +31,7 @@ import {Shop} from '../../../models/shop.model';
 import {Truck} from '../../../models/truck.model';
 import {ThemeColor, UiService} from '../../../utils/ui.service';
 import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+import {getOrderStatusTagInfo, getUserRoleTagInfo} from '../../../utils/tagManager.util';
 import {HttpErrorResponse} from '@angular/common/http';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
@@ -535,16 +536,7 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  protected getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {
-    switch (status) {
-      case 'Pedido realizado': return 'success';
-      case 'Enviado': return 'warn';
-      case 'En reparto': return 'info';
-      case 'Completado': return 'contrast';
-      case 'Cancelado': return 'danger';
-      default: return 'secondary';
-    }
-  }
+  protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
 
   protected getRoleLabel(status: string): string {
     const labels: Record<string, string> = {
@@ -558,4 +550,5 @@ export class ProfileComponent implements OnInit {
 
   protected readonly formatPrice = formatPrice;
   protected readonly formatAddress = formatAddress;
+  protected readonly getUserRoleTagInfo = getUserRoleTagInfo;
 }

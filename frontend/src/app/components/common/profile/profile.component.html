@@ -107,7 +107,7 @@
 
         <div class="relative z-10 text-center md:text-left space-y-2">
           <div class="inline-block">
-            <p-tag [value]="getRoleLabel(user.roles[0])" severity="info" [rounded]="true" styleClass="uppercase text-xs font-bold tracking-wider bg-surface-800 border border-surface-700 text-primary-400 px-3 py-1"></p-tag>
+            <p-tag [value]="getUserRoleTagInfo(user.roles.at(0) ?? '').message" [severity]="getUserRoleTagInfo(user.roles.at(0) ?? '').severity" [icon]="getUserRoleTagInfo(user.roles.at(0) ?? '').icon" rounded="true"></p-tag>
           </div>
           <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
             Hola, <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">{{ user.name }}</span>
@@ -586,8 +586,9 @@
                       <p class="text-xs text-surface-500">Total</p>
                     </div>
 
-                    <p-tag [value]="order.history[order.history.length-1].status"
-                           [severity]="getStatusSeverity(order.history[order.history.length-1].status)"
+                    <p-tag [value]="getOrderStatusTagInfo(order.history[order.history.length-1].status).message"
+                           [severity]="getOrderStatusTagInfo(order.history[order.history.length-1].status).severity"
+                           [icon]="getOrderStatusTagInfo(order.history[order.history.length-1].status).icon"
                            styleClass="min-w-[90px] text-center"></p-tag>
 
                     <p-button

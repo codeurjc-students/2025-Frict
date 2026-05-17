@@ -66,7 +66,7 @@
                         <div class="space-y-1">
                           <div class="flex items-center gap-2 mb-1">
                             @if (item.product.previousPrice > item.product.currentPrice) {
-                              <span class="bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-200 uppercase tracking-wide">Oferta</span>
+                              <p-tag value="Oferta" icon="pi pi-tag" severity="danger" styleClass="!text-[10px] !font-bold uppercase tracking-wide"></p-tag>
                             }
                             <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Ref: {{item.product.referenceCode || 'N/A'}}</span>
                           </div>
@@ -78,9 +78,14 @@
                           </div>
                         </div>
 
-                        <button (click)="removeItem(item.id)" class="hidden sm:flex text-surface-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg" pTooltip="Eliminar producto" tooltipPosition="left">
-                          <i class="pi pi-trash"></i>
-                        </button>
+                        <div class="hidden sm:flex items-center gap-1">
+                          <button (click)="moveToFavorites(item)" [disabled]="isProductInFavorites(item.product.id)" class="text-surface-400 hover:text-primary-500 transition-colors p-2 hover:bg-primary-50 rounded-lg disabled:opacity-40" pTooltip="Mover a favoritos" tooltipPosition="left">
+                            <i class="pi pi-bookmark"></i>
+                          </button>
+                          <button (click)="removeItem(item.id)" class="text-surface-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg" pTooltip="Eliminar producto" tooltipPosition="left">
+                            <i class="pi pi-trash"></i>
+                          </button>
+                        </div>
                       </div>
 
                       <div class="flex flex-wrap items-end justify-between gap-4 mt-4 pt-4 border-t border-surface-50">
@@ -95,6 +100,9 @@
                               <i class="pi pi-plus text-xs"></i>
                             </button>
                           </div>
+                          <button (click)="moveToFavorites(item)" [disabled]="isProductInFavorites(item.product.id)" class="sm:hidden text-surface-400 hover:text-primary-500 p-2 disabled:opacity-40">
+                            <i class="pi pi-bookmark"></i>
+                          </button>
                           <button (click)="removeItem(item.id)" class="sm:hidden text-surface-400 hover:text-red-500 p-2">
                             <i class="pi pi-trash"></i>
                           </button>
@@ -102,8 +110,13 @@
 
                         <div class="text-right">
                           @if (item.product.previousPrice > item.product.currentPrice) {
-                            <div class="text-xs text-surface-400 line-through font-medium mb-0.5">
-                              ({{ formatPrice(item.product.previousPrice) }}/ud)
+                            <div class="flex items-center justify-end gap-2 mb-0.5">
+                              <span class="text-xs text-surface-400 line-through font-medium">
+                                ({{ formatPrice(item.product.previousPrice) }}/ud)
+                              </span>
+                              @if (item.product.discount.startsWith('-')) {
+                                <p-tag [value]="item.product.discount" severity="danger" styleClass="!text-[0.65rem] !font-bold"></p-tag>
+                              }
                             </div>
                           }
                           <div class="text-xl font-bold text-surface-900 flex items-center gap-1">
@@ -153,26 +166,22 @@
                   <div class="flex-1 flex flex-col justify-between">
                     <div>
                       <h3 [routerLink]="['/product', product.id]" class="text-sm font-bold text-surface-900 line-clamp-2 hover:text-primary-600 cursor-pointer mb-2">{{ product.name }}</h3>
-                      <div class="flex items-center justify-start gap-3">
-                        <div class="text-lg font-bold text-surface-900">{{ formatPrice(product.currentPrice) }}</div>
-                        <ng-container>
-                          @if (product.totalUnits > 0) {
-                            <div class="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 shrink-0">
-                              <i class="pi pi-check-circle text-[10px]"></i> Disponible
-                            </div>
+                      <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <div class="text-lg font-bold text-surface-900">{{ formatPrice(product.currentPrice) }}</div>
+                          @if (product.previousPrice > 0 && product.previousPrice > product.currentPrice) {
+                            <span class="text-surface-400 line-through text-xs font-medium">{{ formatPrice(product.previousPrice) }}</span>
                           }
-
-                          @if (!(product.totalUnits > 0)) {
-                            <div class="flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 shrink-0">
-                              <i class="pi pi-times-circle text-[10px]"></i> Agotado
-                            </div>
+                          @if (product.discount.startsWith('-')) {
+                            <p-tag [value]="product.discount" severity="danger" styleClass="!text-[0.65rem] !font-bold"></p-tag>
                           }
-                        </ng-container>
+                        </div>
+                        <app-stock-tag [product]="product"></app-stock-tag>
                       </div>
                     </div>
 
                     <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-50">
-                      <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id) || product.availableUnits == 0" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
+                      <button (click)="moveToCart(product.id)" [disabled]="isProductInCart(product.id)" class="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded hover:bg-primary-100 transition-colors disabled:bg-surface-100 disabled:text-surface-400">
                         <i class="pi pi-cart-plus"></i> Mover al carro
                       </button>
                       <button (click)="removeFavorite(product.id)" class="text-surface-400 hover:text-red-500 transition-colors p-1" pTooltip="Eliminar" tooltipPosition="top">
@@ -263,8 +272,14 @@
             </div>
           </div>
 
+          @if (hasUnavailableItems) {
+            <div class="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-sm text-amber-800">
+              <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5 shrink-0"></i>
+              <span>Hay productos en tu carrito que no están disponibles en la tienda seleccionada.</span>
+            </div>
+          }
           <div class="flex flex-col gap-3">
-            <p-button label="Tramitar pedido" [disabled]="foundItems.totalItems == 0" icon="pi pi-check" iconPos="right"
+            <p-button label="Tramitar pedido" [disabled]="foundItems.totalItems == 0 || hasUnavailableItems" icon="pi pi-check" iconPos="right"
                       routerLink="/summary" styleClass="w-full !rounded-xl !font-bold !py-3 !text-lg shadow-lg shadow-primary-500/20"></p-button>
             <p-button label="Seguir comprando" severity="secondary" routerLink="/" styleClass="w-full !rounded-xl !font-bold !bg-surface-100 !border-surface-200 !text-surface-700 hover:!bg-surface-200"></p-button>
           </div>

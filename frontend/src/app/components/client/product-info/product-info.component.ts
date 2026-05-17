@@ -13,6 +13,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/textFormat.util';
+import {getStockLevelTagInfo} from '../../../utils/tagManager.util';
 import {CategoryService} from '../../../services/category.service';
 import {Category} from '../../../models/category.model';
 import {Dialog} from 'primeng/dialog';
@@ -94,6 +95,7 @@ export class ProductInfoComponent implements OnInit {
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
   protected readonly carouselResponsiveOptions = carouselResponsiveOptions;
   protected readonly formatPrice = formatPrice;
+  protected readonly getStockLevelTagInfo = getStockLevelTagInfo;
   protected readonly Math = Math;
 
   protected images: any[] = [];

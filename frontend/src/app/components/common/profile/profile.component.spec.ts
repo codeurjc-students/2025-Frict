@@ -4,6 +4,7 @@ import {provideHttpClient, HttpErrorResponse} from '@angular/common/http';
 import {ActivatedRoute, Router} from '@angular/router';
 import {of, Subject, throwError} from 'rxjs';
 import {signal} from '@angular/core';
+import {getOrderStatusTagInfo} from '../../../utils/tagManager.util';
 
 import {ProfileComponent} from './profile.component';
 import {UserService} from '../../../services/user.service';
@@ -775,31 +776,31 @@ describe('ProfileComponent', () => {
     });
   });
 
-  // ── getStatusSeverity ─────────────────────────────────────────────────────────
+  // ── getOrderStatusTagInfo (tagManager) ───────────────────────────────────────
 
-  describe('getStatusSeverity', () => {
-    it('should return "success" for "Pedido realizado"', () => {
-      expect((component as any)['getStatusSeverity']('Pedido realizado')).toBe('success');
+  describe('getOrderStatusTagInfo', () => {
+    it('should return info severity for Pedido Realizado', () => {
+      expect(getOrderStatusTagInfo('Pedido Realizado').severity).toBe('info');
     });
 
-    it('should return "warn" for "Enviado"', () => {
-      expect((component as any)['getStatusSeverity']('Enviado')).toBe('warn');
+    it('should return info severity for Enviado', () => {
+      expect(getOrderStatusTagInfo('Enviado').severity).toBe('info');
     });
 
-    it('should return "info" for "En reparto"', () => {
-      expect((component as any)['getStatusSeverity']('En reparto')).toBe('info');
+    it('should return warn severity for En Reparto', () => {
+      expect(getOrderStatusTagInfo('En Reparto').severity).toBe('warn');
     });
 
-    it('should return "contrast" for "Completado"', () => {
-      expect((component as any)['getStatusSeverity']('Completado')).toBe('contrast');
+    it('should return success severity for Completado', () => {
+      expect(getOrderStatusTagInfo('Completado').severity).toBe('success');
     });
 
-    it('should return "danger" for "Cancelado"', () => {
-      expect((component as any)['getStatusSeverity']('Cancelado')).toBe('danger');
+    it('should return danger severity for Cancelado', () => {
+      expect(getOrderStatusTagInfo('Cancelado').severity).toBe('danger');
     });
 
-    it('should return "secondary" for unknown status', () => {
-      expect((component as any)['getStatusSeverity']('Unknown')).toBe('secondary');
+    it('should return secondary severity for unknown status', () => {
+      expect(getOrderStatusTagInfo('Unknown').severity).toBe('secondary');
     });
   });
 

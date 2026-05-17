@@ -435,12 +435,6 @@ public class OrderService {
         User loggedUser = userService.findLoggedUserHelper();
         Product product = productService.findProductHelper(id);
 
-        int inCartUnits = orderItemService.findProductUnitsInCart(id).stream().mapToInt(OrderItem::getQuantity).sum();
-
-        if(inCartUnits + quantity > product.getAvailableUnits()){
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product with ID " + id + " is not enough.");
-        }
-
         Optional<OrderItem> itemInCart = loggedUser.getItemsInCart().stream().filter(item -> item.getProduct().getId().equals(id)).findFirst();
 
         if (itemInCart.isPresent()) {
@@ -460,16 +454,18 @@ public class OrderService {
         OrderItem itemToUpdate = loggedUser.getItemsInCart().stream().filter(item -> item.getProduct().getId().equals(id)).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item in cart with ID " + id + " does not exist."));
 
-        int maxAchievableQuantity = itemToUpdate.getProduct().getShopsStock().stream().mapToInt(ShopStock::getUnits).sum();
+        Long shopId = loggedUser.getSelectedShop() != null ? loggedUser.getSelectedShop().getId() : null;
+        int localStock = itemToUpdate.getProduct().getShopsStock().stream()
+                .filter(s -> s.getShop().getId().equals(shopId))
+                .mapToInt(ShopStock::getUnits)
+                .findFirst()
+                .orElse(0);
 
-        if (quantity > maxAchievableQuantity) {
-            quantity = maxAchievableQuantity;
-        } else if (quantity < 0) {
-            if(maxAchievableQuantity > 0){
-                quantity = 1;
-            } else {
-                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Updating order item not available.");
-            }
+        if (quantity > localStock) {
+            quantity = localStock;
+        }
+        if (quantity < 1) {
+            quantity = 1;
         }
         itemToUpdate.setQuantity(quantity);
     }

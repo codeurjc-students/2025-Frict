@@ -42,8 +42,9 @@
             <div class="flex flex-col items-end gap-1">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estado del Camión</span>
               <p-tag
-                [value]="getTruckCurrentStatus(myTruck())"
-                [severity]="getStatusSeverityTruck(getTruckCurrentStatus(myTruck()))"
+                [value]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(myTruck())).message"
+                [icon]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(myTruck())).icon"
+                [severity]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(myTruck())).severity"
                 styleClass="!px-3 !py-1.5 !font-bold !rounded-lg">
               </p-tag>
             </div>
@@ -103,7 +104,7 @@
                     <div class="relative">
 
                       <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
-                        <i class="text-xs" [ngClass]="log.icon || getIconForTruckStatus(log.status)"></i>
+                        <i class="text-xs" [ngClass]="log.icon || getTruckHistoryStatusTagInfo(log.status).icon"></i>
                       </div>
 
                       <div class="bg-white border rounded-xl p-4 shadow-sm border-surface-200">
@@ -167,9 +168,9 @@
                         <span class="font-mono font-bold text-md">{{ order.referenceCode }}</span>
                         <div class="flex items-center gap-2">
                           @if (myTruck()?.selectedOrderId === order.id) {
-                            <span class="text-[9px] font-bold uppercase text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">Activo</span>
+                            <p-tag value="Activo" severity="success" [rounded]="true" styleClass="!text-[9px]"></p-tag>
                           }
-                          <p-tag [value]="getCurrentStatus(order)" [severity]="getStatusSeverity(getCurrentStatus(order))" styleClass="!text-[9px]"></p-tag>
+                          <p-tag [value]="getOrderStatusTagInfo(getCurrentStatus(order)).message" [icon]="getOrderStatusTagInfo(getCurrentStatus(order)).icon" [severity]="getOrderStatusTagInfo(getCurrentStatus(order)).severity" styleClass="!text-[9px]"></p-tag>
                         </div>
                       </div>
                     </ng-template>
@@ -334,7 +335,7 @@
                             <span class="text-[10px] font-bold text-slate-400 uppercase">Fase Logística</span>
                             <div class="mt-1">
                               @if (selectedOrder()) {
-                                <p-tag [value]="getCurrentStatus(selectedOrder())" [severity]="getStatusSeverity(getCurrentStatus(selectedOrder()))" styleClass="!px-3 !py-1.5 !font-bold !rounded-lg"></p-tag>
+                                <p-tag [value]="getOrderStatusTagInfo(getCurrentStatus(selectedOrder())).message" [icon]="getOrderStatusTagInfo(getCurrentStatus(selectedOrder())).icon" [severity]="getOrderStatusTagInfo(getCurrentStatus(selectedOrder())).severity" styleClass="!px-3 !py-1.5 !font-bold !rounded-lg"></p-tag>
                               }
                               @if (!selectedOrder()) {
                                 <span class="text-slate-300 italic">Sin datos</span>

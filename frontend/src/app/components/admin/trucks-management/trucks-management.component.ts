@@ -27,6 +27,7 @@ import {Textarea} from 'primeng/textarea';
 import {Truck} from '../../../models/truck.model';
 import {TruckService} from '../../../services/truck.service';
 import {formatAddress, formatDuration} from '../../../utils/textFormat.util';
+import {getTruckHistoryStatusTagInfo} from '../../../utils/tagManager.util';
 import {UserService} from '../../../services/user.service';
 import {Select} from 'primeng/select';
 import {RouterLink} from '@angular/router';
@@ -408,21 +409,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    if (status === 'Descanso') return 'success';
-    if (status === 'En ruta a la tienda') return 'info';
-    if (status === 'En Reparto') return 'warn';
-    if (status === 'Fuera de servicio') return 'danger';
-    return 'secondary';
-  }
-
-  getIconForStatus(status: string): string {
-    if (status === 'Descanso') return 'pi pi-moon';
-    if (status === 'En ruta a la tienda') return 'pi pi-map-marker';
-    if (status === 'En Reparto') return 'pi pi-send';
-    if (status === 'Fuera de servicio') return 'pi pi-times-circle';
-    return 'pi pi-info-circle';
-  }
+  protected readonly getTruckHistoryStatusTagInfo = getTruckHistoryStatusTagInfo;
 
   getLoadPercentage(active: number, max: number): number {
     return max === 0 ? 0 : Math.round((active / max) * 100);

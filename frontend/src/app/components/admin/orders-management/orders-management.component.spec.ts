@@ -5,6 +5,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {of, Subject, throwError} from 'rxjs';
 import {MessageService} from 'primeng/api';
 import {PaginatorState} from 'primeng/paginator';
+import {getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass} from '../../../utils/tagManager.util';
 
 import {OrdersManagementComponent} from './orders-management.component';
 import {OrderService} from '../../../services/order.service';
@@ -660,47 +661,47 @@ describe('OrdersManagementComponent', () => {
     });
   });
 
-  // ── Pure helper functions ─────────────────────────────────────────────────────
+  // ── tagManager helpers (getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass) ──
 
-  describe('getIconForStatus', () => {
+  describe('getOrderStatusTagInfo', () => {
     it('should return correct icons for all known statuses', () => {
-      expect(component.getIconForStatus('Pedido Realizado')).toBe('pi pi-shopping-cart');
-      expect(component.getIconForStatus('Enviado')).toBe('pi pi-box');
-      expect(component.getIconForStatus('En Reparto')).toBe('pi pi-truck');
-      expect(component.getIconForStatus('Completado')).toBe('pi pi-check');
-      expect(component.getIconForStatus('Cancelado')).toBe('pi pi-times');
+      expect(getOrderStatusTagInfo('Pedido Realizado').icon).toBe('pi pi-shopping-cart');
+      expect(getOrderStatusTagInfo('Enviado').icon).toBe('pi pi-box');
+      expect(getOrderStatusTagInfo('En Reparto').icon).toBe('pi pi-truck');
+      expect(getOrderStatusTagInfo('Completado').icon).toBe('pi pi-check');
+      expect(getOrderStatusTagInfo('Cancelado').icon).toBe('pi pi-times');
     });
 
     it('should return fallback icon for unknown status', () => {
-      expect(component.getIconForStatus('Unknown')).toBe('pi pi-info-circle');
+      expect(getOrderStatusTagInfo('Unknown').icon).toBe('pi pi-info-circle');
     });
   });
 
-  describe('getStatusColor', () => {
+  describe('getOrderStatusColorClass', () => {
     it('should return correct CSS text color classes', () => {
-      expect(component.getStatusColor('Pedido Realizado')).toBe('text-blue-500');
-      expect(component.getStatusColor('Enviado')).toBe('text-purple-500');
-      expect(component.getStatusColor('En Reparto')).toBe('text-orange-500');
-      expect(component.getStatusColor('Completado')).toBe('text-green-500');
-      expect(component.getStatusColor('Cancelado')).toBe('text-red-500');
+      expect(getOrderStatusColorClass('Pedido Realizado')).toBe('text-blue-500');
+      expect(getOrderStatusColorClass('Enviado')).toBe('text-purple-500');
+      expect(getOrderStatusColorClass('En Reparto')).toBe('text-orange-500');
+      expect(getOrderStatusColorClass('Completado')).toBe('text-green-500');
+      expect(getOrderStatusColorClass('Cancelado')).toBe('text-red-500');
     });
 
     it('should return fallback color for unknown status', () => {
-      expect(component.getStatusColor('Unknown')).toBe('text-slate-400');
+      expect(getOrderStatusColorClass('Unknown')).toBe('text-slate-400');
     });
   });
 
-  describe('getStatusBgColor', () => {
+  describe('getOrderStatusBgColorClass', () => {
     it('should return correct bg+text color classes', () => {
-      expect(component.getStatusBgColor('Pedido Realizado')).toBe('bg-blue-100 text-blue-700');
-      expect(component.getStatusBgColor('Enviado')).toBe('bg-purple-100 text-purple-700');
-      expect(component.getStatusBgColor('En Reparto')).toBe('bg-orange-100 text-orange-700');
-      expect(component.getStatusBgColor('Completado')).toBe('bg-green-100 text-green-700');
-      expect(component.getStatusBgColor('Cancelado')).toBe('bg-red-100 text-red-700');
+      expect(getOrderStatusBgColorClass('Pedido Realizado')).toBe('bg-blue-100 text-blue-700');
+      expect(getOrderStatusBgColorClass('Enviado')).toBe('bg-purple-100 text-purple-700');
+      expect(getOrderStatusBgColorClass('En Reparto')).toBe('bg-orange-100 text-orange-700');
+      expect(getOrderStatusBgColorClass('Completado')).toBe('bg-green-100 text-green-700');
+      expect(getOrderStatusBgColorClass('Cancelado')).toBe('bg-red-100 text-red-700');
     });
 
     it('should return fallback for unknown status', () => {
-      expect(component.getStatusBgColor('Unknown')).toBe('bg-slate-100 text-slate-700');
+      expect(getOrderStatusBgColorClass('Unknown')).toBe('bg-slate-100 text-slate-700');
     });
   });
 

@@ -18,6 +18,7 @@ import {ShopService} from '../../../services/shop.service';
 import {LocationService} from '../../../services/location.service';
 import {AuthService} from '../../../services/auth.service';
 import {formatAddress, formatDuration} from '../../../utils/textFormat.util';
+import {getOrderStatusTagInfo, getTruckHistoryStatusTagInfo} from '../../../utils/tagManager.util';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Truck} from '../../../models/truck.model';
@@ -304,21 +305,8 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     return truck.history[truck.history.length - 1].status;
   }
 
-  getIconForTruckStatus(status: string): string {
-    if (status === 'Descanso') return 'pi pi-moon';
-    if (status === 'En ruta a la tienda') return 'pi pi-map-marker';
-    if (status === 'En Reparto') return 'pi pi-send';
-    if (status === 'Fuera de servicio') return 'pi pi-times-circle';
-    return 'pi pi-info-circle';
-  }
-
-  getStatusSeverityTruck(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    if (status === 'Descanso') return 'success';
-    if (status === 'En ruta a la tienda') return 'info';
-    if (status === 'En Reparto') return 'warn';
-    if (status === 'Fuera de servicio') return 'danger';
-    return 'secondary';
-  }
+  protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
+  protected readonly getTruckHistoryStatusTagInfo = getTruckHistoryStatusTagInfo;
 
   updateTruckStatus() {
     const truck = this.myTruck();
@@ -491,15 +479,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
       this.html5QrcodeScanner.clear().catch(e => console.error(e));
       this.html5QrcodeScanner = null;
     }
-  }
-
-  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const s = status?.toLowerCase() || '';
-    if (s === 'completado') return 'success';
-    if (s === 'en reparto') return 'info';
-    if (s === 'enviado' || s === 'pedido realizado') return 'warn';
-    if (s === 'cancelado') return 'danger';
-    return 'secondary';
   }
 
   protected readonly formatAddress = formatAddress;

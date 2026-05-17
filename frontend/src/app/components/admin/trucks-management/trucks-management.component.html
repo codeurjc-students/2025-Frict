@@ -124,7 +124,7 @@
                   <span class="text-sm text-surface-400 italic">No asignado</span>
                 }
               </td>
-              <td><p-tag [value]="getStatusLabel(getCurrentStatus(truck))" [severity]="getStatusSeverity(getCurrentStatus(truck))"/></td>
+              <td><p-tag [value]="getTruckHistoryStatusTagInfo(getCurrentStatus(truck)).message" [icon]="getTruckHistoryStatusTagInfo(getCurrentStatus(truck)).icon" [severity]="getTruckHistoryStatusTagInfo(getCurrentStatus(truck)).severity"/></td>
               <td class="text-sm text-surface-500"><i class="pi pi-map-marker mr-1 text-surface-300"></i>{{ formatAddress(truck.address) }}</td>
               <td>
                 <p-progressBar [value]="getLoadPercentage(truck.ordersToDeliver, truck.maxOrderCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-surface-100" />
@@ -219,7 +219,7 @@
           <div class="relative">
 
             <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500">
-              <i class="text-xs" [ngClass]="log.icon || getIconForStatus(log.status)"></i>
+              <i class="text-xs" [ngClass]="log.icon || getTruckHistoryStatusTagInfo(log.status).icon"></i>
             </div>
 
             <div class="bg-white border rounded-xl p-4 shadow-sm border-surface-200">
