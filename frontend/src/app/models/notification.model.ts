@@ -7,3 +7,8 @@ export interface Notification {
 
   type: string;
 }
+
+export interface NotificationLocation {
+  notification: Notification;
+  pageIndex: number;
+}

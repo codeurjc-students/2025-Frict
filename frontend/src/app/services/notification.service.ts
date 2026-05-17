@@ -1,5 +1,5 @@
 import {computed, effect, inject, Injectable, OnDestroy, signal} from '@angular/core';
-import {Notification} from '../models/notification.model';
+import {Notification, NotificationLocation} from '../models/notification.model';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {map, Observable, Subject, throwError} from 'rxjs';
 import {catchError} from 'rxjs/operators';
@@ -112,6 +112,11 @@ export class NotificationService implements OnDestroy {
 
   public deleteNotification(id: string): Observable<boolean> {
     return this.http.delete<boolean>(`/api/v1/notifications/${id}`);
+  }
+
+  public getNotificationLocation(id: string, size: number): Observable<NotificationLocation> {
+    const params = new HttpParams().set('size', size.toString());
+    return this.http.get<NotificationLocation>(`/api/v1/notifications/${id}`, { params });
   }
 
   public markAsRead(id: string) {

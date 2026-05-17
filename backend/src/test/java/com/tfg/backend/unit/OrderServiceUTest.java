@@ -634,7 +634,7 @@ class OrderServiceUTest {
             truck = new Truck();
             truck.setId(5L);
             truck.setAssignedShop(selectedShop); // Same shop as order
-            truck.setMaxOrderCapacity(10);
+            truck.setMaxCapacity(10);
             truck.setOrdersToDeliver(new HashSet<>());
         }
 
@@ -654,7 +654,7 @@ class OrderServiceUTest {
         @Test
         @DisplayName("setAssignedTruck throws BAD_REQUEST when the truck is at full capacity")
         void setAssignedTruck_ThrowsBadRequest_WhenTruckAtFullCapacity() {
-            truck.setMaxOrderCapacity(2);
+            truck.setMaxCapacity(2);
             truck.setOrdersToDeliver(new HashSet<>(List.of(new Order(), new Order()))); // Full
 
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));

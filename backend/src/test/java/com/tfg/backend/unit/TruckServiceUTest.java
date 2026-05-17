@@ -70,7 +70,7 @@ class TruckServiceUTest {
         truck = new Truck();
         truck.setId(100L);
         truck.setPlateNumber("1234-ABC");
-        truck.setMaxOrderCapacity(10);
+        truck.setMaxCapacity(10);
         truck.setAssignedShop(shop);
         truck.setAssignedDriver(driver);
         truck.setOrdersToDeliver(new HashSet<>());
@@ -90,7 +90,7 @@ class TruckServiceUTest {
 
         truckDTO = new TruckDTO();
         truckDTO.setPlateNumber("9999-XYZ");
-        truckDTO.setMaxOrderCapacity(15);
+        truckDTO.setMaxCapacity(15);
         truckDTO.setAddress(addressDTO);
     }
 
@@ -146,7 +146,7 @@ class TruckServiceUTest {
             Truck result = truckService.createTruck(truckDTO, shop);
 
             assertEquals("9999-XYZ", result.getPlateNumber());
-            assertEquals(15, result.getMaxOrderCapacity());
+            assertEquals(15, result.getCurrentCapacity());
             assertEquals(shop, result.getAssignedShop());
             assertNotNull(result.getAddress());
             assertEquals("Madrid", result.getAddress().getCity());
@@ -166,7 +166,7 @@ class TruckServiceUTest {
             Truck result = truckService.updateTruck(100L, truckDTO, newShop);
 
             assertEquals("9999-XYZ", result.getPlateNumber());
-            assertEquals(15, result.getMaxOrderCapacity());
+            assertEquals(15, result.getCurrentCapacity());
             assertEquals(newShop, result.getAssignedShop());
         }
 

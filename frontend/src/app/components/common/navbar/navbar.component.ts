@@ -17,6 +17,7 @@ import {ProductService, SearchScope} from '../../../services/product.service';
 import {Select} from 'primeng/select';
 import {Popover} from 'primeng/popover';
 import {NotificationService} from '../../../services/notification.service';
+import {Notification} from '../../../models/notification.model';
 import {HttpClient} from '@angular/common/http';
 
 @Component({
@@ -175,6 +176,15 @@ export class NavbarComponent implements OnInit {
   triggerTest() {
     this.notificationService.triggerTest().subscribe({
       error: (err) => console.error('Error in test:', err)
+    });
+  }
+
+  goToNotification(notif: Notification) {
+    const route = this.authService.isUser() ? '/notifications' : '/admin/notifications';
+    this.notifPopover.hide();
+    this.router.navigate([route], {
+      queryParams: { notifId: notif.id },
+      state: { notification: notif }
     });
   }
 }

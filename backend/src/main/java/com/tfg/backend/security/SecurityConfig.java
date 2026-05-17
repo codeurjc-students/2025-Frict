@@ -110,7 +110,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/*/invoice").hasAuthority("USER") // Client exclusive endpoint
 
                         // --- 5. REVIEWS (ReviewRestController) ---
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Product reviews
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/product", "/api/v1/reviews/product/stats").permitAll() // (All) Product reviews
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyAuthority("USER", "ADMIN") // (All/User) Reviews for logged user and for admin
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/user/*").hasAuthority("ADMIN") // (Admin)
                         .requestMatchers(HttpMethod.POST, "/api/v1/reviews").hasAuthority("USER") // (User)
@@ -161,7 +161,7 @@ public class SecurityConfig {
                         // --- 11. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---
                         .requestMatchers("/api/v1/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/notifications/test").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/", "/api/v1/notifications/*").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/registry/private/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER")

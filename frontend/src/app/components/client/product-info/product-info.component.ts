@@ -21,7 +21,9 @@ import {Avatar} from 'primeng/avatar';
 import {Rating} from 'primeng/rating';
 import {MeterGroupModule} from 'primeng/metergroup';
 import {ReviewService} from '../../../services/review.service';
-import {Review} from '../../../models/review.model';
+import {Review, ReviewStats} from '../../../models/review.model';
+import {PageResponse} from '../../../models/pageResponse.model';
+import {Paginator, PaginatorState} from 'primeng/paginator';
 import {AuthService} from '../../../services/auth.service';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
@@ -40,7 +42,7 @@ import {Tag} from 'primeng/tag';
 import {ChartModule} from 'primeng/chart';
 import {Select} from 'primeng/select';
 import {RegistryService} from '../../../services/registry.service';
-import {formatDate} from '@angular/common';
+import {DecimalPipe, formatDate} from '@angular/common';
 import {DatePicker} from 'primeng/datepicker';
 
 
@@ -73,7 +75,9 @@ import {DatePicker} from 'primeng/datepicker';
     Tag,
     ChartModule,
     Select,
-    DatePicker
+    DatePicker,
+    Paginator,
+    DecimalPipe
   ],
   templateUrl: './product-info.component.html'
 })
@@ -117,12 +121,18 @@ export class ProductInfoComponent implements OnInit {
   protected visibleShippingDialog: boolean = false;
   protected visibleAvailabilityDialog: boolean = false;
 
-  protected stars: any[] = [];
-  protected recommendedCount: number = 0;
-  protected recommendationPercentage: number = 0;
-  protected productReviews: Review[] = [];
+  protected reviewsPage: PageResponse<Review> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
+  protected reviewStats: ReviewStats = { totalReviews: 0, averageRating: 0, star5: 0, star4: 0, star3: 0, star2: 0, star1: 0, recommendationPercentage: 0, userReviewed: false };
+  protected reviewsFirst = 0;
+  protected reviewsRows = 10;
+  protected reviewsSort = 'createdAt,desc';
+  protected reviewsSortOptions = [
+    { label: 'Más recientes',        value: 'createdAt,desc' },
+    { label: 'Más antiguas',         value: 'createdAt,asc'  },
+    { label: 'Mayor valoración',     value: 'rating,desc'    },
+    { label: 'Menor valoración',     value: 'rating,asc'     }
+  ];
 
-  protected userReviewed: boolean = false;
   protected newReview: Partial<Review> = { rating: 5, recommended: true };
 
   protected selectedShop: Shop | null = null;
@@ -157,27 +167,28 @@ export class ProductInfoComponent implements OnInit {
     this.newReview.creatorId = this.loggedUserInfo.id;
     this.reviewService.submitReview(this.newReview).subscribe({
       next: () => {
-        this.userReviewed = true;
+        this.newReview = { rating: 5, recommended: true };
         this.loadReviews();
+        this.loadReviewStats();
       }
     })
   }
 
   protected editReview(id: string) {
-    const publishedReview = this.productReviews.find(r => r.id === id);
-    if(publishedReview){
-      this.newReview = { ...publishedReview };
-      this.productReviews = this.productReviews.filter(r => r.id !== id);
-      this.userReviewed = false;
+    const r = this.reviewsPage.items.find(r => r.id === id);
+    if (r) {
+      this.newReview = { ...r };
+      this.reviewStats = { ...this.reviewStats, userReviewed: false };
+      this.loadReviews();
     }
   }
 
   protected deleteReview(id: string) {
     this.reviewService.deleteReviewById(id).subscribe({
       next: () => {
-        this.newReview = {};
-        this.userReviewed = false;
+        this.newReview = { rating: 5, recommended: true };
         this.loadReviews();
+        this.loadReviewStats();
       }
     })
   }
@@ -245,6 +256,8 @@ export class ProductInfoComponent implements OnInit {
           this.checkInFavourites();
           this.loadShopStocks();
           this.loadReviews();
+          this.loadReviewStats();
+          this.loadLoggedUser();
 
           // --- Load analytics ---
           this.loadTodayViews();
@@ -399,48 +412,46 @@ export class ProductInfoComponent implements OnInit {
 
 
   protected loadReviews() {
-    this.reviewService.getReviewsByProductId(this.product.id).subscribe({
-      next: (reviews) => {
-        this.productReviews = reviews;
-        const stars = [
-          { value: 5, count: 0 },
-          { value: 4, count: 0 },
-          { value: 3, count: 0 },
-          { value: 2, count: 0 },
-          { value: 1, count: 0 },
-        ];
-
-        this.product.totalReviews = this.productReviews.length;
-        this.product.averageRating = this.productReviews.length
-          ? this.productReviews.reduce((acc, r) => acc + r.rating, 0) / this.productReviews.length
-          : 0;
-        this.productReviews.forEach((review: any) => {
-          const star = stars.find(s => s.value === review.rating);
-          if (star) {
-            star.count += 1;
-          }
-        });
-
-        this.stars = stars;
-
-        if(this.productReviews.length > 0){
-          this.recommendedCount = this.productReviews.filter(r => r.recommended).length;
-          this.recommendationPercentage = (this.recommendedCount / this.productReviews.length) * 100;
-        }
-
-        this.authService.getLoginInfo().subscribe({
-          next: (loginInfo) => {
-            this.userReviewed = this.productReviews.some(r => r.creatorId === loginInfo.id)
-            this.loggedUserInfo = loginInfo;
-            this.loading = false;
-          }
-        })
+    this.reviewService.getProductReviews(
+      this.product.id,
+      this.reviewsFirst / this.reviewsRows,
+      this.reviewsRows,
+      this.reviewsSort
+    ).subscribe({
+      next: (page) => {
+        this.reviewsPage = page;
+        this.loading = false;
       },
       error: () => {
         this.loading = false;
         this.error = true;
       }
     });
+  }
+
+  protected loadReviewStats() {
+    this.reviewService.getProductReviewStats(this.product.id).subscribe({
+      next: (stats) => { this.reviewStats = stats; }
+    });
+  }
+
+  protected loadLoggedUser() {
+    if (this.authService.isLogged()) {
+      this.authService.getLoginInfo().subscribe({
+        next: (info) => { this.loggedUserInfo = info; }
+      });
+    }
+  }
+
+  protected onReviewsPageChange(event: PaginatorState) {
+    this.reviewsFirst = event.first ?? 0;
+    this.reviewsRows = event.rows ?? 10;
+    this.loadReviews();
+  }
+
+  protected onReviewsSortChange() {
+    this.reviewsFirst = 0;
+    this.loadReviews();
   }
 
   protected loadShopStocks() {

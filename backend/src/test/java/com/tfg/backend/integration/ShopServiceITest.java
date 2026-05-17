@@ -84,7 +84,7 @@ public class ShopServiceITest {
         deliveryTruck = new Truck();
         deliveryTruck.setReferenceCode("TRUCK-123");
         deliveryTruck.setPlateNumber("1234-ABC");
-        deliveryTruck.setMaxOrderCapacity(10);
+        deliveryTruck.setMaxCapacity(10.0);
         deliveryTruck.setAssignedShop(mainShop);
         mainShop.getAssignedTrucks().add(deliveryTruck);
         deliveryTruck = truckRepository.saveAndFlush(deliveryTruck);

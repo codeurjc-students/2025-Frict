@@ -1,6 +1,6 @@
 import {Component, inject, LOCALE_ID, OnInit, signal} from '@angular/core';
 import {CommonModule, formatDate} from '@angular/common';
-import {RouterLink} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 
 import {Button} from 'primeng/button';
 import {ChartModule} from 'primeng/chart';
@@ -42,6 +42,7 @@ export class AdminHomeComponent implements OnInit {
   private shopService = inject(ShopService);
   private truckService = inject(TruckService);
   private notificationService = inject(NotificationService);
+  private router = inject(Router);
   protected uiService = inject(UiService);
   private metricService = inject(StatService);
   private registryService = inject(RegistryService);
@@ -486,6 +487,13 @@ export class AdminHomeComponent implements OnInit {
       layout: { padding: 1 },
       plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: textColor, font: { weight: 'bold' }, padding: 20 } } },
       cutout: '65%'
+    });
+  }
+
+  goToNotification(notif: Notification) {
+    this.router.navigate(['/admin/notifications'], {
+      queryParams: { notifId: notif.id },
+      state: { notification: notif }
     });
   }
 
