@@ -96,10 +96,18 @@ public class ShopService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "There is not enough budget in this shop to complete this operation.");
         }
 
+        double addedCapacity = targetStock.getProduct().getCapacity() * units;
+        if (restockingShop.getMaxCapacity() > 0 &&
+                restockingShop.getOccupiedCapacity() + addedCapacity > restockingShop.getMaxCapacity()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No hay suficiente capacidad de almacenamiento en la tienda.");
+        }
+
         int oldUnits = targetStock.getUnits();
         int newUnits = oldUnits + units;
         targetStock.setUnits(newUnits);
         restockingShop.setAssignedBudget(restockingShop.getAssignedBudget() - supplyCost);
+        restockingShop.setOccupiedCapacity(restockingShop.getOccupiedCapacity() + addedCapacity);
 
         //Send notifications
         ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(targetStock.getId()), true, null, null);

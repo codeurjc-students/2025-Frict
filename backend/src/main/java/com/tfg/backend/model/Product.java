@@ -48,6 +48,9 @@ public class Product {
 
     private double currentPrice;
 
+    @Column(nullable = false)
+    private double capacity = 1.0;
+
     @Column(name = "is_active")
     private boolean active = true;
 

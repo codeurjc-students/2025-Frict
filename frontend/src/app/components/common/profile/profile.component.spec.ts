@@ -126,7 +126,7 @@ describe('ProfileComponent', () => {
     truckServiceSpy = jasmine.createSpyObj('TruckService', ['getAssignedTruckByDriverId']);
     truckServiceSpy.getAssignedTruckByDriverId.and.callFake(() =>
       of({ id: 't1', referenceCode: 'T-001', plateNumber: '1234-ABC',
-           history: [], address: STUB_ADDRESS, ordersToDeliver: 5, maxOrderCapacity: 10 })
+           history: [], address: STUB_ADDRESS, ordersToDeliver: 5, maxCapacity: 10 })
     );
 
     authServiceSpy = jasmine.createSpyObj('AuthService', [

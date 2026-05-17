@@ -51,7 +51,7 @@ const mockPage: PageResponse<Order> = {
 const mockTruck: any = {
   id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB-1234',
   history: [], shopId: 'shop-1', address: mockAddress,
-  ordersToDeliver: 2, maxOrderCapacity: 10
+  ordersToDeliver: 2, maxCapacity: 10
 };
 
 const mockShop: any = {

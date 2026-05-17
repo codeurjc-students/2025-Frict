@@ -316,6 +316,7 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductDTO dto){
         Product product = new Product(dto.getName(), dto.getDescription(), dto.getCurrentPrice(), dto.getSupplyPrice());
+        product.setCapacity(dto.getCapacity());
         product.setCategories(processCategories(dto.getCategories()));
         applySpecifications(product, dto.getSpecifications());
 
@@ -335,6 +336,7 @@ public class ProductService {
         product.setDescription(dto.getDescription());
         product.setSupplyPrice(dto.getSupplyPrice());
         product.setCurrentPrice(dto.getCurrentPrice());
+        product.setCapacity(dto.getCapacity());
         product.setActive(dto.isActive());
 
         product.setCategories(processCategories(dto.getCategories()));

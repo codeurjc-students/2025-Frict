@@ -60,7 +60,7 @@ const mockShop: Shop = {
 const mockTruck: Truck = {
   id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB-1234',
   history: [], shopId: 'shop-1', address: mockAddress as any,
-  ordersToDeliver: 2, maxOrderCapacity: 10
+  ordersToDeliver: 2, maxCapacity: 10
 };
 
 const mockPage: PageResponse<Order> = {
@@ -724,7 +724,7 @@ describe('OrdersManagementComponent', () => {
   });
 
   describe('getLoadPercentage', () => {
-    it('should return 0 when maxOrderCapacity is 0', () => {
+    it('should return 0 when maxCapacity is 0', () => {
       expect(component.getLoadPercentage(5, 0)).toBe(0);
     });
 

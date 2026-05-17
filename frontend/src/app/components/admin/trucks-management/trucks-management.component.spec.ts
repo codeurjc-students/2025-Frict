@@ -88,7 +88,7 @@ describe('TrucksManagementComponent', () => {
     assignedDriver: mockDriver,
     address: mockAddress,
     ordersToDeliver: 3,
-    maxOrderCapacity: 10
+    maxCapacity: 10
   };
 
   const mockTruckOnRoute: Truck = {
@@ -99,7 +99,7 @@ describe('TrucksManagementComponent', () => {
     assignedDriver: undefined,
     address: { ...mockAddress, id: 'addr-2', latitude: 41.3851, longitude: 2.1734 },
     ordersToDeliver: 7,
-    maxOrderCapacity: 10
+    maxCapacity: 10
   };
 
   const mockTruckMaintenance: Truck = {
@@ -110,7 +110,7 @@ describe('TrucksManagementComponent', () => {
     assignedDriver: undefined,
     address: { ...mockAddress, id: 'addr-3', latitude: undefined, longitude: undefined },
     ordersToDeliver: 0,
-    maxOrderCapacity: 10
+    maxCapacity: 10
   };
 
   const mockTrucksPage: PageResponse<Truck> = {
@@ -375,7 +375,7 @@ describe('TrucksManagementComponent', () => {
 
   // ─── getLoadPercentage ────────────────────────────────────────────────────────
 
-  it('should return 0 when maxOrderCapacity is 0', () => {
+  it('should return 0 when maxCapacity is 0', () => {
     expect(component.getLoadPercentage(5, 0)).toBe(0);
   });
 

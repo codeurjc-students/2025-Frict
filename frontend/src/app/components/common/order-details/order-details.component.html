@@ -35,7 +35,10 @@
 
               @if (order.history && order.history.length > 0) {
                 <div class="mt-4">
-                  <p-tag [value]="order.history[order.history.length-1].status" severity="info" [rounded]="true" styleClass="uppercase text-xs font-bold tracking-wider bg-surface-800 border border-surface-700 text-primary-400 px-3 py-1"></p-tag>
+                  <p-tag [value]="getOrderStatusTagInfo(order.history[order.history.length-1].status).message"
+                         [severity]="getOrderStatusTagInfo(order.history[order.history.length-1].status).severity"
+                         [icon]="getOrderStatusTagInfo(order.history[order.history.length-1].status).icon"
+                         styleClass="min-w-[90px] text-center"></p-tag>
                 </div>
               }
 

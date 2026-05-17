@@ -237,132 +237,157 @@ public class DatabaseInitializer {
 
         // --- COMPUTERS ---
         Product p1 = new Product("Laptop Ultradelgada 13\"", "Máxima portabilidad", 1250.50, 980.00);
-        p1.setPreviousPrice(1500.00);
+        p1.setPreviousPrice(1500.00); p1.setCapacity(3.0);
         assignCategories(p1, catMap, "Portátiles", "Destacado");
         products.add(p1);
 
         Product p2 = new Product("Mini PC Industrial", "Potencia compacta", 510.10, 415.00);
+        p2.setCapacity(4.0);
         assignCategories(p2, catMap, "Sobremesa y Mini PC", "Destacado");
         products.add(p2);
 
         Product p18 = new Product("Portátil Gaming Beast 17\"", "RTX 4090 y i9 de última gen", 3200.00, 2650.00);
-        p18.setPreviousPrice(3500.00);
+        p18.setPreviousPrice(3500.00); p18.setCapacity(4.0);
         assignCategories(p18, catMap, "Portátiles", "Top Ventas");
         products.add(p18);
 
         Product p19 = new Product("All-in-One Oficina Pro", "Pantalla 27\" y diseño limpio", 899.99, 710.50);
+        p19.setCapacity(6.0);
         assignCategories(p19, catMap, "Sobremesa y Mini PC");
         products.add(p19);
 
         // --- MOBILITY ---
         Product p3 = new Product("Smartphone Plegable X", "Innovación en diseño", 750.00, 590.00);
-        p3.setPreviousPrice(1000.00);
+        p3.setPreviousPrice(1000.00); p3.setCapacity(0.5);
         assignCategories(p3, catMap, "Móviles y Smartphones", "Top Ventas", "Destacado");
         products.add(p3);
 
         Product p4 = new Product("Smartwatch con ECG", "Salud en tu muñeca", 220.00, 165.00);
+        p4.setCapacity(0.3);
         assignCategories(p4, catMap, "Smartwatches");
         products.add(p4);
 
         Product p20 = new Product("Tablet Pro 12.9\"", "Pantalla Liquid Retina XDR", 1100.00, 895.00);
+        p20.setCapacity(2.0);
         assignCategories(p20, catMap, "Móviles y Smartphones", "Destacado");
         products.add(p20);
 
         // --- COMPONENTS ---
         Product p5 = new Product("Tarjeta Gráfica RTX 5080", "Next Gen Gaming", 780.25, 620.00);
+        p5.setCapacity(2.0);
         assignCategories(p5, catMap, "Tarjetas Gráficas", "Top Ventas", "Destacado");
         products.add(p5);
 
         Product p6 = new Product("Disco SSD NVMe 2TB", "Velocidad extrema", 155.99, 112.40);
+        p6.setCapacity(0.5);
         assignCategories(p6, catMap, "Almacenamiento");
         products.add(p6);
 
         Product p7 = new Product("Pasta Térmica Gold", "Refrigeración eficiente", 12.50, 6.25);
+        p7.setCapacity(0.1);
         assignCategories(p7, catMap, "Herramientas y Montaje");
         products.add(p7);
 
         Product p21 = new Product("Procesador Intel Core i9", "24 núcleos de potencia pura", 589.90, 495.00);
+        p21.setCapacity(0.5);
         assignCategories(p21, catMap, "Destacado");
         products.add(p21);
 
         Product p22 = new Product("Kit RAM DDR5 32GB", "6000MHz RGB", 145.00, 108.00);
+        p22.setCapacity(0.5);
         assignCategories(p22, catMap, "Destacado");
         products.add(p22);
 
         Product p23 = new Product("Fuente Alimentación 850W", "Certificación Gold Modular", 119.99, 85.50);
+        p23.setCapacity(2.0);
         assignCategories(p23, catMap, "Herramientas y Montaje");
         products.add(p23);
 
         // --- PERIPHERALS ---
         Product p8 = new Product("Monitor Curvo Ultrawide", "Inmersión total", 499.00, 390.00);
+        p8.setCapacity(5.0);
         assignCategories(p8, catMap, "Monitores y Pantallas", "Destacado");
         products.add(p8);
 
         Product p9 = new Product("Teclado Mecánico RGB", "Switches táctiles", 89.65, 58.00);
+        p9.setCapacity(1.0);
         assignCategories(p9, catMap, "Teclados y Ratones", "Top Ventas");
         products.add(p9);
 
         Product p10 = new Product("Auriculares Cancelación Ruido", "Silencio absoluto", 199.50, 142.00);
+        p10.setCapacity(1.0);
         assignCategories(p10, catMap, "Audio y Sonido");
         products.add(p10);
 
         Product p24 = new Product("Ratón Gaming Inalámbrico", "Sensor óptico 25K DPI", 79.99, 52.30);
-        p24.setPreviousPrice(99.99);
+        p24.setPreviousPrice(99.99); p24.setCapacity(0.5);
         assignCategories(p24, catMap, "Teclados y Ratones", "Top Ventas");
         products.add(p24);
 
         Product p25 = new Product("Webcam StreamCam 1080p", "60fps para creadores", 115.50, 88.00);
+        p25.setCapacity(0.5);
         assignCategories(p25, catMap, "Foto y Video");
         products.add(p25);
 
         Product p26 = new Product("Micrófono USB Condensador", "Calidad de estudio podcast", 129.99, 94.50);
+        p26.setCapacity(1.0);
         assignCategories(p26, catMap, "Audio y Sonido");
         products.add(p26);
 
         Product p27 = new Product("Ratón Vertical Ergonómico", "Reduce la fatiga de muñeca", 45.00, 28.50);
+        p27.setCapacity(0.5);
         assignCategories(p27, catMap, "Teclados y Ratones");
         products.add(p27);
 
         // --- HOME & NETWORK ---
         Product p11 = new Product("Router WiFi 6E Mesh", "Cobertura total", 185.70, 142.00);
+        p11.setCapacity(1.5);
         assignCategories(p11, catMap, "Redes y WiFi", "Destacado");
         products.add(p11);
 
         Product p12 = new Product("Altavoz Inteligente IA", "Asistente de hogar", 75.30, 52.00);
+        p12.setCapacity(2.0);
         assignCategories(p12, catMap, "Hogar Inteligente", "Audio y Sonido", "Top Ventas");
         products.add(p12);
 
         Product p13 = new Product("Batería Externa 65W", "Carga rápida", 55.45, 36.50);
+        p13.setCapacity(0.5);
         assignCategories(p13, catMap, "Energía", "Móviles y Smartphones");
         products.add(p13);
 
         Product p28 = new Product("Bombilla Inteligente RGB", "Control por voz y app", 15.99, 8.40);
+        p28.setCapacity(0.2);
         assignCategories(p28, catMap, "Hogar Inteligente", "Energía");
         products.add(p28);
 
         Product p29 = new Product("Switch Gigabit 8 Puertos", "Expansión de red metálica", 25.00, 16.20);
+        p29.setCapacity(1.0);
         assignCategories(p29, catMap, "Redes y WiFi");
         products.add(p29);
 
         // --- MULTIMEDIA ---
         Product p14 = new Product("Cámara Mirrorless 4K", "Calidad profesional", 1120.40, 915.00);
+        p14.setCapacity(2.5);
         assignCategories(p14, catMap, "Foto y Video", "Destacado");
         products.add(p14);
 
         Product p15 = new Product("Dron Plegable GPS", "Tomas aéreas", 345.80, 268.00);
+        p15.setCapacity(3.0);
         assignCategories(p15, catMap, "Foto y Video");
         products.add(p15);
 
         Product p16 = new Product("Gafas Realidad Mixta", "El futuro hoy", 2400.00, 1980.00);
+        p16.setCapacity(2.0);
         assignCategories(p16, catMap, "Destacado", "Monitores y Pantallas");
         products.add(p16);
 
         Product p17 = new Product("Impresora 3D Resina", "Crea prototipos", 425.99, 315.50);
+        p17.setCapacity(8.0);
         assignCategories(p17, catMap, "Herramientas y Montaje");
         products.add(p17);
 
         Product p30 = new Product("Barra de Sonido Atmos", "Cine en casa compacto", 350.00, 265.00);
-        p30.setPreviousPrice(450.00);
+        p30.setPreviousPrice(450.00); p30.setCapacity(4.0);
         assignCategories(p30, catMap, "Audio y Sonido");
         products.add(p30);
 
@@ -390,6 +415,7 @@ public class DatabaseInitializer {
         address1.setLatitude(40.4168);
         address1.setLongitude(-3.7038);
         Shop shop1 = new Shop("Madrid-Recoletos", address1, 3000.00);
+        shop1.setMaxCapacity(500.0);
 
         //Manager assignment
         Optional<User> manager = userRepository.findByUsername("manager");
@@ -411,6 +437,7 @@ public class DatabaseInitializer {
         address2.setLongitude(-0.485225);
 
         Shop shop2 = new Shop("Alicante", address2, 6000.00);
+        shop2.setMaxCapacity(800.0);
         shopRepository.save(shop2);
 
         Address address3 = new Address("Camión 1", "Avenida del Invierno", "", "", "28022", "Madrid", "España");
@@ -421,8 +448,8 @@ public class DatabaseInitializer {
         address4.setLatitude(40.607013);
         address4.setLongitude(-3.712612);
 
-        Truck truck1 = truckRepository.save(new Truck("1234ABC", address3, 3));
-        Truck truck2 = truckRepository.save(new Truck("5678DEF", address4, 1));
+        Truck truck1 = truckRepository.save(new Truck("1234ABC", address3, 50.0));
+        Truck truck2 = truckRepository.save(new Truck("5678DEF", address4, 30.0));
         truck1.setAssignedShop(shop1);
         truck2.setAssignedShop(shop1);
 
@@ -454,13 +481,15 @@ public class DatabaseInitializer {
             orderItems2.add(new OrderItem(products.get(3), user2, 2));
             orderItems2.add(new OrderItem(products.get(7), user2, 1));
 
-            //As all items are all placed orders items, their product reference will be always null
-            for (OrderItem i : orderItems1) { i.setProduct(null); }
-            for (OrderItem i : orderItems2) { i.setProduct(null); }
-
             List<Shop> allShops = shopRepository.findAll();
+
+            // Constructor computes totalCapacity while products are still set
             Order order1 = new Order(user1, orderItems1, allShops.getFirst(), user1.getAddresses().getFirst(), user1.getCards().getFirst());
             Order order2 = new Order(user2, orderItems2, allShops.getLast(), user2.getAddresses().getFirst(), user2.getCards().getFirst());
+
+            // Null products only after constructors have finished reading them
+            for (OrderItem i : orderItems1) { i.setProductReferenceCode(i.getProduct().getReferenceCode()); i.setProduct(null); }
+            for (OrderItem i : orderItems2) { i.setProductReferenceCode(i.getProduct().getReferenceCode()); i.setProduct(null); }
 
             /*
             List<Truck> allTrucks = truckRepository.findAll();
@@ -491,10 +520,15 @@ public class DatabaseInitializer {
         Shop shop1 = shops.getFirst();
         List<ShopStock> shopStocks = new ArrayList<>();
 
+        double totalOccupied = 0.0;
         for (int i = 0; i < products.size(); i++) {
             shopStocks.add(new ShopStock(shop1, products.get(i), i));
+            totalOccupied += i * products.get(i).getCapacity();
         }
         shopStockRepository.saveAll(shopStocks);
+
+        shop1.setOccupiedCapacity(totalOccupied);
+        shopRepository.save(shop1);
     }
 
     private void initReviews() {

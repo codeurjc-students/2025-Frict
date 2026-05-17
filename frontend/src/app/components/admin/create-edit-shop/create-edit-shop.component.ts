@@ -55,6 +55,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       referenceCode: [{ value: '', disabled: true }],
       assignedBudget: [0, [Validators.required, Validators.min(0.01)]],
+      maxCapacity: [0, [Validators.required, Validators.min(0)]],
       // Group address
       address: this.fb.group({
         alias: ['', []],
@@ -120,6 +121,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     if (!this.shopId()) {
       this.shopForm.reset({
         assignedBudget: 0,
+        maxCapacity: 0,
         address: {
           latitude: 0,
           longitude: 0
@@ -200,7 +202,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
             name: shop.name,
             referenceCode: shop.referenceCode,
             address: shop.address,
-            assignedBudget: shop.assignedBudget
+            assignedBudget: shop.assignedBudget,
+            maxCapacity: shop.maxCapacity
           }, { emitEvent: false });
 
           this.loading = false;

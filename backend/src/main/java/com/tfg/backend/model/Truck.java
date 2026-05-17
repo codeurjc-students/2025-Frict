@@ -39,7 +39,10 @@ public class Truck {
     private Set<Order> ordersToDeliver = new HashSet<>();
 
     @Column(nullable = false)
-    private int maxOrderCapacity;
+    private double maxCapacity;
+
+    @Column(nullable = false)
+    private double currentCapacity = 0.0;
 
     @ManyToOne
     private Shop assignedShop;
@@ -58,12 +61,12 @@ public class Truck {
         this.history.add(new TruckStatusLog(TruckStatus.REST, "Camión preparado para el reparto."));
     }
 
-    public Truck(String plateNumber, Address address, int maxOrderCapacity) {
+    public Truck(String plateNumber, Address address, double maxCapacity) {
         this.referenceCode = ReferenceNumberGenerator.generateTruckReferenceNumber();
         this.plateNumber = plateNumber;
         this.history.add(new TruckStatusLog(TruckStatus.REST, "Camión preparado para el reparto."));
         this.address = address;
-        this.maxOrderCapacity = maxOrderCapacity;
+        this.maxCapacity = maxCapacity;
     }
 
     public TruckStatus getCurrentStatus(){

@@ -26,4 +26,6 @@ public interface ShopStockRepository extends JpaRepository<ShopStock, Long> {
 
     List<ShopStock> findAllByShopId(Long id);
     Page<ShopStock> findAllByShopId(Long id, Pageable p);
+
+    Optional<ShopStock> findByShop_IdAndProduct_ReferenceCode(Long shopId, String productReferenceCode);
 }

@@ -38,7 +38,12 @@
         </div>
 
         @if (myTruck()) {
-          <div class="flex items-center gap-3 shrink-0">
+          <div class="flex items-center gap-4 shrink-0">
+            <div class="flex flex-col gap-1 min-w-[120px]">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Carga del Camión</span>
+              <p-progressBar [value]="getLoadPercentage(myTruck()!.currentCapacity, myTruck()!.maxCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-surface-100" />
+              <p class="text-xs text-slate-500 font-bold text-right">{{ myTruck()!.currentCapacity | number:'1.0-1' }} / {{ myTruck()!.maxCapacity | number:'1.0-1' }}</p>
+            </div>
             <div class="flex flex-col items-end gap-1">
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estado del Camión</span>
               <p-tag

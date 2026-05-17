@@ -139,7 +139,7 @@ public class TruckService {
     @Transactional
     public Truck createTruck(TruckDTO truckDTO, Shop assignedShop) {
         Address address = mapAddressFromDTO(truckDTO.getAddress());
-        Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxOrderCapacity());
+        Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxCapacity());
         truck.setAssignedShop(assignedShop); //Can be null (valid)
 
         //Send in-app notifications
@@ -157,7 +157,7 @@ public class TruckService {
         truck.setReferenceCode(truckDTO.getReferenceCode());
         truck.setPlateNumber(truckDTO.getPlateNumber());
         truck.setAddress(mapAddressFromDTO(truckDTO.getAddress()));
-        truck.setMaxOrderCapacity(truckDTO.getMaxOrderCapacity());
+        truck.setMaxCapacity(truckDTO.getMaxCapacity());
         truck.setAssignedShop(assignedShop);
 
         //Send in-app notifications

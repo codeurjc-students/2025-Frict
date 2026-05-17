@@ -64,6 +64,7 @@ export class CreateEditProductComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       supplyPrice: [0, [Validators.required, Validators.min(0.01)]],
       currentPrice: [0, [Validators.required, Validators.min(0.01)]],
+      capacity: [1.0, [Validators.required, Validators.min(0.01)]],
       description: ['', []],
       selectedCategories: ['', []],
       active: [true],
@@ -99,7 +100,8 @@ export class CreateEditProductComponent implements OnInit {
       this.productForm.reset({
         active: true,
         supplyPrice: 0,
-        currentPrice: 0
+        currentPrice: 0,
+        capacity: 1.0
       });
       this.selectedCategories = [];
       this.existingImages.set([]);

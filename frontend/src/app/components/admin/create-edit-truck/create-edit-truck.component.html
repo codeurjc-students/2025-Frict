@@ -63,14 +63,15 @@
               </div>
 
               <div class="flex flex-col gap-2">
-                <label for="capacity" class="text-sm font-semibold text-slate-600">Capacidad Máxima de Pedidos</label>
+                <label for="capacity" class="text-sm font-semibold text-slate-600">Capacidad Máxima</label>
                 <p-inputNumber
                   inputId="capacity"
-                  formControlName="maxOrderCapacity"
+                  formControlName="maxCapacity"
                   [showButtons]="true"
                   buttonLayout="horizontal"
                   [min]="1"
-                  [max]="1000"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
                   decrementButtonClass="p-button-secondary"
                   incrementButtonClass="p-button-secondary"
                   incrementButtonIcon="pi pi-plus"
@@ -78,7 +79,7 @@
                   styleClass="w-full"
                   inputStyleClass="text-center font-bold">
                 </p-inputNumber>
-                @if (truckForm.get('maxOrderCapacity')?.invalid && truckForm.get('maxOrderCapacity')?.touched) {
+                @if (truckForm.get('maxCapacity')?.invalid && truckForm.get('maxCapacity')?.touched) {
                   <small class="text-red-500">
                     Capacidad inválida (Mínimo 1).
                   </small>
@@ -90,8 +91,9 @@
                   <span class="text-xs text-blue-600 font-bold uppercase tracking-wider">Carga Actual en Reparto</span>
                   <div class="flex items-center gap-3">
                     <i class="pi pi-box text-2xl text-blue-400"></i>
-                    <span class="text-2xl font-black text-blue-900">{{ t.ordersToDeliver }}</span>
-                    <span class="text-sm font-medium text-blue-700">/ {{ t.maxOrderCapacity }}</span>
+                    <span class="text-2xl font-black text-blue-900">{{ t.currentCapacity | number:'1.0-2' }}</span>
+                    <span class="text-sm font-medium text-blue-700">/ {{ t.maxCapacity | number:'1.0-2' }}</span>
+                    <span class="text-xs text-blue-500 ml-1">({{ t.ordersToDeliver }} pedidos)</span>
                   </div>
                 </div>
               }

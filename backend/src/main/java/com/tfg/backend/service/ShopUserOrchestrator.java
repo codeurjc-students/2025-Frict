@@ -36,6 +36,7 @@ public class ShopUserOrchestrator {
         address.setLongitude(dto.getLongitude());
 
         Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
+        shop.setMaxCapacity(shopDTO.getMaxCapacity());
 
         //Send notifications
         ShopEvent shopEvent = new ShopEvent(EventAction.CREATED, String.valueOf(shop.getId()), false, null, null);
@@ -61,6 +62,7 @@ public class ShopUserOrchestrator {
 
         shop.setAddress(address);
         shop.setAssignedBudget(shopDTO.getAssignedBudget());
+        shop.setMaxCapacity(shopDTO.getMaxCapacity());
 
         //Send notifications
         String managerUsername = Optional.ofNullable(shop.getAssignedManager()).map(User::getUsername).orElse(null);

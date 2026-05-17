@@ -35,6 +35,8 @@ const mockShop: Shop = {
   name: 'Tienda Central',
   address: { ...mockAddress },
   assignedBudget: 1000,
+  maxCapacity: 0,
+  occupiedCapacity: 0,
   imageInfo: { id: 'img-1', imageUrl: 'http://example.com/img.jpg', s3Key: 'k1', fileName: 'img.jpg' },
   totalAvailableProducts: 5,
   totalAssignedTrucks: 2
@@ -48,7 +50,8 @@ const mockTruck: Truck = {
   shopId: 'shop-1',
   address: { ...mockAddress },
   ordersToDeliver: 2,
-  maxOrderCapacity: 5
+  maxCapacity: 5,
+  currentCapacity: 2
 };
 
 const mockStock: ShopStock = {
@@ -62,6 +65,7 @@ const mockStock: ShopStock = {
   productReferenceCode: 'PR-001',
   productSupplyPrice: 10,
   productCurrentPrice: 15,
+  productCapacity: 2.0,
   units: 20,
   active: true
 };

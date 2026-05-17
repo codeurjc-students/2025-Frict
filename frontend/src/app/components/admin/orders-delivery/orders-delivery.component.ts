@@ -30,6 +30,7 @@ import {Tag} from 'primeng/tag';
 import {TableModule} from 'primeng/table';
 import {Dialog} from 'primeng/dialog';
 import {Tooltip} from 'primeng/tooltip';
+import {ProgressBar} from 'primeng/progressbar';
 
 @Component({
   selector: 'app-orders-delivery',
@@ -37,7 +38,8 @@ import {Tooltip} from 'primeng/tooltip';
   imports: [
     CommonModule, FormsModule, LoadingScreenComponent, BreadcrumbReloadComponent,
     PaginatorModule, Textarea,
-    Tabs, TabList, Tab, TabPanels, TabPanel, Button, Select, Tag, TableModule, Dialog, Tooltip
+    Tabs, TabList, Tab, TabPanels, TabPanel, Button, Select, Tag, TableModule, Dialog, Tooltip,
+    ProgressBar
   ],
   templateUrl: './orders-delivery.component.html'
 })
@@ -53,6 +55,8 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   loading = true;
   error = false;
   hasTruck = true;
+
+  private driverId: string | null = null;
 
   ordersPage = signal<PageResponse<Order>>({ items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 });
   first = 0;
@@ -124,6 +128,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     this.authService.getLoginInfo().subscribe({
       next: (driver) => {
         if (driver && driver.id) {
+          this.driverId = driver.id;
           this.fetchTruck(driver.id);
         } else {
           this.error = true;
@@ -406,6 +411,18 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
+  private refreshTruck() {
+    if (!this.driverId) return;
+    this.truckService.getAssignedTruckByDriverId(this.driverId).subscribe({
+      next: (truck) => {
+        if (truck) {
+          this.myTruck.set(truck);
+          this.newTruckStatus = this.getTruckCurrentStatus(truck);
+        }
+      }
+    });
+  }
+
   // --- NUEVA ACCIÓN: DESASIGNAR PEDIDO ---
   unassignOrder() {
     const order = this.selectedOrder();
@@ -413,8 +430,9 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
 
     this.orderService.unassignAsFinished(order.id).subscribe({
       next: () => {
+        this.refreshTruck();
+        this.fetchOrders();
         this.messageService.add({ severity: 'success', summary: 'Desasignado', detail: 'El pedido ha sido liberado de tu camión.' });
-        this.fetchOrders(); // Recargamos para que desaparezca de la lista
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al desasignar el pedido.' })
     });
@@ -482,4 +500,8 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   }
 
   protected readonly formatAddress = formatAddress;
+
+  getLoadPercentage(active: number, max: number): number {
+    return max === 0 ? 0 : Math.round((active / max) * 100);
+  }
 }

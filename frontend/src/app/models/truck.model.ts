@@ -13,7 +13,8 @@ export interface Truck {
   address: Address;
   driverLocation?: DriverLocation | null;
   ordersToDeliver: number;
-  maxOrderCapacity: number;
+  maxCapacity: number;
+  currentCapacity: number;
   selectedOrderId?: string | null;
   shopAddress?: Address | null;
   selectedOrderAddress?: Address | null;

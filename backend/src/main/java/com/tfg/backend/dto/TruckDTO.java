@@ -21,7 +21,8 @@ public class TruckDTO {
     private AddressDTO address;
     private DriverLocation driverLocation;
     private int ordersToDeliver;
-    private int maxOrderCapacity;
+    private double maxCapacity;
+    private double currentCapacity;
     private Long selectedOrderId;
     private AddressDTO shopAddress;
     private AddressDTO selectedOrderAddress;
@@ -53,6 +54,7 @@ public class TruckDTO {
             }
         }
         this.ordersToDeliver = t.getOrdersToDeliver().size();
-        this.maxOrderCapacity = t.getMaxOrderCapacity();
+        this.maxCapacity = t.getMaxCapacity();
+        this.currentCapacity = t.getCurrentCapacity();
     }
 }

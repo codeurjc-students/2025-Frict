@@ -22,6 +22,7 @@ public class ProductDTO {
     private double supplyPrice;
     private double previousPrice;
     private double currentPrice;
+    private double capacity;
     private boolean active;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
@@ -49,6 +50,7 @@ public class ProductDTO {
         this.supplyPrice = p.getSupplyPrice();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();
+        this.capacity = p.getCapacity();
         this.active = p.isActive();
         if (previousPrice != 0.0 && currentPrice < previousPrice){
             this.discount = "-" + String.valueOf((int) Math.floor(((this.previousPrice - this.currentPrice) / this.previousPrice) * 100)) + "%";

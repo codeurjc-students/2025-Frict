@@ -56,7 +56,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     this.truckForm = this.fb.group({
       plateNumber: ['', [Validators.required, Validators.minLength(4)]],
       referenceCode: [{ value: '', disabled: true }],
-      maxOrderCapacity: [10, [Validators.required, Validators.min(1)]],
+      maxCapacity: [10, [Validators.required, Validators.min(1)]],
       shopId: [''],
 
       address: this.fb.group({
@@ -183,7 +183,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
           this.truckForm.patchValue({
             plateNumber: truck.plateNumber,
             referenceCode: truck.referenceCode,
-            maxOrderCapacity: truck.maxOrderCapacity,
+            maxCapacity: truck.maxCapacity,
             shopId: truck.shopId,
             address: truck.address
           }, { emitEvent: false });

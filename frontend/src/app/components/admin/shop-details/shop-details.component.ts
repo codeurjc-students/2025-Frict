@@ -1,5 +1,5 @@
 import {ChangeDetectorRef, Component, inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
-import {isPlatformBrowser, NgClass} from '@angular/common';
+import {DecimalPipe, isPlatformBrowser, NgClass} from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
 
 import * as L from 'leaflet';
@@ -28,6 +28,7 @@ import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {Message} from 'primeng/message';
+import {ProgressBar} from 'primeng/progressbar';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
 
 @Component({
@@ -41,6 +42,7 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
     Tag,
     Paginator,
     NgClass,
+    DecimalPipe,
     ToggleSwitch,
     FormsModule,
     InputNumber,
@@ -48,6 +50,7 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
     Dialog,
     Select,
     Message,
+    ProgressBar,
     BreadcrumbReloadComponent
   ],
   templateUrl: './shop-details.component.html',
@@ -244,8 +247,18 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     if (!this.selectedStock || !this.selectedStock.productSupplyPrice || this.selectedStock.productSupplyPrice <= 0) {
       return 0;
     }
-    const maxPossible = Math.floor(this.shop.assignedBudget / this.selectedStock.productSupplyPrice);
-    return maxPossible;
+    const maxByBudget = Math.floor(this.shop.assignedBudget / this.selectedStock.productSupplyPrice);
+    if (this.shop.maxCapacity > 0 && this.selectedStock.productCapacity > 0) {
+      const availableCapacity = this.shop.maxCapacity - this.shop.occupiedCapacity;
+      const maxByCapacity = Math.floor(availableCapacity / this.selectedStock.productCapacity);
+      return Math.min(maxByBudget, maxByCapacity);
+    }
+    return maxByBudget;
+  }
+
+  getLoadPercentage(active: number, max: number): number {
+    if (!max || max <= 0) return 0;
+    return Math.min(100, Math.round((active / max) * 100));
   }
 
   showAddStockDialog() {
@@ -476,7 +489,8 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
         next: () => {
           this.stocksPage.items = this.stocksPage.items.map(i => i.id === stock.id ? { ...i, units: i.units + qty } : i);
           this.messageService.add({severity: 'success', summary: 'Stock repuesto correctamente', detail: `${qty} unidades añadidas`});
-          this.shop.assignedBudget -= stock.productSupplyPrice * this.restockQuantity;
+          this.shop.assignedBudget -= stock.productSupplyPrice * qty;
+          this.shop.occupiedCapacity += stock.productCapacity * qty;
           this.restockQuantity = 0;
         },
         error: () => {

@@ -25,6 +25,7 @@ import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {QRCodeComponent} from 'angularx-qrcode';
 import {Dialog} from 'primeng/dialog';
+import {getOrderStatusTagInfo} from '../../../utils/tagManager.util';
 
 @Component({
   selector: 'app-order-details',
@@ -319,4 +320,5 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
   protected readonly formatAddress = formatAddress;
   protected readonly formatPrice = formatPrice;
   protected readonly formatDuration = formatDuration;
+  protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
 }

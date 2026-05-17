@@ -46,6 +46,11 @@
                 <p-inputNumber id="price" formControlName="assignedBudget" mode="currency" currency="EUR" locale="es-ES" placeholder="0,00 €" styleClass="w-full" [min]="0"></p-inputNumber>
               </div>
 
+              <div class="flex flex-col gap-2">
+                <label for="maxCapacity" class="text-sm font-semibold text-slate-600">Capacidad máxima de almacén <span class="text-slate-400 font-normal">(0 = ilimitada)</span></label>
+                <p-inputNumber id="maxCapacity" formControlName="maxCapacity" [showButtons]="true" buttonLayout="horizontal" [min]="0" [minFractionDigits]="0" [maxFractionDigits]="2" decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" styleClass="w-full" inputStyleClass="text-center font-bold"></p-inputNumber>
+              </div>
+
               <div class="flex flex-col col-span-2 gap-2">
                 <label for="ref" class="text-sm font-semibold text-slate-600">Código Referencia</label>
                 <input pInputText id="ref" formControlName="referenceCode" placeholder="Generado automáticamente" class="w-full bg-slate-100 text-slate-500" />

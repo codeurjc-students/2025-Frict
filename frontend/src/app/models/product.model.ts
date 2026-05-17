@@ -11,6 +11,7 @@ export interface Product {
   supplyPrice: number;
   previousPrice: number;
   currentPrice: number;
+  capacity: number;
   active: boolean;
   discount: string;
   categories: Category[];
