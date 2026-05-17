@@ -22,7 +22,6 @@ import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Tooltip} from 'primeng/tooltip';
 import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
-import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
 import {Product} from '../../../models/product.model';
@@ -67,6 +66,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   shop!: Shop;
+  shopImageUrl: string = '';
 
   trucksPage: PageResponse<Truck> = { items: [], totalItems: 0, currentPage: 0, lastPage: 0, pageSize: 5 };
   firstTruck: number = 0;
@@ -135,6 +135,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     this.shopService.getShopById(id).subscribe({
       next: (shop) => {
         this.shop = shop;
+        this.shopImageUrl = shop.imageInfo.imageUrl + '?t=' + Date.now();
         this.loadStocksPage();
         this.loadTrucksPage();
       },
@@ -491,8 +492,44 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
   goBack() { this.router.navigate(['/admin/shops']); }
 
+  getTruckHistoryStatus(truck: Truck): string {
+    if (!truck.history?.length) return 'Descanso';
+    return truck.history[truck.history.length - 1].status;
+  }
+
+  getTruckStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    if (status === 'Descanso') return 'success';
+    if (status === 'En ruta a la tienda') return 'info';
+    if (status === 'En Reparto') return 'warn';
+    if (status === 'Fuera de servicio') return 'danger';
+    return 'secondary';
+  }
+
+  getTruckStatusIcon(status: string): string {
+    if (status === 'Descanso') return 'pi pi-moon';
+    if (status === 'En ruta a la tienda') return 'pi pi-map-marker';
+    if (status === 'En Reparto') return 'pi pi-send';
+    if (status === 'Fuera de servicio') return 'pi pi-times-circle';
+    return 'pi pi-question-circle';
+  }
+
+  getStockSeverity(units: number): 'success' | 'warn' | 'danger' {
+    if (units > 20) return 'success';
+    if (units >= 5) return 'warn';
+    return 'danger';
+  }
+
+  formatLastSeen(dateStr: string | null | undefined): string {
+    if (!dateStr) return '—';
+    const diffMin = Math.round((Date.now() - new Date(dateStr).getTime()) / 60000);
+    if (diffMin < 1) return 'Ahora mismo';
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const h = Math.floor(diffMin / 60);
+    if (h < 24) return `hace ${h} h`;
+    return `hace ${Math.floor(h / 24)} d`;
+  }
+
   protected readonly formatAddress = formatAddress;
   protected readonly formatDuration = formatDuration;
-  protected readonly getTruckStatusTagInfo = getTruckStatusTagInfo;
   protected readonly formatPrice = formatPrice;
 }

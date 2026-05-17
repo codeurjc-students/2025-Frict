@@ -176,17 +176,17 @@
             </div>
           }
         </div>
+      } @else if (loading || error) {
+        <div class="h-[60vh]">
+          <app-loading [loading]="loading" [error]="error" [numElements]="foundProducts.items.length" elementsType="productos" />
+        </div>
       } @else {
-        <div class="w-full">
-          @if (!loading && !error) {
-            <div class="bg-white rounded-3xl p-12 text-center border border-surface-200 shadow-sm mt-4">
-              <div class="w-20 h-20 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="pi pi-search text-3xl text-surface-400"></i>
-              </div>
-              <h3 class="text-xl font-bold text-surface-900 mb-2">No hemos encontrado nada</h3>
-              <p class="text-surface-500">Prueba con otros términos o elimina los filtros seleccionados.</p>
-            </div>
-          }
+        <div class="bg-white rounded-3xl p-12 text-center border border-surface-200 shadow-sm mt-4">
+          <div class="w-20 h-20 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-search text-3xl text-surface-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-surface-900 mb-2">No hemos encontrado nada</h3>
+          <p class="text-surface-500">Prueba con otros términos o elimina los filtros seleccionados.</p>
         </div>
       }
 

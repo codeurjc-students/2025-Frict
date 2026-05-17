@@ -16,6 +16,7 @@ import {Product} from '../../../models/product.model';
 import {ProductSpec} from '../../../models/product-spec.model';
 import {mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
+import {LoadingSectionComponent} from '../loading-section/loading-section.component';
 
 interface SortOption {
   name: string;
@@ -35,7 +36,8 @@ interface SortOption {
     Drawer,
     PrimeTemplate,
     Tree,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    LoadingSectionComponent
   ],
   templateUrl: './search.component.html',
   styleUrl: './search.component.css'
@@ -51,9 +53,15 @@ export class SearchComponent implements OnInit {
   foundProducts: PageResponse<Product> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
 
   sortOptions: SortOption[] = [
-    { name: 'Nombre', value: 'name,asc' },
+    { name: 'Nombre (A-Z)', value: 'name,asc' },
+    { name: 'Nombre (Z-A)', value: 'name,desc' },
     { name: 'Precio: Menor a Mayor', value: 'currentPrice,asc' },
-    { name: 'Precio: Mayor a Menor', value: 'currentPrice,desc' }
+    { name: 'Precio: Mayor a Menor', value: 'currentPrice,desc' },
+    { name: 'Fecha: Más reciente', value: 'createdAt,desc' },
+    { name: 'Fecha: Más antiguo', value: 'createdAt,asc' },
+    { name: 'Valoración', value: 'averageRating,desc' },
+    { name: 'Descuento: Mayor a Menor', value: 'discountPercentage,desc' },
+    { name: 'Descuento: Menor a Mayor', value: 'discountPercentage,asc' },
   ];
   selectedSortOption: SortOption = this.sortOptions[0];
 
@@ -131,6 +139,28 @@ export class SearchComponent implements OnInit {
     return found;
   }
 
+  private getAllDescendants(node: TreeNode): TreeNode[] {
+    const result: TreeNode[] = [node];
+    for (const child of node.children ?? []) {
+      result.push(...this.getAllDescendants(child));
+    }
+    return result;
+  }
+
+  private expandNodesToReveal(selectedKeys: Set<string>): void {
+    const expand = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        if (!node.children?.length) continue;
+        const key = node.key ?? '';
+        const shouldExpand = selectedKeys.has(key) ||
+          [...selectedKeys].some(k => k.startsWith(key + '-'));
+        if (shouldExpand) node.expanded = true;
+        expand(node.children);
+      }
+    };
+    expand(this.categories);
+  }
+
 
   private syncStateWithUrl(params: any) {
     this.searchQuery = params.get('query');
@@ -152,7 +182,28 @@ export class SearchComponent implements OnInit {
     const urlCategoryIds = rawCategories ? rawCategories.split(',') : [];
 
     if (this.categories.length > 0 && urlCategoryIds.length > 0) {
-      this.selectedCategories = this.findNodesByIds(this.categories, urlCategoryIds);
+      const directMatches = this.findNodesByIds(this.categories, urlCategoryIds);
+      const expanded: TreeNode[] = [];
+
+      for (const node of directMatches) {
+        if (node.children && node.children.length > 0) {
+          expanded.push(...this.getAllDescendants(node));
+        } else {
+          expanded.push(node);
+        }
+      }
+
+      const seen = new Set<any>();
+      this.selectedCategories = expanded.filter(n => {
+        if (seen.has(n.data)) return false;
+        seen.add(n.data);
+        return true;
+      });
+
+      const selectedKeys = new Set(
+        this.selectedCategories.filter(n => n.key).map(n => n.key as string)
+      );
+      this.expandNodesToReveal(selectedKeys);
     } else {
       this.selectedCategories = [];
     }
