@@ -1,6 +1,9 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import {forkJoin} from 'rxjs';
+
+import * as L from 'leaflet';
 
 // PrimeNG Imports
 import {ButtonModule} from 'primeng/button';
@@ -10,9 +13,14 @@ import {TagModule} from 'primeng/tag';
 import {DividerModule} from 'primeng/divider';
 
 import {Order} from '../../../models/order.model';
+import {Shop} from '../../../models/shop.model';
+import {Truck} from '../../../models/truck.model';
 import {OrderService} from '../../../services/order.service';
+import {ShopService} from '../../../services/shop.service';
+import {TruckService} from '../../../services/truck.service';
+import {LocationService} from '../../../services/location.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
-import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {QRCodeComponent} from 'angularx-qrcode';
@@ -36,9 +44,12 @@ import {Dialog} from 'primeng/dialog';
   ],
   templateUrl: './order-details.component.html'
 })
-export class OrderDetailsComponent implements OnInit {
+export class OrderDetailsComponent implements OnInit, OnDestroy {
 
   private orderService = inject(OrderService);
+  private shopService = inject(ShopService);
+  private truckService = inject(TruckService);
+  private locationService = inject(LocationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private breadcrumbService = inject(BreadcrumbService);
@@ -55,6 +66,11 @@ export class OrderDetailsComponent implements OnInit {
   qrLoading: boolean = false;
   qrError: boolean = false;
 
+  private orderMap: L.Map | undefined;
+  shop: Shop | null = null;
+  truck: Truck | null = null;
+  routeEta: string | null = null;
+
   private readonly stepsDefinitions = [
     { status: 'Pedido Realizado', icon: 'pi pi-shopping-cart' },
     { status: 'Enviado', icon: 'pi pi-box' },
@@ -66,6 +82,18 @@ export class OrderDetailsComponent implements OnInit {
   ngOnInit() {
     this.orderId = this.route.snapshot.paramMap.get('id');
     this.loadOrder();
+  }
+
+  ngOnDestroy(): void {
+    if (this.orderMap) {
+      this.orderMap.remove();
+      this.orderMap = undefined;
+    }
+  }
+
+  isInDelivery(): boolean {
+    if (!this.order?.history?.length) return false;
+    return this.order.history[this.order.history.length - 1].status === 'En Reparto';
   }
 
   loadOrder() {
@@ -85,6 +113,19 @@ export class OrderDetailsComponent implements OnInit {
           this.order = order;
           this.loadIcons();
           this.loading = false;
+
+          if (this.isInDelivery() && order.assignedShopId && order.assignedTruckId) {
+            forkJoin({
+              shop: this.shopService.getShopById(order.assignedShopId),
+              truck: this.truckService.getTruckById(order.assignedTruckId)
+            }).subscribe({
+              next: ({ shop, truck }) => {
+                this.shop = shop;
+                this.truck = truck;
+                setTimeout(() => this.initOrderMap(), 100);
+              }
+            });
+          }
         },
         error: (err) => {
           console.error(err);
@@ -95,7 +136,71 @@ export class OrderDetailsComponent implements OnInit {
     }
   }
 
-  protected readonly formatPrice = formatPrice;
+  private initOrderMap(): void {
+    const container = document.getElementById('order-tracking-map');
+    if (!container || !this.order) return;
+
+    if (this.orderMap) {
+      this.orderMap.remove();
+    }
+    this.orderMap = L.map('order-tracking-map').setView([40.4168, -3.7038], 6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(this.orderMap);
+    this.orderMap.attributionControl.setPrefix('Leaflet');
+
+    const markersGroup = L.featureGroup().addTo(this.orderMap);
+
+    const destIcon = L.icon({ iconUrl: './location-pointer.png', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
+    const shopIcon = L.icon({ iconUrl: './shopIcon.png', iconSize: [35, 35], iconAnchor: [17, 35], popupAnchor: [0, -35] });
+    const truckIcon = L.icon({ iconUrl: './truckIcon.png', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
+
+    if (this.order.sendingAddress?.latitude && this.order.sendingAddress?.longitude) {
+      L.marker([this.order.sendingAddress.latitude, this.order.sendingAddress.longitude], { icon: destIcon })
+        .bindPopup('<b>Tu dirección de entrega</b>')
+        .addTo(markersGroup);
+    }
+
+    if (this.shop?.address?.latitude && this.shop?.address?.longitude) {
+      L.marker([this.shop.address.latitude, this.shop.address.longitude], { icon: shopIcon })
+        .bindPopup('<b>Tienda de origen</b><br>' + this.shop.name)
+        .addTo(markersGroup);
+    }
+
+    let truckLat: number | undefined;
+    let truckLng: number | undefined;
+    if (this.truck) {
+      if (this.truck.assignedDriver && this.truck.driverLocation?.address?.latitude && this.truck.driverLocation?.address?.longitude) {
+        truckLat = this.truck.driverLocation.address.latitude;
+        truckLng = this.truck.driverLocation.address.longitude;
+      } else if (this.truck.address?.latitude && this.truck.address?.longitude) {
+        truckLat = this.truck.address.latitude;
+        truckLng = this.truck.address.longitude;
+      }
+    }
+
+    if (truckLat !== undefined && truckLng !== undefined) {
+      L.marker([truckLat, truckLng], { icon: truckIcon })
+        .bindPopup('<b>Tu camión de reparto</b><br>' + this.truck?.plateNumber)
+        .addTo(markersGroup);
+    }
+
+    if (markersGroup.getLayers().length > 0) {
+      this.orderMap.fitBounds(markersGroup.getBounds(), { padding: [40, 40], maxZoom: 15 });
+    }
+
+    // Draw route from truck to destination
+    if (truckLat !== undefined && truckLng !== undefined &&
+        this.order.sendingAddress?.latitude && this.order.sendingAddress?.longitude) {
+      this.locationService.getRoute(truckLat, truckLng, this.order.sendingAddress.latitude, this.order.sendingAddress.longitude).subscribe(route => {
+        if (!route || !this.orderMap) return;
+        const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+        L.polyline(latlngs, { color: '#f59e0b', weight: 5, opacity: 0.8 }).addTo(this.orderMap!);
+        this.routeEta = formatDuration(route.durationSeconds);
+      });
+    }
+  }
 
   loadIcons() {
     if (!this.order || !this.order.history) return;
@@ -169,4 +274,6 @@ export class OrderDetailsComponent implements OnInit {
   }
 
   protected readonly formatAddress = formatAddress;
+  protected readonly formatPrice = formatPrice;
+  protected readonly formatDuration = formatDuration;
 }

@@ -204,9 +204,9 @@ class TruckServiceUTest {
         void commentAndOrUpdateTruckStatus_SameStatus_AddsCommentOnly() {
             when(truckRepository.findById(100L)).thenReturn(Optional.of(truck));
 
-            truckService.commentAndOrUpdateTruckStatus(100L, TruckStatus.AVAILABLE, "Truck washed");
+            truckService.commentAndOrUpdateTruckStatus(100L, TruckStatus.REST, "Truck washed");
 
-            assertEquals(TruckStatus.AVAILABLE, truck.getHistory().getLast().getStatus());
+            assertEquals(TruckStatus.REST, truck.getHistory().getLast().getStatus());
             assertEquals(1, truck.getHistory().size(), "Should still be 1 status log");
             assertEquals(2, truck.getHistory().getLast().getUpdates().size(), "Should have 2 comments inside the log");
             assertEquals("Truck washed", truck.getHistory().getLast().getUpdates().getLast().getDescription());
@@ -217,9 +217,9 @@ class TruckServiceUTest {
         void commentAndOrUpdateTruckStatus_DifferentStatus_ChangesStatus() {
             when(truckRepository.findById(100L)).thenReturn(Optional.of(truck));
 
-            truckService.commentAndOrUpdateTruckStatus(100L, TruckStatus.ON_ROUTE, "Departed");
+            truckService.commentAndOrUpdateTruckStatus(100L, TruckStatus.ON_ROUTE_TO_SHOP, "Departed");
 
-            assertEquals(TruckStatus.ON_ROUTE, truck.getHistory().getLast().getStatus());
+            assertEquals(TruckStatus.ON_ROUTE_TO_SHOP, truck.getHistory().getLast().getStatus());
             assertEquals(2, truck.getHistory().size(), "Should have created a new status log");
             assertEquals("Departed", truck.getHistory().getLast().getUpdates().getFirst().getDescription());
         }
@@ -287,18 +287,21 @@ class TruckServiceUTest {
             User admin = new User();
             admin.setRoles(new HashSet<>(List.of("ADMIN")));
 
-            when(truckRepository.countTrucksByStatus(List.of(TruckStatus.AVAILABLE))).thenReturn(10L);
-            when(truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE))).thenReturn(5L);
-            when(truckRepository.countTrucksByStatus(List.of(TruckStatus.MAINTENANCE))).thenReturn(2L);
+            when(truckRepository.countTrucksByStatus(List.of(TruckStatus.REST))).thenReturn(10L);
+            when(truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE_TO_SHOP))).thenReturn(5L);
+            when(truckRepository.countTrucksByStatus(List.of(TruckStatus.IN_DELIVERY))).thenReturn(2L);
             when(truckRepository.countTrucksByStatus(List.of(TruckStatus.OUT_OF_SERVICE))).thenReturn(1L);
 
             List<StatDTO> stats = truckService.getTruckStatistics(admin);
 
             assertEquals(4, stats.size());
-            assertEquals("Disponibles", stats.get(0).label());
+            assertEquals("Descanso", stats.get(0).label());
             assertEquals(10L, stats.get(0).value());
+            assertEquals("En ruta a la tienda", stats.get(1).label());
             assertEquals(5L, stats.get(1).value());
+            assertEquals("En Reparto", stats.get(2).label());
             assertEquals(2L, stats.get(2).value());
+            assertEquals("Fuera de servicio", stats.get(3).label());
             assertEquals(1L, stats.get(3).value());
         }
 
@@ -309,17 +312,22 @@ class TruckServiceUTest {
             manager.setId(88L);
             manager.setRoles(new HashSet<>(List.of("MANAGER")));
 
-            when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.AVAILABLE))).thenReturn(8L);
-            when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.ON_ROUTE))).thenReturn(3L);
-            when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.MAINTENANCE))).thenReturn(1L);
+            when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.REST))).thenReturn(8L);
+            when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.ON_ROUTE_TO_SHOP))).thenReturn(3L);
+            when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.IN_DELIVERY))).thenReturn(1L);
             when(truckRepository.countTrucksByManagerIdAndStatus(88L, List.of(TruckStatus.OUT_OF_SERVICE))).thenReturn(0L);
 
             List<StatDTO> stats = truckService.getTruckStatistics(manager);
 
             assertEquals(4, stats.size());
-            assertEquals("Disponibles", stats.get(0).label());
+            assertEquals("Descanso", stats.get(0).label());
             assertEquals(8L, stats.get(0).value());
+            assertEquals("En ruta a la tienda", stats.get(1).label());
             assertEquals(3L, stats.get(1).value());
+            assertEquals("En Reparto", stats.get(2).label());
+            assertEquals(1L, stats.get(2).value());
+            assertEquals("Fuera de servicio", stats.get(3).label());
+            assertEquals(0L, stats.get(3).value());
         }
 
         @Test

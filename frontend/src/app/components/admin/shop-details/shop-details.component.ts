@@ -6,6 +6,7 @@ import * as L from 'leaflet';
 import {ConfirmationService, MessageService} from 'primeng/api';
 import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
+import {LocationService} from '../../../services/location.service';
 import {Shop} from '../../../models/shop.model';
 import {Truck} from '../../../models/truck.model';
 import {ShopStock} from '../../../models/shopStock.model';
@@ -20,7 +21,7 @@ import {ToggleSwitch} from 'primeng/toggleswitch';
 import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Tooltip} from 'primeng/tooltip';
-import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
 import {getTruckStatusTagInfo} from '../../../utils/tagManager.util';
 import {Dialog} from 'primeng/dialog';
 import {Select} from 'primeng/select';
@@ -60,6 +61,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private shopService = inject(ShopService);
   private truckService = inject(TruckService);
+  private locationService = inject(LocationService);
   private confirmationService = inject(ConfirmationService);
   private productService = inject(ProductService);
   private cdr = inject(ChangeDetectorRef);
@@ -85,6 +87,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
 
   private map: L.Map | undefined;
   private markersLayer: L.LayerGroup | undefined;
+  private routePolylines: L.Polyline[] = [];
 
   protected unassignedTrucks: Truck[] = [];
   protected selectedTruck: Truck | undefined = undefined;
@@ -99,6 +102,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
       this.map.remove();
       this.map = undefined;
     }
+    this.routePolylines = [];
   }
 
   public reloadAll() {
@@ -363,22 +367,54 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   private updateTruckMarkers() {
     if (!this.map || !this.markersLayer) return;
 
-    // 1. Limpiamos marcadores antiguos
     this.markersLayer.clearLayers();
+    this.routePolylines.forEach(p => p.remove());
+    this.routePolylines = [];
 
     const truckIcon = L.icon({
-      iconUrl: './truckIcon.png', // Asegúrate que esta ruta es correcta
+      iconUrl: './truckIcon.png',
       iconSize: [32, 32], iconAnchor: [16, 16]
     });
 
-    // 2. Añadimos los nuevos
-    this.trucksPage.items.forEach(t => {
-      if (t.address.latitude && t.address.longitude){
-        L.marker([t.address.latitude, t.address.longitude], { icon: truckIcon })
-          .addTo(this.markersLayer!)
-          .bindPopup(`<b>${t.referenceCode}</b><br>Estado: OK`); // Asumiendo que t.status existe
+    this.trucksPage.items.forEach(truck => {
+      const pos = this.getEffectivePosition(truck);
+      if (!pos) return;
+
+      const status = truck.history?.length ? truck.history[truck.history.length - 1].status : '';
+      const posLabel = pos.source === 'gps' ? '📍 GPS conductor' : '📍 Última posición guardada';
+
+      const marker = L.marker([pos.lat, pos.lng], { icon: truckIcon })
+        .addTo(this.markersLayer!)
+        .bindPopup(`<b>${truck.referenceCode}</b><br>${status}<br><span style="font-size:11px;color:#94a3b8">${posLabel}</span>`);
+
+      if (status === 'En ruta a la tienda' && this.shop?.address?.latitude && this.shop?.address?.longitude) {
+        this.locationService.getRoute(pos.lat, pos.lng, this.shop.address.latitude, this.shop.address.longitude).subscribe(route => {
+          if (!route || !this.map) return;
+          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+          const poly = L.polyline(latlngs, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.map!);
+          this.routePolylines.push(poly);
+          marker.getPopup()?.setContent(marker.getPopup()!.getContent() + `<br><b style="color:#3b82f6">⏱ ETA: ${formatDuration(route.durationSeconds)}</b>`);
+        });
+      } else if (status === 'En Reparto' && truck.selectedOrderAddress?.latitude && truck.selectedOrderAddress?.longitude) {
+        this.locationService.getRoute(pos.lat, pos.lng, truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude).subscribe(route => {
+          if (!route || !this.map) return;
+          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+          const poly = L.polyline(latlngs, { color: '#f59e0b', weight: 5, opacity: 0.75 }).addTo(this.map!);
+          this.routePolylines.push(poly);
+          marker.getPopup()?.setContent(marker.getPopup()!.getContent() + `<br><b style="color:#f59e0b">⏱ ETA: ${formatDuration(route.durationSeconds)}</b>`);
+        });
       }
     });
+  }
+
+  private getEffectivePosition(truck: Truck): { lat: number; lng: number; source: 'gps' | 'saved' } | null {
+    if (truck.assignedDriver && truck.driverLocation?.address?.latitude && truck.driverLocation?.address?.longitude) {
+      return { lat: truck.driverLocation.address.latitude, lng: truck.driverLocation.address.longitude, source: 'gps' };
+    }
+    if (truck.address?.latitude && truck.address?.longitude) {
+      return { lat: truck.address.latitude, lng: truck.address.longitude, source: 'saved' };
+    }
+    return null;
   }
 
   // --- ACTIONS (Sin cambios) ---
@@ -449,12 +485,14 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
   }
 
   focusTruckOnMap(truck: Truck) {
-    if(this.map && truck.address.latitude && truck.address.longitude) this.map.flyTo([truck.address.latitude, truck.address.longitude], 14);
+    const pos = this.getEffectivePosition(truck);
+    if (this.map && pos) this.map.flyTo([pos.lat, pos.lng], 14);
   }
 
   goBack() { this.router.navigate(['/admin/shops']); }
 
   protected readonly formatAddress = formatAddress;
+  protected readonly formatDuration = formatDuration;
   protected readonly getTruckStatusTagInfo = getTruckStatusTagInfo;
   protected readonly formatPrice = formatPrice;
 }

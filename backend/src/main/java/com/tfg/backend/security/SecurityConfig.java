@@ -135,8 +135,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/shop/*").permitAll() // (All)
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/user/*").hasAuthority("DRIVER") // (Driver)
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/", "/api/v1/trucks/available/").hasAnyAuthority("ADMIN", "MANAGER") // (Admin) All vs (Admin, Manager) Available
-                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/{id}", "/api/v1/trucks/shop/*/list").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/{id}").hasAnyAuthority("ADMIN", "MANAGER", "USER") // (Admin, Manager, User) User needs it for order-details tracking map
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/shop/*/list").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
                         .requestMatchers(HttpMethod.POST, "/api/v1/trucks").hasAuthority("ADMIN") // (Admin)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/status/*").hasAnyAuthority("ADMIN", "DRIVER") // (Admin, Driver) Update truck status
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/*/selected-order").hasAnyAuthority("ADMIN", "DRIVER") // (Admin, Driver) Set active delivery order
                         .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/**").hasAuthority("ADMIN") // (Admin) CRUD and assignments
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/trucks/*").hasAuthority("ADMIN") // (Admin)
 
@@ -152,6 +155,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
 
                         // --- 10. LOCATIONS (LocationRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/locations/route").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER", "USER") // (All authenticated) Routing proxy
                         .requestMatchers("/api/v1/locations/**").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager) Geocoding proxy
 
                         // --- 11. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---

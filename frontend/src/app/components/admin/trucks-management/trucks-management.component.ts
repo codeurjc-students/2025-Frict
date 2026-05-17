@@ -26,11 +26,14 @@ import {Tooltip} from 'primeng/tooltip';
 import {Textarea} from 'primeng/textarea';
 import {Truck} from '../../../models/truck.model';
 import {TruckService} from '../../../services/truck.service';
-import {formatAddress} from '../../../utils/textFormat.util';
+import {formatAddress, formatDuration} from '../../../utils/textFormat.util';
 import {UserService} from '../../../services/user.service';
 import {Select} from 'primeng/select';
 import {RouterLink} from '@angular/router';
 import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcrumb-reload.component';
+import {LocationService} from '../../../services/location.service';
+import {DriverLocationPingService} from '../../../services/driver-location-ping.service';
+import {DriverLocation} from '../../../models/driver-location.model';
 
 @Component({
   selector: 'app-trucks-management',
@@ -46,6 +49,8 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private userService = inject(UserService);
   private confirmationService = inject(ConfirmationService);
+  private locationService = inject(LocationService);
+  private driverLocationPingService = inject(DriverLocationPingService);
 
   trucksPage: PageResponse<Truck> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 };
   first = 0;
@@ -95,17 +100,23 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   private map: L.Map | undefined;
   private markers: L.Marker[] = [];
+  private driverMarkers: L.Marker[] = [];
+  private routePolylines: L.Polyline[] = [];
+  private allDriverLocations: DriverLocation[] = [];
 
   statusOptions = [
-    { label: 'Disponible', value: 'Disponible' },
-    { label: 'En Ruta / Reparto', value: 'En reparto' },
-    { label: 'En Mantenimiento', value: 'En mantenimiento' },
-    { label: 'Fuera de Servicio', value: 'Fuera de servicio' }
+    { label: 'Descanso',           value: 'Descanso' },
+    { label: 'En ruta a la tienda', value: 'En ruta a la tienda' },
+    { label: 'En Reparto',         value: 'En Reparto' },
+    { label: 'Fuera de Servicio',  value: 'Fuera de servicio' }
   ];
 
   ngOnInit() {
     this.initChartOptions();
     this.loadTrucks();
+    this.driverLocationPingService.getAllDriverLocations().subscribe({
+      next: (locs) => { this.allDriverLocations = locs; this.renderDriverMarkers(); }
+    });
   }
 
   ngOnDestroy(): void {
@@ -123,6 +134,9 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       this.map.remove();
       this.map = undefined;
     }
+    this.markers = [];
+    this.driverMarkers = [];
+    this.routePolylines = [];
 
     // 2. Modals closing and selections cleaning
     this.displayHistoryDialog = false;
@@ -132,6 +146,9 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
     // 3. Send requests
     this.loadTrucks();
+    this.driverLocationPingService.getAllDriverLocations().subscribe({
+      next: (locs) => { this.allDriverLocations = locs; this.renderDriverMarkers(); }
+    });
   }
 
   loadTrucks() {
@@ -164,9 +181,12 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
 
   calculateKPIs(items: Truck[]) {
     this.totalTrucks = this.trucksPage.totalItems;
-    this.onRouteTrucks = items.filter(t => this.getCurrentStatus(t)?.toLowerCase().includes('ruta') || this.getCurrentStatus(t)?.toLowerCase().includes('reparto')).length;
+    this.onRouteTrucks = items.filter(t => {
+      const s = this.getCurrentStatus(t);
+      return s === 'En ruta a la tienda' || s === 'En Reparto';
+    }).length;
     this.noDriverTrucks = items.filter(t => !t.assignedDriver).length;
-    this.maintenanceTrucks = items.filter(t => this.getCurrentStatus(t) === 'En mantenimiento').length;
+    this.maintenanceTrucks = items.filter(t => this.getCurrentStatus(t) === 'Fuera de servicio').length;
   }
 
   onPageChange(event: PaginatorState) {
@@ -186,6 +206,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
         if (!this.map) this.initMap();
         this.map?.invalidateSize();
         this.renderTruckMarkers();
+        this.renderDriverMarkers();
       }, 50);
     }
   }
@@ -213,16 +234,15 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   }
 
   private updateChartData(items: Truck[]) {
-    // --- Gráfica 1: Estados Originales ---
-    const available = items.filter(t => this.getCurrentStatus(t) === 'Disponible').length;
-    const onRoute = items.filter(t => this.getCurrentStatus(t)?.toLowerCase().includes('ruta') || this.getCurrentStatus(t)?.toLowerCase().includes('reparto')).length;
-    const maintenance = items.filter(t => this.getCurrentStatus(t) === 'En mantenimiento').length;
+    const resting = items.filter(t => this.getCurrentStatus(t) === 'Descanso').length;
+    const onRouteToShop = items.filter(t => this.getCurrentStatus(t) === 'En ruta a la tienda').length;
+    const inDelivery = items.filter(t => this.getCurrentStatus(t) === 'En Reparto').length;
     const outOfService = items.filter(t => this.getCurrentStatus(t) === 'Fuera de servicio').length;
 
     this.chartData = {
-      labels: ['Disponible', 'En Ruta', 'Mantenimiento', 'Inactivo'],
+      labels: ['Descanso', 'En ruta a la tienda', 'En Reparto', 'Fuera de servicio'],
       datasets: [{
-        data: [available, onRoute, maintenance, outOfService],
+        data: [resting, onRouteToShop, inDelivery, outOfService],
         backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
         hoverOffset: 15,
         borderWidth: 0
@@ -263,41 +283,116 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
     if (!this.map) return;
     this.markers.forEach(m => m.remove());
     this.markers = [];
+    this.routePolylines.forEach(p => p.remove());
+    this.routePolylines = [];
     const bounds = L.latLngBounds([]);
     let hasCoords = false;
 
     this.trucksPage.items.forEach(truck => {
-      if (truck.address?.latitude && truck.address?.longitude) {
-        hasCoords = true;
-        const currentStatus = this.getCurrentStatus(truck)?.toLowerCase();
-        let pinColor = '#ef4444';
+      const pos = this.getEffectivePosition(truck);
+      if (!pos) return;
 
-        if (currentStatus === 'disponible') pinColor = '#22c55e';
-        else if (currentStatus.includes('ruta') || currentStatus.includes('reparto')) pinColor = '#3b82f6';
-        else if (currentStatus === 'en mantenimiento') pinColor = '#f59e0b';
+      hasCoords = true;
+      const currentStatus = this.getCurrentStatus(truck);
+      let pinColor = '#ef4444';
+      if (currentStatus === 'Descanso') pinColor = '#22c55e';
+      else if (currentStatus === 'En ruta a la tienda') pinColor = '#3b82f6';
+      else if (currentStatus === 'En Reparto') pinColor = '#f59e0b';
 
-        const customIcon = L.divIcon({
-          className: 'custom-pin',
-          html: `<div style="background-color: ${pinColor}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [22, 22], iconAnchor: [11, 11]
-        });
+      const borderStyle = pos.source === 'gps'
+        ? 'border: 3px solid #22c55e;'
+        : 'border: 3px solid white;';
+      const customIcon = L.divIcon({
+        className: 'custom-pin',
+        html: `<div style="background-color: ${pinColor}; width: 22px; height: 22px; border-radius: 50%; ${borderStyle} box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [22, 22], iconAnchor: [11, 11]
+      });
 
-        const marker = L.marker([truck.address.latitude, truck.address.longitude], { icon: customIcon })
+      const posLabel = pos.source === 'gps' ? '📍 GPS conductor' : '📍 Última posición guardada';
+      const marker = L.marker([pos.lat, pos.lng], { icon: customIcon })
+        .addTo(this.map!)
+        .bindPopup(`<div class="text-center font-sans"><strong>${truck.plateNumber}</strong><br><span class="text-xs">${truck.assignedDriver?.name || 'Sin conductor'}</span><br><span class="text-xs text-slate-400">${posLabel}</span></div>`);
+      this.markers.push(marker);
+      bounds.extend([pos.lat, pos.lng]);
+
+      // Draw route and destination marker for trucks in transit
+      if (currentStatus === 'En ruta a la tienda' && truck.shopAddress?.latitude && truck.shopAddress?.longitude) {
+        const shopIcon = L.icon({ iconUrl: '/shopIcon.png', iconSize: [35, 35], iconAnchor: [17, 35], popupAnchor: [0, -35] });
+        const destMarker = L.marker([truck.shopAddress.latitude, truck.shopAddress.longitude], { icon: shopIcon })
           .addTo(this.map!)
-          .bindPopup(`<div class="text-center font-sans"><strong>${truck.plateNumber}</strong><br><span class="text-xs text-slate-500">${truck.assignedDriver?.name || 'Sin asignar'}</span></div>`);
-        this.markers.push(marker);
-        bounds.extend([truck.address.latitude, truck.address.longitude]);
+          .bindPopup(`<strong>Tienda destino</strong><br><span class="text-xs">${truck.plateNumber}</span>`);
+        this.markers.push(destMarker);
+        bounds.extend([truck.shopAddress.latitude, truck.shopAddress.longitude]);
+        this.drawRouteOnMap(pos.lat, pos.lng, truck.shopAddress.latitude, truck.shopAddress.longitude, '#3b82f6', marker);
+      } else if (currentStatus === 'En Reparto' && truck.selectedOrderAddress?.latitude && truck.selectedOrderAddress?.longitude) {
+        const destIcon = L.icon({ iconUrl: '/location-pointer.png', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
+        const destMarker = L.marker([truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude], { icon: destIcon })
+          .addTo(this.map!)
+          .bindPopup(`<strong>Destino de entrega</strong><br><span class="text-xs">${truck.plateNumber}</span>`);
+        this.markers.push(destMarker);
+        bounds.extend([truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude]);
+        this.drawRouteOnMap(pos.lat, pos.lng, truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude, '#f59e0b', marker);
       }
     });
     if (hasCoords) this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+  }
+
+  private drawRouteOnMap(fromLat: number, fromLng: number, toLat: number, toLng: number, color: string, marker: L.Marker) {
+    this.locationService.getRoute(fromLat, fromLng, toLat, toLng).subscribe(route => {
+      if (!route || !this.map) return;
+      const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+      const polyline = L.polyline(latlngs, { color, weight: 5, opacity: 0.75 }).addTo(this.map);
+      this.routePolylines.push(polyline);
+      const eta = formatDuration(route.durationSeconds);
+      const popupContent = marker.getPopup()?.getContent() || '';
+      marker.getPopup()?.setContent(popupContent + `<br><span class="text-xs font-bold text-blue-600">⏱ ETA: ${eta}</span>`);
+    });
+  }
+
+  private renderDriverMarkers() {
+    if (!this.map) return;
+    this.driverMarkers.forEach(m => m.remove());
+    this.driverMarkers = [];
+
+    const assignedUsernames = new Set(
+      this.trucksPage.items
+        .filter(t => t.assignedDriver)
+        .map(t => t.assignedDriver!.username)
+    );
+
+    this.allDriverLocations
+      .filter(dl => !assignedUsernames.has(dl.driverUsername))
+      .forEach(dl => {
+        if (!dl.address?.latitude || !dl.address?.longitude) return;
+        const driverIcon = L.divIcon({
+          className: 'custom-pin',
+          html: `<div style="background-color: #8b5cf6; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [18, 18], iconAnchor: [9, 9]
+        });
+        const marker = L.marker([dl.address.latitude, dl.address.longitude], { icon: driverIcon })
+          .addTo(this.map!)
+          .bindPopup(`<div class="text-center font-sans"><strong>${dl.driverName}</strong><br><span class="text-xs text-purple-500">👤 Conductor sin camión</span></div>`);
+        this.driverMarkers.push(marker);
+      });
+  }
+
+  getEffectivePosition(truck: Truck): { lat: number; lng: number; source: 'gps' | 'saved' } | null {
+    if (truck.assignedDriver && truck.driverLocation?.address?.latitude && truck.driverLocation?.address?.longitude) {
+      return { lat: truck.driverLocation.address.latitude, lng: truck.driverLocation.address.longitude, source: 'gps' };
+    }
+    if (truck.address?.latitude && truck.address?.longitude) {
+      return { lat: truck.address.latitude, lng: truck.address.longitude, source: 'saved' };
+    }
+    return null;
   }
 
   locateTruckOnMap(truck: Truck) {
     this.selectedViewMode = 'map';
     this.onViewModeChange();
     setTimeout(() => {
-      if (this.map && truck.address?.latitude && truck.address?.longitude) {
-        this.map.flyTo([truck.address.latitude, truck.address.longitude], 14, { duration: 1.5 });
+      const pos = this.getEffectivePosition(truck);
+      if (this.map && pos) {
+        this.map.flyTo([pos.lat, pos.lng], 14, { duration: 1.5 });
       }
     }, 100);
   }
@@ -313,20 +408,18 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   }
 
   getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    const s = status?.toLowerCase() || '';
-    if (s === 'disponible') return 'success';
-    if (s.includes('ruta') || s.includes('reparto')) return 'info';
-    if (s === 'en mantenimiento') return 'warn';
-    if (s === 'fuera de servicio') return 'danger';
+    if (status === 'Descanso') return 'success';
+    if (status === 'En ruta a la tienda') return 'info';
+    if (status === 'En Reparto') return 'warn';
+    if (status === 'Fuera de servicio') return 'danger';
     return 'secondary';
   }
 
   getIconForStatus(status: string): string {
-    const s = status?.toLowerCase() || '';
-    if (s === 'disponible') return 'pi pi-check-circle';
-    if (s.includes('ruta') || s.includes('reparto')) return 'pi pi-send';
-    if (s === 'en mantenimiento') return 'pi pi-wrench';
-    if (s === 'fuera de servicio') return 'pi pi-times-circle';
+    if (status === 'Descanso') return 'pi pi-moon';
+    if (status === 'En ruta a la tienda') return 'pi pi-map-marker';
+    if (status === 'En Reparto') return 'pi pi-send';
+    if (status === 'Fuera de servicio') return 'pi pi-times-circle';
     return 'pi pi-info-circle';
   }
 
@@ -515,4 +608,5 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   }
 
   protected readonly formatAddress = formatAddress;
+  protected readonly formatDuration = formatDuration;
 }

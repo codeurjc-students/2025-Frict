@@ -1,7 +1,10 @@
 import {DestroyRef, effect, inject, Injectable, OnDestroy} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
 import {AuthService} from './auth.service';
 import {NotificationService} from './notification.service';
+import {DriverLocation} from '../models/driver-location.model';
 
 @Injectable({
   providedIn: 'root'
@@ -9,10 +12,16 @@ import {NotificationService} from './notification.service';
 export class DriverLocationPingService implements OnDestroy {
 
   private readonly PING_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
+  private readonly apiUrl = '/api/v1/trucks/driver-locations';
 
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+  private http = inject(HttpClient);
   private destroyRef = inject(DestroyRef);
+
+  getAllDriverLocations(): Observable<DriverLocation[]> {
+    return this.http.get<DriverLocation[]>(this.apiUrl);
+  }
 
   private intervalHandle: ReturnType<typeof setInterval> | null = null;
   private lastPosition: { lat: number; lng: number } | null = null;

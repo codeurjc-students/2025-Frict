@@ -4,6 +4,8 @@ import com.tfg.backend.utils.ReferenceNumberGenerator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,15 +48,20 @@ public class Truck {
     @JoinColumn(name = "driver_id")
     private User assignedDriver;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "selected_order_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Order selectedOrder;
+
 
     public Truck() {
-        this.history.add(new TruckStatusLog(TruckStatus.AVAILABLE, "Camión preparado para el reparto."));
+        this.history.add(new TruckStatusLog(TruckStatus.REST, "Camión preparado para el reparto."));
     }
 
     public Truck(String plateNumber, Address address, int maxOrderCapacity) {
         this.referenceCode = ReferenceNumberGenerator.generateTruckReferenceNumber();
         this.plateNumber = plateNumber;
-        this.history.add(new TruckStatusLog(TruckStatus.AVAILABLE, "Camión preparado para el reparto."));
+        this.history.add(new TruckStatusLog(TruckStatus.REST, "Camión preparado para el reparto."));
         this.address = address;
         this.maxOrderCapacity = maxOrderCapacity;
     }

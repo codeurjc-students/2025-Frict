@@ -3,8 +3,10 @@ package com.tfg.backend.controller;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.dto.UserDTO;
+import com.tfg.backend.model.DriverLocation;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
+import com.tfg.backend.repository.DriverLocationRepository;
 import com.tfg.backend.service.ShopTruckOrchestrator;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.ConnectionService;
@@ -30,6 +32,7 @@ public class TruckRestController {
 
     private final ShopTruckOrchestrator shopTruckOrchestrator;
     private final TruckService truckService;
+    private final DriverLocationRepository driverLocationRepository;
 
     // Inject the user connection service for presence enrichment
     private final ConnectionService connectionService;
@@ -77,6 +80,21 @@ public class TruckRestController {
     public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
         List<Truck> unassignedTrucks = truckService.findAllByAssignedShopIsNull();
         return ResponseEntity.ok(toEnrichedDTOList(unassignedTrucks));
+    }
+
+    @Operation(summary = "(Admin, Manager) Get all driver locations from MongoDB")
+    @GetMapping("/driver-locations")
+    public ResponseEntity<List<DriverLocation>> getAllDriverLocations() {
+        return ResponseEntity.ok(driverLocationRepository.findAll());
+    }
+
+    @Operation(summary = "(Driver) Set or clear the active delivery order for a truck")
+    @PutMapping("/{truckId}/selected-order")
+    public ResponseEntity<TruckDTO> setSelectedOrder(@PathVariable Long truckId,
+                                                      @RequestParam Long orderId,
+                                                      @RequestParam boolean state) {
+        Truck truck = truckService.setSelectedOrder(truckId, orderId, state);
+        return ResponseEntity.ok(toEnrichedDTO(truck));
     }
 
     @Operation(summary = "(Admin) Set driver assignment to a truck")

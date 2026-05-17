@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {catchError, map, Observable, of} from 'rxjs';
 import {Address} from '../models/address.model';
+import {RouteResult} from '../models/route.model';
 
 export interface Coordinates {
   latitude: number;
@@ -41,6 +42,18 @@ export class LocationService {
       .post<Coordinates>(`${this.apiUrl}/direct`, body)
       .pipe(
         map(coords => coords ?? null),
+        catchError(() => of(null))
+      );
+  }
+
+  // ROUTING via OSRM proxy
+  getRoute(fromLat: number, fromLng: number, toLat: number, toLng: number): Observable<RouteResult | null> {
+    return this.http
+      .get<RouteResult>(`${this.apiUrl}/route`, {
+        params: { fromLat, fromLng, toLat, toLng }
+      })
+      .pipe(
+        map(r => r ?? null),
         catchError(() => of(null))
       );
   }

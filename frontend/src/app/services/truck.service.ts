@@ -69,4 +69,11 @@ export class TruckService {
     params = params.append('comment', comment);
     return this.http.put<Truck>(this.apiUrl + `/status/${id}`, null, { params });
   }
+
+  public setSelectedOrder(truckId: string, orderId: string, state: boolean): Observable<Truck> {
+    let params = new HttpParams();
+    params = params.append('orderId', orderId);
+    params = params.append('state', state);
+    return this.http.put<Truck>(this.apiUrl + `/${truckId}/selected-order`, null, { params });
+  }
 }

@@ -14,4 +14,7 @@ export interface Truck {
   driverLocation?: DriverLocation | null;
   ordersToDeliver: number;
   maxOrderCapacity: number;
+  selectedOrderId?: string | null;
+  shopAddress?: Address | null;
+  selectedOrderAddress?: Address | null;
 }

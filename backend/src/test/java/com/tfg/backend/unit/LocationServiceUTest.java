@@ -26,7 +26,8 @@ class LocationServiceUTest {
     void setUp() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://nominatim.test");
         mockServer = MockRestServiceServer.bindTo(builder).build();
-        locationService = new LocationService(builder.build());
+        RestClient osrmClient = RestClient.builder().baseUrl("https://osrm.test").build();
+        locationService = new LocationService(builder.build(), osrmClient);
     }
 
     @Nested

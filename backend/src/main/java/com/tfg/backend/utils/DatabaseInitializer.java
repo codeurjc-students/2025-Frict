@@ -427,7 +427,7 @@ public class DatabaseInitializer {
         truck2.setAssignedShop(shop1);
 
         truck1.addStatusUpdate("El camión ha comenzado el reparto");
-        truck1.changeTruckStatus(TruckStatus.MAINTENANCE, "El camión está en proceso de revisión técnica.");
+        truck1.changeTruckStatus(TruckStatus.OUT_OF_SERVICE, "El camión está en proceso de revisión técnica.");
 
         truckRepository.save(truck1);
         truckRepository.save(truck2);

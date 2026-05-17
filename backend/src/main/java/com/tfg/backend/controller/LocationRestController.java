@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.CoordinatesDTO;
+import com.tfg.backend.dto.RouteDTO;
 import com.tfg.backend.service.LocationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,16 @@ public class LocationRestController {
     @PostMapping("/direct")
     public ResponseEntity<CoordinatesDTO> directGeocode(@RequestBody AddressDTO address) {
         CoordinatesDTO result = locationService.directGeocode(address);
+        return result != null ? ResponseEntity.ok(result) : ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "(All) Get driving route between two points via OSRM")
+    @GetMapping("/route")
+    public ResponseEntity<RouteDTO> getRoute(@RequestParam double fromLat,
+                                             @RequestParam double fromLng,
+                                             @RequestParam double toLat,
+                                             @RequestParam double toLng) {
+        RouteDTO result = locationService.getRoute(fromLat, fromLng, toLat, toLng);
         return result != null ? ResponseEntity.ok(result) : ResponseEntity.noContent().build();
     }
 }

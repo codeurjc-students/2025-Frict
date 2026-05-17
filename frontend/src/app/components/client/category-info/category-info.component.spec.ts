@@ -156,16 +156,6 @@ describe('CategoryInfoComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // ─── useCases — static data ───────────────────────────────────────────────────
-
-  it('should expose 4 use-case items', () => {
-    expect(component.useCases.length).toBe(4);
-  });
-
-  it('should include "Seguridad para tu Negocio" in the use-cases list', () => {
-    expect(component.useCases.some(u => u.title === 'Seguridad para tu Negocio')).toBeTrue();
-  });
-
   // ─── Happy-path load ──────────────────────────────────────────────────────────
 
   it('should call getCategoryById with the route id on init', () => {

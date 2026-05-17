@@ -159,7 +159,7 @@ public class TruckApiFunctionalITest extends BaseApiFunctionalITest {
     public void commentAndOrUpdateTruckStatus_AsAdmin_UpdatesStatus() {
         String responseBody = given().spec(getSpec(BASE_URL_TRUCKS, adminCookie))
                 .pathParam("id", testTruck.getId())
-                .queryParam("truckStatus", "MAINTENANCE").queryParam("comment", "Going to the mechanic")
+                .queryParam("truckStatus", "ON_ROUTE_TO_SHOP").queryParam("comment", "Heading to the shop")
                 .when().put("/status/{id}")
                 .then().statusCode(200).extract().asString();
 

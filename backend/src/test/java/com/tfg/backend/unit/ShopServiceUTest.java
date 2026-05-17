@@ -53,6 +53,10 @@ class ShopServiceUTest {
     @BeforeEach
     void setUp() {
         // Setup real Shop entity
+        User manager = new User();
+        manager.setId(1L);
+        manager.setUsername("manager-test");
+
         shop = new Shop();
         shop.setId(1L);
         shop.setName("Test Shop");
@@ -60,6 +64,7 @@ class ShopServiceUTest {
         shop.setAssignedTrucks(new ArrayList<>());
         shop.setAssignedOrders(new ArrayList<>());
         shop.setCustomers(new ArrayList<>());
+        shop.setAssignedManager(manager);
 
         ImageInfo img = new ImageInfo();
         img.setS3Key("shop-pic.jpg");
@@ -169,8 +174,16 @@ class ShopServiceUTest {
         @Test
         @DisplayName("setAssignedStock deletes existing stock when state is false")
         void setAssignedStock_DeletesStock_WhenFalse() {
+            Product existingProduct = new Product();
+            existingProduct.setId(99L);
+            existingProduct.setReferenceCode("PROD-99");
+            existingProduct.setName("Test Product");
+
             ShopStock existingStock = new ShopStock();
+            existingStock.setShop(shop);
+            existingStock.setProduct(existingProduct);
             when(shopRepository.findById(1L)).thenReturn(Optional.of(shop));
+            when(productService.findProductHelper(99L)).thenReturn(existingProduct);
             when(shopStockService.findShopStockHelper(99L)).thenReturn(existingStock); // Stock ID 99
 
             ShopStock result = shopService.setAssignedStock(1L, 99L, false);

@@ -211,28 +211,50 @@ public class TruckService {
 
     // --- METRICS METHODS ---
 
+    @Transactional
+    public Truck setSelectedOrder(Long truckId, Long orderId, boolean state) {
+        Truck truck = this.findTruckHelper(truckId);
+        if (state) {
+            boolean belongs = truck.getOrdersToDeliver().stream()
+                    .anyMatch(o -> o.getId().equals(orderId));
+            if (!belongs) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El pedido no pertenece a la lista de entregas de este camión.");
+            }
+            // Find the order from the set
+            Order order = truck.getOrdersToDeliver().stream()
+                    .filter(o -> o.getId().equals(orderId))
+                    .findFirst()
+                    .orElseThrow();
+            truck.setSelectedOrder(order);
+        } else {
+            truck.setSelectedOrder(null);
+        }
+        return truck;
+    }
+
     public List<StatDTO> getTruckStatistics(User currentUser) {
-        long available = 0, onRoute = 0, onMaintenance = 0, outOfService = 0;
+        long resting = 0, onRouteToShop = 0, inDelivery = 0, outOfService = 0;
 
         if (currentUser.hasRole("ADMIN")) {
-            available = truckRepository.countTrucksByStatus(List.of(TruckStatus.AVAILABLE));
-            onRoute = truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE));
-            onMaintenance = truckRepository.countTrucksByStatus(List.of(TruckStatus.MAINTENANCE));
+            resting = truckRepository.countTrucksByStatus(List.of(TruckStatus.REST));
+            onRouteToShop = truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE_TO_SHOP));
+            inDelivery = truckRepository.countTrucksByStatus(List.of(TruckStatus.IN_DELIVERY));
             outOfService = truckRepository.countTrucksByStatus(List.of(TruckStatus.OUT_OF_SERVICE));
         } else if (currentUser.hasRole("MANAGER")) {
             Long managerId = currentUser.getId();
-            available = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.AVAILABLE));
-            onRoute = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.ON_ROUTE));
-            onMaintenance = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.MAINTENANCE));
+            resting = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.REST));
+            onRouteToShop = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.ON_ROUTE_TO_SHOP));
+            inDelivery = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.IN_DELIVERY));
             outOfService = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.OUT_OF_SERVICE));
         } else {
             return List.of();
         }
 
         return List.of(
-                new StatDTO("Disponibles", available),
-                new StatDTO("En Ruta", onRoute),
-                new StatDTO("En mantenimiento", onMaintenance),
+                new StatDTO("Descanso", resting),
+                new StatDTO("En ruta a la tienda", onRouteToShop),
+                new StatDTO("En Reparto", inDelivery),
                 new StatDTO("Fuera de servicio", outOfService)
         );
     }

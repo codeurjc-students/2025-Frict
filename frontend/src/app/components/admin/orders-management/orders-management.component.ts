@@ -34,8 +34,9 @@ import {Truck} from '../../../models/truck.model';
 import {OrderService} from '../../../services/order.service';
 import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
+import {LocationService} from '../../../services/location.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
 
 import * as L from 'leaflet';
 import {ProgressBar} from 'primeng/progressbar';
@@ -57,6 +58,7 @@ export class OrdersManagementComponent implements OnInit {
   private orderService = inject(OrderService);
   private shopService = inject(ShopService);
   private truckService = inject(TruckService);
+  private locationService = inject(LocationService);
 
   ordersPage: PageResponse<Order> = { items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   first = 0;
@@ -105,6 +107,8 @@ export class OrdersManagementComponent implements OnInit {
   activeTab: string = '0';
   private orderMap: L.Map | undefined;
   private markersGroup: L.FeatureGroup | undefined;
+  private routePolyline: L.Polyline | undefined;
+  orderMapEta: string | null = null;
 
   ngOnInit() {
     this.loadOrdersPage();
@@ -173,6 +177,8 @@ export class OrdersManagementComponent implements OnInit {
       this.orderMap.remove();
       this.orderMap = undefined;
     }
+    this.routePolyline = undefined;
+    this.orderMapEta = null;
   }
 
   // Intercept the tabs change to manage map redimensioning
@@ -246,16 +252,68 @@ export class OrdersManagementComponent implements OnInit {
         .addTo(this.markersGroup);
     }
 
-    // Trucks pointer
-    if (this.selectedTruck?.address?.latitude && this.selectedTruck?.address?.longitude) {
-      L.marker([this.selectedTruck.address.latitude, this.selectedTruck.address.longitude], { icon: truckIcon })
-        .bindPopup('<b>Camión</b><br>' + this.selectedTruck?.referenceCode)
+    // Truck pointer (use effective position)
+    const truckPos = this.getEffectiveTruckPosition();
+    if (truckPos) {
+      const posLabel = truckPos.source === 'gps' ? '📍 GPS conductor' : '📍 Última posición guardada';
+      L.marker([truckPos.lat, truckPos.lng], { icon: truckIcon })
+        .bindPopup(`<b>Camión</b><br>${this.selectedTruck?.referenceCode}<br><span style="font-size:11px;color:#94a3b8">${posLabel}</span>`)
         .addTo(this.markersGroup);
     }
 
     // Autocenter the map containing all added pointers
     if (this.markersGroup.getLayers().length > 0) {
       this.orderMap.fitBounds(this.markersGroup.getBounds(), { padding: [40, 40], maxZoom: 15 });
+    }
+
+    // Draw route based on truck status
+    this.drawOrderRoute();
+  }
+
+  private getEffectiveTruckPosition(): { lat: number; lng: number; source: 'gps' | 'saved' } | null {
+    const truck = this.selectedTruck;
+    if (!truck) return null;
+    if (truck.assignedDriver && truck.driverLocation?.address?.latitude && truck.driverLocation?.address?.longitude) {
+      return { lat: truck.driverLocation.address.latitude, lng: truck.driverLocation.address.longitude, source: 'gps' };
+    }
+    if (truck.address?.latitude && truck.address?.longitude) {
+      return { lat: truck.address.latitude, lng: truck.address.longitude, source: 'saved' };
+    }
+    return null;
+  }
+
+  private drawOrderRoute() {
+    const truck = this.selectedTruck;
+    const order = this.selectedOrder;
+    if (!truck || !this.orderMap) return;
+
+    const truckPos = this.getEffectiveTruckPosition();
+    if (!truckPos) return;
+
+    const truckStatus = truck.history?.length ? truck.history[truck.history.length - 1].status : '';
+
+    let destLat: number | undefined;
+    let destLng: number | undefined;
+    let color = '#3b82f6';
+
+    if (truckStatus === 'En ruta a la tienda' && truck.shopAddress?.latitude && truck.shopAddress?.longitude) {
+      destLat = truck.shopAddress.latitude;
+      destLng = truck.shopAddress.longitude;
+      color = '#3b82f6';
+    } else if (truckStatus === 'En Reparto' && order?.sendingAddress?.latitude && order?.sendingAddress?.longitude) {
+      destLat = order.sendingAddress.latitude;
+      destLng = order.sendingAddress.longitude;
+      color = '#f59e0b';
+    }
+
+    if (destLat !== undefined && destLng !== undefined) {
+      this.locationService.getRoute(truckPos.lat, truckPos.lng, destLat, destLng).subscribe(route => {
+        if (!route || !this.orderMap) return;
+        if (this.routePolyline) this.routePolyline.remove();
+        const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+        this.routePolyline = L.polyline(latlngs, { color, weight: 5, opacity: 0.75 }).addTo(this.orderMap);
+        this.orderMapEta = formatDuration(route.durationSeconds);
+      });
     }
   }
 
@@ -484,4 +542,5 @@ export class OrdersManagementComponent implements OnInit {
 
   protected readonly formatPrice = formatPrice;
   protected readonly formatAddress = formatAddress;
+  protected readonly formatDuration = formatDuration;
 }

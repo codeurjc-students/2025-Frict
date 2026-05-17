@@ -3,8 +3,9 @@ package com.tfg.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tfg.backend.dto.AddressDTO;
 import com.tfg.backend.dto.CoordinatesDTO;
-import lombok.RequiredArgsConstructor;
+import com.tfg.backend.dto.RouteDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -15,11 +16,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class LocationService {
 
     private final RestClient nominatimRestClient;
+    private final RestClient osrmRestClient;
+
+    public LocationService(@Qualifier("nominatimRestClient") RestClient nominatimRestClient,
+                           @Qualifier("osrmRestClient") RestClient osrmRestClient) {
+        this.nominatimRestClient = nominatimRestClient;
+        this.osrmRestClient = osrmRestClient;
+    }
 
     public AddressDTO reverseGeocode(double latitude, double longitude) {
         JsonNode response;
@@ -119,6 +126,43 @@ public class LocationService {
 
     private static String nullSafe(String value) {
         return value == null ? "" : value;
+    }
+
+    public RouteDTO getRoute(double fromLat, double fromLng, double toLat, double toLng) {
+        String path = String.format(java.util.Locale.US, "/route/v1/driving/%f,%f;%f,%f", fromLng, fromLat, toLng, toLat);
+        JsonNode response;
+        try {
+            response = osrmRestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(path)
+                            .queryParam("overview", "full")
+                            .queryParam("geometries", "geojson")
+                            .build())
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (RestClientException ex) {
+            log.error("OSRM routing call failed", ex);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Routing provider unreachable");
+        }
+
+        if (response == null || !response.hasNonNull("routes") || response.get("routes").isEmpty()) {
+            return null;
+        }
+
+        JsonNode route = response.get("routes").get(0);
+        double duration = route.path("duration").asDouble();
+        double distance = route.path("distance").asDouble();
+
+        List<List<Double>> coordinates = new ArrayList<>();
+        JsonNode coordsNode = route.path("geometry").path("coordinates");
+        if (coordsNode.isArray()) {
+            for (JsonNode point : coordsNode) {
+                if (point.isArray() && point.size() >= 2) {
+                    coordinates.add(List.of(point.get(0).asDouble(), point.get(1).asDouble()));
+                }
+            }
+        }
+        return new RouteDTO(duration, distance, coordinates);
     }
 
     private static String firstNonBlank(String... values) {
