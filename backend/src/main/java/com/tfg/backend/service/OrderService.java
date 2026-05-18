@@ -264,6 +264,9 @@ public class OrderService {
         Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
 
+        Registry userOrderRegistry = new Registry(EntityType.USER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
+
         Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, orderTotal, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
 
@@ -334,9 +337,6 @@ public class OrderService {
                     Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
                     eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
                 }
-
-                Registry userOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
-                eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
 
                 if (order.getAssignedTruck() != null && order.getAssignedTruck().getAssignedDriver() != null){
                     User driver = order.getAssignedTruck().getAssignedDriver();

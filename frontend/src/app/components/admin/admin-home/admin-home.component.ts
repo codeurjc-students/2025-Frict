@@ -419,7 +419,12 @@ export class AdminHomeComponent implements OnInit {
         const dataCompleted = resCompleted.items || resCompleted;
         const dataCancelled = resCancelled.items || resCancelled;
 
-        const completedToday = dataCompleted.length > 0 ? dataCompleted[dataCompleted.length - 1].totalValue : 0;
+        const lastItem = dataCompleted.length > 0 ? dataCompleted[dataCompleted.length - 1] : null;
+        const isToday = lastItem != null && (() => {
+          const d = new Date(lastItem._id), t = new Date();
+          return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+        })();
+        const completedToday = isToday ? lastItem.totalValue : 0;
 
         this.driverKpis.update(current => ({
           ...current,
@@ -495,6 +500,10 @@ export class AdminHomeComponent implements OnInit {
       queryParams: { notifId: notif.id },
       state: { notification: notif }
     });
+  }
+
+  openSupportEmail(email: string) {
+    window.location.href = 'mailto:' + email;
   }
 
   protected readonly formatPrice = formatPrice;
