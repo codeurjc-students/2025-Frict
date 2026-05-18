@@ -13,6 +13,8 @@ public enum RegistryType {
     USER_ORDERS("Pedidos"),
     USER_REVIEWS("Reseñas"),
     SHOP_BUDGET("Presupuesto"),
+    SHOP_USED_CAPACITY("Capacidad usada"),
+    SHOP_TOTAL_CAPACITY("Capacidad total"),
     SHOP_STOCK("Stock");
 
     private final String translation;

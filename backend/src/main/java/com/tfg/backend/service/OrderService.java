@@ -302,6 +302,9 @@ public class OrderService {
             if (orderStatus.equals(OrderStatus.ON_DELIVERY) && order.getAssignedShop() != null) {
                 Shop shop = order.getAssignedShop();
                 shop.setOccupiedCapacity(Math.max(0, shop.getOccupiedCapacity() - order.getTotalCapacity()));
+
+                Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, -order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), order.getAssignedTruck().getAssignedDriver().getUsername(), order.getAssignedTruck().getAssignedDriver().getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
             }
 
             // Release truck capacity when order is completed or cancelled
@@ -326,6 +329,12 @@ public class OrderService {
                 };
 
                 User loggedUser = userService.findLoggedUserHelper();
+
+                if (orderStatus.equals(OrderStatus.CANCELLED)){
+                    Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                    eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
+                }
+
                 Registry userOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
                 eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
 
@@ -377,6 +386,9 @@ public class OrderService {
 
         Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.ORDERS_CANCELLED, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
+
+        Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
 
         return order; // Saved automatically
     }
