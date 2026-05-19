@@ -71,6 +71,14 @@ export function getStockTagInfo(units: number | null | undefined, localMode: boo
 
   const prefix = localMode ? 'Local' : 'Global';
 
+  if (units < 0) {
+    return {
+      message: `${prefix}: No disponible`,
+      icon: 'pi pi-ban',
+      severity: 'secondary'
+    };
+  }
+
   if (units > 5 && units <= 10) {
     return {
       message: `${prefix}: ${units} uds.`,
@@ -118,6 +126,7 @@ export function getTruckHistoryStatusTagInfo(status: string): TagInformation {
 
 // STOCK LEVEL TAGS — siempre visible (distinto de getStockTagInfo, que devuelve null si stock > 10)
 export function getStockLevelTagInfo(units: number): TagInformation {
+  if (units < 0)  return { message: 'No disponible', icon: 'pi pi-ban',                  severity: 'secondary' };
   if (units > 20) return { message: `${units} uds.`, icon: 'pi pi-box',                  severity: 'success' };
   if (units > 5)  return { message: `${units} uds.`, icon: 'pi pi-exclamation-triangle', severity: 'warn' };
   if (units > 0)  return { message: `${units} uds.`, icon: 'pi pi-exclamation-triangle', severity: 'danger' };

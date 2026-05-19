@@ -18,11 +18,13 @@ public interface ShopStockRepository extends JpaRepository<ShopStock, Long> {
             @Param("shopId") Long shopId
     );
 
-    @Query("SELECT s FROM ShopStock s WHERE s.shop.id = :shopId AND s.product.id IN :productIds AND s.active = true")
+    @Query("SELECT s FROM ShopStock s WHERE s.shop.id = :shopId AND s.product.id IN :productIds")
     List<ShopStock> findStockForProductsInShop(
             @Param("shopId") Long shopId,
             @Param("productIds") List<Long> productIds
     );
+
+    Optional<ShopStock> findByProduct_IdAndShop_Id(Long productId, Long shopId);
 
     List<ShopStock> findAllByShopId(Long id);
     Page<ShopStock> findAllByShopId(Long id, Pageable p);

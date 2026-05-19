@@ -202,6 +202,10 @@ public class OrderService {
                     .findFirst()
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "El producto " + i.getProduct().getName() + " no está disponible en tu tienda seleccionada."));
 
+            if (!localStock.isActive()) {
+                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "El producto " + i.getProduct().getName() + " no está disponible en tu tienda seleccionada.");
+            }
+
             if (localStock.getUnits() < i.getQuantity()){
                 throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "No hay suficiente stock del producto " + i.getProduct().getName() + " en tu tienda seleccionada.");
             }

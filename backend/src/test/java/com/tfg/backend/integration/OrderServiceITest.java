@@ -217,6 +217,36 @@ public class OrderServiceITest {
     }
 
     /**
+     * Tests that placing an order is rejected when a cart product's stock is locally deactivated.
+     */
+    @Test
+    @DisplayName("Create order throws METHOD_NOT_ALLOWED when a cart product has inactive local stock")
+    void testCreateOrder_WithInactiveStock_ThrowsException() {
+        // 1. Deactivate the TV stock in mainShop
+        ShopStock stock = shopStockRepository.findByProduct_IdAndShop_Id(tvProduct.getId(), mainShop.getId()).orElseThrow();
+        stock.setActive(false);
+        shopStockRepository.save(stock);
+        entityManager.flush();
+        entityManager.clear();
+
+        // 2. Authenticate buyer and put 1 TV in cart
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(buyer.getUsername(), "pass", java.util.List.of()));
+
+        User activeBuyer = userRepository.findById(buyer.getId()).orElseThrow();
+        OrderItem cartItem = new OrderItem(tvProduct, activeBuyer, 1);
+        activeBuyer.getAllOrderItems().add(cartItem);
+        userRepository.save(activeBuyer);
+
+        // 3. Act & Assert
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> orderService.createOrder(shippingAddress.getId(), paymentCard.getId()));
+
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("no está disponible"));
+    }
+
+    /**
      * Tests the final deletion of an order, ensuring it's only possible if it's completed or cancelled.
      */
     @Test

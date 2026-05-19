@@ -69,7 +69,7 @@ public class ProductDTO {
 
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {
-            totalUnits += s.getUnits();
+            if (s.isActive()) totalUnits += s.getUnits();
         }
         this.totalUnits = totalUnits;
 
@@ -78,7 +78,7 @@ public class ProductDTO {
         }
         else this.availableUnits = 0;
 
-        this.shopsWithStock = p.getShopsStock().size();
+        this.shopsWithStock = (int) p.getShopsStock().stream().filter(ShopStock::isActive).count();
 
         //Total reviews and average rating
         double totalRating = 0.0;

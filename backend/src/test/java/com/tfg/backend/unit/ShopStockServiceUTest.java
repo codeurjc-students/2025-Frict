@@ -108,9 +108,13 @@ class ShopStockServiceUTest {
         }
 
         @Test
-        @DisplayName("Returns exact units if product is found in the shop")
+        @DisplayName("Returns exact units if product is found in the shop and active")
         void getLocalStock_ReturnsUnits_WhenFound() {
-            when(shopStockRepository.findUnitsByProductIdAndShopId(10L, 5L)).thenReturn(Optional.of(42));
+            ShopStock activeStock = new ShopStock();
+            activeStock.setProduct(p1);
+            activeStock.setUnits(42);
+            activeStock.setActive(true);
+            when(shopStockRepository.findByProduct_IdAndShop_Id(10L, 5L)).thenReturn(Optional.of(activeStock));
 
             Integer units = shopStockService.getLocalStock(p1, 5L);
 
@@ -118,13 +122,27 @@ class ShopStockServiceUTest {
         }
 
         @Test
-        @DisplayName("Returns 0 if product exists but has no stock record in the shop")
-        void getLocalStock_ReturnsZero_WhenNotFound() {
-            when(shopStockRepository.findUnitsByProductIdAndShopId(10L, 5L)).thenReturn(Optional.empty());
+        @DisplayName("Returns -1 if product stock exists in the shop but is inactive")
+        void getLocalStock_ReturnsMinusOne_WhenInactive() {
+            ShopStock inactiveStock = new ShopStock();
+            inactiveStock.setProduct(p1);
+            inactiveStock.setUnits(10);
+            inactiveStock.setActive(false);
+            when(shopStockRepository.findByProduct_IdAndShop_Id(10L, 5L)).thenReturn(Optional.of(inactiveStock));
 
             Integer units = shopStockService.getLocalStock(p1, 5L);
 
-            assertEquals(0, units);
+            assertEquals(-1, units);
+        }
+
+        @Test
+        @DisplayName("Returns null if product has no stock record in the shop")
+        void getLocalStock_ReturnsNull_WhenNotFound() {
+            when(shopStockRepository.findByProduct_IdAndShop_Id(10L, 5L)).thenReturn(Optional.empty());
+
+            Integer units = shopStockService.getLocalStock(p1, 5L);
+
+            assertNull(units);
         }
     }
 

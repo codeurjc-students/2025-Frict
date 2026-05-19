@@ -396,7 +396,7 @@
 
                 <div class="flex items-center gap-1.5 text-xs font-medium pl-6" [ngClass]="product.availableUnits > 0 ? 'text-green-700' : 'text-red-600'">
                   <i [class]="product.availableUnits > 0 ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-                  <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : 'Agotado en esta tienda' }}</span>
+                  <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : product.availableUnits === 0 ? 'Agotado en esta tienda' : 'No disponible en esta tienda' }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 text-xs font-medium pl-6 mt-1 text-primary-800">
@@ -428,11 +428,11 @@
 
           <div class="space-y-4 mb-6">
             <div class="bg-surface-50 p-3 rounded-xl border border-surface-200 transition-opacity"
-                 [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits">
+                 [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || product.availableUnits <= 0">
               <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
               <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
                              [min]="1" [max]="(product.availableUnits - inCartUnits) || 1"
-                             [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
+                             [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) <= 0"
                              class="w-full input-number-modern"
                              [inputStyle]="{'width': '100%', 'background': 'transparent', 'border': 'none', 'text-align': 'center', 'font-weight': 'bold' }">
                 <ng-template pTemplate="incrementbuttonicon"><span class="pi pi-plus"></span></ng-template>
@@ -444,7 +444,7 @@
           <div class="space-y-3">
 
             <button (click)="addItemToCart()"
-                    [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
+                    [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) <= 0"
                     class="w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
                     [class]="(authService.isUser() && authService.selectedShopId() && (product.availableUnits - inCartUnits > 0)) ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-surface-200 text-surface-500 cursor-not-allowed'">
 
@@ -460,7 +460,11 @@
 
               @if (authService.isUser() && authService.selectedShopId()) {
 
-                @if (product.availableUnits === 0) {
+                @if (product.availableUnits < 0) {
+                  <i class="pi pi-ban"></i>
+                  No disponible
+
+                } @else if (product.availableUnits === 0) {
                   <i class="pi pi-times"></i>
                   Agotado
 
@@ -571,9 +575,9 @@
 
             <div class="shrink-0 text-right min-w-[5rem]">
               <p-tag
-                [value]="getStockLevelTagInfo(stock.units).message"
-                [severity]="getStockLevelTagInfo(stock.units).severity"
-                [icon]="getStockLevelTagInfo(stock.units).icon"
+                [value]="getStockLevelTagInfo(stock.active ? stock.units : -1).message"
+                [severity]="getStockLevelTagInfo(stock.active ? stock.units : -1).severity"
+                [icon]="getStockLevelTagInfo(stock.active ? stock.units : -1).icon"
                 [rounded]="true">
               </p-tag>
             </div>

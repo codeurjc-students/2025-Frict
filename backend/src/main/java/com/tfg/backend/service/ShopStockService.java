@@ -59,7 +59,7 @@ public class ShopStockService {
         Map<Long, Integer> stockMap = stocks.stream()
                 .collect(Collectors.toMap(
                         s -> s.getProduct().getId(),
-                        ShopStock::getUnits
+                        s -> s.isActive() ? s.getUnits() : -1
                 ));
 
         // Same order as original list
@@ -73,6 +73,8 @@ public class ShopStockService {
         if (shopId == null || product == null) {
             return null;
         }
-        return shopStockRepository.findUnitsByProductIdAndShopId(product.getId(), shopId).orElse(0);
+        return shopStockRepository.findByProduct_IdAndShop_Id(product.getId(), shopId)
+                .map(s -> s.isActive() ? s.getUnits() : -1)
+                .orElse(null);
     }
 }

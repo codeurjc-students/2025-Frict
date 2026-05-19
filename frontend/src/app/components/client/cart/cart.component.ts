@@ -162,7 +162,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   get hasUnavailableItems(): boolean {
     return this.selectedShop !== null &&
-           this.foundItems.items.some(item => item.product.availableUnits === 0);
+           this.foundItems.items.some(item => item.product.availableUnits <= 0);
   }
 
   protected clearCart() {
