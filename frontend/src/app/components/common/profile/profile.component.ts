@@ -1,5 +1,8 @@
-import {Component, computed, inject, OnInit, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {Component, computed, DestroyRef, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {catchError, debounceTime, filter, of, Subject, switchMap} from 'rxjs';
+import * as L from 'leaflet';
 import {Router, RouterModule} from '@angular/router';
 
 import {FormsModule} from '@angular/forms';
@@ -35,6 +38,7 @@ import {getOrderStatusTagInfo, getUserRoleTagInfo} from '../../../utils/tagManag
 import {HttpErrorResponse} from '@angular/common/http';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
+import {LocationService} from '../../../services/location.service';
 
 @Component({
   selector: 'app-profile',
@@ -68,8 +72,11 @@ export class ProfileComponent implements OnInit {
   private reviewService = inject(ReviewService);
   private shopService = inject(ShopService);
   private truckService = inject(TruckService);
+  private locationService = inject(LocationService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
+  private destroyRef = inject(DestroyRef);
+  private platformId = inject(PLATFORM_ID);
   protected router = inject(Router);
 
   user!: User;
@@ -99,8 +106,16 @@ export class ProfileComponent implements OnInit {
   visibleCardDialog: boolean = false;
 
   newUserData!: User;
+  submittedAddress = false;
   newAddress: Address = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
   newCard: PaymentCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
+  submittedCard = false;
+
+  private addressMap: L.Map | undefined;
+  private addressMarker: L.Marker | undefined;
+  private isGeocodingActive = false;
+  private lastAddressCheck = '';
+  private addressChangeSubject = new Subject<void>();
 
   selectedImage: File | null = null;
   isDragging = false;
@@ -207,6 +222,7 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.setupAddressListener();
     this.loadUser();
   }
 
@@ -384,18 +400,26 @@ export class ProfileComponent implements OnInit {
   }
 
   showAddressCreationDialog() {
+    this.newAddress.alias = 'Nueva dirección de envío';
     this.visibleAddressDialog = true;
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => this.initAddressMap(), 100);
+    }
   }
 
   showCardCreationDialog() {
+    this.newCard.alias = 'Nueva tarjeta';
     this.visibleCardDialog = true;
   }
 
   showEditAddressDialog(id: string) {
     const addressFound = this.user.addresses.find(addr => addr.id === id);
-    if(addressFound){
+    if (addressFound) {
       this.newAddress = structuredClone(addressFound);
       this.visibleAddressDialog = true;
+      if (isPlatformBrowser(this.platformId)) {
+        setTimeout(() => this.initAddressMap(), 100);
+      }
     }
   }
 
@@ -410,6 +434,11 @@ export class ProfileComponent implements OnInit {
   //Create/Edit operations
 
   protected submitAddress() {
+    if (this.hasAddressValidationErrors()) {
+      this.submittedAddress = true;
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Completa los campos obligatorios.' });
+      return;
+    }
     this.userService.submitAddress(this.newAddress).subscribe({
       next: (user) => {
         this.user.addresses = user.addresses;
@@ -418,18 +447,38 @@ export class ProfileComponent implements OnInit {
     })
   }
 
+  protected hasAddressValidationErrors(): boolean {
+    const a = this.newAddress;
+    return !a.alias?.trim() || !a.street?.trim() || !a.number?.trim() || !a.postalCode?.trim() || !a.city?.trim() || !a.country?.trim();
+  }
+
+  isAddressFieldInvalid(value: string | undefined): boolean {
+    return this.submittedAddress && !value?.trim();
+  }
+
   protected submitCard() {
-    if (this.isValidDueDate(this.newCard.dueDate)){
-      this.userService.submitPaymentCard(this.newCard).subscribe({
-        next: (user) => {
-          this.user.cards = user.cards;
-          this.cancelNewCard();
-        }
-      })
+    const c = this.newCard;
+    const isNew = !c.id;
+    if (!c.alias?.trim() || !c.cardOwnerName?.trim() || !this.isValidDueDate(c.dueDate) ||
+        (isNew && (!c.number?.trim() || !c.cvv?.trim()))) {
+      this.submittedCard = true;
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Completa los campos obligatorios.' });
+      return;
     }
-    else {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'El mes de caducidad no puede ser mayor a 12' });
-    }
+    this.userService.submitPaymentCard(c).subscribe({
+      next: (user) => {
+        this.user.cards = user.cards;
+        this.cancelNewCard();
+      }
+    });
+  }
+
+  isCardFieldInvalid(value: string | undefined): boolean {
+    return this.submittedCard && !value?.trim();
+  }
+
+  isCardDueDateInvalid(): boolean {
+    return this.submittedCard && !this.isValidDueDate(this.newCard.dueDate ?? '');
   }
 
   protected saveEditData() {
@@ -477,12 +526,138 @@ export class ProfileComponent implements OnInit {
     this.visibleDataDialog = false;
   }
 
+  private setupAddressListener() {
+    this.addressChangeSubject.pipe(
+      filter(() => this.isGeocodingActive),
+      debounceTime(1000),
+      filter(() => {
+        const addr = this.newAddress;
+        const currentCheck = `${addr.street}|${addr.number}|${addr.city}|${addr.postalCode}|${addr.country}`;
+        if (this.lastAddressCheck === currentCheck) return false;
+        this.lastAddressCheck = currentCheck;
+        return !!(addr.street && addr.city);
+      }),
+      switchMap(() =>
+        this.locationService.getCoordinatesFromAddress(this.newAddress).pipe(
+          catchError(() => of(null))
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(coords => {
+      if (coords) {
+        this.newAddress.latitude = coords.latitude;
+        this.newAddress.longitude = coords.longitude;
+        this.updateAddressMarker(coords.latitude, coords.longitude);
+        if (this.addressMap) this.addressMap.setView([coords.latitude, coords.longitude], 16);
+        this.messageService.add({ severity: 'info', summary: 'Ubicación actualizada', detail: 'Se ha movido el marcador según la dirección ingresada.' });
+      } else {
+        this.messageService.add({ severity: 'warn', summary: 'Dirección no encontrada', detail: 'No se encontraron coordenadas para la dirección indicada.' });
+      }
+    });
+  }
+
+  onAddressFieldChange() {
+    this.addressChangeSubject.next();
+  }
+
+  private initAddressMap(): void {
+    if (this.addressMap) return;
+    const container = document.getElementById('profile-address-map');
+    if (!container) return;
+
+    const hasCoords = !!(this.newAddress.latitude && this.newAddress.longitude);
+    const lat = hasCoords ? this.newAddress.latitude! : 40.4168;
+    const lng = hasCoords ? this.newAddress.longitude! : -3.7038;
+    const zoom = hasCoords ? 15 : 6;
+
+    this.addressMap = L.map('profile-address-map').setView([lat, lng], zoom);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(this.addressMap);
+
+    this.addressMap.attributionControl.setPrefix('Leaflet');
+
+    const iconDefault = L.icon({
+      iconUrl: './location-pointer.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+    L.Marker.prototype.options.icon = iconDefault;
+
+    if (hasCoords) {
+      this.updateAddressMarker(lat, lng);
+    }
+
+    this.addressMap.on('click', (e: L.LeafletMouseEvent) => {
+      this.updateAddressMarker(e.latlng.lat, e.latlng.lng);
+      this.newAddress.latitude = e.latlng.lat;
+      this.newAddress.longitude = e.latlng.lng;
+      this.getAddressFromCoordinates(e.latlng.lat, e.latlng.lng);
+    });
+
+    setTimeout(() => {
+      this.syncAddressMemory();
+      this.isGeocodingActive = true;
+    }, 100);
+  }
+
+  private updateAddressMarker(lat: number, lng: number) {
+    if (this.addressMarker) {
+      this.addressMarker.setLatLng([lat, lng]);
+    } else {
+      this.addressMarker = L.marker([lat, lng]).addTo(this.addressMap!);
+    }
+  }
+
+  private syncAddressMemory() {
+    const addr = this.newAddress;
+    this.lastAddressCheck = `${addr.street}|${addr.number}|${addr.city}|${addr.postalCode}|${addr.country}`;
+  }
+
+  private getAddressFromCoordinates(lat: number, lng: number) {
+    this.isGeocodingActive = false;
+    this.locationService.getAddressFromCoordinates(lat, lng).subscribe({
+      next: (addressData) => {
+        if (addressData) {
+          this.newAddress = { ...this.newAddress, ...addressData, alias: this.newAddress.alias };
+          this.syncAddressMemory();
+          if (addressData.number) {
+            this.messageService.add({ severity: 'info', summary: 'Dirección Exacta', detail: `Detectado nº ${addressData.number}` });
+          } else {
+            this.messageService.add({ severity: 'info', summary: 'Zona detectada', detail: 'Ubicación aproximada (sin número exacto)' });
+          }
+          setTimeout(() => { this.isGeocodingActive = true; }, 50);
+        } else {
+          this.isGeocodingActive = true;
+          this.messageService.add({ severity: 'warn', summary: 'Dirección no encontrada', detail: 'No se encontró ninguna dirección para la ubicación indicada.' });
+        }
+      },
+      error: () => {
+        this.isGeocodingActive = true;
+        this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudo recuperar la dirección automática.' });
+      }
+    });
+  }
+
   protected cancelNewAddress() {
+    if (this.addressMap) {
+      this.addressMap.remove();
+      this.addressMap = undefined;
+      this.addressMarker = undefined;
+    }
+    this.isGeocodingActive = false;
+    this.lastAddressCheck = '';
+    this.submittedAddress = false;
     this.newAddress = {id: "", alias: "", street: "", number: "", floor: "", postalCode: "", city: "", country: ""};
     this.visibleAddressDialog = false;
   }
 
   protected cancelNewCard() {
+    this.submittedCard = false;
     this.newCard = {id: "", alias: "", cardOwnerName: "", number: "", numberEnding: "", cvv: "", dueDate: ""};
     this.visibleCardDialog = false;
   }

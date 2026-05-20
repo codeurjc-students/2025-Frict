@@ -37,6 +37,12 @@ public class TruckRestController {
     // Inject the user connection service for presence enrichment
     private final ConnectionService connectionService;
 
+    @Operation(summary = "(All) Check if a plate number is already taken")
+    @GetMapping("/plate")
+    public ResponseEntity<Boolean> checkPlateNumber(@RequestParam String plateNumber) {
+        return ResponseEntity.ok(truckService.isPlateNumberTaken(plateNumber));
+    }
+
     @Operation(summary = "(Admin) Get all trucks information (paged)")
     @GetMapping("/")
     public ResponseEntity<PageResponse<TruckDTO>> getAllTrucksPage(Pageable pageable) {

@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
-import {DatePipe, DecimalPipe, isPlatformBrowser} from '@angular/common';
+import {DatePipe, DecimalPipe, isPlatformBrowser, NgClass} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -13,6 +13,7 @@ import {MessageService} from 'primeng/api';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import * as L from 'leaflet';
 import {LocationService} from '../../../services/location.service';
+import {CustomValidators} from '../../../utils/customValidators.util';
 
 import {Truck} from '../../../models/truck.model';
 import {TruckService} from '../../../services/truck.service';
@@ -25,6 +26,7 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
   selector: 'app-create-edit-truck',
   standalone: true,
   imports: [
+    NgClass,
     Button,
     ReactiveFormsModule,
     InputText,
@@ -54,7 +56,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   constructor() {
 
     this.truckForm = this.fb.group({
-      plateNumber: ['', [Validators.required, Validators.minLength(4)]],
+      plateNumber: ['', [Validators.required, Validators.minLength(4)], [CustomValidators.createPlateNumberValidator(this.truckService, () => this.truck()?.plateNumber ?? '')]],
       referenceCode: [{ value: '', disabled: true }],
       maxCapacity: [10, [Validators.required, Validators.min(1)]],
       shopId: [''],
@@ -62,7 +64,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
       address: this.fb.group({
         alias: ['Última ubicación conocida', []],
         street: ['', Validators.required],
-        number: ['', Validators.required],
+        number: ['', []],
         floor: ['', []],
         postalCode: ['', Validators.required],
         city: ['', Validators.required],
@@ -95,6 +97,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.truckId.set(this.route.snapshot.paramMap.get('id'));
     this.setupAddressListener();
+    this.setupPlateAliasSync();
     this.loadData();
   }
 
@@ -132,6 +135,23 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     }
     // 3. Make requests
     this.loadData();
+  }
+
+  isInvalid(controlPath: string): boolean {
+    const ctrl = this.truckForm.get(controlPath);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  private setupPlateAliasSync() {
+    this.truckForm.get('plateNumber')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(plate => {
+      const aliasControl = this.truckForm.get('address.alias');
+      const currentAlias: string = aliasControl?.value ?? '';
+      if (!currentAlias || currentAlias.startsWith('Última ubicación de ') || currentAlias === 'Última ubicación conocida') {
+        aliasControl?.setValue(`Última ubicación de ${plate}`, { emitEvent: false });
+      }
+    });
   }
 
   private setupAddressListener() {

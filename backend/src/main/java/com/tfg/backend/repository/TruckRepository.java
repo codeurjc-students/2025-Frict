@@ -14,6 +14,8 @@ public interface TruckRepository extends JpaRepository<Truck, Long> {
 
     List<Truck> findByAssignedShopIsNull();
 
+    boolean existsByPlateNumber(String plateNumber);
+
     Page<Truck> findAllByAssignedShopId(Long id, Pageable p);
 
     //Metrics

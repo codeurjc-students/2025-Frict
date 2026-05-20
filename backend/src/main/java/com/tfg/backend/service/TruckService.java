@@ -34,6 +34,8 @@ public class TruckService {
 
     // --- READ-ONLY METHODS ---
 
+    public boolean isPlateNumberTaken(String plateNumber) { return truckRepository.existsByPlateNumber(plateNumber); }
+
     public Page<Truck> findAll(Pageable pageable) { return truckRepository.findAll(pageable); }
     public List<Truck> findAll() { return truckRepository.findAll(); }
     public List<Truck> findAllByAssignedShopIsNull() { return truckRepository.findByAssignedShopIsNull(); }

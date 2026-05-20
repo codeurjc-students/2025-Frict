@@ -131,7 +131,7 @@ public class Order {
         this.totalItems = totalItems;
         this.subtotalCost = Math.round(subtotal * 100.0) / 100.0;
         this.totalDiscount = Math.round(totalDiscount * 100.0) / 100.0;
-        this.shippingCost = (total > 50.0) ? 0.0 : 5.0;
+        this.shippingCost = (total > 0.0 && total < 50.0) ? 5.0 : 0.0;
         this.totalCost = Math.round(total * 100.0) / 100.0;
         this.totalCapacity = totalCapacity;
     }

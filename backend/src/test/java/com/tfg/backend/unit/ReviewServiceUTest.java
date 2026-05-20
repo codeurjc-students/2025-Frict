@@ -154,7 +154,7 @@ class ReviewServiceUTest {
             product.getReviews().add(review);
             when(productService.findProductHelper(10L)).thenReturn(product);
 
-            Set<Review> result = reviewService.getReviewsByProductId(10L);
+        Set<Review> result = reviewService.getReviewsByProductId(10L);
 
             assertEquals(1, result.size());
             assertTrue(result.contains(review));

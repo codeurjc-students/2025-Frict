@@ -156,7 +156,7 @@ public class SecurityConfig {
 
                         // --- 10. LOCATIONS (LocationRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/locations/route").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER", "USER") // (All authenticated) Routing proxy
-                        .requestMatchers("/api/v1/locations/**").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager) Geocoding proxy
+                        .requestMatchers("/api/v1/locations/**").hasAnyAuthority("ADMIN", "MANAGER", "USER") // Geocoding proxy
 
                         // --- 11. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---
                         .requestMatchers("/api/v1/ws/**").permitAll()

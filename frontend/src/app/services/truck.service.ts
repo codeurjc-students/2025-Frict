@@ -45,6 +45,11 @@ export class TruckService {
     return this.http.get<PageResponse<Truck>>(this.apiUrl + `/shop/${shopId}`, { params });
   }
 
+  public checkPlateNumberTaken(plateNumber: string): Observable<boolean> {
+    let params = new HttpParams().set('plateNumber', plateNumber);
+    return this.http.get<boolean>(this.apiUrl + `/plate`, { params });
+  }
+
   public createTruck(truckData: Truck): Observable<Truck> {
     return this.http.post<Truck>(this.apiUrl, truckData);
   }

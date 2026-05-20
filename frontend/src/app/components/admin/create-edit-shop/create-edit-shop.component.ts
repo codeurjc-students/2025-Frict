@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal, ViewChild} from '@angular/core';
-import {isPlatformBrowser} from '@angular/common';
+import {isPlatformBrowser, NgClass} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -24,6 +24,7 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
   selector: 'app-create-edit-shop',
   standalone: true,
   imports: [
+    NgClass,
     Button,
     ReactiveFormsModule,
     InputText,
@@ -95,6 +96,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.shopId.set(this.route.snapshot.paramMap.get('id'));
     this.setupAddressListener();
+    this.setupNameAliasSync();
     this.loadData();
   }
 
@@ -135,6 +137,23 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       }
     }
     this.loadData();
+  }
+
+  isInvalid(controlPath: string): boolean {
+    const ctrl = this.shopForm.get(controlPath);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  private setupNameAliasSync() {
+    this.shopForm.get('name')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(name => {
+      const aliasControl = this.shopForm.get('address.alias');
+      const currentAlias: string = aliasControl?.value ?? '';
+      if (!currentAlias || currentAlias.startsWith('Ubicación de ')) {
+        aliasControl?.setValue(`Ubicación de ${name}`, { emitEvent: false });
+      }
+    });
   }
 
   private setupAddressListener() {

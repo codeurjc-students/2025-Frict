@@ -450,7 +450,7 @@ public class OrderService {
             }
         }
 
-        double shippingCost = (total > 50.0) ? 0.0 : 5.0;
+        double shippingCost = (total > 0.0 && total < 50.0) ? 5.0 : 0.0;
         return new CartSummaryDTO(totalItems, Math.round(subtotal * 100.0) / 100.0, Math.round(totalDiscount * 100.0) / 100.0, shippingCost, Math.round(total * 100.0) / 100.0);
     }
 
