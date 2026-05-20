@@ -117,7 +117,7 @@ public class TruckApiFunctionalITest extends BaseApiFunctionalITest {
     public void createTruck_AsAdmin_CreatesTruck() {
         TruckDTO newTruck = new TruckDTO();
         newTruck.setPlateNumber("9999-NEW");
-        newTruck.setMaxOrderCapacity(100);
+        newTruck.setMaxCapacity(100);
         newTruck.setAddress(new AddressDTO(new Address("Depot", "Central St", "10", "A", "28005", "Madrid", "Spain")));
 
         given().spec(getSpec(BASE_URL_TRUCKS, adminCookie))
@@ -133,7 +133,7 @@ public class TruckApiFunctionalITest extends BaseApiFunctionalITest {
                 .then().statusCode(200).extract().as(TruckDTO.class);
 
         updateData.setPlateNumber("1111-MOD");
-        updateData.setMaxOrderCapacity(60);
+        updateData.setMaxCapacity(60);
         updateData.setAddress(new AddressDTO(new Address("Depot Mod", "Mod St", "2", "B", "28005", "Madrid", "Spain")));
 
         given().spec(getSpec(BASE_URL_TRUCKS, adminCookie))
@@ -163,7 +163,7 @@ public class TruckApiFunctionalITest extends BaseApiFunctionalITest {
                 .when().put("/status/{id}")
                 .then().statusCode(200).extract().asString();
 
-        assertTrue(responseBody.contains("Going to the mechanic"), "The truck history should contain the new status comment");
+        assertTrue(responseBody.contains("Heading to the shop"), "The truck history should contain the new status comment");
     }
 
     @Test

@@ -62,8 +62,8 @@ public class ReviewApiFunctionalITest extends BaseApiFunctionalITest {
     public void getAllReviewsByProductId_ReturnsList() {
         given().spec(getSpec(BASE_URL_REVIEWS, otherUserCookie))
                 .queryParam("productId", testProduct.getId())
-                .when().get("/")
-                .then().statusCode(200).body("[0].text", equalTo("Excellent product!"));
+                .when().get("/product")
+                .then().statusCode(200).body("items[0].text", equalTo("Excellent product!"));
     }
 
     @Test

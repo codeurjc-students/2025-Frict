@@ -135,7 +135,7 @@ public class ShopUserOrchestratorITest {
         Truck deliveryTruck = new Truck();
         deliveryTruck.setReferenceCode("TRUCK-DEL-123");
         deliveryTruck.setPlateNumber("9999-ZZZ");
-        deliveryTruck.setMaxOrderCapacity(10);
+        deliveryTruck.setMaxCapacity(10);
         deliveryTruck.setAssignedShop(mainShop);
         mainShop.getAssignedTrucks().add(deliveryTruck);
         deliveryTruck = truckRepository.saveAndFlush(deliveryTruck);

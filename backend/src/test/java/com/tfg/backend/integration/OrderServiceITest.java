@@ -73,7 +73,7 @@ public class OrderServiceITest {
         deliveryTruck.setPlateNumber("1234-ABC");
         deliveryTruck.setAssignedShop(mainShop);
         deliveryTruck.setAssignedDriver(driver);
-        deliveryTruck.setMaxOrderCapacity(10);
+        deliveryTruck.setMaxCapacity(10);
         truckRepository.save(deliveryTruck);
 
         // 2. Create Buyer with Address, Card, and Selected Shop
@@ -204,7 +204,7 @@ public class OrderServiceITest {
         rogueTruck.setReferenceCode("TRUCK-ROG-999");
         rogueTruck.setPlateNumber("9999-ZZZ");
         rogueTruck.setAssignedShop(rogueShop);
-        rogueTruck.setMaxOrderCapacity(10);
+        rogueTruck.setMaxCapacity(10);
         truckRepository.save(rogueTruck);
 
         // Act & Assert

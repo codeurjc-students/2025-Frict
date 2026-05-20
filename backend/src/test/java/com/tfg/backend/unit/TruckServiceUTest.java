@@ -146,7 +146,7 @@ class TruckServiceUTest {
             Truck result = truckService.createTruck(truckDTO, shop);
 
             assertEquals("9999-XYZ", result.getPlateNumber());
-            assertEquals(15, result.getCurrentCapacity());
+            assertEquals(15, result.getMaxCapacity());
             assertEquals(shop, result.getAssignedShop());
             assertNotNull(result.getAddress());
             assertEquals("Madrid", result.getAddress().getCity());
@@ -166,7 +166,7 @@ class TruckServiceUTest {
             Truck result = truckService.updateTruck(100L, truckDTO, newShop);
 
             assertEquals("9999-XYZ", result.getPlateNumber());
-            assertEquals(15, result.getCurrentCapacity());
+            assertEquals(15, result.getMaxCapacity());
             assertEquals(newShop, result.getAssignedShop());
         }
 

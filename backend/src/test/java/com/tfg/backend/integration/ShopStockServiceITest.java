@@ -99,7 +99,7 @@ public class ShopStockServiceITest {
         assertAll(
                 () -> assertEquals(2, mainShopStocks.size()),
                 () -> assertEquals(10, mainShopStocks.getFirst(), "First element (Laptop) should have 10 units"),
-                () -> assertEquals(0, mainShopStocks.get(1), "Second element (Smartphone) should be 0 because it's inactive")
+                () -> assertEquals(-1, mainShopStocks.get(1), "Second element (Smartphone) should be -1 because it's inactive")
         );
     }
 

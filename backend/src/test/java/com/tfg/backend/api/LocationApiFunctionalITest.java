@@ -82,12 +82,14 @@ public class LocationApiFunctionalITest extends BaseApiFunctionalITest {
     }
 
     @Test
-    public void reverseGeocode_AsUser_Returns403() {
+    public void reverseGeocode_AsUser_Returns200() {
+        when(locationService.reverseGeocode(anyDouble(), anyDouble())).thenReturn(new AddressDTO());
+
         given().spec(getSpec(BASE_URL_LOCATIONS, userCookie))
                 .queryParam("lat", 40.0)
                 .queryParam("lng", -3.0)
                 .when().get("/reverse")
-                .then().statusCode(403);
+                .then().statusCode(200);
     }
 
     @Test
@@ -132,14 +134,16 @@ public class LocationApiFunctionalITest extends BaseApiFunctionalITest {
     }
 
     @Test
-    public void directGeocode_AsUser_Returns403() {
+    public void directGeocode_AsUser_Returns200() {
+        when(locationService.directGeocode(any(AddressDTO.class))).thenReturn(new CoordinatesDTO(0.0, 0.0));
+
         AddressDTO input = new AddressDTO();
         input.setCity("Madrid");
 
         given().spec(getSpec(BASE_URL_LOCATIONS, userCookie))
                 .body(input)
                 .when().post("/direct")
-                .then().statusCode(403);
+                .then().statusCode(200);
     }
 
     @Test

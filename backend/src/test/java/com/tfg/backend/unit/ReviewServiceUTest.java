@@ -28,7 +28,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -149,15 +148,19 @@ class ReviewServiceUTest {
         }
 
         @Test
-        @DisplayName("getReviewsByProductId returns the internal Set of reviews directly from the Product entity")
+        @DisplayName("getReviewsByProductId fetches paginated reviews for a specific product ID")
         void getReviewsByProductId_Success() {
-            product.getReviews().add(review);
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Review> page = new PageImpl<>(List.of(review));
+
             when(productService.findProductHelper(10L)).thenReturn(product);
+            when(reviewRepository.findAllByProductId(10L, pageable)).thenReturn(page);
 
-        Set<Review> result = reviewService.getReviewsByProductId(10L);
+            Page<Review> result = reviewService.getReviewsByProductId(10L, pageable);
 
-            assertEquals(1, result.size());
-            assertTrue(result.contains(review));
+            assertEquals(1, result.getTotalElements());
+            assertTrue(result.getContent().contains(review));
+            verify(reviewRepository).findAllByProductId(10L, pageable);
         }
     }
 

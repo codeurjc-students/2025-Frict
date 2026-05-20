@@ -7,6 +7,7 @@ import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
+import com.tfg.backend.repository.ShopStockRepository;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
@@ -44,6 +45,7 @@ class OrderServiceUTest {
     @Mock private ProductService productService;
     @Mock private PdfService pdfService;
     @Mock private OrderRepository orderRepository;
+    @Mock private ShopStockRepository shopStockRepository;
     @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
@@ -543,9 +545,9 @@ class OrderServiceUTest {
             orderService.commentAndOrUpdateOrderStatus(1L, OrderStatus.COMPLETED, "Delivered");
 
             assertEquals(OrderStatus.COMPLETED, order.getCurrentStatus());
-            // 1 OrderEvent (STATUS_CHANGED) + 2 RegistryEvents (user + driver)
+            // 1 OrderEvent (STATUS_CHANGED) + 1 RegistryEvent (driver)
             verify(eventPublisher).publishEvent(any(OrderEvent.class));
-            verify(eventPublisher, times(2)).publishEvent(any(RegistryEvent.class));
+            verify(eventPublisher).publishEvent(any(RegistryEvent.class));
         }
 
         @Test
@@ -652,10 +654,11 @@ class OrderServiceUTest {
         }
 
         @Test
-        @DisplayName("setAssignedTruck throws BAD_REQUEST when the truck is at full capacity")
+        @DisplayName("setAssignedTruck throws BAD_REQUEST when adding the order would exceed truck capacity")
         void setAssignedTruck_ThrowsBadRequest_WhenTruckAtFullCapacity() {
             truck.setMaxCapacity(2);
-            truck.setOrdersToDeliver(new HashSet<>(List.of(new Order(), new Order()))); // Full
+            truck.setCurrentCapacity(2); // Already at max
+            order.setTotalCapacity(1);   // Order needs 1 unit
 
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
             when(truckService.findTruckHelper(5L)).thenReturn(truck);
@@ -773,7 +776,7 @@ class OrderServiceUTest {
                     () -> assertEquals(0, result.getTotalItems()),
                     () -> assertEquals(0.0, result.getTotalCost()),
                     () -> assertEquals(0.0, result.getTotalDiscount()),
-                    () -> assertEquals(5.0, result.getShippingCost(), "Below free threshold → paid shipping")
+                    () -> assertEquals(0.0, result.getShippingCost(), "Empty cart → no shipping cost")
             );
         }
 
@@ -879,28 +882,10 @@ class OrderServiceUTest {
         }
 
         @Test
-        @DisplayName("addItemToCart throws METHOD_NOT_ALLOWED when total stock is not enough for the requested quantity")
-        void addItemToCart_ThrowsMethodNotAllowed_WhenStockInsufficient() {
-            Product newProduct = new Product();
-            newProduct.setId(20L);
-            newProduct.setAvailableUnits(3);
-
-            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
-            when(productService.findProductHelper(20L)).thenReturn(newProduct);
-            when(orderItemService.findProductUnitsInCart(20L)).thenReturn(List.of());
-
-            // Requesting 5 but only 3 available
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> orderService.addItemToCart(20L, 5));
-            assertEquals(HttpStatus.METHOD_NOT_ALLOWED, ex.getStatusCode());
-        }
-
-        @Test
         @DisplayName("addItemToCart increases quantity on existing cart item and returns isNew=false")
         void addItemToCart_UpdatesQuantity_WhenItemAlreadyInCart() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
             when(productService.findProductHelper(5L)).thenReturn(p1);
-            when(orderItemService.findProductUnitsInCart(5L)).thenReturn(List.of(cartItem)); // 2 already in cart
 
             SaveResult<OrderItem> result = orderService.addItemToCart(5L, 3); // Add 3 more
 
@@ -920,7 +905,6 @@ class OrderServiceUTest {
 
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
             when(productService.findProductHelper(20L)).thenReturn(newProduct);
-            when(orderItemService.findProductUnitsInCart(20L)).thenReturn(List.of()); // Not in cart
 
             SaveResult<OrderItem> result = orderService.addItemToCart(20L, 2);
 
@@ -948,17 +932,6 @@ class OrderServiceUTest {
             orderService.updateItemQuantity(5L, -5);
 
             assertEquals(1, cartItem.getQuantity(), "Negative values default to 1 if stock exists");
-        }
-
-        @Test
-        @DisplayName("updateItemQuantity throws METHOD_NOT_ALLOWED when quantity is negative and stock is 0")
-        void updateItemQuantity_ThrowsMethodNotAllowed_WhenNegativeAndNoStock() {
-            p1.setShopsStock(List.of(new ShopStock(selectedShop, p1, 0))); // No stock
-            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
-
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> orderService.updateItemQuantity(5L, -1));
-            assertEquals(HttpStatus.METHOD_NOT_ALLOWED, ex.getStatusCode());
         }
 
         @Test

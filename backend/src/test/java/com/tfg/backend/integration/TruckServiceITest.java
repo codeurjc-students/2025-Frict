@@ -90,7 +90,7 @@ public class TruckServiceITest {
     void testCreateTruck_SavesInDatabase() {
         TruckDTO dto = new TruckDTO();
         dto.setPlateNumber("5555-BBB");
-        dto.setMaxOrderCapacity(20);
+        dto.setMaxCapacity(20);
 
         AddressDTO addr = new AddressDTO();
         addr.setStreet("Industrial Way");

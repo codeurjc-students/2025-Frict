@@ -72,7 +72,7 @@ public class ShopTruckOrchestratorITest {
     void testCreateTruck_WithShopAssociation() {
         TruckDTO dto = new TruckDTO();
         dto.setPlateNumber("9999-NEW");
-        dto.setMaxOrderCapacity(15);
+        dto.setMaxCapacity(15);
         dto.setShopId(hubShop.getId()); // Give the shop id for the orchestrator to search for it
 
         AddressDTO addr = new AddressDTO();
