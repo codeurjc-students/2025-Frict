@@ -66,17 +66,17 @@ describe('TrucksManagementComponent', () => {
   };
 
   const mockStatusLogAvailable: TruckStatusLog = {
-    id: 'log-1', icon: 'pi pi-check-circle', status: 'Disponible',
+    id: 'log-1', icon: 'pi pi-check-circle', status: 'Descanso',
     updates: [{ date: '2026-05-01', description: 'Camión disponible en depósito' } as any]
   };
 
   const mockStatusLogOnRoute: TruckStatusLog = {
-    id: 'log-2', icon: 'pi pi-send', status: 'En reparto',
+    id: 'log-2', icon: 'pi pi-send', status: 'En Reparto',
     updates: [{ date: '2026-05-09', description: 'Salida hacia zona norte' } as any]
   };
 
   const mockStatusLogMaintenance: TruckStatusLog = {
-    id: 'log-3', icon: 'pi pi-wrench', status: 'En mantenimiento',
+    id: 'log-3', icon: 'pi pi-wrench', status: 'Fuera de servicio',
     updates: [{ date: '2026-05-08', description: 'Revisión ITV programada' } as any]
   };
 
@@ -88,7 +88,8 @@ describe('TrucksManagementComponent', () => {
     assignedDriver: mockDriver,
     address: mockAddress,
     ordersToDeliver: 3,
-    maxCapacity: 10
+    maxCapacity: 10,
+    currentCapacity: 0
   };
 
   const mockTruckOnRoute: Truck = {
@@ -99,7 +100,8 @@ describe('TrucksManagementComponent', () => {
     assignedDriver: undefined,
     address: { ...mockAddress, id: 'addr-2', latitude: 41.3851, longitude: 2.1734 },
     ordersToDeliver: 7,
-    maxCapacity: 10
+    maxCapacity: 10,
+    currentCapacity: 0
   };
 
   const mockTruckMaintenance: Truck = {
@@ -110,7 +112,8 @@ describe('TrucksManagementComponent', () => {
     assignedDriver: undefined,
     address: { ...mockAddress, id: 'addr-3', latitude: undefined, longitude: undefined },
     ordersToDeliver: 0,
-    maxCapacity: 10
+    maxCapacity: 10,
+    currentCapacity: 0
   };
 
   const mockTrucksPage: PageResponse<Truck> = {
@@ -236,7 +239,7 @@ describe('TrucksManagementComponent', () => {
     expect(component.totalTrucks).toBe(3);
   });
 
-  it('should count onRouteTrucks from items with "reparto" status', () => {
+  it('should count onRouteTrucks from items with "En Reparto" status', () => {
     expect(component.onRouteTrucks).toBe(1);
   });
 
@@ -244,22 +247,22 @@ describe('TrucksManagementComponent', () => {
     expect(component.noDriverTrucks).toBe(2);
   });
 
-  it('should count maintenanceTrucks from items with "En mantenimiento" status', () => {
+  it('should count maintenanceTrucks from items with "Fuera de servicio" status', () => {
     expect(component.maintenanceTrucks).toBe(1);
   });
 
   // ─── updateChartData ──────────────────────────────────────────────────────────
 
   it('should build chartData with 4 labels after load', () => {
-    expect(component.chartData.labels).toEqual(['Disponible', 'En Ruta', 'Mantenimiento', 'Inactivo']);
+    expect(component.chartData.labels).toEqual(['Descanso', 'En ruta a la tienda', 'En Reparto', 'Fuera de servicio']);
   });
 
   it('should build chartData dataset with correct counts', () => {
     const data = component.chartData.datasets[0].data;
-    expect(data[0]).toBe(1); // Disponible
-    expect(data[1]).toBe(1); // En Ruta (reparto)
-    expect(data[2]).toBe(1); // Mantenimiento
-    expect(data[3]).toBe(0); // Inactivo
+    expect(data[0]).toBe(1); // Descanso
+    expect(data[1]).toBe(0); // En ruta a la tienda
+    expect(data[2]).toBe(1); // En Reparto
+    expect(data[3]).toBe(1); // Fuera de servicio
   });
 
   it('should build assignedChartData with 2 labels after load', () => {
@@ -327,7 +330,7 @@ describe('TrucksManagementComponent', () => {
 
   it('should return the last history entry status', () => {
     const truck = { ...mockTruckAvailable, history: [mockStatusLogAvailable, mockStatusLogOnRoute] };
-    expect(component.getCurrentStatus(truck)).toBe('En reparto');
+    expect(component.getCurrentStatus(truck)).toBe('En Reparto');
   });
 
   it('should return "Disponible" when truck has no history', () => {
@@ -421,7 +424,7 @@ describe('TrucksManagementComponent', () => {
 
   it('should set newHistoryStatus to current status on openHistory', () => {
     component.openHistory(mockTruckAvailable);
-    expect(component.newHistoryStatus).toBe('Disponible');
+    expect(component.newHistoryStatus).toBe('Descanso');
   });
 
   it('should clear newHistoryComment on openHistory', () => {
@@ -476,7 +479,7 @@ describe('TrucksManagementComponent', () => {
 
   it('should show info message when status stays the same via addHistoryComment', () => {
     component.selectedTruck = { ...mockTruckAvailable };
-    component.newHistoryStatus = 'Disponible';
+    component.newHistoryStatus = 'Descanso';
     component.newHistoryComment = 'Todo en orden';
     truckServiceSpy.commentAndOrUpdateTruckStatus.and.returnValue(of({ ...mockTruckAvailable }));
     component.addHistoryComment();
@@ -688,7 +691,7 @@ describe('TrucksManagementComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Camiones Totales');
     expect(fixture.nativeElement.textContent).toContain('Sin Conductor Asignado');
     expect(fixture.nativeElement.textContent).toContain('En Ruta');
-    expect(fixture.nativeElement.textContent).toContain('Mantenimiento');
+    expect(fixture.nativeElement.textContent).toContain('Fuera de Servicio');
   });
 
   it('should display KPI values in the DOM', () => {

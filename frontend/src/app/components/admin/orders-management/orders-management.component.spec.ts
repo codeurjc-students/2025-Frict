@@ -6,6 +6,7 @@ import {of, Subject, throwError} from 'rxjs';
 import {MessageService} from 'primeng/api';
 import {PaginatorState} from 'primeng/paginator';
 import {getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass} from '../../../utils/tagManager.util';
+import {provideHttpClient} from '@angular/common/http';
 
 import {OrdersManagementComponent} from './orders-management.component';
 import {OrderService} from '../../../services/order.service';
@@ -44,7 +45,7 @@ const mockOrder: Order = {
   assignedShopId: 'shop-1',
   assignedTruckId: 'truck-1',
   estimatedCompletionTime: 60,
-  totalItems: 3, subtotalCost: 30, totalDiscount: 0, shippingCost: 5, totalCost: 35,
+  totalItems: 3, subtotalCost: 30, totalDiscount: 0, shippingCost: 5, totalCost: 35, totalCapacity: 1,
   cardNumberEnding: '1234',
   sendingAddress: mockAddress as any,
   createdAt: '2025-01-01'
@@ -52,7 +53,7 @@ const mockOrder: Order = {
 
 const mockShop: Shop = {
   id: 'shop-1', referenceCode: 'SHP-001', name: 'Tienda Test',
-  address: mockAddress as any, assignedBudget: 10000,
+  address: mockAddress as any, assignedBudget: 10000, maxCapacity: 0, occupiedCapacity: 0,
   imageInfo: { id: 'si1', imageUrl: 'http://img.jpg', s3Key: 'sk1', fileName: 'f.jpg' },
   totalAvailableProducts: 100, totalAssignedTrucks: 2
 };
@@ -60,7 +61,7 @@ const mockShop: Shop = {
 const mockTruck: Truck = {
   id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB-1234',
   history: [], shopId: 'shop-1', address: mockAddress as any,
-  ordersToDeliver: 2, maxCapacity: 10
+  ordersToDeliver: 2, maxCapacity: 10, currentCapacity: 0
 };
 
 const mockPage: PageResponse<Order> = {
@@ -108,6 +109,7 @@ describe('OrdersManagementComponent', () => {
       imports: [OrdersManagementComponent],
       providers: [
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: OrderService, useValue: orderServiceSpy },
         { provide: ShopService, useValue: shopServiceSpy },

@@ -23,7 +23,7 @@ const mockAddress: any = {
 
 const mockShop: Shop = {
   id: 'shop-1', referenceCode: 'SHP-001', name: 'Tienda Test',
-  address: mockAddress, assignedBudget: 5000,
+  address: mockAddress, assignedBudget: 5000, maxCapacity: 0, occupiedCapacity: 0,
   imageInfo: { id: 'img-1', imageUrl: 'http://img.jpg', s3Key: 'k1', fileName: 'f.jpg' },
   totalAvailableProducts: 30, totalAssignedTrucks: 2
 };

@@ -6,6 +6,7 @@ import {of, Subject, throwError} from 'rxjs';
 import {MessageService} from 'primeng/api';
 import {PaginatorState} from 'primeng/paginator';
 import {getOrderStatusTagInfo} from '../../../utils/tagManager.util';
+import {provideHttpClient} from '@angular/common/http';
 
 import {OrdersDeliveryComponent} from './orders-delivery.component';
 import {AuthService} from '../../../services/auth.service';
@@ -39,7 +40,7 @@ const mockOrder: Order = {
   user: mockUser, orderItems: [],
   assignedShopId: 'shop-1', assignedTruckId: 'truck-1',
   estimatedCompletionTime: 60,
-  totalItems: 2, subtotalCost: 20, totalDiscount: 0, shippingCost: 3, totalCost: 23,
+  totalItems: 2, subtotalCost: 20, totalDiscount: 0, shippingCost: 3, totalCost: 23, totalCapacity: 1,
   cardNumberEnding: '1234', sendingAddress: mockAddress, createdAt: '2025-01-01'
 };
 
@@ -115,6 +116,7 @@ describe('OrdersDeliveryComponent', () => {
       imports: [OrdersDeliveryComponent],
       providers: [
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: OrderService, useValue: orderServiceSpy },

@@ -15,7 +15,7 @@ function makeProduct(totalUnits: number, availableUnits: number): Product {
     imagesInfo: [{ id: '1', imageUrl: '/laptop.jpg', s3Key: '', fileName: '' }],
     description: 'A laptop', supplyPrice: 100, previousPrice: 120, currentPrice: 100,
     active: true, discount: '0%', categories: [], shopsWithStock: 1,
-    averageRating: 4.5, totalReviews: 10, specifications: [], createdAt: '2025-01-01',
+    averageRating: 4.5, totalReviews: 10, specifications: [], capacity: 1, createdAt: '2025-01-01',
     totalUnits, availableUnits
   };
 }

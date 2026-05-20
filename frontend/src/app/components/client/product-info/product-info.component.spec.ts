@@ -87,6 +87,7 @@ describe('ProductInfoComponent', () => {
     averageRating: 4.5,
     totalReviews: 0,
     specifications: [],
+    capacity: 1,
     createdAt: '2026-05-08'
   };
 
@@ -136,7 +137,8 @@ describe('ProductInfoComponent', () => {
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getCategoryById']);
 
     reviewServiceSpy = jasmine.createSpyObj('ReviewService', [
-      'getReviewsByProductId',
+      'getProductReviews',
+      'getProductReviewStats',
       'submitReview',
       'deleteReviewById'
     ]);
@@ -200,7 +202,12 @@ describe('ProductInfoComponent', () => {
     productServiceSpy.checkInFavourites.and.returnValue(of(false));
     orderServiceSpy.getCartItemByProductId.and.returnValue(of(null));
     orderServiceSpy.addItemToCart.and.returnValue(of({} as any));
-    reviewServiceSpy.getReviewsByProductId.and.returnValue(of([]));
+    reviewServiceSpy.getProductReviews.and.returnValue(
+      of({ items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 10 })
+    );
+    reviewServiceSpy.getProductReviewStats.and.returnValue(
+      of({ totalReviews: 0, averageRating: 0, star5: 0, star4: 0, star3: 0, star2: 0, star1: 0, recommendationPercentage: 0, userReviewed: false })
+    );
     registryServiceSpy.loadPublicRegistry.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
@@ -383,45 +390,34 @@ describe('ProductInfoComponent', () => {
 
   // ─── Review statistics ────────────────────────────────────────────────────────
 
-  it('should compute totalReviews, average rating and star distribution correctly', () => {
-    const reviews: Review[] = [
-      { ...mockReview, id: 'r1', creatorId: 'u2', rating: 5, recommended: true },
-      { ...mockReview, id: 'r2', creatorId: 'u3', rating: 4, recommended: true },
-      { ...mockReview, id: 'r3', creatorId: 'u4', rating: 3, recommended: false }
-    ];
-    reviewServiceSpy.getReviewsByProductId.and.returnValue(of(reviews));
-
-    fixture.detectChanges();
-
-    expect((component as any).product.totalReviews).toBe(3);
-    expect((component as any).product.averageRating).toBeCloseTo(4, 1);
-    expect((component as any).recommendedCount).toBe(2);
-    expect((component as any).recommendationPercentage).toBeCloseTo(66.67, 1);
-
-    const star5 = (component as any).stars.find((s: any) => s.value === 5);
-    const star3 = (component as any).stars.find((s: any) => s.value === 3);
-    expect(star5.count).toBe(1);
-    expect(star3.count).toBe(1);
-  });
-
-  it('should set userReviewed=true when the logged user already has a review', () => {
-    reviewServiceSpy.getReviewsByProductId.and.returnValue(
-      of([{ ...mockReview, creatorId: 'user-1' }])  // same id as mockLoginInfo.id
+  it('should populate reviewStats from getProductReviewStats on load', () => {
+    reviewServiceSpy.getProductReviewStats.and.returnValue(
+      of({ totalReviews: 3, averageRating: 4, star5: 1, star4: 1, star3: 1, star2: 0, star1: 0, recommendationPercentage: 66.67, userReviewed: false })
     );
 
     fixture.detectChanges();
 
-    expect((component as any).userReviewed).toBeTrue();
+    expect((component as any).reviewStats.totalReviews).toBe(3);
+    expect((component as any).reviewStats.averageRating).toBeCloseTo(4, 1);
+    expect((component as any).reviewStats.recommendationPercentage).toBeCloseTo(66.67, 1);
+    expect((component as any).reviewStats.star5).toBe(1);
+    expect((component as any).reviewStats.star3).toBe(1);
   });
 
-  it('should leave userReviewed=false when none of the reviews belong to the logged user', () => {
-    reviewServiceSpy.getReviewsByProductId.and.returnValue(
-      of([{ ...mockReview, creatorId: 'another-user' }])
+  it('should set userReviewed=true when getProductReviewStats returns userReviewed=true', () => {
+    reviewServiceSpy.getProductReviewStats.and.returnValue(
+      of({ totalReviews: 1, averageRating: 5, star5: 1, star4: 0, star3: 0, star2: 0, star1: 0, recommendationPercentage: 100, userReviewed: true })
     );
 
     fixture.detectChanges();
 
-    expect((component as any).userReviewed).toBeFalse();
+    expect((component as any).reviewStats.userReviewed).toBeTrue();
+  });
+
+  it('should leave userReviewed=false when getProductReviewStats returns userReviewed=false', () => {
+    fixture.detectChanges();
+
+    expect((component as any).reviewStats.userReviewed).toBeFalse();
   });
 
   // ─── Favourites ───────────────────────────────────────────────────────────────
@@ -551,12 +547,12 @@ describe('ProductInfoComponent', () => {
     const submittedReview = { ...mockReview, id: 'rev-new', creatorId: 'user-1' };
     reviewServiceSpy.submitReview.and.returnValue(of(submittedReview));
 
-    fixture.detectChanges(); // initial load — getReviewsByProductId returns of([]) by default
+    fixture.detectChanges();
 
-    // submitReview triggers loadReviews internally, which recomputes userReviewed from the
-    // reviews list. Reconfigure the spy to return the submitted review so the recomputation
-    // sees a review owned by the logged user (creatorId === 'user-1').
-    reviewServiceSpy.getReviewsByProductId.and.returnValue(of([submittedReview]));
+    // After submit, loadReviewStats is called — configure it to return userReviewed=true
+    reviewServiceSpy.getProductReviewStats.and.returnValue(
+      of({ totalReviews: 1, averageRating: 5, star5: 1, star4: 0, star3: 0, star2: 0, star1: 0, recommendationPercentage: 100, userReviewed: true })
+    );
 
     (component as any).loggedUserInfo = mockLoginInfo;
     (component as any).newReview = { rating: 5, recommended: true, text: 'Excelente' };
@@ -565,7 +561,7 @@ describe('ProductInfoComponent', () => {
     expect(reviewServiceSpy.submitReview).toHaveBeenCalledWith(
       jasmine.objectContaining({ productId: '1', creatorId: 'user-1' })
     );
-    expect((component as any).userReviewed).toBeTrue();
+    expect((component as any).reviewStats.userReviewed).toBeTrue();
   });
 
   it('should call deleteReviewById service, reset newReview and set userReviewed=false', () => {
@@ -575,22 +571,22 @@ describe('ProductInfoComponent', () => {
     (component as any).deleteReview('rev-1');
 
     expect(reviewServiceSpy.deleteReviewById).toHaveBeenCalledWith('rev-1');
-    expect((component as any).newReview).toEqual({});
-    expect((component as any).userReviewed).toBeFalse();
+    expect((component as any).newReview).toEqual(jasmine.objectContaining({ rating: 5, recommended: true }));
+    expect((component as any).reviewStats.userReviewed).toBeFalse();
   });
 
   it('should move the selected review into newReview and set userReviewed=false on editReview', () => {
     const editableReview: Review = { ...mockReview, id: 'rev-edit', creatorId: 'user-1' };
 
     fixture.detectChanges();
-    (component as any).productReviews = [editableReview];
-    (component as any).userReviewed = true;
+    (component as any).reviewsPage = { items: [editableReview], totalItems: 1, currentPage: 0, lastPage: 0, pageSize: 10 };
+    (component as any).reviewStats = { ...(component as any).reviewStats, userReviewed: true };
     (component as any).editReview('rev-edit');
 
-    expect((component as any).userReviewed).toBeFalse();
+    expect((component as any).reviewStats.userReviewed).toBeFalse();
     expect((component as any).newReview).toEqual(jasmine.objectContaining({ id: 'rev-edit' }));
     expect(
-      (component as any).productReviews.find((r: Review) => r.id === 'rev-edit')
+      (component as any).reviewsPage.items.find((r: Review) => r.id === 'rev-edit')
     ).toBeUndefined();
   });
 

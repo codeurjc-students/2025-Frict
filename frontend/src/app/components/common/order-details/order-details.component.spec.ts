@@ -30,6 +30,7 @@ const STUB_ORDER: Order = {
   totalDiscount: 10,
   shippingCost: 5,
   totalCost: 190,
+  totalCapacity: 1,
   cardNumberEnding: '1234',
   sendingAddress: { id: 'a1', alias: 'Casa', street: 'Calle Mayor', number: '1', floor: '2A', postalCode: '28001', city: 'Madrid', country: 'España' },
   createdAt: '2025-01-01T12:00:00'

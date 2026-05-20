@@ -20,7 +20,7 @@ const STUB_PRODUCT: Product = {
   imagesInfo: [{ id: '1', imageUrl: '/laptop.jpg', s3Key: '', fileName: '' }],
   description: 'A laptop', supplyPrice: 100, previousPrice: 120, currentPrice: 100,
   active: true, discount: '0%', categories: [], totalUnits: 10, availableUnits: 10,
-  shopsWithStock: 1, averageRating: 4.5, totalReviews: 10, specifications: [], createdAt: '2025-01-01'
+  shopsWithStock: 1, averageRating: 4.5, totalReviews: 10, specifications: [], capacity: 1, createdAt: '2025-01-01'
 };
 
 const STUB_PAGE: PageResponse<Product> = {
@@ -129,8 +129,8 @@ describe('SearchComponent', () => {
       expect(component.rows).toBe(10);
     });
 
-    it('should expose 3 sort options', () => {
-      expect(component.sortOptions.length).toBe(3);
+    it('should expose 9 sort options', () => {
+      expect(component.sortOptions.length).toBe(9);
     });
 
     it('should set selectedSortOption to the first option by default', () => {
@@ -321,7 +321,7 @@ describe('SearchComponent', () => {
     });
 
     it('should include the selected sort value in queryParams', () => {
-      component.selectedSortOption = component.sortOptions[1];
+      component.selectedSortOption = component.sortOptions[2]; // 'currentPrice,asc' is now at index 2
       component.onSortChange();
       expect(routerSpy.navigate).toHaveBeenCalledWith(
         [], jasmine.objectContaining({ queryParams: jasmine.objectContaining({ sort: 'currentPrice,asc' }) })

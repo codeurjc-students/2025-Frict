@@ -40,6 +40,7 @@ const mockProduct: Product = {
   supplyPrice: 10,
   previousPrice: 0,
   currentPrice: 15,
+  capacity: 1,
   active: true,
   discount: '0%',
   categories: [{ ...mockCategory }],

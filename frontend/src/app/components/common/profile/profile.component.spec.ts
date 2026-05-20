@@ -51,7 +51,7 @@ const STUB_ORDER: Order = {
   history: [{ id: 'h1', status: 'Pedido realizado', icon: 'pi pi-shopping-cart', updates: [] }],
   user: {} as any, orderItems: [], assignedShopId: null, assignedTruckId: null,
   estimatedCompletionTime: 3, totalItems: 1, subtotalCost: 100, totalDiscount: 0,
-  shippingCost: 0, cardNumberEnding: '1234', sendingAddress: STUB_ADDRESS
+  shippingCost: 0, totalCapacity: 1, cardNumberEnding: '1234', sendingAddress: STUB_ADDRESS
 };
 
 const STUB_REVIEW: Review = {
@@ -118,7 +118,7 @@ describe('ProfileComponent', () => {
     shopServiceSpy.getShopById.and.callFake(() =>
       of({ id: 's1', name: 'Tienda 1', referenceCode: 'S-001', address: STUB_ADDRESS,
            assignedBudget: 1000, imageInfo: { id: '', imageUrl: '', s3Key: '', fileName: '' },
-           totalAvailableProducts: 10, totalAssignedTrucks: 1 })
+           totalAvailableProducts: 10, totalAssignedTrucks: 1, maxCapacity: 0, occupiedCapacity: 0 })
     );
     shopServiceSpy.getAssignedShopsPage.and.callFake(() => of(makePage([])));
     shopServiceSpy.getAllShopsList.and.callFake(() => of([]));
@@ -126,7 +126,7 @@ describe('ProfileComponent', () => {
     truckServiceSpy = jasmine.createSpyObj('TruckService', ['getAssignedTruckByDriverId']);
     truckServiceSpy.getAssignedTruckByDriverId.and.callFake(() =>
       of({ id: 't1', referenceCode: 'T-001', plateNumber: '1234-ABC',
-           history: [], address: STUB_ADDRESS, ordersToDeliver: 5, maxCapacity: 10 })
+           history: [], address: STUB_ADDRESS, ordersToDeliver: 5, maxCapacity: 10, currentCapacity: 0 })
     );
 
     authServiceSpy = jasmine.createSpyObj('AuthService', [
@@ -589,12 +589,14 @@ describe('ProfileComponent', () => {
     it('should update user.addresses from the response', () => {
       const updated = [{ ...STUB_ADDRESS, alias: 'Trabajo' }];
       userServiceSpy.submitAddress.and.callFake(() => of({ ...STUB_USER, addresses: updated }));
+      component.newAddress = { ...STUB_ADDRESS };
       (component as any)['submitAddress']();
       expect(component.user.addresses).toEqual(updated);
     });
 
     it('should call cancelNewAddress after success', () => {
       spyOn(component as any, 'cancelNewAddress');
+      component.newAddress = { ...STUB_ADDRESS };
       (component as any)['submitAddress']();
       expect((component as any)['cancelNewAddress']).toHaveBeenCalled();
     });

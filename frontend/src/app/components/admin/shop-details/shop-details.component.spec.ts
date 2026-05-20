@@ -15,6 +15,7 @@ import { Product } from '../../../models/product.model';
 import { PageResponse } from '../../../models/pageResponse.model';
 import { BreadcrumbService } from '../../../utils/breadcrumb.service';
 import { AuthService } from '../../../services/auth.service';
+import { provideHttpClient } from '@angular/common/http';
 
 const mockAddress = {
   id: 'addr-1',
@@ -79,6 +80,7 @@ const mockProduct: Product = {
   supplyPrice: 8,
   previousPrice: 12,
   currentPrice: 14,
+  capacity: 1,
   active: true,
   discount: '0',
   categories: [],
@@ -153,6 +155,7 @@ describe('ShopDetailsComponent', () => {
       imports: [ShopDetailsComponent],
       providers: [
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: ShopService, useValue: shopServiceSpy },
         { provide: TruckService, useValue: truckServiceSpy },
