@@ -236,7 +236,7 @@ describe('CreateEditShopComponent', () => {
     });
 
     it('should do nothing when file exceeds MAX_SIZE', () => {
-      const oversizedFile = { size: component['MAX_SIZE'] + 1, name: 'big.jpg' } as File;
+      const oversizedFile = { size: component['MAX_SIZE'] + 1, name: 'big.jpg', type: 'image/jpeg' } as File;
       component.onFileSelect({ files: [oversizedFile] });
 
       expect(component.newImage()).toBeNull();

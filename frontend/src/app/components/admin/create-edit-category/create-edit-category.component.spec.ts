@@ -369,14 +369,14 @@ describe('CreateEditCategoryComponent', () => {
     });
 
     it('should do nothing when file exceeds MAX_SIZE', () => {
-      const oversized = { size: component['MAX_SIZE'] + 1, name: 'big.jpg' } as File;
+      const oversized = { size: component['MAX_SIZE'] + 1, name: 'big.jpg', type: 'image/jpeg' } as File;
       component.onFileSelect({ files: [oversized] });
       expect(component.newImage()).toBeNull();
     });
 
     it('should replace any previous newImage', () => {
-      const file1 = new File(['a'], 'a.jpg');
-      const file2 = new File(['b'], 'b.jpg');
+      const file1 = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+      const file2 = new File(['b'], 'b.jpg', { type: 'image/jpeg' });
       component.onFileSelect({ files: [file1] });
       component.onFileSelect({ files: [file2] });
       expect(component.newImage()!.file).toBe(file2);
