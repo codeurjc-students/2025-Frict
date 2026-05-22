@@ -437,12 +437,12 @@ public class ProductService {
     }
 
     @Transactional
-    public Product updateProductImages(Long id, List<ProductImageInfo> existingImages, List<MultipartFile> newImages){
+    public Product updateProductImages(Long id, List<ImageInfo> existingImages, List<MultipartFile> newImages){
         Product product = this.findProductHelper(id);
         List<ProductImageInfo> currentImages = product.getImages();
 
         Set<String> keepS3Keys = (existingImages != null)
-                ? existingImages.stream().map(ProductImageInfo::getS3Key).filter(Objects::nonNull).collect(Collectors.toSet())
+                ? existingImages.stream().map(ImageInfo::getS3Key).filter(Objects::nonNull).collect(Collectors.toSet())
                 : Collections.emptySet();
 
         // 1. Delete discarded ones

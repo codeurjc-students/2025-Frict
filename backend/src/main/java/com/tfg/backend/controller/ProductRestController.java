@@ -3,7 +3,7 @@ package com.tfg.backend.controller;
 import com.tfg.backend.dto.*;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.Product;
-import com.tfg.backend.model.ProductImageInfo;
+import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -154,7 +154,7 @@ public class ProductRestController {
     @PutMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDTO> updateProductImages(
             @PathVariable Long id,
-            @RequestPart("existingImages") List<ProductImageInfo> existingImages,
+            @RequestPart("existingImages") List<ImageInfo> existingImages,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ) {
         Product updatedProduct = productService.updateProductImages(id, existingImages, newImages);

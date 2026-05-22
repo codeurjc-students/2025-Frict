@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 
@@ -11,7 +11,7 @@ import {ToggleSwitch} from 'primeng/toggleswitch';
 import {MessageService, TreeNode} from 'primeng/api';
 import {TreeSelect} from 'primeng/treeselect';
 import {AutoComplete} from 'primeng/autocomplete';
-import {DomSanitizer} from '@angular/platform-browser';
+import {SafeUrlPipe} from '../../../utils/safe-url.pipe';
 
 import {ProductService} from '../../../services/product.service';
 import {CategoryService} from '../../../services/category.service';
@@ -42,12 +42,13 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    SafeUrlPipe
   ],
   templateUrl: './create-edit-product.component.html',
   styleUrl: 'create-edit-product.component.css'
 })
-export class CreateEditProductComponent implements OnInit {
+export class CreateEditProductComponent implements OnInit, OnDestroy {
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
@@ -55,7 +56,6 @@ export class CreateEditProductComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
-  private sanitizer = inject(DomSanitizer);
   private breadcrumbService = inject(BreadcrumbService);
 
   constructor() {
@@ -105,6 +105,7 @@ export class CreateEditProductComponent implements OnInit {
       });
       this.selectedCategories = [];
       this.existingImages.set([]);
+      this.newImages().forEach(img => URL.revokeObjectURL(img.previewUrl));
       this.newImages.set([]);
       this.specs.set([]);
     }
@@ -209,27 +210,25 @@ export class CreateEditProductComponent implements OnInit {
 
   onFileSelect(event: any) {
     const incomingFiles: File[] = Array.from(event.files || []);
-    const validFiles: File[] = [];
-
-    incomingFiles.forEach(file => {
-      if (file.size <= this.MAX_SIZE) {
-        validFiles.push(file);
-      }
-    });
+    const validFiles = incomingFiles.filter(f => f.type.startsWith('image/') && f.size <= this.MAX_SIZE);
 
     if (validFiles.length > 0) {
-      const currentNewImages = this.newImages();
       const processedFiles: LocalImage[] = validFiles.map(file => ({
-        file: file,
-        previewUrl: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file))
+        file,
+        previewUrl: URL.createObjectURL(file)
       }));
-
-      this.newImages.set([...currentNewImages, ...processedFiles]);
+      this.newImages.update(imgs => [...imgs, ...processedFiles]);
     }
   }
 
   removeNewImage(index: number) {
+    const img = this.newImages()[index];
+    if (img) URL.revokeObjectURL(img.previewUrl);
     this.newImages.update(imgs => imgs.filter((_, i) => i !== index));
+  }
+
+  ngOnDestroy() {
+    this.newImages().forEach(img => URL.revokeObjectURL(img.previewUrl));
   }
 
   removeExistingImage(index: number) {

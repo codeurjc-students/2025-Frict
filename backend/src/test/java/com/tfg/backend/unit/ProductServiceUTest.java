@@ -862,7 +862,7 @@ class ProductServiceUTest {
             try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
                 mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(false);
 
-                productService.updateProductImages(1L, List.of(keepImg), List.of(newFile));
+                productService.updateProductImages(1L, List.of(new ImageInfo(null, "keep.jpg", null)), List.of(newFile));
 
                 verify(imageService).deleteFile("discard.jpg");
                 assertEquals(2, product.getImages().size());

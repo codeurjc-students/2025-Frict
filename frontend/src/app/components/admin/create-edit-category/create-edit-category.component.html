@@ -183,7 +183,7 @@
 
               @if (newImage(); as img) {
                 <div class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-video">
-                  <img [src]="img.previewUrl" class="w-full h-full object-cover">
+                  <img [src]="img.previewUrl | safeUrl" class="w-full h-full object-cover">
                   <span class="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Nueva</span>
                   <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">

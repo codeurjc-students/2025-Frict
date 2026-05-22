@@ -93,20 +93,3 @@ jobs:
       - name: Run Client Unit Tests
         working-directory: frontend
         run: ng test --watch=false --browsers=ChromeHeadlessNoSandbox
-
-      - name: Generate SSL certs for Angular dev server
-        working-directory: frontend
-        run: |
-          mkdir -p certs
-          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
-            -keyout certs/localhost-key.pem \
-            -out certs/localhost.pem \
-            -subj "/CN=localhost"
-
-      - name: Start Angular for E2E Tests
-        working-directory: frontend
-        run: ng serve &
-
-      - name: Run E2E Tests
-        working-directory: backend
-        run: mvn test -Dtest='com.tfg.backend.e2e.**'

@@ -1,8 +1,8 @@
-import {Component, inject, OnInit, signal, ViewChild} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal, ViewChild} from '@angular/core';
 import {NgClass} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {DomSanitizer} from '@angular/platform-browser';
+import {SafeUrlPipe} from '../../../utils/safe-url.pipe';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {forkJoin, of} from 'rxjs';
 import {finalize, map} from 'rxjs/operators';
@@ -27,12 +27,13 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
   standalone: true,
   imports: [
     Button, ReactiveFormsModule, InputText, FileUpload, FormsModule,
-    RouterLink, LoadingScreenComponent, OrganizationChart, Editor, Textarea, Select, PrimeTemplate, NgClass, BreadcrumbReloadComponent
+    RouterLink, LoadingScreenComponent, OrganizationChart, Editor, Textarea, Select, PrimeTemplate, NgClass, BreadcrumbReloadComponent,
+    SafeUrlPipe
   ],
   templateUrl: './create-edit-category.component.html',
   styleUrl: './create-edit-category.component.css'
 })
-export class CreateEditCategoryComponent implements OnInit {
+export class CreateEditCategoryComponent implements OnInit, OnDestroy {
 
   @ViewChild('fileUploader') fileUploader: FileUpload | undefined;
 
@@ -42,7 +43,6 @@ export class CreateEditCategoryComponent implements OnInit {
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
   private categoryService = inject(CategoryService);
-  private sanitizer = inject(DomSanitizer);
   private uiService = inject(UiService);
   private breadcrumbService = inject(BreadcrumbService);
 
@@ -101,6 +101,7 @@ export class CreateEditCategoryComponent implements OnInit {
         icon: 'pi pi-folder',
       });
 
+      this.revokeNewImage();
       this.newImage.set(null);
       this.existingImage.set(null);
       this.oldImage.set(null);
@@ -242,25 +243,41 @@ export class CreateEditCategoryComponent implements OnInit {
 
   protected availableIcons() { return this.availableIconsList; }
 
+  private revokeNewImage() {
+    const img = this.newImage();
+    if (img) URL.revokeObjectURL(img.previewUrl);
+  }
+
   onFileSelect(event: any) {
     const file = event.files[0];
-    if (file && file.size <= this.MAX_SIZE) {
-      const preview = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file));
-      this.newImage.set({ file: file, previewUrl: preview });
+    if (file && file.type.startsWith('image/') && file.size <= this.MAX_SIZE) {
+      this.revokeNewImage();
+      this.newImage.set({ file, previewUrl: URL.createObjectURL(file) });
       this.existingImage.set(null);
     }
   }
 
-  onFileRemove(event: any) { this.newImage.set(null); }
+  onFileRemove(event: any) {
+    this.revokeNewImage();
+    this.newImage.set(null);
+  }
 
   removeImage() {
+    this.revokeNewImage();
     this.newImage.set(null);
     this.existingImage.set(null);
     if (this.fileUploader) this.fileUploader.clear();
   }
 
+  ngOnDestroy() {
+    this.revokeNewImage();
+  }
+
   restoreImage() {
+    this.revokeNewImage();
+    this.newImage.set(null);
     this.existingImage.set(this.oldImage());
+    if (this.fileUploader) this.fileUploader.clear();
   }
 
   onSubmit() {
