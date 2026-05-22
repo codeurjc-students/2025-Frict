@@ -38,7 +38,7 @@ describe('CartComponent', () => {
     supplyPrice: 20, previousPrice: 80, currentPrice: 59, active: true, discount: '-25%',
     categories: [{ id: 'cat-1', name: 'Periféricos', icon: '', bannerText: '', shortDescription: '',
                    longDescription: '', imageInfo: mockImageInfo, timesUsed: 1, parentId: '', children: [] }],
-    totalUnits: 100, availableUnits: 50, shopsWithStock: 3, averageRating: 4.5, totalReviews: 12, createdAt: '2026-05-08'
+    totalUnits: 100, availableUnits: 50, shopsWithStock: 3, averageRating: 4.5, totalReviews: 12, specifications: [], capacity: 1, createdAt: '2026-05-08'
   };
 
   const mockOrderItem: OrderItem = {
@@ -52,7 +52,7 @@ describe('CartComponent', () => {
     description: 'Descripción', imagesInfo: [mockImageInfo],
     supplyPrice: 30, previousPrice: 120, currentPrice: 89, active: true, discount: '-26%',
     categories: [], totalUnits: 60, availableUnits: 30,
-    shopsWithStock: 2, averageRating: 4.8, totalReviews: 20, createdAt: '2026-05-08'
+    shopsWithStock: 2, averageRating: 4.8, totalReviews: 20, specifications: [], capacity: 1, createdAt: '2026-05-08'
   };
 
   const mockCartItemsPage: PageResponse<OrderItem> = {

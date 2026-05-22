@@ -122,7 +122,7 @@
               </td>
 
               <td class="text-center text-sm">
-                <p-tag [severity]="product.totalUnits > 5 ? 'success' : 'danger'" [value]="product.totalUnits +  ' unidades'" icon="pi pi-box" [rounded]="true" styleClass="mx-1"></p-tag>
+                <p-tag [severity]="getStockLevelTagInfo(product.totalUnits).severity" [value]="getStockLevelTagInfo(product.totalUnits).message" [icon]="getStockLevelTagInfo(product.totalUnits).icon" [rounded]="true" styleClass="mx-1"></p-tag>
               </td>
 
               <td>

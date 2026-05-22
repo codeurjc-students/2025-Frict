@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.ReviewDTO;
+import com.tfg.backend.dto.ReviewStatsDTO;
 import com.tfg.backend.dto.UserDTO;
 import com.tfg.backend.model.Review;
 import com.tfg.backend.service.ReviewService;
@@ -44,12 +45,18 @@ public class ReviewRestController {
         return ResponseEntity.ok(toEnrichedPageResponse(userReviews));
     }
 
-    // Get all the reviews of a product
-    @Operation(summary = "(All) Get all reviews by product ID")
-    @GetMapping("/")
-    public ResponseEntity<List<ReviewDTO>> getAllReviewsByProductId(@RequestParam Long productId) {
-        Set<Review> reviews = reviewService.getReviewsByProductId(productId);
-        return ResponseEntity.ok(toEnrichedDTOList(reviews));
+    @Operation(summary = "(All) Get product reviews paged and sorted")
+    @GetMapping("/product")
+    public ResponseEntity<PageResponse<ReviewDTO>> getProductReviews(
+            @RequestParam Long productId, Pageable pageable) {
+        Page<Review> reviews = reviewService.getReviewsByProductId(productId, pageable);
+        return ResponseEntity.ok(toEnrichedPageResponse(reviews));
+    }
+
+    @Operation(summary = "(All) Get product review statistics")
+    @GetMapping("/product/stats")
+    public ResponseEntity<ReviewStatsDTO> getProductReviewStats(@RequestParam Long productId) {
+        return ResponseEntity.ok(reviewService.getStatsByProductId(productId));
     }
 
     @Operation(summary = "(User) Create review")

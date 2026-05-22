@@ -50,6 +50,8 @@ export class ClientHomeComponent implements OnInit {
   ];
 
   categories: Category[] = [];
+  categoriesLoading: boolean = true;
+  categoriesError: boolean = false;
   featuredCategoryId: string = '0';
   topSalesCategoryId: string = '0';
   peripheralsCategoryId: string = '0';
@@ -75,12 +77,17 @@ export class ClientHomeComponent implements OnInit {
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list;
+        this.categoriesLoading = false;
         const peripheralsCategory = this.categories.find(c => c.name.toLowerCase() === 'periféricos');
         this.peripheralsCategoryId = peripheralsCategory ? peripheralsCategory.id : '0';
 
         this.loadFeaturedProducts();
         this.loadTopSalesProducts();
         this.loadRecommendedProducts();
+      },
+      error: () => {
+        this.categoriesLoading = false;
+        this.categoriesError = true;
       }
     })
   }
@@ -130,18 +137,20 @@ export class ClientHomeComponent implements OnInit {
   }
 
   public reload() {
+    this.categoriesError = false;
     this.featuredError = false;
     this.recommendedError = false;
     this.topSalesError = false;
 
+    this.categoriesLoading = true;
     this.featuredLoading = true;
     this.recommendedLoading = true;
     this.topSalesLoading = true;
 
+    this.categories = [];
     this.featuredProducts = [];
     this.recommendedProducts = [];
     this.topSalesProducts = [];
-    this.categories = [];
 
     this.loadCategories();
   }

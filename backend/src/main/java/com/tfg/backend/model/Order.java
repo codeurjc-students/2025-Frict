@@ -60,6 +60,8 @@ public class Order {
     private double shippingCost;
     private double totalCost;
 
+    private double totalCapacity = 0.0;
+
     private String cardNumberEnding; //Historic fields from Address and PaymentCard (prevent that, when the user deletes their addresses or cards, the order remains identifiable)
 
     @ManyToOne
@@ -119,11 +121,19 @@ public class Order {
             }
         }
 
+        double totalCapacity = 0.0;
+        for (OrderItem item : this.getItems()) {
+            if (item.getProduct() != null) {
+                totalCapacity += item.getQuantity() * item.getProduct().getCapacity();
+            }
+        }
+
         this.totalItems = totalItems;
         this.subtotalCost = Math.round(subtotal * 100.0) / 100.0;
         this.totalDiscount = Math.round(totalDiscount * 100.0) / 100.0;
-        this.shippingCost = (total > 50.0) ? 0.0 : 5.0;
+        this.shippingCost = (total > 0.0 && total < 50.0) ? 5.0 : 0.0;
         this.totalCost = Math.round(total * 100.0) / 100.0;
+        this.totalCapacity = totalCapacity;
     }
 
     public OrderStatus getCurrentStatus(){

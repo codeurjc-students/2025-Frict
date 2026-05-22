@@ -75,7 +75,11 @@ describe('NotificationsComponent', () => {
         { provide: Router, useValue: routerSpy },
         {
           provide: ActivatedRoute,
-          useValue: { root: { children: [] }, snapshot: { paramMap: { get: () => null }, url: [], data: {} } }
+          useValue: {
+            root: { children: [] },
+            snapshot: { paramMap: { get: () => null }, queryParamMap: { get: () => null }, url: [], data: {} },
+            queryParams: of({})
+          }
         }
       ]
     }).compileComponents();

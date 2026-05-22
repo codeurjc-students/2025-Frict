@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal} from '@angular/core';
-import {isPlatformBrowser} from '@angular/common';
+import {DatePipe, DecimalPipe, isPlatformBrowser, NgClass} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -13,6 +13,7 @@ import {MessageService} from 'primeng/api';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import * as L from 'leaflet';
 import {LocationService} from '../../../services/location.service';
+import {CustomValidators} from '../../../utils/customValidators.util';
 
 import {Truck} from '../../../models/truck.model';
 import {TruckService} from '../../../services/truck.service';
@@ -25,6 +26,7 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
   selector: 'app-create-edit-truck',
   standalone: true,
   imports: [
+    NgClass,
     Button,
     ReactiveFormsModule,
     InputText,
@@ -33,7 +35,9 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    DatePipe,
+    DecimalPipe
   ],
   templateUrl: './create-edit-truck.component.html'
 })
@@ -52,15 +56,15 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   constructor() {
 
     this.truckForm = this.fb.group({
-      plateNumber: ['', [Validators.required, Validators.minLength(4)]],
+      plateNumber: ['', [Validators.required, Validators.minLength(4)], [CustomValidators.createPlateNumberValidator(this.truckService, () => this.truck()?.plateNumber ?? '')]],
       referenceCode: [{ value: '', disabled: true }],
-      maxOrderCapacity: [10, [Validators.required, Validators.min(1)]],
+      maxCapacity: [10, [Validators.required, Validators.min(1)]],
       shopId: [''],
 
       address: this.fb.group({
         alias: ['Última ubicación conocida', []],
         street: ['', Validators.required],
-        number: ['', Validators.required],
+        number: ['', []],
         floor: ['', []],
         postalCode: ['', Validators.required],
         city: ['', Validators.required],
@@ -86,12 +90,14 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
   // Leaflet
   private map: L.Map | undefined;
   private marker: L.Marker | undefined;
+  private locationMap: L.Map | undefined;
   private lastAddressCheck: string = '';
   private isGeocodingActive: boolean = false;
 
   ngOnInit() {
     this.truckId.set(this.route.snapshot.paramMap.get('id'));
     this.setupAddressListener();
+    this.setupPlateAliasSync();
     this.loadData();
   }
 
@@ -113,6 +119,10 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
       this.map = undefined;
       this.marker = undefined;
     }
+    if (this.locationMap) {
+      this.locationMap.remove();
+      this.locationMap = undefined;
+    }
 
     // 2. Creation mode: Clean TS memory
     if (!this.truckId()) {
@@ -125,6 +135,23 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
     }
     // 3. Make requests
     this.loadData();
+  }
+
+  isInvalid(controlPath: string): boolean {
+    const ctrl = this.truckForm.get(controlPath);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  private setupPlateAliasSync() {
+    this.truckForm.get('plateNumber')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(plate => {
+      const aliasControl = this.truckForm.get('address.alias');
+      const currentAlias: string = aliasControl?.value ?? '';
+      if (!currentAlias || currentAlias.startsWith('Última ubicación de ') || currentAlias === 'Última ubicación conocida') {
+        aliasControl?.setValue(`Última ubicación de ${plate}`, { emitEvent: false });
+      }
+    });
   }
 
   private setupAddressListener() {
@@ -151,6 +178,8 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         this.updateMarker(coords.latitude, coords.longitude);
         if (this.map) this.map.setView([coords.latitude, coords.longitude], 16);
         this.messageService.add({ severity: 'info', summary: 'Ubicación actualizada', detail: 'Se ha movido el marcador según la dirección ingresada.' });
+      } else {
+        this.messageService.add({ severity: 'warn', summary: 'Dirección no encontrada', detail: 'No se encontraron coordenadas para la dirección indicada.' });
       }
     });
   }
@@ -174,7 +203,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
           this.truckForm.patchValue({
             plateNumber: truck.plateNumber,
             referenceCode: truck.referenceCode,
-            maxOrderCapacity: truck.maxOrderCapacity,
+            maxCapacity: truck.maxCapacity,
             shopId: truck.shopId,
             address: truck.address
           }, { emitEvent: false });
@@ -193,6 +222,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
             this.syncAddressMemory();
             this.isGeocodingActive = true;
             this.initMap();
+            this.initLocationMap();
           }, 100);
         },
         error: () => {
@@ -318,6 +348,7 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
           setTimeout(() => { this.isGeocodingActive = true; }, 50);
         } else {
           this.isGeocodingActive = true;
+          this.messageService.add({ severity: 'warn', summary: 'Dirección no encontrada', detail: 'No se encontró ninguna dirección para la ubicación indicada.' });
         }
       },
       error: (err) => {
@@ -326,6 +357,45 @@ export class CreateEditTruckComponent implements OnInit, AfterViewInit {
         this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudo recuperar la dirección automática.' });
       }
     });
+  }
+
+  private initLocationMap(): void {
+    const loc = this.truck()?.driverLocation;
+    if (!loc?.address) return;
+
+    const container = document.getElementById('location-map');
+    if (!container) return;
+
+    if (this.locationMap) {
+      this.locationMap.remove();
+      this.locationMap = undefined;
+    }
+
+    const lat = loc.address.latitude;
+    const lng = loc.address.longitude;
+
+    this.locationMap = L.map('location-map', {
+      zoomControl: true,
+      dragging: false,
+      scrollWheelZoom: false
+    }).setView([lat, lng], 15);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(this.locationMap);
+
+    this.locationMap.attributionControl.setPrefix('Leaflet');
+
+    const icon = L.icon({
+      iconUrl: './location-pointer.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    L.marker([lat, lng], { icon }).addTo(this.locationMap);
   }
 
   onSubmit() {

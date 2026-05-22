@@ -45,6 +45,11 @@ export class TruckService {
     return this.http.get<PageResponse<Truck>>(this.apiUrl + `/shop/${shopId}`, { params });
   }
 
+  public checkPlateNumberTaken(plateNumber: string): Observable<boolean> {
+    let params = new HttpParams().set('plateNumber', plateNumber);
+    return this.http.get<boolean>(this.apiUrl + `/plate`, { params });
+  }
+
   public createTruck(truckData: Truck): Observable<Truck> {
     return this.http.post<Truck>(this.apiUrl, truckData);
   }
@@ -68,5 +73,12 @@ export class TruckService {
     params = params.append('truckStatus', truckStatus);
     params = params.append('comment', comment);
     return this.http.put<Truck>(this.apiUrl + `/status/${id}`, null, { params });
+  }
+
+  public setSelectedOrder(truckId: string, orderId: string, state: boolean): Observable<Truck> {
+    let params = new HttpParams();
+    params = params.append('orderId', orderId);
+    params = params.append('state', state);
+    return this.http.put<Truck>(this.apiUrl + `/${truckId}/selected-order`, null, { params });
   }
 }

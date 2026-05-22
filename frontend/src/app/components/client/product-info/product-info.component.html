@@ -42,10 +42,10 @@
         <div class="flex items-center gap-3 bg-surface-50 px-4 py-2 rounded-xl border border-surface-200">
           <div class="flex flex-col items-end">
             <div class="flex items-center gap-2">
-              <span class="text-2xl font-bold text-surface-900">{{ product.averageRating }}</span>
-              <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true" class="scale-90"></p-rating>
+              <span class="text-2xl font-bold text-surface-900">{{ reviewStats.averageRating | number:'1.1-1' }}</span>
+              <p-rating [ngModel]="Math.floor(reviewStats.averageRating)" [readonly]="true" class="scale-90"></p-rating>
             </div>
-            <span class="text-xs text-primary-600 font-medium cursor-pointer hover:underline">{{ product.totalReviews }} opiniones</span>
+            <span class="text-xs text-primary-600 font-medium cursor-pointer hover:underline">{{ reviewStats.totalReviews }} opiniones</span>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@
           <p-tabs value="0">
             <p-tablist class="!border-b !border-surface-200 mb-6">
               <p-tab value="0" class="!font-bold">Información</p-tab>
-              <p-tab disabled value="1" class="!font-bold">Especificaciones</p-tab>
+              <p-tab value="1" class="!font-bold">Especificaciones</p-tab>
               <!-- NUEVA PESTAÑA: VISUALIZACIONES -->
               <p-tab value="2" class="!font-bold">Visualizaciones</p-tab>
             </p-tablist>
@@ -98,7 +98,26 @@
               <p-tabpanel value="0">
                 <div class="prose prose-slate max-w-none text-surface-600 leading-relaxed" [innerHTML]="product.description"></div>
               </p-tabpanel>
-              <p-tabpanel value="1">Coming soon...</p-tabpanel>
+              <p-tabpanel value="1">
+                @if (product.specifications.length) {
+                  <p-table [value]="product.specifications" styleClass="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th class="w-1/3">Especificación</th>
+                        <th>Valores</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-spec>
+                      <tr>
+                        <td class="font-semibold text-surface-700">{{ spec.name }}</td>
+                        <td class="text-surface-600">{{ spec.values.join(', ') }}</td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                } @else {
+                  <p class="text-surface-400 italic text-sm">Este producto no tiene especificaciones técnicas registradas.</p>
+                }
+              </p-tabpanel>
 
               <!-- NUEVO PANEL: VISUALIZACIONES -->
 
@@ -198,11 +217,11 @@
             <div class="absolute top-0 right-0 w-64 h-64 bg-primary-500/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
 
             <div class="text-center relative z-10">
-              <span class="text-6xl font-extrabold tracking-tighter">{{ product.averageRating }}</span>
+              <span class="text-6xl font-extrabold tracking-tighter">{{ reviewStats.averageRating | number:'1.1-1' }}</span>
               <div class="flex justify-center my-2">
-                <p-rating [ngModel]="Math.floor(this.product.averageRating)" [readonly]="true" class="gap-1"></p-rating>
+                <p-rating [ngModel]="Math.floor(reviewStats.averageRating)" [readonly]="true" class="gap-1"></p-rating>
               </div>
-              <p class="text-surface-400 text-sm">{{product.totalReviews}} reseñas totales</p>
+              <p class="text-surface-400 text-sm">{{reviewStats.totalReviews}} reseñas totales</p>
             </div>
 
             <div class="hidden md:block w-px h-24 bg-surface-700"></div>
@@ -213,19 +232,19 @@
                   <i class="pi pi-thumbs-up text-xl"></i>
                 </div>
                 <div>
-                  <span class="block text-3xl font-bold">{{ recommendationPercentage }}%</span>
+                  <span class="block text-3xl font-bold">{{ reviewStats.recommendationPercentage | number:'1.0-0' }}%</span>
                   <span class="text-surface-400 text-sm">recomiendan este producto</span>
                 </div>
               </div>
             </div>
 
             <div class="flex-1 w-full md:w-auto relative z-10">
-              @for (star of stars; track $index) {
+              @for (star of [{value:5,count:reviewStats.star5},{value:4,count:reviewStats.star4},{value:3,count:reviewStats.star3},{value:2,count:reviewStats.star2},{value:1,count:reviewStats.star1}]; track star.value) {
                 <div class="flex items-center gap-2 mb-1.5 text-sm">
                   <span class="w-3 font-bold">{{ star.value }}</span>
                   <i class="pi pi-star-fill text-yellow-500 text-xs"></i>
                   <div class="flex-1 h-2 bg-surface-700 rounded-full overflow-hidden">
-                    <div class="h-full bg-primary-500 rounded-full" [style.width.%]="product.totalReviews > 0 ? (star.count / product.totalReviews) * 100 : 0"></div>
+                    <div class="h-full bg-primary-500 rounded-full" [style.width.%]="reviewStats.totalReviews > 0 ? (star.count / reviewStats.totalReviews) * 100 : 0"></div>
                   </div>
                   <span class="w-8 text-right text-surface-400">{{ star.count }}</span>
                 </div>
@@ -233,7 +252,7 @@
             </div>
           </div>
 
-          @if (authService.isLogged() && authService.isUser() && !userReviewed) {
+          @if (authService.isLogged() && authService.isUser() && !reviewStats.userReviewed) {
             <div class="my-8 bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
               <h3 class="text-lg font-bold mb-4">Escribe tu reseña</h3>
               <div class="flex gap-4">
@@ -264,8 +283,21 @@
             </div>
           }
 
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-surface-500 font-medium">{{ reviewStats.totalReviews }} reseñas</span>
+            <p-select
+              [options]="reviewsSortOptions"
+              [(ngModel)]="reviewsSort"
+              (onChange)="onReviewsSortChange()"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-44 text-sm"
+              appendTo="body">
+            </p-select>
+          </div>
+
           <div class="space-y-4">
-            @for (review of productReviews; track $index) {
+            @for (review of reviewsPage.items; track review.id) {
               <div class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm hover:border-surface-300 transition-colors">
                 <div class="flex justify-between items-start mb-4">
                   <div class="flex items-center gap-3">
@@ -299,7 +331,7 @@
                     }
                   </div>
 
-                  @if (authService.isLogged() && authService.isUser() && userReviewed && (loggedUserInfo.id == review.creatorId)) {
+                  @if (authService.isLogged() && authService.isUser() && reviewStats.userReviewed && (loggedUserInfo.id == review.creatorId)) {
                     <div class="flex gap-2">
                       <button (click)="editReview(review.id)" class="text-surface-400 hover:text-primary-600 transition-colors"><i class="pi pi-pencil"></i></button>
                       <button (click)="deleteReview(review.id)" class="text-surface-400 hover:text-red-600 transition-colors"><i class="pi pi-trash"></i></button>
@@ -309,6 +341,17 @@
               </div>
             }
           </div>
+
+          <p-paginator
+            (onPageChange)="onReviewsPageChange($event)"
+            [first]="reviewsFirst"
+            [rows]="reviewsRows"
+            [totalRecords]="reviewStats.totalReviews"
+            [rowsPerPageOptions]="[10, 20, 30]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} reseñas"
+            styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl mt-4">
+          </p-paginator>
         </div>
       </div>
 
@@ -353,7 +396,7 @@
 
                 <div class="flex items-center gap-1.5 text-xs font-medium pl-6" [ngClass]="product.availableUnits > 0 ? 'text-green-700' : 'text-red-600'">
                   <i [class]="product.availableUnits > 0 ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-                  <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : 'Agotado en esta tienda' }}</span>
+                  <span>{{ product.availableUnits > 0 ? 'Disponibilidad local: ' + product.availableUnits + ' uds.' : product.availableUnits === 0 ? 'Agotado en esta tienda' : 'No disponible en esta tienda' }}</span>
                 </div>
 
                 <div class="flex items-center gap-1.5 text-xs font-medium pl-6 mt-1 text-primary-800">
@@ -385,11 +428,11 @@
 
           <div class="space-y-4 mb-6">
             <div class="bg-surface-50 p-3 rounded-xl border border-surface-200 transition-opacity"
-                 [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || !product.availableUnits">
+                 [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || product.availableUnits <= 0">
               <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
               <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
                              [min]="1" [max]="(product.availableUnits - inCartUnits) || 1"
-                             [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
+                             [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) <= 0"
                              class="w-full input-number-modern"
                              [inputStyle]="{'width': '100%', 'background': 'transparent', 'border': 'none', 'text-align': 'center', 'font-weight': 'bold' }">
                 <ng-template pTemplate="incrementbuttonicon"><span class="pi pi-plus"></span></ng-template>
@@ -401,7 +444,7 @@
           <div class="space-y-3">
 
             <button (click)="addItemToCart()"
-                    [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) == 0"
+                    [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) <= 0"
                     class="w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
                     [class]="(authService.isUser() && authService.selectedShopId() && (product.availableUnits - inCartUnits > 0)) ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-md shadow-primary-500/20' : 'bg-surface-200 text-surface-500 cursor-not-allowed'">
 
@@ -417,7 +460,11 @@
 
               @if (authService.isUser() && authService.selectedShopId()) {
 
-                @if (product.availableUnits === 0) {
+                @if (product.availableUnits < 0) {
+                  <i class="pi pi-ban"></i>
+                  No disponible
+
+                } @else if (product.availableUnits === 0) {
                   <i class="pi pi-times"></i>
                   Agotado
 
@@ -528,8 +575,9 @@
 
             <div class="shrink-0 text-right min-w-[5rem]">
               <p-tag
-                [value]="stock.units > 1 ? stock.units + ' unidades' : (stock.units === 1 ? '1 unidad' : 'Agotado')"
-                [severity]="stock.units > 5 ? 'success' : (stock.units > 0 ? 'warning' : 'danger')"
+                [value]="getStockLevelTagInfo(stock.active ? stock.units : -1).message"
+                [severity]="getStockLevelTagInfo(stock.active ? stock.units : -1).severity"
+                [icon]="getStockLevelTagInfo(stock.active ? stock.units : -1).icon"
                 [rounded]="true">
               </p-tag>
             </div>

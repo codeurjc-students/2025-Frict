@@ -2,7 +2,7 @@ import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
-import {RouterLink} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {InputGroup} from 'primeng/inputgroup';
 import {InputGroupAddon} from 'primeng/inputgroupaddon';
 import {Button} from 'primeng/button';
@@ -47,6 +47,7 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
   protected authService = inject(AuthService);
   protected uiService = inject(UiService);
   protected notificationService = inject(NotificationService);
+  private router = inject(Router);
 
   recentShopsNotifications = signal<Notification[]>([]);
 
@@ -248,6 +249,13 @@ export class ShopsManagementComponent implements OnInit, OnDestroy {
         }
       })
     }
+  }
+
+  goToNotification(notif: Notification) {
+    this.router.navigate(['/admin/notifications'], {
+      queryParams: { notifId: notif.id },
+      state: { notification: notif }
+    });
   }
 
   protected readonly formatAddress = formatAddress;

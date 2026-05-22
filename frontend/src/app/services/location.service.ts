@@ -1,7 +1,8 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {map, Observable} from 'rxjs';
+import {HttpClient} from '@angular/common/http';
+import {catchError, map, Observable, of} from 'rxjs';
 import {Address} from '../models/address.model';
+import {RouteResult} from '../models/route.model';
 
 export interface Coordinates {
   latitude: number;
@@ -13,62 +14,48 @@ export interface Coordinates {
 })
 export class LocationService {
 
+  private apiUrl = '/api/v1/locations';
+
   constructor(private http: HttpClient) {
   }
 
   // REVERSE GEOCODING
   getAddressFromCoordinates(lat: number, lng: number): Observable<Partial<Address> | null> {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
-
-    return this.http.get<any>(url).pipe(
-      map(data => {
-        if (!data || !data.address) return null;
-
-        const addr = data.address;
-
-        const mappedAddress: Partial<Address> = {
-          street: addr.road || addr.pedestrian || addr.street || '',
-          number: addr.house_number || '',
-          city: addr.city || addr.town || addr.village || '',
-          postalCode: addr.postcode || '',
-          country: addr.country || ''
-        };
-
-        return mappedAddress;
-      })
-    );
+    return this.http
+      .get<Partial<Address>>(`${this.apiUrl}/reverse`, {params: {lat, lng}})
+      .pipe(
+        map(addr => addr ?? null),
+        catchError(() => of(null))
+      );
   }
 
   // DIRECT GEOCODING
   getCoordinatesFromAddress(address: Partial<Address>): Observable<Coordinates | null> {
-    const url = 'https://nominatim.openstreetmap.org/search';
+    const body = {
+      street: address.street ?? '',
+      number: address.number ?? '',
+      postalCode: address.postalCode ?? '',
+      city: address.city ?? '',
+      country: address.country ?? ''
+    };
+    return this.http
+      .post<Coordinates>(`${this.apiUrl}/direct`, body)
+      .pipe(
+        map(coords => coords ?? null),
+        catchError(() => of(null))
+      );
+  }
 
-    const queryParts = [
-      `${address.street || ''} ${address.number || ''}`.trim(),
-      address.city,
-      address.postalCode,
-      address.country
-    ].filter(part => !!part);
-
-    const fullQuery = queryParts.join(', ');
-
-    const params = new HttpParams()
-      .set('q', fullQuery)
-      .set('format', 'json')
-      .set('limit', '1');
-
-    return this.http.get<any[]>(url, { params }).pipe(
-      map(results => {
-        if (results && results.length > 0) {
-          const firstResult = results[0];
-          return {
-            latitude: parseFloat(firstResult.lat),
-            longitude: parseFloat(firstResult.lon)
-          };
-        }
-        return null;
+  // ROUTING via OSRM proxy
+  getRoute(fromLat: number, fromLng: number, toLat: number, toLng: number): Observable<RouteResult | null> {
+    return this.http
+      .get<RouteResult>(`${this.apiUrl}/route`, {
+        params: { fromLat, fromLng, toLat, toLng }
       })
-    );
+      .pipe(
+        map(r => r ?? null),
+        catchError(() => of(null))
+      );
   }
 
 }

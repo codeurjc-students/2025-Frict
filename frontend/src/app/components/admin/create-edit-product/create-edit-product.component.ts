@@ -1,4 +1,4 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 
@@ -10,13 +10,15 @@ import {FileUpload} from 'primeng/fileupload';
 import {ToggleSwitch} from 'primeng/toggleswitch';
 import {MessageService, TreeNode} from 'primeng/api';
 import {TreeSelect} from 'primeng/treeselect';
-import {DomSanitizer} from '@angular/platform-browser';
+import {AutoComplete} from 'primeng/autocomplete';
+import {SafeUrlPipe} from '../../../utils/safe-url.pipe';
 
 import {ProductService} from '../../../services/product.service';
 import {CategoryService} from '../../../services/category.service';
 import {fixKeys, mapToCategories, mapToTreeNodes} from '../../../utils/nodeMapper.util';
 import {formatPrice} from '../../../utils/textFormat.util';
 import {Product} from '../../../models/product.model';
+import {ProductSpec} from '../../../models/product-spec.model';
 import {ImageInfo} from '../../../models/imageInfo.model';
 import {LocalImage} from '../../../models/localImage.model';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
@@ -36,15 +38,17 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     ToggleSwitch,
     FileUpload,
     TreeSelect,
+    AutoComplete,
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    SafeUrlPipe
   ],
   templateUrl: './create-edit-product.component.html',
   styleUrl: 'create-edit-product.component.css'
 })
-export class CreateEditProductComponent implements OnInit {
+export class CreateEditProductComponent implements OnInit, OnDestroy {
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
@@ -52,7 +56,6 @@ export class CreateEditProductComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
-  private sanitizer = inject(DomSanitizer);
   private breadcrumbService = inject(BreadcrumbService);
 
   constructor() {
@@ -61,6 +64,7 @@ export class CreateEditProductComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       supplyPrice: [0, [Validators.required, Validators.min(0.01)]],
       currentPrice: [0, [Validators.required, Validators.min(0.01)]],
+      capacity: [1.0, [Validators.required, Validators.min(0.01)]],
       description: ['', []],
       selectedCategories: ['', []],
       active: [true],
@@ -72,11 +76,18 @@ export class CreateEditProductComponent implements OnInit {
   product = signal<Product | null>(null);
   existingImages = signal<ImageInfo[]>([]);
   newImages = signal<LocalImage[]>([]);
+  specs = signal<ProductSpec[]>([]);
 
   protected readonly MAX_SIZE = 5000000;
   productForm: FormGroup;
   categories: TreeNode[] = [];
   selectedCategories: TreeNode[] = [];
+
+  pendingSpecName = '';
+  pendingSpecValue = '';
+  allSpecs: Record<string, string[]> = {};
+  filteredSpecNames: string[] = [];
+  filteredSpecValues: string[] = [];
 
   loading: boolean = true;
   error: boolean = false;
@@ -89,11 +100,14 @@ export class CreateEditProductComponent implements OnInit {
       this.productForm.reset({
         active: true,
         supplyPrice: 0,
-        currentPrice: 0
+        currentPrice: 0,
+        capacity: 1.0
       });
       this.selectedCategories = [];
       this.existingImages.set([]);
+      this.newImages().forEach(img => URL.revokeObjectURL(img.previewUrl));
       this.newImages.set([]);
+      this.specs.set([]);
     }
     this.loadData();
   }
@@ -131,6 +145,8 @@ export class CreateEditProductComponent implements OnInit {
           this.product.set(product);
           this.productForm.patchValue(product);
           this.existingImages.set(product.imagesInfo);
+          this.specs.set(product.specifications ?? []);
+          this.loadSpecsCatalog();
 
           // Map selection to treeSelect
           if (this.categories.length > 0 && this.selectedCategories.length > 0) {
@@ -149,6 +165,8 @@ export class CreateEditProductComponent implements OnInit {
         { label: 'Gestor de Productos', routerLink: '/admin/products' }
       ]);
       // CREATE
+      this.specs.set([]);
+      this.loadSpecsCatalog();
       this.categoryService.getAllCategories().subscribe({
         next: (list) => {
           const cleanCategories = this.removeOthersCategoryFromTree(list || []);
@@ -192,31 +210,66 @@ export class CreateEditProductComponent implements OnInit {
 
   onFileSelect(event: any) {
     const incomingFiles: File[] = Array.from(event.files || []);
-    const validFiles: File[] = [];
-
-    incomingFiles.forEach(file => {
-      if (file.size <= this.MAX_SIZE) {
-        validFiles.push(file);
-      }
-    });
+    const validFiles = incomingFiles.filter(f => f.type.startsWith('image/') && f.size <= this.MAX_SIZE);
 
     if (validFiles.length > 0) {
-      const currentNewImages = this.newImages();
       const processedFiles: LocalImage[] = validFiles.map(file => ({
-        file: file,
-        previewUrl: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file))
+        file,
+        previewUrl: URL.createObjectURL(file)
       }));
-
-      this.newImages.set([...currentNewImages, ...processedFiles]);
+      this.newImages.update(imgs => [...imgs, ...processedFiles]);
     }
   }
 
   removeNewImage(index: number) {
+    const img = this.newImages()[index];
+    if (img) URL.revokeObjectURL(img.previewUrl);
     this.newImages.update(imgs => imgs.filter((_, i) => i !== index));
+  }
+
+  ngOnDestroy() {
+    this.newImages().forEach(img => URL.revokeObjectURL(img.previewUrl));
   }
 
   removeExistingImage(index: number) {
     this.existingImages.update(imgs => imgs.filter((_, i) => i !== index));
+  }
+
+  private loadSpecsCatalog() {
+    this.productService.getSpecsCatalog().subscribe(s => this.allSpecs = s);
+  }
+
+  searchSpecNames(query: string) {
+    this.filteredSpecNames = Object.keys(this.allSpecs)
+      .filter(n => n.toLowerCase().includes(query.toLowerCase()));
+  }
+
+  searchSpecValues(query: string) {
+    const known = this.allSpecs[this.pendingSpecName] ?? [];
+    this.filteredSpecValues = known.filter(v => v.toLowerCase().includes(query.toLowerCase()));
+  }
+
+  addSpec() {
+    if (!this.pendingSpecName.trim() || !this.pendingSpecValue.trim()) return;
+    const name = this.pendingSpecName.trim();
+    const value = this.pendingSpecValue.trim();
+    this.specs.update(s => {
+      const existing = s.find(e => e.name === name);
+      if (existing) {
+        if (!existing.values.includes(value)) existing.values = [...existing.values, value];
+        return [...s];
+      }
+      return [...s, { name, values: [value] }];
+    });
+    this.pendingSpecName = '';
+    this.pendingSpecValue = '';
+  }
+
+  removeSpecValue(specName: string, value: string) {
+    this.specs.update(s =>
+      s.map(e => e.name === specName ? { ...e, values: e.values.filter(v => v !== value) } : e)
+       .filter(e => e.values.length > 0)
+    );
   }
 
   onSubmit() {
@@ -237,7 +290,8 @@ export class CreateEditProductComponent implements OnInit {
         const productData: Product = {
           ...cleanFormValue,
           categories: mapToCategories(selectedCategories),
-          images: this.existingImages()
+          images: this.existingImages(),
+          specifications: this.specs()
         };
 
         this.productService.updateProduct(editingProduct.id, productData).subscribe({
@@ -255,7 +309,8 @@ export class CreateEditProductComponent implements OnInit {
       const productData: Product = {
         ...cleanFormValue,
         categories: mapToCategories(selectedCategories),
-        images: this.existingImages()
+        images: this.existingImages(),
+        specifications: this.specs()
       };
 
       this.productService.createProduct(productData).subscribe({

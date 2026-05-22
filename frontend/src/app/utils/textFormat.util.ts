@@ -46,3 +46,11 @@ export function formatCardDueDate(isoDate: string | undefined): string { //Input
 export function formatAddress(address: Address): string {
   return `${address.street}, ${address.number} ${address.floor} ${address.postalCode} ${address.city} (${address.country})`
 }
+
+export function formatDuration(seconds: number): string {
+  const totalMinutes = Math.round(seconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+}

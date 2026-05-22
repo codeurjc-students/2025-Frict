@@ -4,13 +4,15 @@ import com.tfg.backend.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     boolean existsByReferenceCode(String referenceCode);
 
@@ -35,15 +37,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.referenceCode NOT IN :excludedRefs AND p.active = true ORDER BY p.createdAt DESC")
     Page<Product> findActiveProductsExcluding(@Param("excludedRefs") Collection<String> excludedRefs, Pageable pageable);
 
-    @Query("""
-    SELECT DISTINCT p FROM Product p
-    LEFT JOIN p.categories c
-    WHERE
-      (:searchTerm IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
-    AND
-      (:categoryIds IS NULL OR c.id IN :categoryIds)
-    """)
-    Page<Product> findByFilters(@Param("searchTerm") String searchTerm,
-                                @Param("categoryIds") List<Long> categoryIds,
-                                Pageable pageable);
+    @Query("SELECT DISTINCT s.name FROM ProductSpec s ORDER BY s.name")
+    List<String> findAllDistinctSpecNames();
+
+    @Query("SELECT DISTINCT v FROM ProductSpec s JOIN s.values v WHERE s.name = :name ORDER BY v")
+    List<String> findDistinctValuesBySpecName(@Param("name") String name);
+
+    @Query("SELECT p.referenceCode FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds AND p.active = true")
+    Set<String> findReferenceCodesByCategoryIds(@Param("categoryIds") Collection<Long> categoryIds);
+
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds AND p.referenceCode NOT IN :excludedRefs AND p.active = true ORDER BY p.createdAt DESC")
+    Page<Product> findActiveProductsByCategoryIdsExcluding(@Param("categoryIds") Collection<Long> categoryIds, @Param("excludedRefs") Collection<String> excludedRefs, Pageable pageable);
+
+    @Query("SELECT COUNT(DISTINCT ss.shop.id) FROM Product p JOIN p.shopsStock ss WHERE p.referenceCode IN :productRefs AND p.active = true AND ss.units > 0")
+    long countDistinctShopsByProductReferences(@Param("productRefs") Collection<String> productRefs);
 }

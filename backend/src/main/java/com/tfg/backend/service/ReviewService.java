@@ -3,6 +3,7 @@ package com.tfg.backend.service;
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.ReviewDTO;
+import com.tfg.backend.dto.ReviewStatsDTO;
 import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ReviewRepository;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -46,9 +49,32 @@ public class ReviewService {
         return reviewRepository.findAllByUser(user, pageInfo);
     }
 
-    public Set<Review> getReviewsByProductId(Long id) {
-        Product product = productService.findProductHelper(id);
-        return product.getReviews();
+    public Page<Review> getReviewsByProductId(Long productId, Pageable pageable) {
+        productService.findProductHelper(productId);
+        return reviewRepository.findAllByProductId(productId, pageable);
+    }
+
+    public ReviewStatsDTO getStatsByProductId(Long productId) {
+        productService.findProductHelper(productId);
+        long total       = reviewRepository.countByProductId(productId);
+        double avg       = reviewRepository.avgRatingByProductId(productId);
+        long recommended = reviewRepository.countRecommendedByProductId(productId);
+        double recPct    = total > 0 ? (recommended * 100.0 / total) : 0.0;
+
+        Map<Integer, Long> starMap = new HashMap<>();
+        for (Object[] row : reviewRepository.countByProductIdGroupByRating(productId))
+            starMap.put((Integer) row[0], (Long) row[1]);
+
+        boolean userReviewed = false;
+        try {
+            User u = userService.findLoggedUserHelper();
+            userReviewed = reviewRepository.existsByProductIdAndUserId(productId, u.getId());
+        } catch (ResponseStatusException ignored) {}
+
+        return new ReviewStatsDTO(total, avg,
+            starMap.getOrDefault(5, 0L), starMap.getOrDefault(4, 0L),
+            starMap.getOrDefault(3, 0L), starMap.getOrDefault(2, 0L),
+            starMap.getOrDefault(1, 0L), recPct, userReviewed);
     }
 
     public Review findReviewHelper(Long id) {

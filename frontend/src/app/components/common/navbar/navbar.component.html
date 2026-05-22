@@ -121,7 +121,7 @@
                     </div>
                   } @else {
                     @for (notif of notificationService.unreadNotifications(); track notif.id) {
-                      <div class="p-4 border-b border-surface-700/50 hover:bg-surface-700 transition-colors flex justify-between items-start gap-3 group">
+                      <div (click)="goToNotification(notif)" class="p-4 border-b border-surface-700/50 hover:bg-surface-700 transition-colors flex justify-between items-start gap-3 group cursor-pointer">
                         <div class="flex flex-col gap-1.5 flex-1 min-w-0">
                           <span class="font-semibold text-white text-sm line-clamp-1" [title]="notif.subject">{{ notif.subject }}</span>
                           <span class="text-surface-300 text-xs line-clamp-2" [title]="notif.description">{{ notif.description }}</span>
@@ -191,7 +191,7 @@
 
       @if (authService.isLogged()) {
         <div class="top-0 w-full">
-          <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors cursor-pointer" [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'">
+          <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors cursor-pointer" [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'">
             <p-avatar [image]=loggedUserInfo.imageUrl class="mr-2" size="large" shape="circle" />
             <div class="flex flex-col">
               <span class="font-bold">{{ loggedUserInfo.name }}</span>
@@ -204,7 +204,7 @@
 
       @if (!authService.isLogged()) {
         <div class="top-0 w-full">
-          <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors cursor-pointer" routerLink="/login">
+          <a class="m-4 flex items-center p-4 gap-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors cursor-pointer" routerLink="/login">
             <p-avatar icon="pi pi-user" size="large" styleClass="bg-surface-700 text-white"/>
             <div class="flex flex-col">
               <span class="font-bold">¡Hola! Identifícate</span>
@@ -252,7 +252,7 @@
           }
 
           <li>
-            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
                [routerLink]="(authService.isAdmin() || authService.isManager() || authService.isDriver()) ? ['/admin'] : ['/']"
                routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
                [routerLinkActiveOptions]="routerOptions">
@@ -262,7 +262,7 @@
           </li>
 
           <li>
-            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+            <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
                [routerLink]="['/search']"
                routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
                [routerLinkActiveOptions]="routerOptions">
@@ -273,7 +273,7 @@
 
           <li>
             <div (click)="toggleCategories()"
-                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors p-ripple">
+                 class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-primary-400 transition-colors p-ripple">
               <span class="font-medium uppercase tracking-wider text-sm">Categorías</span>
               <i class="pi pi-chevron-down transition-transform duration-300"
                  [class.rotate-180]="isCategoriesExpanded()">
@@ -293,7 +293,7 @@
                   @for (item of adminItems; track item.link) {
                     @if (canViewItem(item)) {
                       <li>
-                        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+                        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
                            [routerLink]="item.link"
                            routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
                           <i [class]="item.icon + ' mr-3'"></i>
@@ -313,7 +313,7 @@
             <ul class="list-none p-4 m-0 pt-0">
               <li>
                 <div (click)="toggleAccount()"
-                     class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-white transition-colors p-ripple">
+                     class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-primary-400 transition-colors p-ripple">
                   <span class="font-medium uppercase tracking-wider text-sm">Cuenta</span>
                   <i class="pi pi-chevron-down transition-transform duration-300"
                      [class.rotate-180]="isAccountExpanded()">
@@ -322,13 +322,13 @@
 
                 <ul [class.hidden]="!isAccountExpanded()" class="list-none p-0 m-0 overflow-hidden block">
                   <li>
-                    <a [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'" class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
+                    <a [routerLink]="authService.isUser() ? '/profile' : '/admin/profile'" class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors" routerLink="/profile" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                       <i class="pi pi-user mr-3"></i>
                       <span class="font-medium">Perfil</span>
                     </a>
                   </li>
                   <li>
-                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors" [routerLink]="authService.isUser() ? '/notifications' : '/admin/notifications'" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
+                    <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors" [routerLink]="authService.isUser() ? '/notifications' : '/admin/notifications'" routerLinkActive="border-l-4 border-primary-500 bg-surface-700">
                       <i class="pi pi-bell mr-3"></i>
                       <span class="font-medium">Notificaciones</span>
                       @if (notificationService.unreadCount() > 0) {
@@ -391,7 +391,7 @@
       }
 
       @else {
-        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 duration-150 transition-colors"
+        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
            [routerLink]="['/category', cat.id]"
            routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
            [routerLinkActiveOptions]="routerOptions"

@@ -1,5 +1,6 @@
 import {Category} from './category.model';
 import {ImageInfo} from './imageInfo.model';
+import {ProductSpec} from './product-spec.model';
 
 export interface Product {
   id: string; //It will be automatically converted to long when reaching the backend
@@ -10,9 +11,11 @@ export interface Product {
   supplyPrice: number;
   previousPrice: number;
   currentPrice: number;
+  capacity: number;
   active: boolean;
   discount: string;
   categories: Category[];
+  specifications: ProductSpec[];
   totalUnits: number;
   availableUnits: number;
   shopsWithStock: number;

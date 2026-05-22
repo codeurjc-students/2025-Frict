@@ -42,6 +42,8 @@ describe('ProductCardComponent', () => {
     shopsWithStock: 3,
     averageRating: 4.5,
     totalReviews: 12,
+    specifications: [],
+    capacity: 1,
     createdAt: '2026-05-08'
   };
 
@@ -166,23 +168,22 @@ describe('ProductCardComponent', () => {
   it('should show the discount badge when discount starts with "-"', () => {
     component.product = { ...mockProduct, discount: '-25%' };
     fixture.detectChanges();
-    // The badge span uses class bg-red-100 and displays the discount text
-    const badge = fixture.debugElement.query(By.css('.bg-red-100'));
+    const badge = fixture.debugElement.query(By.css('p-tag'));
     expect(badge).not.toBeNull();
-    expect(badge.nativeElement.textContent.trim()).toBe('-25%');
+    expect(fixture.nativeElement.textContent).toContain('-25%');
   });
 
   it('should NOT show the discount badge when discount does not start with "-"', () => {
     component.product = { ...mockProduct, discount: '0%' };
     fixture.detectChanges();
-    const badge = fixture.debugElement.query(By.css('.bg-red-100'));
+    const badge = fixture.debugElement.query(By.css('p-tag'));
     expect(badge).toBeNull();
   });
 
   it('should NOT show the discount badge when discount is an empty string', () => {
     component.product = { ...mockProduct, discount: '' };
     fixture.detectChanges();
-    const badge = fixture.debugElement.query(By.css('.bg-red-100'));
+    const badge = fixture.debugElement.query(By.css('p-tag'));
     expect(badge).toBeNull();
   });
 

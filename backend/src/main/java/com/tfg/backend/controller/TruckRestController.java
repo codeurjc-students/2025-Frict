@@ -3,8 +3,10 @@ package com.tfg.backend.controller;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.dto.UserDTO;
+import com.tfg.backend.model.DriverLocation;
 import com.tfg.backend.model.Truck;
 import com.tfg.backend.model.TruckStatus;
+import com.tfg.backend.repository.DriverLocationRepository;
 import com.tfg.backend.service.ShopTruckOrchestrator;
 import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.ConnectionService;
@@ -30,9 +32,16 @@ public class TruckRestController {
 
     private final ShopTruckOrchestrator shopTruckOrchestrator;
     private final TruckService truckService;
+    private final DriverLocationRepository driverLocationRepository;
 
     // Inject the user connection service for presence enrichment
     private final ConnectionService connectionService;
+
+    @Operation(summary = "(All) Check if a plate number is already taken")
+    @GetMapping("/plate")
+    public ResponseEntity<Boolean> checkPlateNumber(@RequestParam String plateNumber) {
+        return ResponseEntity.ok(truckService.isPlateNumberTaken(plateNumber));
+    }
 
     @Operation(summary = "(Admin) Get all trucks information (paged)")
     @GetMapping("/")
@@ -77,6 +86,21 @@ public class TruckRestController {
     public ResponseEntity<List<TruckDTO>> getAllUnassignedTrucks() {
         List<Truck> unassignedTrucks = truckService.findAllByAssignedShopIsNull();
         return ResponseEntity.ok(toEnrichedDTOList(unassignedTrucks));
+    }
+
+    @Operation(summary = "(Admin, Manager) Get all driver locations from MongoDB")
+    @GetMapping("/driver-locations")
+    public ResponseEntity<List<DriverLocation>> getAllDriverLocations() {
+        return ResponseEntity.ok(driverLocationRepository.findAll());
+    }
+
+    @Operation(summary = "(Driver) Set or clear the active delivery order for a truck")
+    @PutMapping("/{truckId}/selected-order")
+    public ResponseEntity<TruckDTO> setSelectedOrder(@PathVariable Long truckId,
+                                                      @RequestParam Long orderId,
+                                                      @RequestParam boolean state) {
+        Truck truck = truckService.setSelectedOrder(truckId, orderId, state);
+        return ResponseEntity.ok(toEnrichedDTO(truck));
     }
 
     @Operation(summary = "(Admin) Set driver assignment to a truck")
@@ -131,7 +155,7 @@ public class TruckRestController {
      * Converts a Truck entity to a DTO and enriches its driver (if assigned).
      */
     private TruckDTO toEnrichedDTO(Truck truck) {
-        TruckDTO dto = new TruckDTO(truck);
+        TruckDTO dto = truckService.toTruckDTO(truck);
         if (dto.getAssignedDriver() != null) {
             connectionService.enrichWithConnection(dto.getAssignedDriver());
         }
@@ -142,7 +166,7 @@ public class TruckRestController {
      * Converts a list of Truck entities to DTOs and enriches all drivers in batch.
      */
     private List<TruckDTO> toEnrichedDTOList(List<Truck> trucks) {
-        List<TruckDTO> dtos = trucks.stream().map(TruckDTO::new).toList();
+        List<TruckDTO> dtos = trucks.stream().map(truckService::toTruckDTO).toList();
 
         List<UserDTO> drivers = dtos.stream()
                 .map(TruckDTO::getAssignedDriver)
@@ -158,7 +182,7 @@ public class TruckRestController {
      */
     private PageResponse<TruckDTO> toEnrichedPageResponse(Page<Truck> trucks) {
         // 1. Map the pure entity page to a DTO page
-        Page<TruckDTO> dtoPage = trucks.map(TruckDTO::new);
+        Page<TruckDTO> dtoPage = trucks.map(truckService::toTruckDTO);
 
         // 2. Extract drivers from the current page and enrich them in a single batch query
         List<UserDTO> drivers = dtoPage.getContent().stream()

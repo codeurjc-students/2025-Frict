@@ -22,9 +22,11 @@ public class ProductDTO {
     private double supplyPrice;
     private double previousPrice;
     private double currentPrice;
+    private double capacity;
     private boolean active;
     private String discount;
     private List<CategoryDTO> categories = new ArrayList<>();
+    private List<ProductSpecDTO> specifications = new ArrayList<>();
     private int totalUnits; // Sum of all stock from all shops
     private int availableUnits; // Purchasable units from selected shop (registered users only, other roles will display 0 to avoid unexpected purchases)
     private int shopsWithStock;
@@ -48,6 +50,7 @@ public class ProductDTO {
         this.supplyPrice = p.getSupplyPrice();
         this.previousPrice = p.getPreviousPrice();
         this.currentPrice = p.getCurrentPrice();
+        this.capacity = p.getCapacity();
         this.active = p.isActive();
         if (previousPrice != 0.0 && currentPrice < previousPrice){
             this.discount = "-" + String.valueOf((int) Math.floor(((this.previousPrice - this.currentPrice) / this.previousPrice) * 100)) + "%";
@@ -60,9 +63,13 @@ public class ProductDTO {
         }
         this.categories = dtos;
 
+        for (ProductSpec s : p.getSpecifications()) {
+            this.specifications.add(new ProductSpecDTO(s.getName(), new ArrayList<>(s.getValues())));
+        }
+
         int totalUnits = 0;
         for (ShopStock s : p.getShopsStock()) {
-            totalUnits += s.getUnits();
+            if (s.isActive()) totalUnits += s.getUnits();
         }
         this.totalUnits = totalUnits;
 
@@ -71,7 +78,7 @@ public class ProductDTO {
         }
         else this.availableUnits = 0;
 
-        this.shopsWithStock = p.getShopsStock().size();
+        this.shopsWithStock = (int) p.getShopsStock().stream().filter(ShopStock::isActive).count();
 
         //Total reviews and average rating
         double totalRating = 0.0;

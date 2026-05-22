@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -230,5 +231,9 @@ public class CategoryService {
             }
             temp = temp.getParent();
         }
+    }
+
+    public Set<Long> findFamilyCategoryIds(Long rootId){
+        return this.categoryRepository.findFamilyCategoryIds(rootId);
     }
 }

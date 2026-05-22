@@ -21,6 +21,7 @@ const mockProduct: Product = {
   supplyPrice: 8,
   previousPrice: 12,
   currentPrice: 10,
+  capacity: 1,
   active: true,
   discount: '0',
   categories: [],
@@ -29,6 +30,7 @@ const mockProduct: Product = {
   shopsWithStock: 3,
   averageRating: 4.0,
   totalReviews: 5,
+  specifications: [],
   createdAt: '2025-01-01'
 };
 
@@ -41,6 +43,7 @@ const mockProduct2: Product = {
   supplyPrice: 5,
   previousPrice: 9,
   currentPrice: 8,
+  capacity: 1,
   active: false,
   discount: '0',
   categories: [],
@@ -49,6 +52,7 @@ const mockProduct2: Product = {
   shopsWithStock: 1,
   averageRating: 3.5,
   totalReviews: 2,
+  specifications: [],
   createdAt: '2025-01-02'
 };
 

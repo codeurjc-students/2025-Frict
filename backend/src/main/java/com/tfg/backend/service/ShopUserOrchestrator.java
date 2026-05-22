@@ -36,6 +36,7 @@ public class ShopUserOrchestrator {
         address.setLongitude(dto.getLongitude());
 
         Shop shop = new Shop(shopDTO.getName(), address, shopDTO.getAssignedBudget());
+        shop.setMaxCapacity(shopDTO.getMaxCapacity());
 
         //Send notifications
         ShopEvent shopEvent = new ShopEvent(EventAction.CREATED, String.valueOf(shop.getId()), false, null, null);
@@ -45,6 +46,12 @@ public class ShopUserOrchestrator {
         Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, shopDTO.getAssignedBudget(), shop.getReferenceCode(), shop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
         eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
 
+        Registry totalCapacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_TOTAL_CAPACITY, shopDTO.getMaxCapacity(), shop.getReferenceCode(), shop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        eventPublisher.publishEvent(new RegistryEvent(totalCapacityRegistry));
+
+        Registry usedCapacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, 0.0, shop.getReferenceCode(), shop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        eventPublisher.publishEvent(new RegistryEvent(usedCapacityRegistry));
+
         return shopService.save(shop);
     }
 
@@ -52,6 +59,7 @@ public class ShopUserOrchestrator {
     public Shop updateShop(Long id, ShopDTO shopDTO){
         Shop shop = shopService.findShopHelper(id);
         double oldBudget = shop.getAssignedBudget();
+        double oldCapacity = shop.getMaxCapacity();
 
         shop.setName(shopDTO.getName());
         AddressDTO dto = shopDTO.getAddress();
@@ -61,6 +69,7 @@ public class ShopUserOrchestrator {
 
         shop.setAddress(address);
         shop.setAssignedBudget(shopDTO.getAssignedBudget());
+        shop.setMaxCapacity(shopDTO.getMaxCapacity());
 
         //Send notifications
         String managerUsername = Optional.ofNullable(shop.getAssignedManager()).map(User::getUsername).orElse(null);
@@ -71,6 +80,9 @@ public class ShopUserOrchestrator {
         User loggedUser = userService.findLoggedUserHelper();
         Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, shopDTO.getAssignedBudget() - oldBudget, shop.getReferenceCode(), shop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
         eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
+
+        Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_TOTAL_CAPACITY, shopDTO.getMaxCapacity() - oldCapacity, shop.getReferenceCode(), shop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
 
         return shop;
     }
@@ -98,6 +110,7 @@ public class ShopUserOrchestrator {
         shop.getCustomers().clear();
 
         double oldBudget = shop.getAssignedBudget();
+        double oldCapacity = shop.getMaxCapacity();
         shopService.delete(shop);
 
         if (shop.getImage() != null && shop.getImage().getS3Key() != null && !GlobalDefaults.isDefaultShopImage(shop.getImage())) {
@@ -111,6 +124,12 @@ public class ShopUserOrchestrator {
         User loggedUser = userService.findLoggedUserHelper();
         Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, -oldBudget, shop.getReferenceCode(), shop.getName() + " (eliminada)", loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
         eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
+
+        Registry totalCapacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_TOTAL_CAPACITY, -oldCapacity, shop.getReferenceCode(), shop.getName() + " (eliminada)", loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        eventPublisher.publishEvent(new RegistryEvent(totalCapacityRegistry));
+
+        Registry usedCapacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, -oldCapacity, shop.getReferenceCode(), shop.getName() + " (eliminada)", loggedUser.getUsername(), loggedUser.getName(), null, null, null, null);
+        eventPublisher.publishEvent(new RegistryEvent(usedCapacityRegistry));
 
         return shop;
     }

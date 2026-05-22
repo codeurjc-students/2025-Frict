@@ -32,8 +32,8 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="flex flex-col gap-2">
-                <label for="name" class="text-sm font-semibold text-slate-600">Nombre de la Tienda</label>
-                <input pInputText id="name" formControlName="name" placeholder="Ej: Tienda Central Madrid" class="w-full" />
+                <label for="name" class="text-sm font-semibold text-slate-600">Nombre de la Tienda <span class="text-red-500">*</span></label>
+                <input pInputText id="name" formControlName="name" placeholder="Ej: Tienda Central Madrid" class="w-full" [ngClass]="{'!border-red-500': isInvalid('name')}" />
                 @if (shopForm.get('name')?.invalid && shopForm.get('name')?.touched) {
                   <small class="text-red-500">
                     El nombre es obligatorio.
@@ -42,8 +42,13 @@
               </div>
 
               <div class="flex flex-col gap-2">
-                <label for="ref" class="text-sm font-semibold text-slate-600">Presupuesto inicial</label>
-                <p-inputNumber id="price" formControlName="assignedBudget" mode="currency" currency="EUR" locale="es-ES" placeholder="0,00 €" styleClass="w-full" [min]="0"></p-inputNumber>
+                <label for="ref" class="text-sm font-semibold text-slate-600">Presupuesto inicial <span class="text-red-500">*</span></label>
+                <p-inputNumber id="price" formControlName="assignedBudget" mode="currency" currency="EUR" locale="es-ES" placeholder="0,00 €" styleClass="w-full" [min]="0" [inputStyleClass]="isInvalid('assignedBudget') ? '!border-red-500' : ''"></p-inputNumber>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label for="maxCapacity" class="text-sm font-semibold text-slate-600">Capacidad máxima de almacén <span class="text-red-500">*</span> <span class="text-slate-400 font-normal">(0 = ilimitada)</span></label>
+                <p-inputNumber id="maxCapacity" formControlName="maxCapacity" [showButtons]="true" buttonLayout="horizontal" [min]="0" [minFractionDigits]="0" [maxFractionDigits]="2" decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" styleClass="w-full" [inputStyleClass]="isInvalid('maxCapacity') ? 'text-center font-bold !border-red-500' : 'text-center font-bold'"></p-inputNumber>
               </div>
 
               <div class="flex flex-col col-span-2 gap-2">
@@ -81,28 +86,28 @@
                   <input pInputText formControlName="alias" class="w-full"/>
                 </div>
                 <div class="flex flex-col gap-2 md:col-span-2">
-                  <label class="text-sm font-semibold text-slate-600">Calle / Avenida</label>
-                  <input pInputText formControlName="street" class="w-full"/>
+                  <label class="text-sm font-semibold text-slate-600">Calle / Avenida <span class="text-red-500">*</span></label>
+                  <input pInputText formControlName="street" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.street')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Número</label>
-                  <input pInputText formControlName="number" class="w-full"/>
+                  <label class="text-sm font-semibold text-slate-600">Número <span class="text-red-500">*</span></label>
+                  <input pInputText formControlName="number" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.number')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
                   <label class="text-sm font-semibold text-slate-600">Piso</label>
                   <input pInputText formControlName="floor" class="w-full"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Ciudad</label>
-                  <input pInputText formControlName="city" class="w-full"/>
+                  <label class="text-sm font-semibold text-slate-600">Ciudad <span class="text-red-500">*</span></label>
+                  <input pInputText formControlName="city" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.city')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Código Postal</label>
-                  <input pInputText formControlName="postalCode" class="w-full"/>
+                  <label class="text-sm font-semibold text-slate-600">Código Postal <span class="text-red-500">*</span></label>
+                  <input pInputText formControlName="postalCode" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.postalCode')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">País</label>
-                  <input pInputText formControlName="country" class="w-full"/>
+                  <label class="text-sm font-semibold text-slate-600">País <span class="text-red-500">*</span></label>
+                  <input pInputText formControlName="country" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.country')}"/>
                 </div>
               </div>
 
@@ -145,7 +150,7 @@
 
               @if (newImage(); as img) {
                 <div class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-video">
-                  <img [src]="img.previewUrl" class="w-full h-full object-cover">
+                  <img [src]="img.previewUrl | safeUrl" class="w-full h-full object-cover">
                   <span class="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Nueva</span>
                   <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">

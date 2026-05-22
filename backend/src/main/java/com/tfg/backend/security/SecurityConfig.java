@@ -84,7 +84,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/products/favourites/*").hasAuthority("USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/available/*").hasAuthority("MANAGER") // (Manager)
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/recommendations").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/category/*/top-sales").permitAll() //Get top sales products given a category
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/category/*/timeline").permitAll() //Get total count of views / sales given a category
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/category/*/metrics").permitAll() //Get category metrics information
                         .requestMatchers("/api/v1/products/**").hasAuthority("ADMIN") // (Admin) for CRUD, images and activations
+
 
                         // --- 4. ORDERS & CART (OrderRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/cart/**").hasAuthority("USER") // (User)
@@ -106,7 +110,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/*/invoice").hasAuthority("USER") // Client exclusive endpoint
 
                         // --- 5. REVIEWS (ReviewRestController) ---
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/").permitAll() // (All) Product reviews
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/product", "/api/v1/reviews/product/stats").permitAll() // (All) Product reviews
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews").hasAnyAuthority("USER", "ADMIN") // (All/User) Reviews for logged user and for admin
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/user/*").hasAuthority("ADMIN") // (Admin)
                         .requestMatchers(HttpMethod.POST, "/api/v1/reviews").hasAuthority("USER") // (User)
@@ -131,8 +135,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/shop/*").permitAll() // (All)
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/user/*").hasAuthority("DRIVER") // (Driver)
                         .requestMatchers(HttpMethod.GET, "/api/v1/trucks/", "/api/v1/trucks/available/").hasAnyAuthority("ADMIN", "MANAGER") // (Admin) All vs (Admin, Manager) Available
-                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/{id}", "/api/v1/trucks/shop/*/list").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/{id}").hasAnyAuthority("ADMIN", "MANAGER", "USER") // (Admin, Manager, User) User needs it for order-details tracking map
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trucks/shop/*/list").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
                         .requestMatchers(HttpMethod.POST, "/api/v1/trucks").hasAuthority("ADMIN") // (Admin)
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/status/*").hasAnyAuthority("ADMIN", "DRIVER") // (Admin, Driver) Update truck status
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/*/selected-order").hasAnyAuthority("ADMIN", "DRIVER") // (Admin, Driver) Set active delivery order
                         .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/**").hasAuthority("ADMIN") // (Admin) CRUD and assignments
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/trucks/*").hasAuthority("ADMIN") // (Admin)
 
@@ -147,10 +154,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/stats/orders").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER") // (Admin, Manager, Driver)
                         .requestMatchers("/api/v1/stats/shops", "/api/v1/stats/trucks").hasAnyAuthority("ADMIN", "MANAGER") // (Admin, Manager)
 
-                        // --- 10. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---
+                        // --- 10. LOCATIONS (LocationRestController) ---
+                        .requestMatchers(HttpMethod.GET, "/api/v1/locations/route").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER", "USER") // (All authenticated) Routing proxy
+                        .requestMatchers("/api/v1/locations/**").hasAnyAuthority("ADMIN", "MANAGER", "USER") // Geocoding proxy
+
+                        // --- 11. WEBSOCKETS, NOTIFICATIONS AND REGISTRIES ---
                         .requestMatchers("/api/v1/ws/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/notifications/test").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/notifications/unread", "/api/v1/notifications/", "/api/v1/notifications/*").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/notifications/*/read", "/api/v1/notifications/read-all").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/notifications/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/registry/private/*").hasAnyAuthority("ADMIN", "MANAGER", "DRIVER")

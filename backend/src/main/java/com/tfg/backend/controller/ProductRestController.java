@@ -1,10 +1,9 @@
 package com.tfg.backend.controller;
 
+import com.tfg.backend.dto.*;
 import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.dto.ProductDTO;
-import com.tfg.backend.dto.ShopStockDTO;
 import com.tfg.backend.model.Product;
-import com.tfg.backend.model.ProductImageInfo;
+import com.tfg.backend.model.ImageInfo;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -41,9 +41,20 @@ public class ProductRestController {
     public ResponseEntity<PageResponse<ProductDTO>> getFilteredProducts(
             Pageable pageable,
             @RequestParam(value = "query", required = false) String searchTerm,
-            @RequestParam(value = "categoryId", required = false) List<Long> categoryIds) {
-        Page<Product> products = productService.getFilteredProducts(searchTerm, categoryIds, pageable);
+            @RequestParam(value = "categoryId", required = false) List<Long> categoryIds,
+            @RequestParam(value = "specFilter", required = false, defaultValue = "") List<String> specFilter) {
+        List<SpecFilterDTO> specs = specFilter.stream()
+                .filter(s -> !s.isBlank())
+                .map(SpecFilterDTO::fromString)
+                .toList();
+        Page<Product> products = productService.getFilteredProducts(searchTerm, categoryIds, specs, pageable);
         return ResponseEntity.ok(PageFormatter.toPageResponse(products, ProductDTO::new));
+    }
+
+    @Operation(summary = "(All) Get all distinct spec names and their values (for autocomplete)")
+    @GetMapping("/specs")
+    public ResponseEntity<Map<String, List<String>>> getSpecsCatalog() {
+        return ResponseEntity.ok(productService.getSpecsCatalog());
     }
 
     @Operation(summary = "(User) Get logged user favourite products (paged)")
@@ -143,7 +154,7 @@ public class ProductRestController {
     @PutMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDTO> updateProductImages(
             @PathVariable Long id,
-            @RequestPart("existingImages") List<ProductImageInfo> existingImages,
+            @RequestPart("existingImages") List<ImageInfo> existingImages,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ) {
         Product updatedProduct = productService.updateProductImages(id, existingImages, newImages);
@@ -165,5 +176,34 @@ public class ProductRestController {
     ) {
         Page<Product> recommendations = productService.getPersonalizedRecommendations(page, size);
         return ResponseEntity.ok(PageFormatter.toPageResponse(recommendations, ProductDTO::new));
+    }
+
+    @Operation(summary = "(All) Get top sales products by category ID (paged)")
+    @GetMapping("/category/{categoryId}/top-sales")
+    public ResponseEntity<PageResponse<ProductDTO>> getCategoryTopSales(
+            @PathVariable Long categoryId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        Page<Product> topSales = productService.getTopSalesByCategory(categoryId, page, size);
+        return ResponseEntity.ok(PageFormatter.toPageResponse(topSales, ProductDTO::new));
+    }
+
+
+    @Operation(summary = "(All) Get timeline stats for a category")
+    @GetMapping("/category/{categoryId}/timeline")
+    public ResponseEntity<List<org.bson.Document>> getCategoryTimeline(
+            @PathVariable Long categoryId,
+            @RequestParam String dataType,
+            @RequestParam int days) {
+
+        return ResponseEntity.ok(productService.getCategoryTimeline(categoryId, dataType, days));
+    }
+
+
+    @Operation(summary = "(All) Get global metrics for a category")
+    @GetMapping("/category/{categoryId}/metrics")
+    public ResponseEntity<Map<String, Object>> getCategoryMetrics(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(productService.getCategoryGlobalMetrics(categoryId));
     }
 }

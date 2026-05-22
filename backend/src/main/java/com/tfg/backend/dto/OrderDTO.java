@@ -28,6 +28,7 @@ public class OrderDTO {
     private double totalDiscount;
     private double shippingCost;
     private double totalCost;
+    private double totalCapacity;
 
     private String cardNumberEnding;
     private AddressDTO sendingAddress;
@@ -61,6 +62,7 @@ public class OrderDTO {
         this.totalDiscount = o.getTotalDiscount();
         this.shippingCost = o.getShippingCost();
         this.totalCost = o.getTotalCost();
+        this.totalCapacity = o.getTotalCapacity();
 
         this.cardNumberEnding = o.getCardNumberEnding();
         if (o.getFullSendingAddress() != null){

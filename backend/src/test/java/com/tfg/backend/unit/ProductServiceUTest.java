@@ -2,6 +2,8 @@ package com.tfg.backend.unit;
 
 import com.tfg.backend.dto.CategoryDTO;
 import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.ProductSpecDTO;
+import com.tfg.backend.dto.SpecFilterDTO;
 import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ProductRepository;
@@ -19,6 +21,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -124,17 +127,34 @@ class ProductServiceUTest {
         }
 
         @Test
-        @DisplayName("getFilteredProducts forwards searchTerm and categoryIds to repository")
+        @DisplayName("getFilteredProducts builds a Specification and delegates to JpaSpecificationExecutor")
         void getFilteredProducts_ForwardsFilters() {
             Pageable pageable = PageRequest.of(0, 10);
             Page<Product> page = new PageImpl<>(List.of(product));
-            when(productRepository.findByFilters("laptop", List.of(1L, 2L), pageable)).thenReturn(page);
+            when(productRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
             when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
-            Page<Product> result = productService.getFilteredProducts("laptop", List.of(1L, 2L), pageable);
+            Page<Product> result = productService.getFilteredProducts("laptop", List.of(1L, 2L), List.of(), pageable);
 
             assertEquals(1, result.getTotalElements());
-            verify(productRepository).findByFilters("laptop", List.of(1L, 2L), pageable);
+            verify(productRepository).findAll(any(Specification.class), eq(pageable));
+        }
+
+        @Test
+        @DisplayName("getSpecsCatalog delegates to repository and assembles ordered name→values map")
+        void getSpecsCatalog_DelegatesToRepository() {
+            when(productRepository.findAllDistinctSpecNames()).thenReturn(List.of("Color", "Talla"));
+            when(productRepository.findDistinctValuesBySpecName("Color")).thenReturn(List.of("Azul", "Rojo"));
+            when(productRepository.findDistinctValuesBySpecName("Talla")).thenReturn(List.of("M", "XL"));
+
+            Map<String, List<String>> catalog = productService.getSpecsCatalog();
+
+            assertEquals(2, catalog.size());
+            assertEquals(List.of("Azul", "Rojo"), catalog.get("Color"));
+            assertEquals(List.of("M", "XL"), catalog.get("Talla"));
+            verify(productRepository).findAllDistinctSpecNames();
+            verify(productRepository).findDistinctValuesBySpecName("Color");
+            verify(productRepository).findDistinctValuesBySpecName("Talla");
         }
 
         @Test
@@ -416,7 +436,7 @@ class ProductServiceUTest {
         void deleteById_ThrowsException() {
             when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> productService.deleteById(1L));
+            assertThrows(ResponseStatusException.class, () -> productService.deleteProduct(1L));
         }
 
         @Test
@@ -424,7 +444,7 @@ class ProductServiceUTest {
         void deleteById_Success() {
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-            productService.deleteById(1L);
+            productService.deleteProduct(1L);
 
             verify(productRepository).delete(product);
         }
@@ -555,6 +575,42 @@ class ProductServiceUTest {
 
             assertEquals(1, result.getCategories().size());
             assertEquals(99L, result.getCategories().getFirst().getId());
+        }
+
+        @Test
+        @DisplayName("createProduct maps ProductSpecDTO list to ProductSpec entities on the saved product")
+        void createProduct_WithSpecs_PersistsSpecifications() {
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+            productDTO.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Rojo", "Azul"))));
+            when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+            Product result = productService.createProduct(productDTO);
+
+            assertEquals(1, result.getSpecifications().size());
+            ProductSpec spec = result.getSpecifications().getFirst();
+            assertEquals("Color", spec.getName());
+            assertTrue(spec.getValues().containsAll(List.of("Rojo", "Azul")));
+        }
+
+        @Test
+        @DisplayName("updateProduct replaces existing specifications with the ones from the incoming DTO")
+        void updateProduct_WithSpecs_ReplacesSpecifications() {
+            ProductSpec existingSpec = new ProductSpec("Old", List.of("V1"), product);
+            product.getSpecifications().add(existingSpec);
+
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            productDTO.setCategories(null);
+            productDTO.setSpecifications(List.of(new ProductSpecDTO("Talla", List.of("M", "XL"))));
+
+            Product result = productService.updateProduct(1L, productDTO);
+
+            assertEquals(1, result.getSpecifications().size());
+            ProductSpec updated = result.getSpecifications().getFirst();
+            assertEquals("Talla", updated.getName());
+            assertTrue(updated.getValues().containsAll(List.of("M", "XL")));
         }
 
         @Test
@@ -806,7 +862,7 @@ class ProductServiceUTest {
             try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
                 mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(false);
 
-                productService.updateProductImages(1L, List.of(keepImg), List.of(newFile));
+                productService.updateProductImages(1L, List.of(new ImageInfo(null, "keep.jpg", null)), List.of(newFile));
 
                 verify(imageService).deleteFile("discard.jpg");
                 assertEquals(2, product.getImages().size());

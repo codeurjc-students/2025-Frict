@@ -12,6 +12,7 @@ import {PageResponse} from '../../../models/pageResponse.model';
 import {Product} from '../../../models/product.model';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/textFormat.util';
+import {getStockLevelTagInfo} from '../../../utils/tagManager.util';
 import {RouterLink} from '@angular/router';
 import {Select} from 'primeng/select';
 import {Tag} from 'primeng/tag';
@@ -246,4 +247,5 @@ export class ProductsManagementComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
+  protected readonly getStockLevelTagInfo = getStockLevelTagInfo;
 }

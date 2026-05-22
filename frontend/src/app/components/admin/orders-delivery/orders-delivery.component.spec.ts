@@ -5,6 +5,8 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {of, Subject, throwError} from 'rxjs';
 import {MessageService} from 'primeng/api';
 import {PaginatorState} from 'primeng/paginator';
+import {getOrderStatusTagInfo} from '../../../utils/tagManager.util';
+import {provideHttpClient} from '@angular/common/http';
 
 import {OrdersDeliveryComponent} from './orders-delivery.component';
 import {AuthService} from '../../../services/auth.service';
@@ -38,7 +40,7 @@ const mockOrder: Order = {
   user: mockUser, orderItems: [],
   assignedShopId: 'shop-1', assignedTruckId: 'truck-1',
   estimatedCompletionTime: 60,
-  totalItems: 2, subtotalCost: 20, totalDiscount: 0, shippingCost: 3, totalCost: 23,
+  totalItems: 2, subtotalCost: 20, totalDiscount: 0, shippingCost: 3, totalCost: 23, totalCapacity: 1,
   cardNumberEnding: '1234', sendingAddress: mockAddress, createdAt: '2025-01-01'
 };
 
@@ -50,7 +52,7 @@ const mockPage: PageResponse<Order> = {
 const mockTruck: any = {
   id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB-1234',
   history: [], shopId: 'shop-1', address: mockAddress,
-  ordersToDeliver: 2, maxOrderCapacity: 10
+  ordersToDeliver: 2, maxCapacity: 10
 };
 
 const mockShop: any = {
@@ -114,6 +116,7 @@ describe('OrdersDeliveryComponent', () => {
       imports: [OrdersDeliveryComponent],
       providers: [
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: OrderService, useValue: orderServiceSpy },
@@ -681,35 +684,31 @@ describe('OrdersDeliveryComponent', () => {
     });
   });
 
-  // ── getStatusSeverity ─────────────────────────────────────────────────────────
+  // ── getOrderStatusTagInfo (tagManager) ───────────────────────────────────────
 
-  describe('getStatusSeverity', () => {
-    it('should return "success" for Completado', () => {
-      expect(component.getStatusSeverity('Completado')).toBe('success');
+  describe('getOrderStatusTagInfo', () => {
+    it('should return success severity for Completado', () => {
+      expect(getOrderStatusTagInfo('Completado').severity).toBe('success');
     });
 
-    it('should return "info" for En Reparto', () => {
-      expect(component.getStatusSeverity('En Reparto')).toBe('info');
+    it('should return warn severity for En Reparto', () => {
+      expect(getOrderStatusTagInfo('En Reparto').severity).toBe('warn');
     });
 
-    it('should return "warn" for Enviado', () => {
-      expect(component.getStatusSeverity('Enviado')).toBe('warn');
+    it('should return info severity for Enviado', () => {
+      expect(getOrderStatusTagInfo('Enviado').severity).toBe('info');
     });
 
-    it('should return "warn" for Pedido Realizado', () => {
-      expect(component.getStatusSeverity('Pedido Realizado')).toBe('warn');
+    it('should return info severity for Pedido Realizado', () => {
+      expect(getOrderStatusTagInfo('Pedido Realizado').severity).toBe('info');
     });
 
-    it('should return "danger" for Cancelado', () => {
-      expect(component.getStatusSeverity('Cancelado')).toBe('danger');
+    it('should return danger severity for Cancelado', () => {
+      expect(getOrderStatusTagInfo('Cancelado').severity).toBe('danger');
     });
 
-    it('should return "secondary" for unknown status', () => {
-      expect(component.getStatusSeverity('Unknown')).toBe('secondary');
-    });
-
-    it('should be case-insensitive', () => {
-      expect(component.getStatusSeverity('COMPLETADO')).toBe('success');
+    it('should return secondary severity for unknown status', () => {
+      expect(getOrderStatusTagInfo('Unknown').severity).toBe('secondary');
     });
   });
 

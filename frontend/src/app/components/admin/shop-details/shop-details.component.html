@@ -11,7 +11,7 @@
       <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="relative w-full h-64 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
-        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + shop.imageInfo.imageUrl + ')'"></div>
+        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + shopImageUrl + ')'"></div>
         <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-transparent"></div>
         <p-button
           (click)="goBack()"
@@ -66,47 +66,70 @@
 
             <ng-template pTemplate="header">
               <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
-                <th class="pl-4 font-semibold">Ref</th>
+                <th class="pl-4 font-semibold">Camión</th>
                 <th class="font-semibold">Conductor</th>
                 <th class="text-center font-semibold">Estado</th>
-                <th class="font-semibold">Pedido Actual</th>
+                <th class="text-center font-semibold">Capacidad</th>
                 <th class="text-right pr-4 font-semibold">Acciones</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-truck>
               <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group cursor-pointer" (click)="focusTruckOnMap(truck)">
-                <td class="pl-4 font-mono text-sm text-slate-500">{{ truck.referenceCode }}</td>
-                <td>
-                  @if (truck.driver) {
+
+                <!-- Matrícula + Ref -->
+                <td class="pl-4 py-3">
+                  <div class="font-bold text-slate-800 text-sm">{{ truck.plateNumber }}</div>
+                  <div class="text-[10px] font-mono text-slate-400">{{ truck.referenceCode }}</div>
+                </td>
+
+                <!-- Conductor: nombre + badge online + último ping GPS -->
+                <td class="py-3">
+                  @if (truck.assignedDriver) {
                     <div class="flex items-center gap-2">
-                      <p-avatar [label]="truck.driver.name.charAt(0)" shape="circle" styleClass="bg-slate-200 text-slate-600 text-xs" />
-                      <span class="text-sm font-medium text-slate-700">{{ truck.driver.name }}</span>
+                      <p-avatar [label]="truck.assignedDriver.name.charAt(0)" shape="circle" styleClass="bg-slate-200 text-slate-600 text-xs shrink-0" />
+                      <div>
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-sm font-medium text-slate-700">{{ truck.assignedDriver.name }}</span>
+                          <span
+                            class="w-2 h-2 rounded-full shrink-0"
+                            [class.bg-green-500]="truck.assignedDriver.connection?.online"
+                            [class.bg-slate-400]="!truck.assignedDriver.connection?.online"
+                            [pTooltip]="truck.assignedDriver.connection?.online ? 'Conectado' : 'Desconectado'">
+                          </span>
+                        </div>
+                        <div class="text-[10px] text-slate-400">
+                          GPS: {{ formatLastSeen(truck.driverLocation?.pingDateTime) }}
+                        </div>
+                      </div>
                     </div>
                   } @else {
                     <span class="text-xs text-slate-400 italic">Sin asignar</span>
                   }
                 </td>
-                <td class="text-center">
+
+                <!-- Estado del camión (desde historial) -->
+                <td class="text-center py-3">
                   <p-tag
-                    [icon]="getTruckStatusTagInfo(truck.ordersToDeliver, truck.assignedDriver?.logged ?? false).icon"
-                    [value]="getTruckStatusTagInfo(truck.ordersToDeliver, truck.assignedDriver?.logged ?? false).message"
-                    [severity]="getTruckStatusTagInfo(truck.ordersToDeliver, truck.assignedDriver?.logged ?? false).severity"
+                    [icon]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(truck)).icon"
+                    [value]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(truck)).message"
+                    [severity]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(truck)).severity"
                     [rounded]="true"
-                    styleClass="text-[10px] uppercase">
+                    styleClass="text-[10px] uppercase whitespace-nowrap">
                   </p-tag>
                 </td>
-                <td>
-                  @if(truck.currentOrderId) {
-                    <span class="font-mono text-xs text-cyan-600 bg-cyan-50 px-2 py-1 rounded border border-cyan-100">{{ truck.currentOrderId }}</span>
-                  } @else {
-                    <span class="text-slate-400 text-xs">-</span>
-                  }
+
+                <!-- Capacidad: pedidos actuales / máximo -->
+                <td class="text-center py-3">
+                  <div class="text-sm font-bold text-slate-700">{{ truck.currentCapacity | number:'1.0-1' }} / {{ truck.maxCapacity | number:'1.0-1' }}</div>
+                  <div class="text-[10px] text-slate-400">{{ truck.ordersToDeliver }} pedidos</div>
                 </td>
-                <td class="text-right pr-4">
-                  <div class="flex justify-start gap-2">
-                    <p-button icon="pi pi-map-marker" (onClick)="focusTruckOnMap(truck); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" rounded="true" pTooltip="Localizar"></p-button>
-                    <p-button icon="pi pi-trash" (onClick)="manageTruckAssignment(truck.id, false); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
+
+                <!-- Acciones -->
+                <td class="text-right pr-4 py-3">
+                  <div class="flex justify-end gap-2">
+                    <p-button icon="pi pi-map-marker" (onClick)="focusTruckOnMap(truck); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-info" [rounded]="true" pTooltip="Localizar en mapa"></p-button>
+                    <p-button icon="pi pi-trash" (onClick)="manageTruckAssignment(truck.id, false); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-danger" [rounded]="true" pTooltip="Desvincular"></p-button>
                   </div>
                 </td>
               </tr>
@@ -114,7 +137,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="5" class="text-center p-8 text-slate-400">
+                <td colspan="6" class="text-center p-8 text-slate-400">
                   <div class="flex flex-col items-center gap-2">
                     <i class="pi pi-truck text-2xl opacity-50"></i>
                     <span>No hay camiones asignados a esta tienda.</span>
@@ -174,6 +197,12 @@
           <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col xl:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4 w-full xl:w-auto">
               <h3 class="text-xl font-bold text-slate-800">Inventario</h3>
+              @if (shop.maxCapacity > 0) {
+                <div class="flex flex-col gap-0.5 min-w-[150px]">
+                  <p-progressBar [value]="getLoadPercentage(shop.occupiedCapacity, shop.maxCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-surface-100" />
+                  <span class="text-[10px] text-slate-400 font-medium">{{ shop.occupiedCapacity | number:'1.0-1' }} / {{ shop.maxCapacity | number:'1.0-1' }}</span>
+                </div>
+              }
             </div>
 
             <div class="flex gap-2 w-full xl:w-auto">
@@ -204,8 +233,11 @@
               <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
                 <th class="pl-4 font-semibold w-16 text-center">Activo</th>
                 <th class="font-semibold">Producto</th>
-                <th class="text-center font-semibold">Stock Total</th>
-                <th class="text-right font-semibold">Acciones</th>
+                <th class="text-center font-semibold">P. Compra</th>
+                <th class="text-center font-semibold">P. Venta</th>
+                <th class="text-center font-semibold">Stock</th>
+                <th class="text-center font-semibold">Capacidad</th>
+                <th class="text-right pr-4 font-semibold">Acciones</th>
               </tr>
             </ng-template>
 
@@ -222,15 +254,33 @@
                   <div class="text-xs font-mono text-slate-400">{{ stock.productReferenceCode }}</div>
                 </td>
 
-                <td class="text-center">
-                  <p-tag [severity]="stock.units > 10 ? 'success' : 'danger'" [value]="stock.units + ' unidades'" [rounded]="true" styleClass="text-xs">
+                <td class="text-center py-3">
+                  <span class="text-sm font-medium text-slate-600">{{ formatPrice(stock.productSupplyPrice) }}</span>
+                </td>
+
+                <td class="text-center py-3">
+                  <span class="text-sm font-semibold text-slate-800">{{ formatPrice(stock.productCurrentPrice) }}</span>
+                </td>
+
+                <td class="text-center py-3">
+                  <p-tag
+                    [severity]="getStockLevelTagInfo(stock.units).severity"
+                    [value]="getStockLevelTagInfo(stock.units).message"
+                    [icon]="getStockLevelTagInfo(stock.units).icon"
+                    [rounded]="true"
+                    styleClass="text-xs"
+                    [pTooltip]="stock.units === 0 ? 'Sin stock' : stock.units <= 5 ? 'Stock crítico' : stock.units <= 20 ? 'Stock bajo' : 'Stock correcto'">
                   </p-tag>
                 </td>
 
-                <td class="text-right pr-4">
-                  <div class="flex justify-start gap-2">
-                    <p-button icon="pi pi-plus" (onClick)="selectProductForReplenish(stock); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-help" rounded="true" pTooltip="Reponer"></p-button>
-                    <p-button icon="pi pi-trash" (onClick)="manageStockAssignment(stock.id, false)" styleClass="p-button-xs p-button-outlined p-button-danger" rounded="true" pTooltip="Eliminar"></p-button>
+                <td class="text-center py-3">
+                  <span class="text-sm font-medium text-slate-600">{{ stock.units * stock.productCapacity | number:'1.0-1' }}</span>
+                </td>
+
+                <td class="text-right pr-4 py-3">
+                  <div class="flex justify-end gap-2">
+                    <p-button icon="pi pi-plus" (onClick)="selectProductForReplenish(stock); $event.stopPropagation()" styleClass="p-button-xs p-button-outlined p-button-help" [rounded]="true" pTooltip="Reponer stock"></p-button>
+                    <p-button icon="pi pi-trash" (onClick)="manageStockAssignment(stock.id, false)" styleClass="p-button-xs p-button-outlined p-button-danger" [rounded]="true" pTooltip="Eliminar stock"></p-button>
                   </div>
                 </td>
               </tr>
@@ -238,7 +288,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="4" class="text-center p-8 text-slate-400">
+                <td colspan="7" class="text-center p-8 text-slate-400">
                   <div class="flex flex-col items-center gap-2">
                     <i class="pi pi-box text-2xl opacity-50"></i>
                     <span>No hay stock disponible en esta tienda.</span>
@@ -295,14 +345,27 @@
 
             <p-message severity="info" icon="pi pi-info-circle" styleClass="mb-4">Las unidades repuestas se mostrarán inmediatamente como disponibles en esta tienda si este stock está activo.</p-message>
 
-            <div class="bg-white p-4 rounded-xl border-l-4 border-l-primary-500 border border-slate-200 mb-4 shadow-sm">
-              <div class="flex items-center gap-2 mb-1">
-                <i class="pi pi-wallet text-primary-500 text-sm"></i>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Presupuesto asignado</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div class="bg-white p-4 rounded-xl border-l-4 border-l-primary-500 border border-slate-200 shadow-sm">
+                <div class="flex items-center gap-2 mb-1">
+                  <i class="pi pi-wallet text-primary-500 text-sm"></i>
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Presupuesto asignado</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-800">
+                  {{ formatPrice(shop.assignedBudget) }}
+                </p>
               </div>
-              <p class="text-2xl font-bold text-slate-800">
-                {{ formatPrice(shop.assignedBudget) }}
-              </p>
+              @if (shop.maxCapacity > 0) {
+                <div class="bg-white p-4 rounded-xl border-l-4 border-l-amber-400 border border-slate-200 shadow-sm">
+                  <div class="flex items-center gap-2 mb-1">
+                    <i class="pi pi-box text-amber-500 text-sm"></i>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Capacidad almacén</span>
+                  </div>
+                  <p class="text-2xl font-bold text-slate-800">
+                    {{ shop.occupiedCapacity | number:'1.0-1' }} / {{ shop.maxCapacity | number:'1.0-1' }}
+                  </p>
+                </div>
+              }
             </div>
 
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
@@ -322,9 +385,21 @@
                 </div>
 
                 <div class="flex justify-between">
+                  <span class="text-slate-500">Capacidad por unidad:</span>
+                  <span class="text-slate-700 font-medium">{{ selectedStock.productCapacity | number:'1.0-2' }}</span>
+                </div>
+
+                <div class="flex justify-between">
                   <span class="text-slate-500">Unidades actuales:</span>
                   <span class="text-slate-700 font-medium">{{ selectedStock.units }} uds.</span>
                 </div>
+
+                @if (shop.maxCapacity > 0) {
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Capacidad (tras reponer):</span>
+                    <span class="text-slate-700 font-medium">{{ shop.occupiedCapacity + restockQuantity * selectedStock.productCapacity | number:'1.0-1' }} / {{ shop.maxCapacity | number:'1.0-1' }}</span>
+                  </div>
+                }
 
                 <div class="flex justify-between pt-2 mt-1 border-t border-slate-200">
                   <span class="text-slate-800 font-bold">Total reposición:</span>

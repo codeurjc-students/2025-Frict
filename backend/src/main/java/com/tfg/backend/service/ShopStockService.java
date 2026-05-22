@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class ShopStockService {
 
     public void saveAll(List<ShopStock> l){ this.shopStockRepository.saveAll(l); }
 
+    @Transactional
     public void deleteById(Long id){ this.shopStockRepository.deleteById(id); }
 
     public ShopStock findShopStockHelper(Long id) {
@@ -57,7 +59,7 @@ public class ShopStockService {
         Map<Long, Integer> stockMap = stocks.stream()
                 .collect(Collectors.toMap(
                         s -> s.getProduct().getId(),
-                        ShopStock::getUnits
+                        s -> s.isActive() ? s.getUnits() : -1
                 ));
 
         // Same order as original list
@@ -71,6 +73,8 @@ public class ShopStockService {
         if (shopId == null || product == null) {
             return null;
         }
-        return shopStockRepository.findUnitsByProductIdAndShopId(product.getId(), shopId).orElse(0);
+        return shopStockRepository.findByProduct_IdAndShop_Id(product.getId(), shopId)
+                .map(s -> s.isActive() ? s.getUnits() : -1)
+                .orElse(null);
     }
 }

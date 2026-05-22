@@ -18,6 +18,7 @@ export interface Order {
   totalDiscount: number;
   shippingCost: number;
   totalCost: number;
+  totalCapacity: number;
 
   cardNumberEnding: string;
   sendingAddress: Address;

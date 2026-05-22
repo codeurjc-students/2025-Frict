@@ -7,9 +7,9 @@ import lombok.Getter;
 import java.util.Arrays;
 
 public enum TruckStatus {
-    AVAILABLE("Disponible", "El camión está listo para comenzar a repartir pedidos."),
-    ON_ROUTE("En reparto", "El camión ha iniciado el reparto de pedidos."),
-    MAINTENANCE("En mantenimiento", "El camión está siendo revisado o reparado"),
+    REST("Descanso",               "El camión está en reposo y disponible para ser asignado."),
+    ON_ROUTE_TO_SHOP("En ruta a la tienda", "El camión se dirige a la tienda para recoger pedidos."),
+    IN_DELIVERY("En Reparto",     "El camión está en camino al destino de entrega."),
     OUT_OF_SERVICE("Fuera de servicio", "El camión ha sido dado de baja del servicio.");
 
     private final String description;

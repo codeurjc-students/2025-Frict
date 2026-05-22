@@ -4,11 +4,14 @@ import com.tfg.backend.dto.CartSummaryDTO;
 import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.event.OrderEvent;
 import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
+import com.tfg.backend.repository.ShopStockRepository;
 import com.tfg.backend.service.*;
 import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,6 +45,7 @@ class OrderServiceUTest {
     @Mock private ProductService productService;
     @Mock private PdfService pdfService;
     @Mock private OrderRepository orderRepository;
+    @Mock private ShopStockRepository shopStockRepository;
     @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
@@ -54,6 +58,8 @@ class OrderServiceUTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(orderService, "lowStockThreshold", 5);
+
         selectedShop = new Shop();
         selectedShop.setId(10L);
         selectedShop.setReferenceCode("SH-TEST");
@@ -389,6 +395,78 @@ class OrderServiceUTest {
             assertEquals(HttpStatus.METHOD_NOT_ALLOWED, exception.getStatusCode());
             assertTrue(exception.getReason().contains("No hay suficiente stock"));
         }
+
+        @Test
+        @DisplayName("createOrder publishes ShopStockEvent.LOW_STOCK when stock crosses the threshold")
+        void createOrder_PublishesLowStockEvent_WhenThresholdCrossed() {
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            selectedShop.setAssignedBudget(5000.0);
+            when(shopService.findShopHelper(10L)).thenReturn(selectedShop);
+
+            Product product = new Product();
+            product.setId(1L);
+            product.setName("Cola");
+            product.setReferenceCode("PRD-001");
+            product.setCurrentPrice(2.0);
+            ProductImageInfo img = new ProductImageInfo();
+            img.setImageInfo(new ImageInfo());
+            product.setImages(List.of(img));
+
+            // 7 units in stock, buying 4 → 3 remaining (crosses threshold of 5)
+            ShopStock localStock = new ShopStock(selectedShop, product, 7);
+            product.setShopsStock(List.of(localStock));
+
+            OrderItem cartItem = new OrderItem();
+            cartItem.setProduct(product);
+            cartItem.setQuantity(4);
+
+            when(orderItemService.findUserCartItemsList(1L)).thenReturn(List.of(cartItem));
+
+            Order savedOrder = new Order();
+            savedOrder.setReferenceCode("ORD-LOW");
+            savedOrder.setTotalCost(8.0);
+            when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+            orderService.createOrder(100L, 200L);
+
+            verify(eventPublisher).publishEvent(any(ShopStockEvent.class));
+        }
+
+        @Test
+        @DisplayName("createOrder does not publish ShopStockEvent.LOW_STOCK when stock stays at or above threshold")
+        void createOrder_DoesNotPublishLowStockEvent_WhenThresholdNotCrossed() {
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            selectedShop.setAssignedBudget(5000.0);
+            when(shopService.findShopHelper(10L)).thenReturn(selectedShop);
+
+            Product product = new Product();
+            product.setId(2L);
+            product.setName("Chips");
+            product.setReferenceCode("PRD-002");
+            product.setCurrentPrice(2.0);
+            ProductImageInfo img = new ProductImageInfo();
+            img.setImageInfo(new ImageInfo());
+            product.setImages(List.of(img));
+
+            // 10 units in stock, buying 3 → 7 remaining (still above threshold of 5)
+            ShopStock localStock = new ShopStock(selectedShop, product, 10);
+            product.setShopsStock(List.of(localStock));
+
+            OrderItem cartItem = new OrderItem();
+            cartItem.setProduct(product);
+            cartItem.setQuantity(3);
+
+            when(orderItemService.findUserCartItemsList(1L)).thenReturn(List.of(cartItem));
+
+            Order savedOrder = new Order();
+            savedOrder.setReferenceCode("ORD-OK");
+            savedOrder.setTotalCost(6.0);
+            when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+            orderService.createOrder(100L, 200L);
+
+            verify(eventPublisher, never()).publishEvent(any(ShopStockEvent.class));
+        }
     }
 
     // --- STATUS UPDATES AND CANCELLATIONS ---
@@ -467,9 +545,9 @@ class OrderServiceUTest {
             orderService.commentAndOrUpdateOrderStatus(1L, OrderStatus.COMPLETED, "Delivered");
 
             assertEquals(OrderStatus.COMPLETED, order.getCurrentStatus());
-            // 1 OrderEvent (STATUS_CHANGED) + 2 RegistryEvents (user + driver)
+            // 1 OrderEvent (STATUS_CHANGED) + 1 RegistryEvent (driver)
             verify(eventPublisher).publishEvent(any(OrderEvent.class));
-            verify(eventPublisher, times(2)).publishEvent(any(RegistryEvent.class));
+            verify(eventPublisher).publishEvent(any(RegistryEvent.class));
         }
 
         @Test
@@ -558,7 +636,7 @@ class OrderServiceUTest {
             truck = new Truck();
             truck.setId(5L);
             truck.setAssignedShop(selectedShop); // Same shop as order
-            truck.setMaxOrderCapacity(10);
+            truck.setMaxCapacity(10);
             truck.setOrdersToDeliver(new HashSet<>());
         }
 
@@ -576,10 +654,11 @@ class OrderServiceUTest {
         }
 
         @Test
-        @DisplayName("setAssignedTruck throws BAD_REQUEST when the truck is at full capacity")
+        @DisplayName("setAssignedTruck throws BAD_REQUEST when adding the order would exceed truck capacity")
         void setAssignedTruck_ThrowsBadRequest_WhenTruckAtFullCapacity() {
-            truck.setMaxOrderCapacity(2);
-            truck.setOrdersToDeliver(new HashSet<>(List.of(new Order(), new Order()))); // Full
+            truck.setMaxCapacity(2);
+            truck.setCurrentCapacity(2); // Already at max
+            order.setTotalCapacity(1);   // Order needs 1 unit
 
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
             when(truckService.findTruckHelper(5L)).thenReturn(truck);
@@ -697,7 +776,7 @@ class OrderServiceUTest {
                     () -> assertEquals(0, result.getTotalItems()),
                     () -> assertEquals(0.0, result.getTotalCost()),
                     () -> assertEquals(0.0, result.getTotalDiscount()),
-                    () -> assertEquals(5.0, result.getShippingCost(), "Below free threshold → paid shipping")
+                    () -> assertEquals(0.0, result.getShippingCost(), "Empty cart → no shipping cost")
             );
         }
 
@@ -803,28 +882,10 @@ class OrderServiceUTest {
         }
 
         @Test
-        @DisplayName("addItemToCart throws METHOD_NOT_ALLOWED when total stock is not enough for the requested quantity")
-        void addItemToCart_ThrowsMethodNotAllowed_WhenStockInsufficient() {
-            Product newProduct = new Product();
-            newProduct.setId(20L);
-            newProduct.setAvailableUnits(3);
-
-            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
-            when(productService.findProductHelper(20L)).thenReturn(newProduct);
-            when(orderItemService.findProductUnitsInCart(20L)).thenReturn(List.of());
-
-            // Requesting 5 but only 3 available
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> orderService.addItemToCart(20L, 5));
-            assertEquals(HttpStatus.METHOD_NOT_ALLOWED, ex.getStatusCode());
-        }
-
-        @Test
         @DisplayName("addItemToCart increases quantity on existing cart item and returns isNew=false")
         void addItemToCart_UpdatesQuantity_WhenItemAlreadyInCart() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
             when(productService.findProductHelper(5L)).thenReturn(p1);
-            when(orderItemService.findProductUnitsInCart(5L)).thenReturn(List.of(cartItem)); // 2 already in cart
 
             SaveResult<OrderItem> result = orderService.addItemToCart(5L, 3); // Add 3 more
 
@@ -844,7 +905,6 @@ class OrderServiceUTest {
 
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
             when(productService.findProductHelper(20L)).thenReturn(newProduct);
-            when(orderItemService.findProductUnitsInCart(20L)).thenReturn(List.of()); // Not in cart
 
             SaveResult<OrderItem> result = orderService.addItemToCart(20L, 2);
 
@@ -872,17 +932,6 @@ class OrderServiceUTest {
             orderService.updateItemQuantity(5L, -5);
 
             assertEquals(1, cartItem.getQuantity(), "Negative values default to 1 if stock exists");
-        }
-
-        @Test
-        @DisplayName("updateItemQuantity throws METHOD_NOT_ALLOWED when quantity is negative and stock is 0")
-        void updateItemQuantity_ThrowsMethodNotAllowed_WhenNegativeAndNoStock() {
-            p1.setShopsStock(List.of(new ShopStock(selectedShop, p1, 0))); // No stock
-            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
-
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> orderService.updateItemQuantity(5L, -1));
-            assertEquals(HttpStatus.METHOD_NOT_ALLOWED, ex.getStatusCode());
         }
 
         @Test

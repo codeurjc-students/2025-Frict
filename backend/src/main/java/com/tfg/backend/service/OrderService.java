@@ -6,11 +6,14 @@ import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.event.OrderEvent;
 import com.tfg.backend.event.RegistryEvent;
+import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.OrderRepository;
+import com.tfg.backend.repository.ShopStockRepository;
 import com.tfg.backend.utils.PdfService;
 import com.tfg.backend.utils.SaveResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +37,11 @@ public class OrderService {
     private final OrderItemService orderItemService;
     private final ProductService productService;
     private final OrderRepository orderRepository;
+    private final ShopStockRepository shopStockRepository;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Value("${notifications.stock.low-threshold:5}")
+    private int lowStockThreshold;
 
     // --- READ-ONLY METHODS ---
 
@@ -117,15 +124,19 @@ public class OrderService {
             if (order.getAssignedTruck() != null && order.getAssignedTruck().getId().equals(truck.getId())) {
                 return order;
             }
-            if (truck.getOrdersToDeliver().size() >= truck.getMaxOrderCapacity()) {
+            if (truck.getCurrentCapacity() + order.getTotalCapacity() > truck.getMaxCapacity()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This truck capacity is full and cannot accept any more orders.");
             }
+            truck.setCurrentCapacity(truck.getCurrentCapacity() + order.getTotalCapacity());
             order.setAssignedTruck(truck);
 
             driverUsername = Optional.of(truck).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
 
         } else {
             driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
+            if (order.getAssignedTruck() != null) {
+                order.getAssignedTruck().setCurrentCapacity(Math.max(0, order.getAssignedTruck().getCurrentCapacity() - order.getTotalCapacity()));
+            }
             order.setAssignedTruck(null);
         }
 
@@ -155,6 +166,9 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order must be assigned to your truck to perform this operation.");
         }
 
+        if (assignedTruck.getSelectedOrder() != null && assignedTruck.getSelectedOrder().getId().equals(order.getId())) {
+            assignedTruck.setSelectedOrder(null);
+        }
         order.setAssignedTruck(null);
         return order;
     }
@@ -179,33 +193,58 @@ public class OrderService {
         //Stores product references for later registries
         Map<OrderItem, String> productRefMap = new HashMap<>();
 
-        // Validate AND reduce stock in a single pass
+        String managerUsernameForStockEvents = Optional.ofNullable(selectedShop.getAssignedManager()).map(User::getUsername).orElse(null);
+
+        // Validate, reduce stock and set historical snapshot fields — products NOT nulled yet
         for (OrderItem i : cartItems) {
             ShopStock localStock = i.getProduct().getShopsStock().stream()
                     .filter(stock -> stock.getShop().getId().equals(selectedShop.getId()))
                     .findFirst()
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "El producto " + i.getProduct().getName() + " no está disponible en tu tienda seleccionada."));
 
+            if (!localStock.isActive()) {
+                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "El producto " + i.getProduct().getName() + " no está disponible en tu tienda seleccionada.");
+            }
+
             if (localStock.getUnits() < i.getQuantity()){
                 throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "No hay suficiente stock del producto " + i.getProduct().getName() + " en tu tienda seleccionada.");
             }
 
             // Decrease stock (Safe because @Transactional will roll this back if a later item throws an exception)
-            localStock.setUnits(localStock.getUnits() - i.getQuantity());
+            int oldUnits = localStock.getUnits();
+            int newUnits = oldUnits - i.getQuantity();
+            localStock.setUnits(newUnits);
+
+            // Publish LOW_STOCK when crossing the configured threshold (AFTER_COMMIT listener guarantees rollback safety)
+            if (oldUnits >= lowStockThreshold && newUnits < lowStockThreshold) {
+                Product p = i.getProduct();
+                ShopStockEvent lowStockEvent = new ShopStockEvent(
+                        ShopStockEvent.StockAction.LOW_STOCK,
+                        selectedShop.getId(), selectedShop.getName(), selectedShop.getReferenceCode(),
+                        p.getId(), p.getName(), p.getReferenceCode(),
+                        oldUnits, newUnits, lowStockThreshold,
+                        managerUsernameForStockEvents
+                );
+                eventPublisher.publishEvent(lowStockEvent);
+            }
 
             //Save the product reference
             productRefMap.put(i, i.getProduct().getReferenceCode());
 
-            // Make the order item historical
+            // Historical snapshot (product still set so constructor can read capacity)
             i.setProductName(i.getProduct().getName());
             i.setProductImageUrl(i.getProduct().getImages().getFirst().getImageUrl());
             i.setProductPrice(i.getProduct().getCurrentPrice());
-            i.setProduct(null);
+            i.setProductReferenceCode(i.getProduct().getReferenceCode());
         }
 
+        // Constructor computes totalCapacity (and all other totals) while products are still set
         Order newOrder = new Order(loggedUser, cartItems, selectedShop, address, card);
         newOrder.setFullSendingAddress(address);
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
+
+        // Null products only after the constructor has finished reading them
+        cartItems.forEach(i -> i.setProduct(null));
 
         double orderTotal = newOrder.getTotalCost();
         selectedShop.setAssignedBudget(selectedShop.getAssignedBudget() + orderTotal);
@@ -221,9 +260,16 @@ public class OrderService {
         for (OrderItem i : cartItems) {
             Registry unitsSoldRegistry = new Registry(EntityType.PRODUCT, RegistryType.PRODUCT_UNITS_SOLD, (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), productRefMap.get(i), i.getProductName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
             eventPublisher.publishEvent(new RegistryEvent(unitsSoldRegistry));
+
+            Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, - (double) i.getQuantity(), selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), productRefMap.get(i), i.getProductName(), savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+            eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
         }
+
         Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
+
+        Registry userOrderRegistry = new Registry(EntityType.USER, RegistryType.USER_ORDERS, 1.0, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
 
         Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, orderTotal, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
@@ -259,6 +305,25 @@ public class OrderService {
             OrderStatus currentStatus = order.getCurrentStatus();
             order.changeOrderStatus(orderStatus, comment);
 
+            // Release shop capacity when order leaves the shop physically
+            if (orderStatus.equals(OrderStatus.ON_DELIVERY) && order.getAssignedShop() != null) {
+                Shop shop = order.getAssignedShop();
+                shop.setOccupiedCapacity(Math.max(0, shop.getOccupiedCapacity() - order.getTotalCapacity()));
+
+                Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, -order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), order.getAssignedTruck().getAssignedDriver().getUsername(), order.getAssignedTruck().getAssignedDriver().getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
+            }
+
+            // Release truck capacity when order is completed or cancelled
+            if ((orderStatus.equals(OrderStatus.COMPLETED) || orderStatus.equals(OrderStatus.CANCELLED)) && order.getAssignedTruck() != null) {
+                Truck truck = order.getAssignedTruck();
+                truck.setCurrentCapacity(Math.max(0, truck.getCurrentCapacity() - order.getTotalCapacity()));
+            }
+
+            if (orderStatus.equals(OrderStatus.CANCELLED)) {
+                restoreStockAndCapacityOnCancellation(order, currentStatus);
+            }
+
             // Send notifications
             OrderEvent orderEvent = new OrderEvent(EventAction.STATUS_CHANGED, String.valueOf(order.getId()), currentStatus.getDescription(), orderStatus.getDescription(), order.getUser().getUsername(), managerUsername, driverUsername);
             eventPublisher.publishEvent(orderEvent);
@@ -271,8 +336,11 @@ public class OrderService {
                 };
 
                 User loggedUser = userService.findLoggedUserHelper();
-                Registry userOrderRegistry = new Registry(EntityType.ORDER, registryType, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
-                eventPublisher.publishEvent(new RegistryEvent(userOrderRegistry));
+
+                if (orderStatus.equals(OrderStatus.CANCELLED)){
+                    Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                    eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
+                }
 
                 if (order.getAssignedTruck() != null && order.getAssignedTruck().getAssignedDriver() != null){
                     User driver = order.getAssignedTruck().getAssignedDriver();
@@ -306,6 +374,14 @@ public class OrderService {
         OrderStatus currentStatus = order.getCurrentStatus();
         order.changeOrderStatus(OrderStatus.CANCELLED, reason);
 
+        // Release truck capacity on cancellation
+        if (order.getAssignedTruck() != null) {
+            Truck truck = order.getAssignedTruck();
+            truck.setCurrentCapacity(Math.max(0, truck.getCurrentCapacity() - order.getTotalCapacity()));
+        }
+
+        restoreStockAndCapacityOnCancellation(order, currentStatus);
+
         // Send notifications
         String managerUsername = Optional.ofNullable(order.getAssignedShop()).map(Shop::getAssignedManager).map(User::getUsername).orElse(null);
         String driverUsername = Optional.ofNullable(order.getAssignedTruck()).map(Truck::getAssignedDriver).map(User::getUsername).orElse(null);
@@ -314,6 +390,9 @@ public class OrderService {
 
         Registry orderRegistry = new Registry(EntityType.ORDER, RegistryType.ORDERS_CANCELLED, 1.0, order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(orderRegistry));
+
+        Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+        eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
 
         return order; // Saved automatically
     }
@@ -371,7 +450,7 @@ public class OrderService {
             }
         }
 
-        double shippingCost = (total > 50.0) ? 0.0 : 5.0;
+        double shippingCost = (total > 0.0 && total < 50.0) ? 5.0 : 0.0;
         return new CartSummaryDTO(totalItems, Math.round(subtotal * 100.0) / 100.0, Math.round(totalDiscount * 100.0) / 100.0, shippingCost, Math.round(total * 100.0) / 100.0);
     }
 
@@ -409,12 +488,6 @@ public class OrderService {
         User loggedUser = userService.findLoggedUserHelper();
         Product product = productService.findProductHelper(id);
 
-        int inCartUnits = orderItemService.findProductUnitsInCart(id).stream().mapToInt(OrderItem::getQuantity).sum();
-
-        if(inCartUnits + quantity > product.getAvailableUnits()){
-            throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Stock of product with ID " + id + " is not enough.");
-        }
-
         Optional<OrderItem> itemInCart = loggedUser.getItemsInCart().stream().filter(item -> item.getProduct().getId().equals(id)).findFirst();
 
         if (itemInCart.isPresent()) {
@@ -434,16 +507,18 @@ public class OrderService {
         OrderItem itemToUpdate = loggedUser.getItemsInCart().stream().filter(item -> item.getProduct().getId().equals(id)).findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item in cart with ID " + id + " does not exist."));
 
-        int maxAchievableQuantity = itemToUpdate.getProduct().getShopsStock().stream().mapToInt(ShopStock::getUnits).sum();
+        Long shopId = loggedUser.getSelectedShop() != null ? loggedUser.getSelectedShop().getId() : null;
+        int localStock = itemToUpdate.getProduct().getShopsStock().stream()
+                .filter(s -> s.getShop().getId().equals(shopId))
+                .mapToInt(ShopStock::getUnits)
+                .findFirst()
+                .orElse(0);
 
-        if (quantity > maxAchievableQuantity) {
-            quantity = maxAchievableQuantity;
-        } else if (quantity < 0) {
-            if(maxAchievableQuantity > 0){
-                quantity = 1;
-            } else {
-                throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Updating order item not available.");
-            }
+        if (quantity > localStock) {
+            quantity = localStock;
+        }
+        if (quantity < 1) {
+            quantity = 1;
         }
         itemToUpdate.setQuantity(quantity);
     }
@@ -461,6 +536,28 @@ public class OrderService {
         Order order = this.findOrderHelper(orderId);
         String qrToken = this.getOrderQrToken(orderId);
         return pdfService.generateOrderInvoicePdf(order, qrToken);
+    }
+
+    // --- PRIVATE HELPERS ---
+
+    private void restoreStockAndCapacityOnCancellation(Order order, OrderStatus statusBeforeCancellation) {
+        if (order.getAssignedShop() == null) return;
+
+        Long shopId = order.getAssignedShop().getId();
+
+        // Restore shop stock for each item (always, regardless of cancellation stage)
+        for (OrderItem item : order.getItems()) {
+            if (item.getProductReferenceCode() != null) {
+                shopStockRepository.findByShop_IdAndProduct_ReferenceCode(shopId, item.getProductReferenceCode())
+                        .ifPresent(stock -> stock.setUnits(stock.getUnits() + item.getQuantity()));
+            }
+        }
+
+        // Restore shop capacity only if it was already decreased (order had reached ON_DELIVERY)
+        if (statusBeforeCancellation == OrderStatus.ON_DELIVERY) {
+            Shop shop = order.getAssignedShop();
+            shop.setOccupiedCapacity(shop.getOccupiedCapacity() + order.getTotalCapacity());
+        }
     }
 
     // --- METRICS METHOD ---

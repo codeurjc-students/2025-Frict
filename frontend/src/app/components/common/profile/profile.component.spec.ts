@@ -4,6 +4,7 @@ import {provideHttpClient, HttpErrorResponse} from '@angular/common/http';
 import {ActivatedRoute, Router} from '@angular/router';
 import {of, Subject, throwError} from 'rxjs';
 import {signal} from '@angular/core';
+import {getOrderStatusTagInfo} from '../../../utils/tagManager.util';
 
 import {ProfileComponent} from './profile.component';
 import {UserService} from '../../../services/user.service';
@@ -50,7 +51,7 @@ const STUB_ORDER: Order = {
   history: [{ id: 'h1', status: 'Pedido realizado', icon: 'pi pi-shopping-cart', updates: [] }],
   user: {} as any, orderItems: [], assignedShopId: null, assignedTruckId: null,
   estimatedCompletionTime: 3, totalItems: 1, subtotalCost: 100, totalDiscount: 0,
-  shippingCost: 0, cardNumberEnding: '1234', sendingAddress: STUB_ADDRESS
+  shippingCost: 0, totalCapacity: 1, cardNumberEnding: '1234', sendingAddress: STUB_ADDRESS
 };
 
 const STUB_REVIEW: Review = {
@@ -117,7 +118,7 @@ describe('ProfileComponent', () => {
     shopServiceSpy.getShopById.and.callFake(() =>
       of({ id: 's1', name: 'Tienda 1', referenceCode: 'S-001', address: STUB_ADDRESS,
            assignedBudget: 1000, imageInfo: { id: '', imageUrl: '', s3Key: '', fileName: '' },
-           totalAvailableProducts: 10, totalAssignedTrucks: 1 })
+           totalAvailableProducts: 10, totalAssignedTrucks: 1, maxCapacity: 0, occupiedCapacity: 0 })
     );
     shopServiceSpy.getAssignedShopsPage.and.callFake(() => of(makePage([])));
     shopServiceSpy.getAllShopsList.and.callFake(() => of([]));
@@ -125,7 +126,7 @@ describe('ProfileComponent', () => {
     truckServiceSpy = jasmine.createSpyObj('TruckService', ['getAssignedTruckByDriverId']);
     truckServiceSpy.getAssignedTruckByDriverId.and.callFake(() =>
       of({ id: 't1', referenceCode: 'T-001', plateNumber: '1234-ABC',
-           history: [], address: STUB_ADDRESS, ordersToDeliver: 5, maxOrderCapacity: 10 })
+           history: [], address: STUB_ADDRESS, ordersToDeliver: 5, maxCapacity: 10, currentCapacity: 0 })
     );
 
     authServiceSpy = jasmine.createSpyObj('AuthService', [
@@ -588,12 +589,14 @@ describe('ProfileComponent', () => {
     it('should update user.addresses from the response', () => {
       const updated = [{ ...STUB_ADDRESS, alias: 'Trabajo' }];
       userServiceSpy.submitAddress.and.callFake(() => of({ ...STUB_USER, addresses: updated }));
+      component.newAddress = { ...STUB_ADDRESS };
       (component as any)['submitAddress']();
       expect(component.user.addresses).toEqual(updated);
     });
 
     it('should call cancelNewAddress after success', () => {
       spyOn(component as any, 'cancelNewAddress');
+      component.newAddress = { ...STUB_ADDRESS };
       (component as any)['submitAddress']();
       expect((component as any)['cancelNewAddress']).toHaveBeenCalled();
     });
@@ -775,31 +778,31 @@ describe('ProfileComponent', () => {
     });
   });
 
-  // ── getStatusSeverity ─────────────────────────────────────────────────────────
+  // ── getOrderStatusTagInfo (tagManager) ───────────────────────────────────────
 
-  describe('getStatusSeverity', () => {
-    it('should return "success" for "Pedido realizado"', () => {
-      expect((component as any)['getStatusSeverity']('Pedido realizado')).toBe('success');
+  describe('getOrderStatusTagInfo', () => {
+    it('should return info severity for Pedido Realizado', () => {
+      expect(getOrderStatusTagInfo('Pedido Realizado').severity).toBe('info');
     });
 
-    it('should return "warn" for "Enviado"', () => {
-      expect((component as any)['getStatusSeverity']('Enviado')).toBe('warn');
+    it('should return info severity for Enviado', () => {
+      expect(getOrderStatusTagInfo('Enviado').severity).toBe('info');
     });
 
-    it('should return "info" for "En reparto"', () => {
-      expect((component as any)['getStatusSeverity']('En reparto')).toBe('info');
+    it('should return warn severity for En Reparto', () => {
+      expect(getOrderStatusTagInfo('En Reparto').severity).toBe('warn');
     });
 
-    it('should return "contrast" for "Completado"', () => {
-      expect((component as any)['getStatusSeverity']('Completado')).toBe('contrast');
+    it('should return success severity for Completado', () => {
+      expect(getOrderStatusTagInfo('Completado').severity).toBe('success');
     });
 
-    it('should return "danger" for "Cancelado"', () => {
-      expect((component as any)['getStatusSeverity']('Cancelado')).toBe('danger');
+    it('should return danger severity for Cancelado', () => {
+      expect(getOrderStatusTagInfo('Cancelado').severity).toBe('danger');
     });
 
-    it('should return "secondary" for unknown status', () => {
-      expect((component as any)['getStatusSeverity']('Unknown')).toBe('secondary');
+    it('should return secondary severity for unknown status', () => {
+      expect(getOrderStatusTagInfo('Unknown').severity).toBe('secondary');
     });
   });
 

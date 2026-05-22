@@ -32,6 +32,12 @@ public class Shop {
 
     private double assignedBudget;
 
+    @Column(nullable = false)
+    private double maxCapacity = 0.0;
+
+    @Column(nullable = false)
+    private double occupiedCapacity = 0.0;
+
     @Embedded
     private ImageInfo image;
 

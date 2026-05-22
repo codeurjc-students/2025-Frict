@@ -15,6 +15,7 @@ import { Product } from '../../../models/product.model';
 import { PageResponse } from '../../../models/pageResponse.model';
 import { BreadcrumbService } from '../../../utils/breadcrumb.service';
 import { AuthService } from '../../../services/auth.service';
+import { provideHttpClient } from '@angular/common/http';
 
 const mockAddress = {
   id: 'addr-1',
@@ -35,6 +36,8 @@ const mockShop: Shop = {
   name: 'Tienda Central',
   address: { ...mockAddress },
   assignedBudget: 1000,
+  maxCapacity: 0,
+  occupiedCapacity: 0,
   imageInfo: { id: 'img-1', imageUrl: 'http://example.com/img.jpg', s3Key: 'k1', fileName: 'img.jpg' },
   totalAvailableProducts: 5,
   totalAssignedTrucks: 2
@@ -48,7 +51,8 @@ const mockTruck: Truck = {
   shopId: 'shop-1',
   address: { ...mockAddress },
   ordersToDeliver: 2,
-  maxOrderCapacity: 5
+  maxCapacity: 5,
+  currentCapacity: 2
 };
 
 const mockStock: ShopStock = {
@@ -62,6 +66,7 @@ const mockStock: ShopStock = {
   productReferenceCode: 'PR-001',
   productSupplyPrice: 10,
   productCurrentPrice: 15,
+  productCapacity: 2.0,
   units: 20,
   active: true
 };
@@ -75,6 +80,7 @@ const mockProduct: Product = {
   supplyPrice: 8,
   previousPrice: 12,
   currentPrice: 14,
+  capacity: 1,
   active: true,
   discount: '0',
   categories: [],
@@ -83,6 +89,7 @@ const mockProduct: Product = {
   shopsWithStock: 3,
   averageRating: 4.5,
   totalReviews: 10,
+  specifications: [],
   createdAt: '2025-01-01'
 };
 
@@ -148,6 +155,7 @@ describe('ShopDetailsComponent', () => {
       imports: [ShopDetailsComponent],
       providers: [
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: ShopService, useValue: shopServiceSpy },
         { provide: TruckService, useValue: truckServiceSpy },

@@ -8,6 +8,8 @@ export interface Shop {
   name: string;
   address: Address;
   assignedBudget: number;
+  maxCapacity: number;
+  occupiedCapacity: number;
   imageInfo: ImageInfo;
   totalAvailableProducts: number;
   totalAssignedTrucks: number;

@@ -3,6 +3,7 @@ import {ActivatedRoute, NavigationEnd, Router, RouterOutlet} from '@angular/rout
 import {filter, map, mergeMap} from 'rxjs';
 import {AuthService} from './services/auth.service';
 import {OrderService} from './services/order.service';
+import {DriverLocationPingService} from './services/driver-location-ping.service';
 import {ConfirmDialog} from 'primeng/confirmdialog';
 import {Toast} from 'primeng/toast';
 import {UiService} from './utils/ui.service';
@@ -21,7 +22,9 @@ export class AppComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private orderService: OrderService,
     private authService: AuthService,
-    private uiService: UiService
+    private uiService: UiService,
+    // Eager-instantiate the ping service so its effect() can observe login state
+    private driverLocationPingService: DriverLocationPingService
   ) {
     effect(() => {
       if (this.authService.isLogged() && this.authService.isUser()) {

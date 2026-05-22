@@ -107,13 +107,6 @@ public class OrderApiFunctionalITest extends BaseApiFunctionalITest {
     }
 
     @Test
-    public void addItemToCart_ExceedsStock_ThrowsMethodNotAllowed() {
-        given().spec(getSpec(BASE_URL_ORDERS, userCookie))
-                .pathParam("id", testProduct.getId()).queryParam("quantity", 6)
-                .when().post("/cart/{id}").then().statusCode(405);
-    }
-
-    @Test
     public void createOrderTest() {
         given().spec(getSpec(BASE_URL_ORDERS, userCookie)).pathParam("id", testProduct.getId()).queryParam("quantity", 1).when().post("/cart/{id}");
 

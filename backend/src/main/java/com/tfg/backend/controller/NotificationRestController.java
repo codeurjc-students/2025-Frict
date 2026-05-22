@@ -2,6 +2,7 @@ package com.tfg.backend.controller;
 
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.NotificationDTO;
+import com.tfg.backend.dto.NotificationLocationDTO;
 import com.tfg.backend.dto.PageResponse;
 import com.tfg.backend.model.Notification;
 import com.tfg.backend.service.NotificationService;
@@ -93,6 +94,14 @@ public class NotificationRestController {
     public ResponseEntity<Boolean> markAllAsRead(Authentication authentication) {
         notificationService.markAllAsRead(authentication.getName());
         return ResponseEntity.ok(true);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<NotificationLocationDTO> getNotificationLocation(
+            @PathVariable("id") String id,
+            @RequestParam(defaultValue = "5") int size,
+            Authentication authentication) {
+        return ResponseEntity.ok(notificationService.getNotificationLocation(id, authentication.getName(), size));
     }
 
     @DeleteMapping("/{id}")

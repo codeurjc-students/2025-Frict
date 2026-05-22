@@ -109,6 +109,7 @@ describe('UsersManagementComponent', () => {
     totalDiscount: 0,
     shippingCost: 5,
     totalCost: 105,
+    totalCapacity: 1,
     cardNumberEnding: '4242',
     sendingAddress: {
       id: 'addr-1', alias: 'Casa', street: 'Calle Mayor', number: '1',

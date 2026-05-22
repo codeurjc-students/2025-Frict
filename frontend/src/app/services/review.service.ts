@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import {Review} from '../models/review.model';
+import {Review, ReviewStats} from '../models/review.model';
 import {PageResponse} from '../models/pageResponse.model';
 
 @Injectable({
@@ -32,6 +32,20 @@ export class ReviewService {
     let params = new HttpParams();
     params = params.append('productId', id);
     return this.http.get<Review[]>(this.apiUrl + `/`, { params });
+  }
+
+  public getProductReviews(productId: string, page: number, size: number, sort: string): Observable<PageResponse<Review>> {
+    const params = new HttpParams()
+      .set('productId', productId)
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sort', sort);
+    return this.http.get<PageResponse<Review>>(this.apiUrl + `/product`, { params });
+  }
+
+  public getProductReviewStats(productId: string): Observable<ReviewStats> {
+    const params = new HttpParams().set('productId', productId);
+    return this.http.get<ReviewStats>(this.apiUrl + `/product/stats`, { params });
   }
 
   //Creates and edits reviews

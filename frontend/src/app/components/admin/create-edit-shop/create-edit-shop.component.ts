@@ -1,5 +1,5 @@
-import {AfterViewInit, Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal, ViewChild} from '@angular/core';
-import {isPlatformBrowser} from '@angular/common';
+import {AfterViewInit, Component, DestroyRef, inject, OnDestroy, OnInit, PLATFORM_ID, signal, ViewChild} from '@angular/core';
+import {isPlatformBrowser, NgClass} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -10,7 +10,7 @@ import {InputNumber} from 'primeng/inputnumber';
 import {Button} from 'primeng/button';
 import {FileUpload} from 'primeng/fileupload';
 import {MessageService} from 'primeng/api';
-import {DomSanitizer} from '@angular/platform-browser';
+import {SafeUrlPipe} from '../../../utils/safe-url.pipe';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {ShopService} from '../../../services/shop.service';
 import {Shop} from '../../../models/shop.model';
@@ -24,6 +24,7 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
   selector: 'app-create-edit-shop',
   standalone: true,
   imports: [
+    NgClass,
     Button,
     ReactiveFormsModule,
     InputText,
@@ -32,19 +33,19 @@ import {BreadcrumbService} from '../../../utils/breadcrumb.service';
     FormsModule,
     RouterLink,
     LoadingScreenComponent,
-    BreadcrumbReloadComponent
+    BreadcrumbReloadComponent,
+    SafeUrlPipe
   ],
   templateUrl: './create-edit-shop.component.html',
   styleUrl: './create-edit-shop.component.css'
 })
-export class CreateEditShopComponent implements OnInit, AfterViewInit {
+export class CreateEditShopComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private messageService = inject(MessageService);
   private route = inject(ActivatedRoute);
   private shopService = inject(ShopService);
-  private sanitizer = inject(DomSanitizer);
   private locationService = inject(LocationService);
   private breadcrumbService = inject(BreadcrumbService);
   private platformId = inject(PLATFORM_ID);
@@ -55,6 +56,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       name: ['', [Validators.required, Validators.minLength(3)]],
       referenceCode: [{ value: '', disabled: true }],
       assignedBudget: [0, [Validators.required, Validators.min(0.01)]],
+      maxCapacity: [0, [Validators.required, Validators.min(0)]],
       // Group address
       address: this.fb.group({
         alias: ['', []],
@@ -94,6 +96,7 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.shopId.set(this.route.snapshot.paramMap.get('id'));
     this.setupAddressListener();
+    this.setupNameAliasSync();
     this.loadData();
   }
 
@@ -120,12 +123,14 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     if (!this.shopId()) {
       this.shopForm.reset({
         assignedBudget: 0,
+        maxCapacity: 0,
         address: {
           latitude: 0,
           longitude: 0
         }
       });
 
+      this.revokeNewImage();
       this.newImage.set(null);
       this.existingImage.set(null);
       if (this.fileUploader) {
@@ -133,6 +138,23 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
       }
     }
     this.loadData();
+  }
+
+  isInvalid(controlPath: string): boolean {
+    const ctrl = this.shopForm.get(controlPath);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  private setupNameAliasSync() {
+    this.shopForm.get('name')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(name => {
+      const aliasControl = this.shopForm.get('address.alias');
+      const currentAlias: string = aliasControl?.value ?? '';
+      if (!currentAlias || currentAlias.startsWith('Ubicación de ')) {
+        aliasControl?.setValue(`Ubicación de ${name}`, { emitEvent: false });
+      }
+    });
   }
 
   private setupAddressListener() {
@@ -166,6 +188,12 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           summary: 'Ubicación actualizada',
           detail: 'Se ha movido el marcador según la dirección ingresada.'
         });
+      } else {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Dirección no encontrada',
+          detail: 'No se encontraron coordenadas para la dirección indicada.'
+        });
       }
     });
   }
@@ -194,7 +222,8 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
             name: shop.name,
             referenceCode: shop.referenceCode,
             address: shop.address,
-            assignedBudget: shop.assignedBudget
+            assignedBudget: shop.assignedBudget,
+            maxCapacity: shop.maxCapacity
           }, { emitEvent: false });
 
           this.loading = false;
@@ -316,6 +345,11 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
           }, 50);
         } else {
           this.isGeocodingActive = true;
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Dirección no encontrada',
+            detail: 'No se encontró ninguna dirección para la ubicación indicada.'
+          });
         }
       },
       error: (err) => {
@@ -334,25 +368,27 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
   }
 
   // --- IMAGE LOGIC (SINGLE) ---
+  private revokeNewImage() {
+    const img = this.newImage();
+    if (img) URL.revokeObjectURL(img.previewUrl);
+  }
+
   onFileSelect(event: any) {
     const file = event.files[0];
-    if (file && file.size <= this.MAX_SIZE) {
-      const preview = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(file));
-
-      // Replace previous images
-      this.newImage.set({
-        file: file,
-        previewUrl: preview
-      });
+    if (file && file.type.startsWith('image/') && file.size <= this.MAX_SIZE) {
+      this.revokeNewImage();
+      this.newImage.set({ file, previewUrl: URL.createObjectURL(file) });
       this.existingImage.set(null);
     }
   }
 
   onFileRemove() {
+    this.revokeNewImage();
     this.newImage.set(null);
   }
 
   removeImage() {
+    this.revokeNewImage();
     this.newImage.set(null);
     this.existingImage.set(null);
     if (this.fileUploader) {
@@ -360,10 +396,17 @@ export class CreateEditShopComponent implements OnInit, AfterViewInit {
     }
   }
 
+  ngOnDestroy() {
+    this.revokeNewImage();
+  }
+
   restoreImage() {
     const oldImage = this.shop()?.imageInfo.imageUrl;
-    if (oldImage){
+    if (oldImage) {
+      this.revokeNewImage();
+      this.newImage.set(null);
       this.existingImage.set(oldImage);
+      if (this.fileUploader) this.fileUploader.clear();
     }
   }
 

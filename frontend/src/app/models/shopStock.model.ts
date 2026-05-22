@@ -10,6 +10,7 @@ export interface ShopStock {
   productReferenceCode: string;
   productSupplyPrice: number;
   productCurrentPrice: number;
+  productCapacity: number;
 
   units: number;
   active: boolean;

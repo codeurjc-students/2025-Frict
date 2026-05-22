@@ -997,6 +997,36 @@ class UserServiceUTest {
         }
 
         @Test
+        @DisplayName("getUsernamesByFavoritedProductAndSelectedShop returns empty list when either ID is null")
+        void getUsernamesByFavoritedProductAndSelectedShop_NullId_ReturnsEmpty() {
+            assertTrue(userService.getUsernamesByFavoritedProductAndSelectedShop(null, 5L).isEmpty());
+            assertTrue(userService.getUsernamesByFavoritedProductAndSelectedShop(10L, null).isEmpty());
+            verify(userRepository, never()).findUsernamesByFavoritedProductAndSelectedShop(any(), any());
+        }
+
+        @Test
+        @DisplayName("getUsernamesByFavoritedProductAndSelectedShop delegates to repository when both IDs are present")
+        void getUsernamesByFavoritedProductAndSelectedShop_DelegatesToRepository() {
+            when(userRepository.findUsernamesByFavoritedProductAndSelectedShop(10L, 5L)).thenReturn(List.of("alice", "bob"));
+            assertEquals(List.of("alice", "bob"), userService.getUsernamesByFavoritedProductAndSelectedShop(10L, 5L));
+        }
+
+        @Test
+        @DisplayName("getUsernamesBySelectedShopAndProductInFavoritesOrCart returns empty list when either ID is null")
+        void getUsernamesBySelectedShopAndProductInFavoritesOrCart_NullId_ReturnsEmpty() {
+            assertTrue(userService.getUsernamesBySelectedShopAndProductInFavoritesOrCart(null, 5L).isEmpty());
+            assertTrue(userService.getUsernamesBySelectedShopAndProductInFavoritesOrCart(10L, null).isEmpty());
+            verify(userRepository, never()).findUsernamesBySelectedShopAndProductInFavoritesOrCart(any(), any());
+        }
+
+        @Test
+        @DisplayName("getUsernamesBySelectedShopAndProductInFavoritesOrCart delegates to repository when both IDs are present")
+        void getUsernamesBySelectedShopAndProductInFavoritesOrCart_DelegatesToRepository() {
+            when(userRepository.findUsernamesBySelectedShopAndProductInFavoritesOrCart(10L, 5L)).thenReturn(List.of("charlie"));
+            assertEquals(List.of("charlie"), userService.getUsernamesBySelectedShopAndProductInFavoritesOrCart(10L, 5L));
+        }
+
+        @Test
         @DisplayName("findAll/findById/findByUsername/findByEmail delegate to the repository")
         void simpleFinders_DelegateToRepository() {
             when(userRepository.findAll()).thenReturn(List.of(loggedUser));

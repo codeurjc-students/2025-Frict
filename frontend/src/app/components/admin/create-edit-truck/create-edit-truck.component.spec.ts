@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
 import {provideNoopAnimations} from '@angular/platform-browser/animations';
 import {PLATFORM_ID} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -25,12 +25,12 @@ const mockAddress: any = {
 const mockTruck: Truck = {
   id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB12CD',
   history: [], shopId: 'shop-1', address: mockAddress,
-  ordersToDeliver: 2, maxOrderCapacity: 10
+  ordersToDeliver: 2, maxCapacity: 10, currentCapacity: 0
 };
 
 const mockShop: Shop = {
   id: 'shop-1', referenceCode: 'SHP-001', name: 'Tienda Test',
-  address: mockAddress, assignedBudget: 10000,
+  address: mockAddress, assignedBudget: 10000, maxCapacity: 0, occupiedCapacity: 0,
   imageInfo: { id: 'si1', imageUrl: 'http://img.jpg', s3Key: 'sk1', fileName: 'f.jpg' },
   totalAvailableProducts: 50, totalAssignedTrucks: 1
 };
@@ -40,7 +40,7 @@ const mockShop: Shop = {
 function fillValidForm(component: CreateEditTruckComponent) {
   component.truckForm.patchValue({
     plateNumber: 'AB12CD',
-    maxOrderCapacity: 10,
+    maxCapacity: 10,
     address: {
       street: 'Calle Mayor', number: '10', postalCode: '28001',
       city: 'Madrid', country: 'España', latitude: 40.4168, longitude: -3.7038
@@ -99,8 +99,9 @@ describe('CreateEditTruckComponent', () => {
     routerEvents$ = new Subject<any>();
 
     truckServiceSpy = jasmine.createSpyObj('TruckService', [
-      'getTruckById', 'createTruck', 'updateTruck'
+      'getTruckById', 'createTruck', 'updateTruck', 'checkPlateNumberTaken'
     ]);
+    truckServiceSpy.checkPlateNumberTaken.and.callFake(() => of(false));
     shopServiceSpy = jasmine.createSpyObj('ShopService', [
       'getShopById', 'getAllShopsList'
     ]);
@@ -148,7 +149,7 @@ describe('CreateEditTruckComponent', () => {
     });
 
     it('should initialise form with default values', () => {
-      expect(component.truckForm.get('maxOrderCapacity')?.value).toBe(10);
+      expect(component.truckForm.get('maxCapacity')?.value).toBe(10);
       expect(component.truckForm.get('address.country')?.value).toBe('España');
     });
 
@@ -183,7 +184,7 @@ describe('CreateEditTruckComponent', () => {
 
     it('should patch form with truck data', () => {
       expect(component.truckForm.get('plateNumber')?.value).toBe('AB12CD');
-      expect(component.truckForm.get('maxOrderCapacity')?.value).toBe(10);
+      expect(component.truckForm.get('maxCapacity')?.value).toBe(10);
     });
 
     it('should set loading=false after success', () => {
@@ -345,19 +346,20 @@ describe('CreateEditTruckComponent', () => {
       expect(component.truckForm.get('plateNumber')?.invalid).toBeTrue();
     });
 
-    it('should be valid when plateNumber meets minimum length', () => {
+    it('should be valid when plateNumber meets minimum length', fakeAsync(() => {
       fillValidForm(component);
+      tick(300); // drain the 250ms async validator debounce
       expect(component.truckForm.get('plateNumber')?.valid).toBeTrue();
+    }));
+
+    it('should be invalid when maxCapacity is 0', () => {
+      component.truckForm.patchValue({ maxCapacity: 0 });
+      expect(component.truckForm.get('maxCapacity')?.invalid).toBeTrue();
     });
 
-    it('should be invalid when maxOrderCapacity is 0', () => {
-      component.truckForm.patchValue({ maxOrderCapacity: 0 });
-      expect(component.truckForm.get('maxOrderCapacity')?.invalid).toBeTrue();
-    });
-
-    it('should be valid when maxOrderCapacity >= 1', () => {
-      component.truckForm.patchValue({ maxOrderCapacity: 5 });
-      expect(component.truckForm.get('maxOrderCapacity')?.valid).toBeTrue();
+    it('should be valid when maxCapacity >= 1', () => {
+      component.truckForm.patchValue({ maxCapacity: 5 });
+      expect(component.truckForm.get('maxCapacity')?.valid).toBeTrue();
     });
 
     it('address street field should be required', () => {

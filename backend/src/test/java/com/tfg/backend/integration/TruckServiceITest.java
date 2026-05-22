@@ -65,7 +65,7 @@ public class TruckServiceITest {
         activeTruck.setReferenceCode("TR-001");
         activeTruck.setAssignedShop(mainShop);
         activeTruck.setAssignedDriver(driver);
-        activeTruck.changeTruckStatus(TruckStatus.AVAILABLE, "Initial state");
+        activeTruck.changeTruckStatus(TruckStatus.REST, "Initial state");
         truckRepository.save(activeTruck);
 
         // 5. Create Order
@@ -90,7 +90,7 @@ public class TruckServiceITest {
     void testCreateTruck_SavesInDatabase() {
         TruckDTO dto = new TruckDTO();
         dto.setPlateNumber("5555-BBB");
-        dto.setMaxOrderCapacity(20);
+        dto.setMaxCapacity(20);
 
         AddressDTO addr = new AddressDTO();
         addr.setStreet("Industrial Way");
@@ -144,8 +144,8 @@ public class TruckServiceITest {
     @Test
     @DisplayName("Metrics: Correctly counts trucks by status and manager ID using SQL joins")
     void testTruckMetrics_RepositoryQueries() {
-        long adminCount = truckRepository.countTrucksByStatus(List.of(TruckStatus.AVAILABLE));
-        long managerCount = truckRepository.countTrucksByManagerIdAndStatus(manager.getId(), List.of(TruckStatus.AVAILABLE));
+        long adminCount = truckRepository.countTrucksByStatus(List.of(TruckStatus.REST));
+        long managerCount = truckRepository.countTrucksByManagerIdAndStatus(manager.getId(), List.of(TruckStatus.REST));
 
         assertAll(
                 () -> assertEquals(1, adminCount, "Admin should see 1 available truck"),

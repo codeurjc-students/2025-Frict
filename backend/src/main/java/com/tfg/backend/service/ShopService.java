@@ -1,12 +1,16 @@
 package com.tfg.backend.service;
 
+import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.StatDTO;
+import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.event.ShopEvent;
+import com.tfg.backend.event.ShopStockEvent;
 import com.tfg.backend.model.*;
 import com.tfg.backend.repository.ShopRepository;
 import com.tfg.backend.utils.GlobalDefaults;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +34,9 @@ public class ShopService {
     private final ProductService productService;
     private final ShopRepository shopRepository;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Value("${notifications.stock.low-threshold:5}")
+    private int lowStockThreshold;
 
     // --- READ-ONLY METHODS ---
 
@@ -89,12 +96,41 @@ public class ShopService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "There is not enough budget in this shop to complete this operation.");
         }
 
-        targetStock.setUnits(targetStock.getUnits() + units);
+        double addedCapacity = targetStock.getProduct().getCapacity() * units;
+        if (restockingShop.getMaxCapacity() > 0 &&
+                restockingShop.getOccupiedCapacity() + addedCapacity > restockingShop.getMaxCapacity()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No hay suficiente capacidad de almacenamiento en la tienda.");
+        }
+
+        int oldUnits = targetStock.getUnits();
+        int newUnits = oldUnits + units;
+        targetStock.setUnits(newUnits);
         restockingShop.setAssignedBudget(restockingShop.getAssignedBudget() - supplyCost);
+        restockingShop.setOccupiedCapacity(restockingShop.getOccupiedCapacity() + addedCapacity);
 
         //Send notifications
         ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(targetStock.getId()), true, null, null);
         eventPublisher.publishEvent(shopEvent);
+
+        // Specific RESTOCKED event with product + shop context for tailored, role-aware notifications
+        Product product = targetStock.getProduct();
+        String managerUsername = restockingShop.getAssignedManager() != null ? restockingShop.getAssignedManager().getUsername() : null;
+        ShopStockEvent stockEvent = new ShopStockEvent(
+                ShopStockEvent.StockAction.RESTOCKED,
+                restockingShop.getId(), restockingShop.getName(), restockingShop.getReferenceCode(),
+                product.getId(), product.getName(), product.getReferenceCode(),
+                oldUnits, newUnits, lowStockThreshold,
+                managerUsername
+        );
+        eventPublisher.publishEvent(stockEvent);
+
+        Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, (double) units, restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+        eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
+
+        Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, (double) units * product.getCapacity(), restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+        eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
+
         return targetStock;
     }
 
@@ -102,19 +138,21 @@ public class ShopService {
     public ShopStock setAssignedStock(Long shopId, Long stockId, boolean state){
         Shop shop = this.findShopHelper(shopId);
         ShopStock targetStock;
+        Product product = productService.findProductHelper(stockId);
 
         if (state) {
-            Product product = productService.findProductHelper(stockId);
             targetStock = this.shopStockService.save(new ShopStock(shop, product, 0));
         } else {
             targetStock = shopStockService.findShopStockHelper(stockId);
             this.shopStockService.deleteById(stockId);
+
+            Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, - (double) targetStock.getUnits(), shop.getReferenceCode(), shop.getName(), shop.getAssignedManager().getUsername(), shop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+            eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
         }
 
         //Send notifications
         ShopEvent shopEvent = new ShopEvent(EventAction.STATUS_CHANGED, String.valueOf(targetStock.getId()), false, null, null);
         eventPublisher.publishEvent(shopEvent);
-
 
         return targetStock;
     }

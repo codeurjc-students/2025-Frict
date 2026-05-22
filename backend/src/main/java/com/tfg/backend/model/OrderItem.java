@@ -35,6 +35,9 @@ public class OrderItem {
     @Column(name = "product_price_snapshot")
     private double productPrice;
 
+    @Column(name = "product_ref_snapshot")
+    private String productReferenceCode;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

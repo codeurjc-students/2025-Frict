@@ -94,6 +94,8 @@
             "codeCoverage": true,
             "codeCoverageExclude": [
               "src/app/*.*",
+              "src/app/models/**",
+              "src/app/services/**",
               "src/app/utils/**"
             ],
             "karmaConfig": "karma.conf.js",

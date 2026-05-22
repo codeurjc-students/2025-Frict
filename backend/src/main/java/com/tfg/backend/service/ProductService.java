@@ -1,9 +1,7 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.dto.CategoryDTO;
-import com.tfg.backend.dto.EntityType;
-import com.tfg.backend.dto.EventAction;
-import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.*;
+import com.tfg.backend.utils.ProductSpecifications;
 import com.tfg.backend.event.ProductEvent;
 import com.tfg.backend.event.RegistryEvent;
 import com.tfg.backend.model.*;
@@ -51,10 +49,26 @@ public class ProductService {
         return productsPage;
     }
 
-    public Page<Product> getFilteredProducts(String searchTerm, List<Long> categoryIds, Pageable pageInfo) {
-        Page<Product> productsPage = productRepository.findByFilters(searchTerm, categoryIds, pageInfo);
+    public Page<Product> getFilteredProducts(String searchTerm, List<Long> categoryIds,
+                                             List<SpecFilterDTO> specFilters, Pageable pageInfo) {
+        var spec = ProductSpecifications.hasSearchTerm(searchTerm).and(ProductSpecifications.hasCategories(categoryIds));
+        if (specFilters != null) {
+            for (SpecFilterDTO f : specFilters) {
+                spec = spec.and(ProductSpecifications.hasSpec(f));
+            }
+        }
+        Page<Product> productsPage = productRepository.findAll(spec, pageInfo);
         enrichWithStock(productsPage.getContent());
         return productsPage;
+    }
+
+    public Map<String, List<String>> getSpecsCatalog() {
+        List<String> names = productRepository.findAllDistinctSpecNames();
+        Map<String, List<String>> catalog = new LinkedHashMap<>();
+        for (String name : names) {
+            catalog.put(name, productRepository.findDistinctValuesBySpecName(name));
+        }
+        return catalog;
     }
 
     public Optional<Product> findById(Long id) {
@@ -140,6 +154,98 @@ public class ProductService {
     }
 
 
+    public Page<Product> getTopSalesByCategory(Long categoryId, int page, int size) {
+
+        Category rootCategory = categoryService.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("La categoría no existe"));
+
+        Set<Long> familyCategoryIds = categoryService.findFamilyCategoryIds(categoryId);
+
+        Set<String> categoryProductRefs = productRepository.findReferenceCodesByCategoryIds(familyCategoryIds);
+
+        List<Product> finalProducts = new ArrayList<>();
+
+        if (!categoryProductRefs.isEmpty()) {
+            List<String> topSalesRefs = registryService.getTopSalesProductReferencesInList(categoryProductRefs, size);
+
+            if (!topSalesRefs.isEmpty()) {
+                List<Product> topProductsFromDb = productRepository.findByReferenceCodeIn(topSalesRefs);
+
+                Map<String, Product> productMap = topProductsFromDb.stream()
+                        .collect(Collectors.toMap(Product::getReferenceCode, p -> p));
+
+                for (String ref : topSalesRefs) {
+                    if (productMap.containsKey(ref)) {
+                        finalProducts.add(productMap.get(ref));
+                    }
+                }
+            }
+        }
+
+        if (finalProducts.size() < size) {
+            int missingCount = size - finalProducts.size();
+
+            Set<String> alreadySelectedRefs = finalProducts.stream()
+                    .map(Product::getReferenceCode)
+                    .collect(Collectors.toSet());
+
+            if (alreadySelectedRefs.isEmpty()) {
+                alreadySelectedRefs.add("");
+            }
+
+            Pageable fallbackPageable = PageRequest.of(0, missingCount);
+            List<Product> fallbackProducts = productRepository.findActiveProductsByCategoryIdsExcluding(
+                    familyCategoryIds, alreadySelectedRefs, fallbackPageable).getContent();
+
+            finalProducts.addAll(fallbackProducts);
+        }
+
+        enrichWithStock(finalProducts);
+
+        return new PageImpl<>(finalProducts, PageRequest.of(page, size), finalProducts.size());
+    }
+
+
+    public List<org.bson.Document> getCategoryTimeline(Long categoryId, String dataType, int days) {
+        Category rootCategory = categoryService.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("La categoría no existe"));
+        Set<Long> familyCategoryIds = categoryService.findFamilyCategoryIds(categoryId);
+        Set<String> productRefs = productRepository.findReferenceCodesByCategoryIds(familyCategoryIds);
+
+        return registryService.getProductsTimelineStats(productRefs, dataType, days);
+    }
+
+
+    public Map<String, Object> getCategoryGlobalMetrics(Long categoryId) {
+        if (!productRepository.existsById(categoryId)) { // O con tu categoryRepository según corresponda
+            throw new EntityNotFoundException("La categoría no existe");
+        }
+
+        Set<Long> familyCategoryIds = categoryService.findFamilyCategoryIds(categoryId);
+        Set<String> productRefs = productRepository.findReferenceCodesByCategoryIds(familyCategoryIds);
+
+        if (productRefs.isEmpty()) {
+            return Map.of(
+                    "totalShops", 0L,
+                    "totalViews", 0L,
+                    "totalSales", 0L,
+                    "totalProducts", 0L
+            );
+        }
+
+        long shopsCount = productRepository.countDistinctShopsByProductReferences(productRefs);
+        long viewsCount = registryService.getTotalViewsForProducts(productRefs);
+        long salesCount = registryService.getTotalSalesForProducts(productRefs);
+        long productsCount = productRefs.size();
+
+        return Map.of(
+                "totalShops", shopsCount,
+                "totalViews", viewsCount,
+                "totalSales", salesCount,
+                "totalProducts", productsCount
+        );
+    }
+
 
     // --- WRITING METHODS (override Transactional) ---
 
@@ -183,7 +289,7 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteById(Long id) {
+    protected void deleteById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("The product that is being deleted does not exist"));
         productRepository.delete(product);
@@ -210,7 +316,9 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductDTO dto){
         Product product = new Product(dto.getName(), dto.getDescription(), dto.getCurrentPrice(), dto.getSupplyPrice());
+        product.setCapacity(dto.getCapacity());
         product.setCategories(processCategories(dto.getCategories()));
+        applySpecifications(product, dto.getSpecifications());
 
         //Send notifications
         List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
@@ -228,9 +336,11 @@ public class ProductService {
         product.setDescription(dto.getDescription());
         product.setSupplyPrice(dto.getSupplyPrice());
         product.setCurrentPrice(dto.getCurrentPrice());
+        product.setCapacity(dto.getCapacity());
         product.setActive(dto.isActive());
 
         product.setCategories(processCategories(dto.getCategories()));
+        applySpecifications(product, dto.getSpecifications());
 
         //Send notifications
         List<String> managerUsernames = product.getShopsStock().stream().map(s -> s.getShop().getAssignedManager()).filter(Objects::nonNull).map(User::getUsername).toList();
@@ -327,12 +437,12 @@ public class ProductService {
     }
 
     @Transactional
-    public Product updateProductImages(Long id, List<ProductImageInfo> existingImages, List<MultipartFile> newImages){
+    public Product updateProductImages(Long id, List<ImageInfo> existingImages, List<MultipartFile> newImages){
         Product product = this.findProductHelper(id);
         List<ProductImageInfo> currentImages = product.getImages();
 
         Set<String> keepS3Keys = (existingImages != null)
-                ? existingImages.stream().map(ProductImageInfo::getS3Key).filter(Objects::nonNull).collect(Collectors.toSet())
+                ? existingImages.stream().map(ImageInfo::getS3Key).filter(Objects::nonNull).collect(Collectors.toSet())
                 : Collections.emptySet();
 
         // 1. Delete discarded ones
@@ -407,6 +517,16 @@ public class ProductService {
         }
 
         return categories;
+    }
+
+    private void applySpecifications(Product product, List<ProductSpecDTO> dtos) {
+        product.getSpecifications().clear();
+        if (dtos == null) return;
+        for (ProductSpecDTO dto : dtos) {
+            if (dto.getName() != null && !dto.getName().isBlank() && dto.getValues() != null && !dto.getValues().isEmpty()) {
+                product.getSpecifications().add(new ProductSpec(dto.getName(), dto.getValues(), product));
+            }
+        }
     }
 
     private void checkProductFields(Product p){

@@ -17,3 +17,15 @@ export interface Review {
   createdAt: string;
   recommended: boolean;
 }
+
+export interface ReviewStats {
+  totalReviews: number;
+  averageRating: number;
+  star5: number;
+  star4: number;
+  star3: number;
+  star2: number;
+  star1: number;
+  recommendationPercentage: number;
+  userReviewed: boolean;
+}

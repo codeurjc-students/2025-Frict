@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +48,9 @@ public class Product {
 
     private double currentPrice;
 
+    @Column(nullable = false)
+    private double capacity = 1.0;
+
     @Column(name = "is_active")
     private boolean active = true;
 
@@ -67,6 +71,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShopStock> shopsStock = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductSpec> specifications = new ArrayList<>();
+
     //In-memory only field: Allows passing the selected local stock calculations back to ProductDTO entities
     @Transient
     private Integer availableUnits;
@@ -75,6 +82,12 @@ public class Product {
     @Column(nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private LocalDateTime createdAt;
+
+    @Formula("(SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = id)")
+    private double averageRating;
+
+    @Formula("(CASE WHEN previous_price > 0 AND current_price < previous_price THEN (previous_price - current_price) / previous_price ELSE 0 END)")
+    private double discountPercentage;
 
     public Product() {
     }

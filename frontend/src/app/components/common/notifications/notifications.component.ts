@@ -1,4 +1,6 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
+import {filter, skip} from 'rxjs';
 import {DatePipe, NgClass, UpperCasePipe} from '@angular/common';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
 import {PageResponse} from '../../../models/pageResponse.model';
@@ -32,6 +34,8 @@ export class NotificationsComponent implements OnInit {
 
   private messageService = inject(MessageService);
   private notificationService = inject(NotificationService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   protected uiService = inject(UiService);
 
   // Pagination and Data
@@ -48,7 +52,39 @@ export class NotificationsComponent implements OnInit {
   selectedNotification = signal<Notification | null>(null);
 
   ngOnInit() {
-    this.loadNotifications();
+    const initialNotifId = this.route.snapshot.queryParamMap.get('notifId');
+
+    if (initialNotifId) {
+      this.handleDeepLink(initialNotifId);
+    } else {
+      this.loadNotifications();
+    }
+
+    // React to same-route navigations (component already mounted, user clicks a new notification)
+    this.route.queryParams.pipe(
+      skip(1),                            // skip the initial emission already handled above
+      filter(params => !!params['notifId'])
+    ).subscribe(params => this.handleDeepLink(params['notifId']));
+  }
+
+  private handleDeepLink(notifId: string) {
+    // Clean the URL immediately so back-navigation doesn't re-trigger
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+
+    // Show from router state instantly while the backend resolves
+    const stateNotif: Notification | undefined = history.state?.notification;
+    if (stateNotif && stateNotif.id === notifId) {
+      this.selectNotification(stateNotif);
+    }
+
+    this.notificationService.getNotificationLocation(notifId, this.rows).subscribe({
+      next: (location) => {
+        this.first = location.pageIndex * this.rows;
+        this.selectNotification(location.notification);
+        this.loadNotifications();
+      },
+      error: () => this.loadNotifications()
+    });
   }
 
   public reloadAll() {

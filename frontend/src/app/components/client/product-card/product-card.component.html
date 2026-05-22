@@ -36,9 +36,7 @@
           }
 
           @if (product.discount.startsWith('-')) {
-            <span class="text-[0.65rem] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
-              {{ product.discount }}
-            </span>
+            <p-tag [value]="product.discount" severity="danger" styleClass="!text-[0.65rem] !font-bold"></p-tag>
           }
         </div>
 

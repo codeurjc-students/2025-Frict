@@ -47,7 +47,7 @@
                 <div cdkDrag (click)="openOrderDetails(order)" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
                   <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <div class="flex items-center gap-2 min-w-0 mr-2">
-                      <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getStatusColor(getCurrentStatus(order))"></i>
+                      <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getOrderStatusColorClass(getCurrentStatus(order))"></i>
                       <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                     </div>
                     <div class="flex flex-col items-end shrink-0">
@@ -100,7 +100,7 @@
 
               <div class="flex justify-between items-start mb-2 pointer-events-none">
                 <div class="flex items-center gap-2 min-w-0 mr-2">
-                  <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getStatusColor(getCurrentStatus(order))"></i>
+                  <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getOrderStatusColorClass(getCurrentStatus(order))"></i>
                   <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                 </div>
                 <div class="flex flex-col items-end shrink-0">
@@ -172,22 +172,22 @@
               {{ order.user.name }}
             </td>
             <td class="py-3 px-4">
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center w-fit gap-1.5" [ngClass]="getStatusBgColor(getCurrentStatus(order))">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center w-fit gap-1.5" [ngClass]="getOrderStatusBgColorClass(getCurrentStatus(order))">
                  <i class="pi pi-circle-fill text-xs"></i>{{ getCurrentStatus(order) }}
               </span>
             </td>
             <td class="py-3 px-4">
               @if(order.assignedShopId) {
-                <p-tag severity="success" styleClass="tag-standard"><i class="pi pi-check"></i></p-tag>
+                <p-tag severity="success" styleClass="tag-standard"><i class="pi pi-shop"></i><i class="pi pi-check"></i></p-tag>
               } @else {
-                <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-times"></i></p-tag>
+                <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-shop"></i><i class="pi pi-times"></i></p-tag>
               }
             </td>
             <td class="py-3 px-4">
               @if(order.assignedTruckId) {
-                <p-tag severity="success" styleClass="tag-standard"><i class="pi pi-check"></i></p-tag>
+                <p-tag severity="success" styleClass="tag-standard"><i class="pi pi-truck"></i><i class="pi pi-check"></i></p-tag>
               } @else {
-                <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-times"></i></p-tag>
+                <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-truck"></i><i class="pi pi-times"></i></p-tag>
               }
             </td>
             <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="formatAddress(order.sendingAddress)"><i class="pi pi-map-marker mr-1"></i> {{ formatAddress(order.sendingAddress) }}</td>
@@ -266,7 +266,7 @@
       </div>
       <div class="flex items-center gap-3 mt-1">
         <span class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5"
-              [ngClass]="getStatusBgColor(getCurrentStatus(selectedOrder))">
+              [ngClass]="getOrderStatusBgColorClass(getCurrentStatus(selectedOrder))">
             <i class="pi pi-circle-fill text-xs"></i>
           {{ getCurrentStatus(selectedOrder) }}
         </span>
@@ -278,11 +278,12 @@
   </ng-template>
 
   <div *ngIf="selectedOrder">
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Productos distintos</span><span class="text-xl font-bold text-slate-800">{{ selectedOrder.orderItems.length || 0 }}</span></div>
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Artículos totales</span><span class="text-xl font-bold text-slate-800">{{ selectedOrder.totalItems }}</span></div>
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Subtotal</span><span class="text-xl font-bold text-slate-800">{{ formatPrice(selectedOrder.subtotalCost) }}</span></div>
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Descuento</span><span class="text-xl font-bold text-red-600">-{{ formatPrice(selectedOrder.totalDiscount) }}</span></div>
+      <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Capacidad</span><span class="text-xl font-bold text-slate-800">{{ selectedOrder.totalCapacity | number:'1.0-2' }}</span></div>
       <div class="flex flex-col md:border-l md:border-slate-200 md:pl-4"><span class="text-xs font-bold text-slate-500 uppercase">Total Pedido</span><span class="text-2xl font-black text-slate-900">{{ formatPrice(selectedOrder.totalCost) }}</span></div>
     </div>
 
@@ -320,7 +321,17 @@
 
             <p-tabpanel value="1">
               <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-4">
-                <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</label>
+                <ng-container *ngIf="listModeSelected">
+                  <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Estado del pedido</label>
+                  <p-select
+                    [options]="orderStatuses"
+                    [(ngModel)]="selectedStatusForUpdate"
+                    appendTo="body"
+                    styleClass="w-full !border-blue-200 !rounded-lg !text-sm"
+                    class="w-full mb-3">
+                  </p-select>
+                </ng-container>
+                <label *ngIf="!listModeSelected" class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</label>
                 <textarea pInputTextarea [(ngModel)]="newComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario o nota..."></textarea>
                 <div class="flex justify-end mt-2"><p-button label="Publicar comentario" icon="pi pi-send" size="small" (click)="addComment()" [disabled]="!newComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button></div>
               </div>
@@ -328,7 +339,7 @@
               <div class="relative pl-4 border-l-2 border-slate-200 ml-4 space-y-8 pb-4">
                 @for (log of selectedOrder.history; track log.id || $index) {
                   <div class="relative">
-                    <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500"><i class="text-xs" [ngClass]="log.icon || getIconForStatus(log.status)"></i></div>
+                    <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500"><i class="text-xs" [ngClass]="log.icon || getOrderStatusTagInfo(log.status).icon"></i></div>
                     <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-200">
                       <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
                         <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">{{ log.status }}</span>
@@ -352,6 +363,11 @@
             <p-tabpanel value="2">
               <div class="bg-slate-100 mt-4 rounded-xl border border-slate-200 h-[400px] relative overflow-hidden">
                 <div id="order-map" class="w-full h-full z-0"></div>
+                @if (orderMapEta) {
+                  <div class="absolute bottom-3 left-3 z-[500] bg-white/90 rounded-xl shadow-md px-3 py-2 text-xs font-bold text-blue-700 border border-blue-100">
+                    ⏱ Tiempo estimado: {{ orderMapEta }}
+                  </div>
+                }
               </div>
             </p-tabpanel>
           </p-tabpanels>
@@ -376,13 +392,13 @@
                 Capacidad:
               </p>
               <p-progressBar
-                [value]="getLoadPercentage(selectedTruck.ordersToDeliver, selectedTruck.maxOrderCapacity)"
+                [value]="getLoadPercentage(selectedTruck.currentCapacity, selectedTruck.maxCapacity)"
                 [showValue]="false"
                 [style]="{'height': '6px'}"
                 styleClass="!bg-surface-100">
               </p-progressBar>
               <p class="text-xs text-surface-400 mt-1 font-bold text-right">
-                {{ selectedTruck.ordersToDeliver || 0 }} / {{ selectedTruck.maxOrderCapacity }} pedidos
+                {{ selectedTruck.currentCapacity | number:'1.0-1' }} / {{ selectedTruck.maxCapacity | number:'1.0-1' }} · {{ selectedTruck.ordersToDeliver }} pedidos
               </p>
             </div>
 

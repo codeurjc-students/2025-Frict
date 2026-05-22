@@ -1,5 +1,6 @@
 import {AbstractControl, AsyncValidatorFn, ValidationErrors, ValidatorFn} from '@angular/forms';
 import {UserService} from '../services/user.service';
+import {TruckService} from '../services/truck.service';
 import {map, Observable, of, switchMap, timer} from 'rxjs';
 
 
@@ -43,6 +44,19 @@ export class CustomValidators {
         switchMap(() => userService.checkUsernameTaken(value)),
         // Error if it does not exist
         map((exists) => (exists ? null : { userNotFound: true }))
+      );
+    };
+  }
+
+  static createPlateNumberValidator(truckService: TruckService, getExcludedPlate: () => string): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      const value = control.value;
+      if (!value) return of(null);
+      if (value === getExcludedPlate()) return of(null);
+
+      return timer(250).pipe(
+        switchMap(() => truckService.checkPlateNumberTaken(value)),
+        map((isTaken) => (isTaken ? { plateNumberTaken: true } : null))
       );
     };
   }

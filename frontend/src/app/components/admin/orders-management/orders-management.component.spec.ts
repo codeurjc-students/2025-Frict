@@ -5,6 +5,8 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {of, Subject, throwError} from 'rxjs';
 import {MessageService} from 'primeng/api';
 import {PaginatorState} from 'primeng/paginator';
+import {getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass} from '../../../utils/tagManager.util';
+import {provideHttpClient} from '@angular/common/http';
 
 import {OrdersManagementComponent} from './orders-management.component';
 import {OrderService} from '../../../services/order.service';
@@ -43,7 +45,7 @@ const mockOrder: Order = {
   assignedShopId: 'shop-1',
   assignedTruckId: 'truck-1',
   estimatedCompletionTime: 60,
-  totalItems: 3, subtotalCost: 30, totalDiscount: 0, shippingCost: 5, totalCost: 35,
+  totalItems: 3, subtotalCost: 30, totalDiscount: 0, shippingCost: 5, totalCost: 35, totalCapacity: 1,
   cardNumberEnding: '1234',
   sendingAddress: mockAddress as any,
   createdAt: '2025-01-01'
@@ -51,7 +53,7 @@ const mockOrder: Order = {
 
 const mockShop: Shop = {
   id: 'shop-1', referenceCode: 'SHP-001', name: 'Tienda Test',
-  address: mockAddress as any, assignedBudget: 10000,
+  address: mockAddress as any, assignedBudget: 10000, maxCapacity: 0, occupiedCapacity: 0,
   imageInfo: { id: 'si1', imageUrl: 'http://img.jpg', s3Key: 'sk1', fileName: 'f.jpg' },
   totalAvailableProducts: 100, totalAssignedTrucks: 2
 };
@@ -59,7 +61,7 @@ const mockShop: Shop = {
 const mockTruck: Truck = {
   id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB-1234',
   history: [], shopId: 'shop-1', address: mockAddress as any,
-  ordersToDeliver: 2, maxOrderCapacity: 10
+  ordersToDeliver: 2, maxCapacity: 10, currentCapacity: 0
 };
 
 const mockPage: PageResponse<Order> = {
@@ -107,6 +109,7 @@ describe('OrdersManagementComponent', () => {
       imports: [OrdersManagementComponent],
       providers: [
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: PLATFORM_ID, useValue: 'server' },
         { provide: OrderService, useValue: orderServiceSpy },
         { provide: ShopService, useValue: shopServiceSpy },
@@ -660,47 +663,47 @@ describe('OrdersManagementComponent', () => {
     });
   });
 
-  // ── Pure helper functions ─────────────────────────────────────────────────────
+  // ── tagManager helpers (getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass) ──
 
-  describe('getIconForStatus', () => {
+  describe('getOrderStatusTagInfo', () => {
     it('should return correct icons for all known statuses', () => {
-      expect(component.getIconForStatus('Pedido Realizado')).toBe('pi pi-shopping-cart');
-      expect(component.getIconForStatus('Enviado')).toBe('pi pi-box');
-      expect(component.getIconForStatus('En Reparto')).toBe('pi pi-truck');
-      expect(component.getIconForStatus('Completado')).toBe('pi pi-check');
-      expect(component.getIconForStatus('Cancelado')).toBe('pi pi-times');
+      expect(getOrderStatusTagInfo('Pedido Realizado').icon).toBe('pi pi-shopping-cart');
+      expect(getOrderStatusTagInfo('Enviado').icon).toBe('pi pi-box');
+      expect(getOrderStatusTagInfo('En Reparto').icon).toBe('pi pi-truck');
+      expect(getOrderStatusTagInfo('Completado').icon).toBe('pi pi-check');
+      expect(getOrderStatusTagInfo('Cancelado').icon).toBe('pi pi-times');
     });
 
     it('should return fallback icon for unknown status', () => {
-      expect(component.getIconForStatus('Unknown')).toBe('pi pi-info-circle');
+      expect(getOrderStatusTagInfo('Unknown').icon).toBe('pi pi-info-circle');
     });
   });
 
-  describe('getStatusColor', () => {
+  describe('getOrderStatusColorClass', () => {
     it('should return correct CSS text color classes', () => {
-      expect(component.getStatusColor('Pedido Realizado')).toBe('text-blue-500');
-      expect(component.getStatusColor('Enviado')).toBe('text-purple-500');
-      expect(component.getStatusColor('En Reparto')).toBe('text-orange-500');
-      expect(component.getStatusColor('Completado')).toBe('text-green-500');
-      expect(component.getStatusColor('Cancelado')).toBe('text-red-500');
+      expect(getOrderStatusColorClass('Pedido Realizado')).toBe('text-blue-500');
+      expect(getOrderStatusColorClass('Enviado')).toBe('text-purple-500');
+      expect(getOrderStatusColorClass('En Reparto')).toBe('text-orange-500');
+      expect(getOrderStatusColorClass('Completado')).toBe('text-green-500');
+      expect(getOrderStatusColorClass('Cancelado')).toBe('text-red-500');
     });
 
     it('should return fallback color for unknown status', () => {
-      expect(component.getStatusColor('Unknown')).toBe('text-slate-400');
+      expect(getOrderStatusColorClass('Unknown')).toBe('text-slate-400');
     });
   });
 
-  describe('getStatusBgColor', () => {
+  describe('getOrderStatusBgColorClass', () => {
     it('should return correct bg+text color classes', () => {
-      expect(component.getStatusBgColor('Pedido Realizado')).toBe('bg-blue-100 text-blue-700');
-      expect(component.getStatusBgColor('Enviado')).toBe('bg-purple-100 text-purple-700');
-      expect(component.getStatusBgColor('En Reparto')).toBe('bg-orange-100 text-orange-700');
-      expect(component.getStatusBgColor('Completado')).toBe('bg-green-100 text-green-700');
-      expect(component.getStatusBgColor('Cancelado')).toBe('bg-red-100 text-red-700');
+      expect(getOrderStatusBgColorClass('Pedido Realizado')).toBe('bg-blue-100 text-blue-700');
+      expect(getOrderStatusBgColorClass('Enviado')).toBe('bg-purple-100 text-purple-700');
+      expect(getOrderStatusBgColorClass('En Reparto')).toBe('bg-orange-100 text-orange-700');
+      expect(getOrderStatusBgColorClass('Completado')).toBe('bg-green-100 text-green-700');
+      expect(getOrderStatusBgColorClass('Cancelado')).toBe('bg-red-100 text-red-700');
     });
 
     it('should return fallback for unknown status', () => {
-      expect(component.getStatusBgColor('Unknown')).toBe('bg-slate-100 text-slate-700');
+      expect(getOrderStatusBgColorClass('Unknown')).toBe('bg-slate-100 text-slate-700');
     });
   });
 
@@ -723,7 +726,7 @@ describe('OrdersManagementComponent', () => {
   });
 
   describe('getLoadPercentage', () => {
-    it('should return 0 when maxOrderCapacity is 0', () => {
+    it('should return 0 when maxCapacity is 0', () => {
       expect(component.getLoadPercentage(5, 0)).toBe(0);
     });
 

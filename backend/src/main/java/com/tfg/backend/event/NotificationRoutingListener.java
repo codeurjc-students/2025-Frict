@@ -1,8 +1,23 @@
 package com.tfg.backend.event;
 
 import com.tfg.backend.dto.EntityType;
-import com.tfg.backend.model.ReviewEvent;
+import com.tfg.backend.dto.EventAction;
+import com.tfg.backend.model.*;
+import com.tfg.backend.service.NotificationMessageBuilder;
+import com.tfg.backend.service.NotificationMessageBuilder.NotificationMessage;
+import com.tfg.backend.service.NotificationMessageBuilder.OrderMessageContext;
+import com.tfg.backend.service.NotificationMessageBuilder.ProductMessageContext;
+import com.tfg.backend.service.NotificationMessageBuilder.ReviewMessageContext;
+import com.tfg.backend.service.NotificationMessageBuilder.ShopMessageContext;
+import com.tfg.backend.service.NotificationMessageBuilder.ShopStockMessageContext;
+import com.tfg.backend.service.NotificationMessageBuilder.TruckMessageContext;
+import com.tfg.backend.service.NotificationMessageBuilder.UserMessageContext;
 import com.tfg.backend.service.NotificationService;
+import com.tfg.backend.service.OrderService;
+import com.tfg.backend.service.ProductService;
+import com.tfg.backend.service.ReviewService;
+import com.tfg.backend.service.ShopService;
+import com.tfg.backend.service.TruckService;
 import com.tfg.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +25,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -20,7 +37,13 @@ import java.util.Set;
 public class NotificationRoutingListener {
 
     private final NotificationService notificationService;
+    private final NotificationMessageBuilder messageBuilder;
     private final UserService userService;
+    private final OrderService orderService;
+    private final TruckService truckService;
+    private final ShopService shopService;
+    private final ProductService productService;
+    private final ReviewService reviewService;
 
     // ==========================================
     // 1. ORDER NOTIFICATIONS HANDLER
@@ -28,42 +51,27 @@ public class NotificationRoutingListener {
     @Async
     @TransactionalEventListener
     public void handleOrderEvent(OrderEvent event) {
-        String orderId = event.getOrderId();
+        Order order = parseLong(event.getOrderId()).flatMap(orderService::findById).orElse(null);
 
-        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
-        if (event.getManagerUsername() != null) involvedUsers.add(event.getManagerUsername());
-        if (event.getDriverUsername() != null) involvedUsers.add(event.getDriverUsername());
-        if (event.getCustomerUsername() != null) involvedUsers.add(event.getCustomerUsername());
+        OrderMessageContext ctx = new OrderMessageContext(
+                order != null ? order.getReferenceCode() : null,
+                event.getOldStatus(),
+                event.getNewStatus(),
+                getSafeActorUsername(),
+                event.getCustomerUsername() != null ? event.getCustomerUsername() : (order != null && order.getUser() != null ? order.getUser().getUsername() : null),
+                order != null && order.getAssignedTruck() != null ? order.getAssignedTruck().getPlateNumber() : null,
+                order != null && order.getAssignedShop() != null ? order.getAssignedShop().getName() : null
+        );
 
-        String subject = "";
-        String description = "";
-
-        switch (event.getAction()){
-            case CREATED -> {
-                subject = "Nuevo pedido recibido";
-                description = "El usuario " + getSafeActorUsername() + " ha realizado un nuevo pedido.";
-            }
-            case ASSIGNED -> {
-                subject = "Nuevo pedido asignado";
-                description = "El camión asignado al pedido #" + orderId + " ha cambiado.";
-            }
-            case STATUS_CHANGED -> {
-                subject = "Estado de pedido #" + orderId + " actualizado";
-                description = "El estado ha pasado de " + event.getOldStatus() + " a " + event.getNewStatus() + ".";
-            }
-            case NEW_COMMENT -> {
-                subject = "Nuevo comentario en pedido #" + orderId;
-                description = "El pedido #" + orderId + " tiene una nueva actualización.";
-            }
-            case DELETED -> {
-                subject = "Pedido histórico #" + orderId + " eliminado";
-                description = "El pedido ha sido eliminado del historial de compras.";
-            }
-        }
-
-        if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, EntityType.ORDER);
-        }
+        Set<String> notified = new HashSet<>();
+        notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.ORDER,
+                () -> messageBuilder.buildForOrder(event.getAction(), NotificationRole.ADMIN, ctx), notified);
+        notifyForRole(single(event.getManagerUsername()), NotificationRole.MANAGER, EntityType.ORDER,
+                () -> messageBuilder.buildForOrder(event.getAction(), NotificationRole.MANAGER, ctx), notified);
+        notifyForRole(single(event.getDriverUsername()), NotificationRole.DRIVER, EntityType.ORDER,
+                () -> messageBuilder.buildForOrder(event.getAction(), NotificationRole.DRIVER, ctx), notified);
+        notifyForRole(single(event.getCustomerUsername()), NotificationRole.CUSTOMER, EntityType.ORDER,
+                () -> messageBuilder.buildForOrder(event.getAction(), NotificationRole.CUSTOMER, ctx), notified);
     }
 
     // ==========================================
@@ -72,45 +80,26 @@ public class NotificationRoutingListener {
     @Async
     @TransactionalEventListener
     public void handleTruckEvent(TruckEvent event) {
-        String truckId = event.getTruckId();
+        Truck truck = parseLong(event.getTruckId()).flatMap(truckService::findById).orElse(null);
 
-        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
-        if (event.getDriverUsername() != null) involvedUsers.add(event.getDriverUsername());
-        if (event.getManagerUsername() != null) involvedUsers.add(event.getManagerUsername());
+        TruckMessageContext ctx = new TruckMessageContext(
+                truck != null ? truck.getPlateNumber() : null,
+                truck != null ? truck.getReferenceCode() : null,
+                event.getOldStatus(),
+                event.getNewStatus(),
+                getSafeActorUsername(),
+                event.getDriverUsername(),
+                truck != null && truck.getAssignedDriver() != null ? truck.getAssignedDriver().getUsername() : null,
+                truck != null && truck.getAssignedShop() != null ? truck.getAssignedShop().getName() : null
+        );
 
-        String subject = "";
-        String description = "";
-
-        switch (event.getAction()){
-            case CREATED -> {
-                subject = "Nuevo camión registrado";
-                description = "El administrador " + getSafeActorUsername() + " ha registrado un nuevo camión.";
-            }
-            case ASSIGNED -> {
-                subject = "Cambio de conductor del camión " + truckId;
-                description = "El conductor asociado al camión " + truckId + " ha cambiado.";
-            }
-            case STATUS_CHANGED -> {
-                subject = "Estado de camión " + truckId + " actualizado";
-                description = "El estado ha pasado de " + event.getOldStatus() + " a " + event.getNewStatus() + ".";
-            }
-            case NEW_COMMENT -> {
-                subject = "Nuevo comentario en camión " + truckId;
-                description = "El camión " + truckId + " tiene una nueva actualización.";
-            }
-            case UPDATED -> {
-                subject = "Actualización del camión " + truckId;
-                description = "Los datos del camión " + truckId + " han cambiado.";
-            }
-            case DELETED -> {
-                subject = "Camión " + truckId + " eliminado";
-                description = "El camión " + truckId + " ha sido eliminado de la flota.";
-            }
-        }
-
-        if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, EntityType.TRUCK);
-        }
+        Set<String> notified = new HashSet<>();
+        notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.TRUCK,
+                () -> messageBuilder.buildForTruck(event.getAction(), NotificationRole.ADMIN, ctx), notified);
+        notifyForRole(single(event.getManagerUsername()), NotificationRole.MANAGER, EntityType.TRUCK,
+                () -> messageBuilder.buildForTruck(event.getAction(), NotificationRole.MANAGER, ctx), notified);
+        notifyForRole(single(event.getDriverUsername()), NotificationRole.DRIVER, EntityType.TRUCK,
+                () -> messageBuilder.buildForTruck(event.getAction(), NotificationRole.DRIVER, ctx), notified);
     }
 
     // ==========================================
@@ -119,57 +108,32 @@ public class NotificationRoutingListener {
     @Async
     @TransactionalEventListener
     public void handleShopEvent(ShopEvent event) {
-        String shopId = event.getShopId();
+        Shop shop = parseLong(event.getShopId()).flatMap(shopService::findById).orElse(null);
 
-        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
-        if (event.getManagerUsername() != null) involvedUsers.add(event.getManagerUsername());
-        if (event.getDriverUsernames() != null && !event.getDriverUsernames().isEmpty()) {
-            involvedUsers.addAll(event.getDriverUsernames());
-        }
+        ShopMessageContext ctx = new ShopMessageContext(
+                shop != null ? shop.getName() : null,
+                shop != null ? shop.getReferenceCode() : null,
+                null,
+                null,
+                getSafeActorUsername(),
+                event.getManagerUsername(),
+                null
+        );
 
-        // Protegemos el parseo a Long comprobando que el ID no sea null (necesario para updates/deletes)
-        if (event.isNotifyCustomers() && shopId != null) {
-            try {
-                List<String> subscribedCustomers = userService.getUsernamesBySelectedShop(Long.valueOf(shopId));
-                if (subscribedCustomers != null && !subscribedCustomers.isEmpty()) {
-                    involvedUsers.addAll(subscribedCustomers);
-                }
-            } catch (NumberFormatException e) {
-                log.error("Error parsing shopId {} to Long while searching for customers.", shopId, e);
-            }
-        }
+        Set<String> notified = new HashSet<>();
+        notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.SHOP,
+                () -> messageBuilder.buildForShop(event.getAction(), NotificationRole.ADMIN, ctx), notified);
+        notifyForRole(single(event.getManagerUsername()), NotificationRole.MANAGER, EntityType.SHOP,
+                () -> messageBuilder.buildForShop(event.getAction(), NotificationRole.MANAGER, ctx), notified);
+        notifyForRole(event.getDriverUsernames(), NotificationRole.DRIVER, EntityType.SHOP,
+                () -> messageBuilder.buildForShop(event.getAction(), NotificationRole.DRIVER, ctx), notified);
 
-        String subject = "";
-        String description = "";
-
-        switch (event.getAction()){
-            case CREATED -> {
-                subject = "Nueva tienda registrada";
-                description = "El administrador " + getSafeActorUsername() + " ha registrado una nueva tienda.";
-            }
-            case ASSIGNED -> {
-                subject = "Nuevo camión asignado a tienda #" + shopId;
-                description = "Un nuevo camión está disponible para el reparto en la tienda "+ shopId + ".";
-            }
-            case STATUS_CHANGED -> {
-                subject = "Actualización de stock de la tienda #" + shopId;
-                description = "Se ha repuesto o activado el stock de la tienda #" + shopId + ".";
-            }
-            case UPDATED -> {
-                subject = "Actualización de la tienda #" + shopId;
-                description = "Los datos de configuración de la tienda #" + shopId + " han cambiado.";
-            }
-            case DELETED -> {
-                subject = "Tienda #" + shopId + " eliminada";
-                description = "La tienda #" + shopId + " ha sido eliminada del sistema.";
-            }
-        }
-
-        if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, EntityType.SHOP);
+        if (event.isNotifyCustomers() && shop != null) {
+            List<String> subscribedCustomers = userService.getUsernamesBySelectedShop(shop.getId());
+            notifyForRole(subscribedCustomers, NotificationRole.CUSTOMER, EntityType.SHOP,
+                    () -> messageBuilder.buildForShop(event.getAction(), NotificationRole.CUSTOMER, ctx), notified);
         }
     }
-
 
     // ==========================================
     // 4. PRODUCT NOTIFICATIONS HANDLER
@@ -177,59 +141,36 @@ public class NotificationRoutingListener {
     @Async
     @TransactionalEventListener
     public void handleProductEvent(ProductEvent event) {
-        String productId = event.getProductId();
-        Long pIdLong;
-
-        try {
-            pIdLong = Long.valueOf(productId);
-        } catch (NumberFormatException e) {
-            log.error("Error parsing productId {} to Long.", productId, e);
-            return; // Cannot proceed without a valid ID
+        Optional<Long> pIdOpt = parseLong(event.getProductId());
+        if (pIdOpt.isEmpty()) {
+            log.error("Error parsing productId {} to Long.", event.getProductId());
+            return;
         }
+        Long pIdLong = pIdOpt.get();
+        Product product = productService.findById(pIdLong).orElse(null);
 
-        // 1. Involved audience: admins, managers from the event, users as favourite, and users with the product in cart.
-        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
+        ProductMessageContext ctx = new ProductMessageContext(
+                product != null ? product.getName() : null,
+                product != null ? product.getReferenceCode() : null,
+                null,
+                null,
+                getSafeActorUsername(),
+                null
+        );
 
-        // Add managers calculated in the service
-        if (event.getManagerUsernames() != null && !event.getManagerUsernames().isEmpty()) {
-            involvedUsers.addAll(event.getManagerUsernames());
-        }
+        Set<String> notified = new HashSet<>();
+        notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.PRODUCT,
+                () -> messageBuilder.buildForProduct(event.getAction(), NotificationRole.ADMIN, ctx), notified);
+        notifyForRole(event.getManagerUsernames(), NotificationRole.MANAGER, EntityType.PRODUCT,
+                () -> messageBuilder.buildForProduct(event.getAction(), NotificationRole.MANAGER, ctx), notified);
 
-        // Add users who have it as favorite
+        Set<String> customers = new HashSet<>();
         List<String> favoritedCustomers = userService.getUsernamesByFavoritedProduct(pIdLong);
-        if (favoritedCustomers != null) involvedUsers.addAll(favoritedCustomers);
-
-        // Add users who have it in their cart (OrderItems)
+        if (favoritedCustomers != null) customers.addAll(favoritedCustomers);
         List<String> cartCustomers = userService.getUsernamesWithProductInCart(pIdLong);
-        if (cartCustomers != null) involvedUsers.addAll(cartCustomers);
-
-        // 2. Build message content
-        String subject = "";
-        String description = "";
-
-        switch (event.getAction()) {
-            case CREATED -> {
-                subject = "Nuevo producto registrado";
-                description = "El administrador " + getSafeActorUsername() + " ha añadido un nuevo producto al catálogo.";
-            }
-            case STATUS_CHANGED -> {
-                subject = "Activación global del producto #" + productId;
-                description = "La disponibilidad global del producto #" + productId + " ha cambiado.";
-            }
-            case UPDATED -> {
-                subject = "Actualización del producto #" + productId;
-                description = "El producto #" + productId + " ha sido actualizado.";
-            }
-            case DELETED -> {
-                subject = "Producto #" + productId + " retirado";
-                description = "El producto #" + productId + " ha sido eliminado definitivamente del catálogo.";
-            }
-        }
-
-        // 3. Dispatch notifications
-        if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, EntityType.PRODUCT);
-        }
+        if (cartCustomers != null) customers.addAll(cartCustomers);
+        notifyForRole(customers, NotificationRole.CUSTOMER, EntityType.PRODUCT,
+                () -> messageBuilder.buildForProduct(event.getAction(), NotificationRole.CUSTOMER, ctx), notified);
     }
 
     // ==========================================
@@ -238,71 +179,48 @@ public class NotificationRoutingListener {
     @Async
     @TransactionalEventListener
     public void handleUserEvent(UserEvent event) {
-        String targetUsername = event.getTargetUsername(); // The user affected by the action
+        String targetUsername = event.getTargetUsername();
 
-        // 1. Base audience: All administrators
-        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
+        User targetUser = userService.findByUsername(targetUsername).orElse(null);
+        String targetRole = targetUser != null ? targetUser.getRole() : null;
+        String targetDisplayName = targetUser != null ? targetUser.getName() : null;
+        String shopName = targetUser != null && targetUser.getSelectedShop() != null ? targetUser.getSelectedShop().getName() : null;
 
-        // 2. Build the message content
-        String subject = "";
-        String description = "";
+        UserMessageContext ctx = new UserMessageContext(
+                targetUsername,
+                targetDisplayName,
+                targetRole,
+                null,
+                null,
+                getSafeActorUsername(),
+                shopName,
+                null
+        );
 
-        switch (event.getAction()) {
-            case CREATED -> {
-                subject = "Nuevo usuario registrado";
-                description = "El usuario " + targetUsername + " se ha registrado en el sistema.";
-            }
-            case STATUS_CHANGED -> {
-                String loggedUserRole = userService.getLoggedUserRole();
-                if (loggedUserRole != null){
-                    if (loggedUserRole.equals("USER")){
-                        subject = "Cuenta de usuario " + targetUsername + " eliminada por el usuario";
-                        description = "La cuenta vinculada al usuario " + targetUsername + " ha sido anonimizada.";
-                    }
-                    else {
-                        subject = "Cuenta de usuario " + targetUsername + " anonimizada";
-                        description = "La cuenta vinculada al usuario " + targetUsername + " ha sido anonimizada.";
-                    }
-                }
-            }
+        EventAction action = event.getAction();
+        Set<String> notified = new HashSet<>();
 
-            case NEW_COMMENT -> { //User ban notifications
-                subject = "Usuario " + targetUsername + " baneado";
-                description = "La cuenta vinculada al usuario " + targetUsername + " ha sido baneada.";
-            }
+        notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.USER,
+                () -> messageBuilder.buildForUser(action, NotificationRole.ADMIN, ctx), notified);
 
-            case ASSIGNED -> {
-                String loggedUserRole = userService.getLoggedUserRole();
-                if (loggedUserRole != null){
-                    if (loggedUserRole.equals("USER")){
-                        subject = "Cambio de asignación de tienda";
-                        description = "El usuario " + targetUsername + " ha cambiado su tienda seleccionada";
-                    }
-                    else {
-                        involvedUsers.add(targetUsername);
-                        subject = "Cambio de asignación de manager";
-                        description = "Las tiendas asignadas al manager " + targetUsername + " han cambiado.";
-                    }
-                }
-            }
-
-            case UPDATED -> {
-                subject = "Contraseña de usuario " + targetUsername + " actualizada";
-                description = "La clave de acceso del usuario interno " + targetUsername + " ha sido modificada";
-            }
-
-            case DELETED -> {
-                subject = "Usuario eliminado";
-                description = "La cuenta del usuario " + targetUsername + " ha sido eliminada del sistema.";
+        // For ASSIGNED action where target is a MANAGER, also notify the target user
+        if (action == EventAction.ASSIGNED) {
+            String loggedUserRole = userService.getLoggedUserRole();
+            if (loggedUserRole != null && !"USER".equals(loggedUserRole)) {
+                notifyForRole(single(targetUsername), NotificationRole.MANAGER, EntityType.USER,
+                        () -> messageBuilder.buildForUser(action, NotificationRole.MANAGER, ctx), notified);
             }
         }
 
-        // 3. Dispatch notifications
-        if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, EntityType.USER);
+        // For NEW_COMMENT (ban), also notify the managers of the target's selected shop
+        if (action == EventAction.NEW_COMMENT && targetUser != null && targetUser.getSelectedShop() != null) {
+            User assignedManager = targetUser.getSelectedShop().getAssignedManager();
+            if (assignedManager != null) {
+                notifyForRole(single(assignedManager.getUsername()), NotificationRole.MANAGER, EntityType.USER,
+                        () -> messageBuilder.buildForUser(action, NotificationRole.MANAGER, ctx), notified);
+            }
         }
     }
-
 
     // ==========================================
     // 6. REVIEW NOTIFICATIONS HANDLER
@@ -310,76 +228,121 @@ public class NotificationRoutingListener {
     @Async
     @TransactionalEventListener
     public void handleReviewEvent(ReviewEvent event) {
-        String reviewId = event.getReviewId();
-        String productId = event.getProductId();
-        Long pIdLong;
-
-        // Necesitamos el productId para buscar a los clientes interesados
-        if (productId == null) {
+        if (event.getProductId() == null) {
             log.error("ReviewEvent missing productId. Cannot determine audience.");
             return;
         }
-
-        try {
-            pIdLong = Long.valueOf(productId);
-        } catch (NumberFormatException e) {
-            log.error("Error parsing productId {} to Long.", productId, e);
+        Optional<Long> pIdOpt = parseLong(event.getProductId());
+        if (pIdOpt.isEmpty()) {
+            log.error("Error parsing productId {} to Long.", event.getProductId());
             return;
         }
+        Long pIdLong = pIdOpt.get();
+        Product product = productService.findById(pIdLong).orElse(null);
 
-        // 1. Involved audience: admins, managers from the event, users with product as favourite, and users with the product in cart.
-        Set<String> involvedUsers = new HashSet<>(userService.getAllAdminUsernames());
-
-        // Add managers calculated in the service and passed via the event
-        if (event.getManagerUsernames() != null && !event.getManagerUsernames().isEmpty()) {
-            involvedUsers.addAll(event.getManagerUsernames());
+        Review review = null;
+        if (event.getReviewId() != null) {
+            review = parseLong(event.getReviewId()).flatMap(reviewService::findById).orElse(null);
         }
 
-        // Add users who have it as favorite
+        ReviewMessageContext ctx = new ReviewMessageContext(
+                review != null && review.getUser() != null ? review.getUser().getUsername() : getSafeActorUsername(),
+                product != null ? product.getName() : null,
+                product != null ? product.getReferenceCode() : null,
+                review != null ? review.getRating() : null,
+                getSafeActorUsername()
+        );
+
+        Set<String> notified = new HashSet<>();
+        notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.REVIEW,
+                () -> messageBuilder.buildForReview(event.getAction(), NotificationRole.ADMIN, ctx), notified);
+        notifyForRole(event.getManagerUsernames(), NotificationRole.MANAGER, EntityType.REVIEW,
+                () -> messageBuilder.buildForReview(event.getAction(), NotificationRole.MANAGER, ctx), notified);
+
+        Set<String> customers = new HashSet<>();
         List<String> favoritedCustomers = userService.getUsernamesByFavoritedProduct(pIdLong);
-        if (favoritedCustomers != null) involvedUsers.addAll(favoritedCustomers);
-
-        // Add users who have it in their cart (OrderItems)
+        if (favoritedCustomers != null) customers.addAll(favoritedCustomers);
         List<String> cartCustomers = userService.getUsernamesWithProductInCart(pIdLong);
-        if (cartCustomers != null) involvedUsers.addAll(cartCustomers);
+        if (cartCustomers != null) customers.addAll(cartCustomers);
+        notifyForRole(customers, NotificationRole.CUSTOMER, EntityType.REVIEW,
+                () -> messageBuilder.buildForReview(event.getAction(), NotificationRole.CUSTOMER, ctx), notified);
+    }
 
-        // 2. Build message content
-        String subject = "";
-        String description = "";
+    // ==========================================
+    // 7. SHOP STOCK NOTIFICATIONS HANDLER
+    // ==========================================
+    @Async
+    @TransactionalEventListener
+    public void handleShopStockEvent(ShopStockEvent event) {
+        ShopStockMessageContext ctx = new ShopStockMessageContext(
+                event.getShopName(),
+                event.getShopRefCode(),
+                event.getProductName(),
+                event.getProductRefCode(),
+                event.getOldUnits(),
+                event.getNewUnits(),
+                event.getThreshold(),
+                getSafeActorUsername()
+        );
+
+        Set<String> notified = new HashSet<>();
 
         switch (event.getAction()) {
-            case CREATED -> {
-                subject = "Nueva reseña publicada";
-                description = "El usuario " + getSafeActorUsername() + " ha dejado una nueva reseña en un producto de tu interés.";
+            case RESTOCKED -> {
+                notifyForRole(userService.getAllAdminUsernames(), NotificationRole.ADMIN, EntityType.SHOP,
+                        () -> messageBuilder.buildForStockRestocked(NotificationRole.ADMIN, ctx), notified);
+                if (event.getShopId() != null && event.getProductId() != null) {
+                    List<String> targetCustomers = userService.getUsernamesByFavoritedProductAndSelectedShop(event.getShopId(), event.getProductId());
+                    notifyForRole(targetCustomers, NotificationRole.CUSTOMER, EntityType.SHOP,
+                            () -> messageBuilder.buildForStockRestocked(NotificationRole.CUSTOMER, ctx), notified);
+                }
             }
-            case UPDATED -> {
-                subject = "Reseña actualizada";
-                description = "El usuario " + getSafeActorUsername() + " ha modificado su reseña para el producto #" + productId + ".";
+            case LOW_STOCK -> {
+                notifyForRole(single(event.getManagerUsername()), NotificationRole.MANAGER, EntityType.SHOP,
+                        () -> messageBuilder.buildForStockLow(NotificationRole.MANAGER, ctx), notified);
+                if (event.getShopId() != null && event.getProductId() != null) {
+                    List<String> targetCustomers = userService.getUsernamesBySelectedShopAndProductInFavoritesOrCart(event.getShopId(), event.getProductId());
+                    notifyForRole(targetCustomers, NotificationRole.CUSTOMER, EntityType.SHOP,
+                            () -> messageBuilder.buildForStockLow(NotificationRole.CUSTOMER, ctx), notified);
+                }
             }
-            case DELETED -> {
-                subject = "Reseña eliminada";
-                description = "Una reseña asociada al producto #" + productId + " ha sido eliminada.";
-            }
-        }
-
-        // 3. Dispatch notifications
-        if (!subject.isEmpty()) {
-            notifySafe(involvedUsers, subject, description, EntityType.REVIEW);
         }
     }
 
     // ==========================================
-    // UTILITY METHODS (DRY)
+    // UTILITY METHODS
     // ==========================================
-    private void notifySafe(Iterable<String> recipients, String subject, String description, EntityType type) {
-        if (recipients == null) return;
+    private void notifyForRole(Collection<String> recipients,
+                               NotificationRole role,
+                               EntityType type,
+                               java.util.function.Supplier<NotificationMessage> messageSupplier,
+                               Set<String> alreadyNotified) {
+        if (recipients == null || recipients.isEmpty()) return;
         String excludedUser = userService.getLoggedUserUsername();
 
+        NotificationMessage message = null;
         for (String recipient : recipients) {
-            if (recipient != null && !recipient.isBlank() && !recipient.equals(excludedUser)) {
-                log.info("Sending notification to: {}", recipient);
-                notificationService.createAndSendNotification(recipient, subject, description, type);
-            }
+            if (recipient == null || recipient.isBlank()) continue;
+            if (recipient.equals(excludedUser)) continue;
+            if (!alreadyNotified.add(recipient)) continue;
+
+            if (message == null) message = messageSupplier.get();
+
+            log.info("Sending {} notification to: {}", role, recipient);
+            notificationService.createAndSendNotification(recipient, message.subject(), message.description(), type);
+        }
+    }
+
+    private List<String> single(String username) {
+        return username == null || username.isBlank() ? List.of() : List.of(username);
+    }
+
+    private Optional<Long> parseLong(String value) {
+        if (value == null || value.isBlank()) return Optional.empty();
+        try {
+            return Optional.of(Long.valueOf(value));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
         }
     }
 

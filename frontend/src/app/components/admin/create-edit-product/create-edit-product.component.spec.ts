@@ -40,6 +40,7 @@ const mockProduct: Product = {
   supplyPrice: 10,
   previousPrice: 0,
   currentPrice: 15,
+  capacity: 1,
   active: true,
   discount: '0%',
   categories: [{ ...mockCategory }],
@@ -48,6 +49,7 @@ const mockProduct: Product = {
   shopsWithStock: 3,
   averageRating: 4.5,
   totalReviews: 10,
+  specifications: [],
   createdAt: '2025-01-01'
 };
 
@@ -102,7 +104,7 @@ describe('CreateEditProductComponent', () => {
     routerEvents$ = new Subject<any>();
 
     productServiceSpy = jasmine.createSpyObj('ProductService', [
-      'getProductById', 'createProduct', 'updateProduct', 'updateProductImages'
+      'getProductById', 'createProduct', 'updateProduct', 'updateProductImages', 'getSpecsCatalog'
     ]);
     categoryServiceSpy = jasmine.createSpyObj('CategoryService', ['getAllCategories']);
     messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
@@ -121,6 +123,7 @@ describe('CreateEditProductComponent', () => {
     productServiceSpy.createProduct.and.callFake(() => of({ ...mockProduct }));
     productServiceSpy.updateProduct.and.callFake(() => of({ ...mockProduct }));
     productServiceSpy.updateProductImages.and.callFake(() => of({ ...mockProduct }));
+    productServiceSpy.getSpecsCatalog.and.callFake(() => of({}));
 
     await buildTestBed(null);
 
@@ -309,29 +312,29 @@ describe('CreateEditProductComponent', () => {
     });
 
     it('should ignore files that exceed MAX_SIZE', () => {
-      const oversized = { size: component['MAX_SIZE'] + 1, name: 'big.jpg' } as File;
+      const oversized = { size: component['MAX_SIZE'] + 1, name: 'big.jpg', type: 'image/jpeg' } as File;
       component.onFileSelect({ files: [oversized] });
       expect(component.newImages().length).toBe(0);
     });
 
     it('should add multiple valid files at once', () => {
-      const file1 = new File(['a'], 'a.jpg');
-      const file2 = new File(['b'], 'b.jpg');
+      const file1 = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+      const file2 = new File(['b'], 'b.jpg', { type: 'image/jpeg' });
       component.onFileSelect({ files: [file1, file2] });
       expect(component.newImages().length).toBe(2);
     });
 
     it('should accumulate images across multiple calls', () => {
-      const file1 = new File(['a'], 'a.jpg');
-      const file2 = new File(['b'], 'b.jpg');
+      const file1 = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+      const file2 = new File(['b'], 'b.jpg', { type: 'image/jpeg' });
       component.onFileSelect({ files: [file1] });
       component.onFileSelect({ files: [file2] });
       expect(component.newImages().length).toBe(2);
     });
 
     it('should only add valid files when mixed with oversized ones', () => {
-      const valid = new File(['a'], 'a.jpg');
-      const oversized = { size: component['MAX_SIZE'] + 1, name: 'big.jpg' } as File;
+      const valid = new File(['a'], 'a.jpg', { type: 'image/jpeg' });
+      const oversized = { size: component['MAX_SIZE'] + 1, name: 'big.jpg', type: 'image/jpeg' } as File;
       component.onFileSelect({ files: [valid, oversized] });
       expect(component.newImages().length).toBe(1);
     });

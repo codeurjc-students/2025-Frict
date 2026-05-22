@@ -15,8 +15,10 @@ import {BreadcrumbReloadComponent} from '../../common/breadcrumb-reload/breadcru
 import {OrderService} from '../../../services/order.service';
 import {TruckService} from '../../../services/truck.service';
 import {ShopService} from '../../../services/shop.service';
+import {LocationService} from '../../../services/location.service';
 import {AuthService} from '../../../services/auth.service';
-import {formatAddress} from '../../../utils/textFormat.util';
+import {formatAddress, formatDuration} from '../../../utils/textFormat.util';
+import {getOrderStatusTagInfo, getTruckHistoryStatusTagInfo} from '../../../utils/tagManager.util';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
 import {Truck} from '../../../models/truck.model';
@@ -28,6 +30,7 @@ import {Tag} from 'primeng/tag';
 import {TableModule} from 'primeng/table';
 import {Dialog} from 'primeng/dialog';
 import {Tooltip} from 'primeng/tooltip';
+import {ProgressBar} from 'primeng/progressbar';
 
 @Component({
   selector: 'app-orders-delivery',
@@ -35,7 +38,8 @@ import {Tooltip} from 'primeng/tooltip';
   imports: [
     CommonModule, FormsModule, LoadingScreenComponent, BreadcrumbReloadComponent,
     PaginatorModule, Textarea,
-    Tabs, TabList, Tab, TabPanels, TabPanel, Button, Select, Tag, TableModule, Dialog, Tooltip
+    Tabs, TabList, Tab, TabPanels, TabPanel, Button, Select, Tag, TableModule, Dialog, Tooltip,
+    ProgressBar
   ],
   templateUrl: './orders-delivery.component.html'
 })
@@ -45,11 +49,14 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
   private truckService = inject(TruckService);
   private shopService = inject(ShopService);
+  private locationService = inject(LocationService);
   private messageService = inject(MessageService);
 
   loading = true;
   error = false;
   hasTruck = true;
+
+  private driverId: string | null = null;
 
   ordersPage = signal<PageResponse<Order>>({ items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0 });
   first = 0;
@@ -74,7 +81,19 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   cancelComment = '';
 
   private map: L.Map | undefined;
+  private routePolyline: L.Polyline | undefined;
   protected markers: L.Marker[] = [];
+  deliveryMapEta: string | null = null;
+
+  // Truck status management
+  truckStatusOptions = [
+    { label: 'Descanso',            value: 'Descanso' },
+    { label: 'En ruta a la tienda', value: 'En ruta a la tienda' },
+    { label: 'En Reparto',          value: 'En Reparto' },
+    { label: 'Fuera de Servicio',   value: 'Fuera de servicio' }
+  ];
+  newTruckStatus: string = '';
+  newTruckComment: string = '';
 
   // Instancia del escáner QR
   private html5QrcodeScanner: Html5QrcodeScanner | null = null;
@@ -109,6 +128,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     this.authService.getLoginInfo().subscribe({
       next: (driver) => {
         if (driver && driver.id) {
+          this.driverId = driver.id;
           this.fetchTruck(driver.id);
         } else {
           this.error = true;
@@ -129,6 +149,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
         this.myTruck.set(truck);
         if (truck != null){
           this.hasTruck = true;
+          this.newTruckStatus = this.getTruckCurrentStatus(truck);
           this.fetchShop(truck.id);
         } else {
           this.hasTruck = false;
@@ -217,16 +238,12 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     if (!this.map) return;
     this.markers.forEach(m => m.remove());
     this.markers = [];
+    if (this.routePolyline) { this.routePolyline.remove(); this.routePolyline = undefined; }
+    this.deliveryMapEta = null;
     const bounds = L.latLngBounds([]);
 
     const addCustomMarker = (lat: number, lng: number, iconUrl: string, popupText: string) => {
-      const customIcon = L.icon({
-        iconUrl: iconUrl,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-      });
-
+      const customIcon = L.icon({ iconUrl, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
       const marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map!).bindPopup(`<strong>${popupText}</strong>`);
       this.markers.push(marker);
       bounds.extend([lat, lng]);
@@ -238,18 +255,94 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     }
 
     const truck = this.myTruck();
-    if (truck?.address?.latitude != null && truck?.address?.longitude != null) {
-      addCustomMarker(truck.address.latitude, truck.address.longitude, '/truckIcon.png', 'Mi Camión (Pos. Actual)');
+    let truckLat: number | null = null;
+    let truckLng: number | null = null;
+    if (truck) {
+      if (truck.assignedDriver && truck.driverLocation?.address?.latitude && truck.driverLocation?.address?.longitude) {
+        truckLat = truck.driverLocation.address.latitude;
+        truckLng = truck.driverLocation.address.longitude;
+        addCustomMarker(truckLat, truckLng, '/truckIcon.png', 'Mi Camión (GPS)');
+      } else if (truck.address?.latitude != null && truck.address?.longitude != null) {
+        truckLat = truck.address.latitude;
+        truckLng = truck.address.longitude;
+        addCustomMarker(truckLat, truckLng, '/truckIcon.png', 'Mi Camión (última posición)');
+      }
     }
 
-    const order = this.selectedOrder();
-    if (order?.sendingAddress?.latitude != null && order?.sendingAddress?.longitude != null) {
-      addCustomMarker(order.sendingAddress.latitude, order.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido');
+    // Active delivery order destination
+    const truckStatus = this.getTruckCurrentStatus(truck);
+    const activeOrder = this.ordersPage().items.find(o => o.id === truck?.selectedOrderId);
+
+    if (truckStatus === 'En ruta a la tienda' && shop?.address?.latitude && shop?.address?.longitude) {
+      if (truckLat !== null && truckLng !== null) {
+        this.locationService.getRoute(truckLat, truckLng, shop.address.latitude, shop.address.longitude).subscribe(route => {
+          if (!route || !this.map) return;
+          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+          this.routePolyline = L.polyline(latlngs, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.map!);
+          this.deliveryMapEta = formatDuration(route.durationSeconds);
+        });
+      }
+    } else if (truckStatus === 'En Reparto' && activeOrder?.sendingAddress?.latitude && activeOrder?.sendingAddress?.longitude) {
+      addCustomMarker(activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido Activo');
+      if (truckLat !== null && truckLng !== null) {
+        this.locationService.getRoute(truckLat, truckLng, activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude).subscribe(route => {
+          if (!route || !this.map) return;
+          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+          this.routePolyline = L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.75 }).addTo(this.map!);
+          this.deliveryMapEta = formatDuration(route.durationSeconds);
+        });
+      }
+    } else {
+      // No active route: show selected order destination for reference
+      const order = this.selectedOrder();
+      if (order?.sendingAddress?.latitude != null && order?.sendingAddress?.longitude != null) {
+        addCustomMarker(order.sendingAddress.latitude, order.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido');
+      }
     }
 
     if (this.markers.length > 0) {
       this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
     }
+  }
+
+  getTruckCurrentStatus(truck: Truck | null | undefined): string {
+    if (!truck?.history?.length) return '';
+    return truck.history[truck.history.length - 1].status;
+  }
+
+  protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
+  protected readonly getTruckHistoryStatusTagInfo = getTruckHistoryStatusTagInfo;
+
+  updateTruckStatus() {
+    const truck = this.myTruck();
+    if (!truck || !this.newTruckComment.trim()) return;
+
+    this.truckService.commentAndOrUpdateTruckStatus(truck.id, this.newTruckStatus, this.newTruckComment.trim()).subscribe({
+      next: (updatedTruck) => {
+        this.myTruck.set(updatedTruck);
+        this.newTruckComment = '';
+        this.newTruckStatus = this.getTruckCurrentStatus(updatedTruck);
+        this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Estado del camión actualizado.' });
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el estado del camión.' })
+    });
+  }
+
+  setActiveOrder(orderId: string) {
+    const truck = this.myTruck();
+    if (!truck) return;
+    const isActive = truck.selectedOrderId === orderId;
+    this.truckService.setSelectedOrder(truck.id, orderId, !isActive).subscribe({
+      next: (updatedTruck) => {
+        this.myTruck.set(updatedTruck);
+        this.messageService.add({
+          severity: 'success',
+          summary: isActive ? 'Pedido desactivado' : 'Pedido activo',
+          detail: isActive ? 'Ya no hay pedido activo en ruta.' : 'Este pedido es ahora el objetivo de entrega activo.'
+        });
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el pedido activo.' })
+    });
   }
 
   getCurrentStatus(order: Order | null | undefined): string {
@@ -318,6 +411,18 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
+  private refreshTruck() {
+    if (!this.driverId) return;
+    this.truckService.getAssignedTruckByDriverId(this.driverId).subscribe({
+      next: (truck) => {
+        if (truck) {
+          this.myTruck.set(truck);
+          this.newTruckStatus = this.getTruckCurrentStatus(truck);
+        }
+      }
+    });
+  }
+
   // --- NUEVA ACCIÓN: DESASIGNAR PEDIDO ---
   unassignOrder() {
     const order = this.selectedOrder();
@@ -325,8 +430,9 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
 
     this.orderService.unassignAsFinished(order.id).subscribe({
       next: () => {
+        this.refreshTruck();
+        this.fetchOrders();
         this.messageService.add({ severity: 'success', summary: 'Desasignado', detail: 'El pedido ha sido liberado de tu camión.' });
-        this.fetchOrders(); // Recargamos para que desaparezca de la lista
       },
       error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Fallo al desasignar el pedido.' })
     });
@@ -393,14 +499,9 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     }
   }
 
-  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const s = status?.toLowerCase() || '';
-    if (s === 'completado') return 'success';
-    if (s === 'en reparto') return 'info';
-    if (s === 'enviado' || s === 'pedido realizado') return 'warn';
-    if (s === 'cancelado') return 'danger';
-    return 'secondary';
-  }
-
   protected readonly formatAddress = formatAddress;
+
+  getLoadPercentage(active: number, max: number): number {
+    return max === 0 ? 0 : Math.round((active / max) * 100);
+  }
 }

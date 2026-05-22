@@ -13,6 +13,8 @@ public class ShopDTO {
     private String name;
     private AddressDTO address;
     private double assignedBudget;
+    private double maxCapacity;
+    private double occupiedCapacity;
     private ImageInfo imageInfo;
     private int totalAvailableProducts;
     private int totalAssignedTrucks;
@@ -27,6 +29,8 @@ public class ShopDTO {
         this.name = s.getName();
         this.address = new AddressDTO(s.getAddress());
         this.assignedBudget = s.getAssignedBudget();
+        this.maxCapacity = s.getMaxCapacity();
+        this.occupiedCapacity = s.getOccupiedCapacity();
         this.imageInfo = s.getImage();
         this.totalAvailableProducts = s.getAvailableProducts().size();
         this.totalAssignedTrucks = s.getAssignedTrucks().size();

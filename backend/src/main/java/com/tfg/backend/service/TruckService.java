@@ -6,6 +6,7 @@ import com.tfg.backend.dto.StatDTO;
 import com.tfg.backend.dto.TruckDTO;
 import com.tfg.backend.event.TruckEvent;
 import com.tfg.backend.model.*;
+import com.tfg.backend.repository.DriverLocationRepository;
 import com.tfg.backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,10 +28,13 @@ public class TruckService {
 
     private final UserService userService;
     private final TruckRepository truckRepository;
+    private final DriverLocationRepository driverLocationRepository;
     private final ApplicationEventPublisher eventPublisher;
 
 
     // --- READ-ONLY METHODS ---
+
+    public boolean isPlateNumberTaken(String plateNumber) { return truckRepository.existsByPlateNumber(plateNumber); }
 
     public Page<Truck> findAll(Pageable pageable) { return truckRepository.findAll(pageable); }
     public List<Truck> findAll() { return truckRepository.findAll(); }
@@ -49,6 +53,15 @@ public class TruckService {
     public Truck findTruckHelper(Long id) {
         return this.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Truck with ID " + id + " does not exist."));
+    }
+
+    public TruckDTO toTruckDTO(Truck truck) {
+        TruckDTO dto = new TruckDTO(truck);
+        if (truck.getAssignedDriver() != null) {
+            driverLocationRepository.findById(truck.getAssignedDriver().getUsername())
+                    .ifPresent(dto::setDriverLocation);
+        }
+        return dto;
     }
 
     // --- WRITING METHODS (override Transactional) ---
@@ -74,6 +87,20 @@ public class TruckService {
         } else {
             driverUsername = Optional.ofNullable(truck.getAssignedDriver()).map(User::getUsername).orElse(null);
             truck.setAssignedDriver(null);
+            // Copy the driver's last GPS position to truck.address so location is preserved after unassignment
+            if (driverUsername != null) {
+                driverLocationRepository.findById(driverUsername).ifPresent(dl -> {
+                    AddressSnapshot snap = dl.getAddress();
+                    Address updated = new Address(
+                            "Última posición GPS",
+                            snap.getStreet(), snap.getNumber(), "",
+                            snap.getPostalCode(), snap.getCity(), snap.getCountry()
+                    );
+                    updated.setLatitude(snap.getLatitude());
+                    updated.setLongitude(snap.getLongitude());
+                    truck.setAddress(updated);
+                });
+            }
         }
 
         //Send in-app notifications
@@ -114,7 +141,7 @@ public class TruckService {
     @Transactional
     public Truck createTruck(TruckDTO truckDTO, Shop assignedShop) {
         Address address = mapAddressFromDTO(truckDTO.getAddress());
-        Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxOrderCapacity());
+        Truck truck = new Truck(truckDTO.getPlateNumber(), address, truckDTO.getMaxCapacity());
         truck.setAssignedShop(assignedShop); //Can be null (valid)
 
         //Send in-app notifications
@@ -132,7 +159,7 @@ public class TruckService {
         truck.setReferenceCode(truckDTO.getReferenceCode());
         truck.setPlateNumber(truckDTO.getPlateNumber());
         truck.setAddress(mapAddressFromDTO(truckDTO.getAddress()));
-        truck.setMaxOrderCapacity(truckDTO.getMaxOrderCapacity());
+        truck.setMaxCapacity(truckDTO.getMaxCapacity());
         truck.setAssignedShop(assignedShop);
 
         //Send in-app notifications
@@ -186,28 +213,50 @@ public class TruckService {
 
     // --- METRICS METHODS ---
 
+    @Transactional
+    public Truck setSelectedOrder(Long truckId, Long orderId, boolean state) {
+        Truck truck = this.findTruckHelper(truckId);
+        if (state) {
+            boolean belongs = truck.getOrdersToDeliver().stream()
+                    .anyMatch(o -> o.getId().equals(orderId));
+            if (!belongs) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "El pedido no pertenece a la lista de entregas de este camión.");
+            }
+            // Find the order from the set
+            Order order = truck.getOrdersToDeliver().stream()
+                    .filter(o -> o.getId().equals(orderId))
+                    .findFirst()
+                    .orElseThrow();
+            truck.setSelectedOrder(order);
+        } else {
+            truck.setSelectedOrder(null);
+        }
+        return truck;
+    }
+
     public List<StatDTO> getTruckStatistics(User currentUser) {
-        long available = 0, onRoute = 0, onMaintenance = 0, outOfService = 0;
+        long resting = 0, onRouteToShop = 0, inDelivery = 0, outOfService = 0;
 
         if (currentUser.hasRole("ADMIN")) {
-            available = truckRepository.countTrucksByStatus(List.of(TruckStatus.AVAILABLE));
-            onRoute = truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE));
-            onMaintenance = truckRepository.countTrucksByStatus(List.of(TruckStatus.MAINTENANCE));
+            resting = truckRepository.countTrucksByStatus(List.of(TruckStatus.REST));
+            onRouteToShop = truckRepository.countTrucksByStatus(List.of(TruckStatus.ON_ROUTE_TO_SHOP));
+            inDelivery = truckRepository.countTrucksByStatus(List.of(TruckStatus.IN_DELIVERY));
             outOfService = truckRepository.countTrucksByStatus(List.of(TruckStatus.OUT_OF_SERVICE));
         } else if (currentUser.hasRole("MANAGER")) {
             Long managerId = currentUser.getId();
-            available = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.AVAILABLE));
-            onRoute = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.ON_ROUTE));
-            onMaintenance = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.MAINTENANCE));
+            resting = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.REST));
+            onRouteToShop = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.ON_ROUTE_TO_SHOP));
+            inDelivery = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.IN_DELIVERY));
             outOfService = truckRepository.countTrucksByManagerIdAndStatus(managerId, List.of(TruckStatus.OUT_OF_SERVICE));
         } else {
             return List.of();
         }
 
         return List.of(
-                new StatDTO("Disponibles", available),
-                new StatDTO("En Ruta", onRoute),
-                new StatDTO("En mantenimiento", onMaintenance),
+                new StatDTO("Descanso", resting),
+                new StatDTO("En ruta a la tienda", onRouteToShop),
+                new StatDTO("En Reparto", inDelivery),
                 new StatDTO("Fuera de servicio", outOfService)
         );
     }

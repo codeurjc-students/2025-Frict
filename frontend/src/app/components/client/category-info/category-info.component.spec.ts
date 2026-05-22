@@ -77,7 +77,7 @@ describe('CategoryInfoComponent', () => {
     description: 'Cámara de alta definición', imagesInfo: [mockImageInfo],
     supplyPrice: 30, previousPrice: 100, currentPrice: 79, active: true, discount: '-21%',
     categories: [], totalUnits: 50, availableUnits: 20, shopsWithStock: 2,
-    averageRating: 4.3, totalReviews: 8, createdAt: '2026-05-08'
+    averageRating: 4.3, totalReviews: 8, specifications: [], capacity: 1, createdAt: '2026-05-08'
   };
 
   const mockProductPage: PageResponse<Product> = {
@@ -103,10 +103,12 @@ describe('CategoryInfoComponent', () => {
     );
 
     productServiceSpy = jasmine.createSpyObj('ProductService', [
-      'getProductsByCategoryName', 'searchScope'
+      'getCategoryTopSales', 'getCategoryMetrics', 'getCategoryTimeline', 'searchScope'
     ]);
     productServiceSpy.searchScope.and.returnValue('GLOBAL');
-    productServiceSpy.getProductsByCategoryName.and.returnValue(of(mockProductPage));
+    productServiceSpy.getCategoryTopSales.and.returnValue(of(mockProductPage));
+    productServiceSpy.getCategoryMetrics.and.returnValue(of({ totalShops: 0, totalViews: 0, totalSales: 0 }));
+    productServiceSpy.getCategoryTimeline.and.returnValue(of([]));
 
     breadcrumbServiceSpy = jasmine.createSpyObj('BreadcrumbService', [
       'setNodesForUrl', 'insertPenultimateNodesForUrl', 'setBaseBreadcrumbs', 'breadcrumbs'
@@ -154,16 +156,6 @@ describe('CategoryInfoComponent', () => {
 
   it('should create the component', () => {
     expect(component).toBeTruthy();
-  });
-
-  // ─── useCases — static data ───────────────────────────────────────────────────
-
-  it('should expose 4 use-case items', () => {
-    expect(component.useCases.length).toBe(4);
-  });
-
-  it('should include "Seguridad para tu Negocio" in the use-cases list', () => {
-    expect(component.useCases.some(u => u.title === 'Seguridad para tu Negocio')).toBeTrue();
   });
 
   // ─── Happy-path load ──────────────────────────────────────────────────────────
@@ -257,9 +249,9 @@ describe('CategoryInfoComponent', () => {
 
   // ─── loadTopSalesProducts ─────────────────────────────────────────────────────
 
-  it('should call getProductsByCategoryName with the main category name', () => {
-    expect(productServiceSpy.getProductsByCategoryName)
-      .toHaveBeenCalledWith(mockMainCategory.name);
+  it('should call getCategoryTopSales with the main category id', () => {
+    expect(productServiceSpy.getCategoryTopSales)
+      .toHaveBeenCalledWith(mockMainCategory.id, 10);
   });
 
   // ─── loadMainCategory reset ───────────────────────────────────────────────────
@@ -302,7 +294,9 @@ describe('CategoryInfoComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Cámaras');
   });
 
-  it('should render the category shortDescription', () => {
+  it('should render shortDescription as fallback when bannerText is absent', () => {
+    component.mainCategory = { ...mockMainCategory, bannerText: '' };
+    fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain(mockMainCategory.shortDescription);
   });
 

@@ -166,7 +166,90 @@ public class RegistryRepository {
         return 0.0;
     }
 
+
+    public List<String> getTopSalesProductReferencesInList(Collection<String> productRefs, int limit) {
+        List<AggregationOperation> operations = new ArrayList<>();
+
+        operations.add(Aggregation.match(Criteria.where("metadata.dataType").is(RegistryType.PRODUCT_UNITS_SOLD)));
+
+        if (productRefs != null && !productRefs.isEmpty()) {
+            operations.add(Aggregation.match(Criteria.where("metadata.productId").in(productRefs)));
+        } else {
+            return Collections.emptyList();
+        }
+
+        operations.add(Aggregation.sort(Sort.Direction.DESC, "timestamp"));
+
+        operations.add(Aggregation.group("metadata.productId")
+                .first("metrics.total").as("latestTotal"));
+
+        operations.add(Aggregation.sort(Sort.Direction.DESC, "latestTotal"));
+
+        operations.add(Aggregation.limit(limit));
+
+        return mongoTemplate.aggregate(Aggregation.newAggregation(operations), "registries", Document.class)
+                .getMappedResults().stream()
+                .map(doc -> doc.getString("_id"))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     public Registry save(Registry r){
         return mongoTemplate.save(r, "registries");
+    }
+
+
+    public List<Document> getProductsTimelineStats(Collection<String> productRefs, String dataType, int days) {
+        if (productRefs == null || productRefs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Date sinceDate = new Date(System.currentTimeMillis() - ((long) days * 24 * 60 * 60 * 1000));
+        List<AggregationOperation> operations = new ArrayList<>();
+
+        operations.add(Aggregation.match(Criteria.where("metadata.productId").in(productRefs)
+                .and("metadata.dataType").is(dataType)
+                .and("timestamp").gte(sinceDate)));
+        
+        AggregationOperation groupStage = context -> new Document("$group",
+                new Document("_id",
+                        new Document("$dateTrunc",
+                                new Document("date", "$timestamp").append("unit", "day")
+                        )
+                ).append("value", new Document("$sum", "$metrics.value"))
+        );
+        operations.add(groupStage);
+        operations.add(Aggregation.sort(Sort.Direction.ASC, "_id"));
+
+        return mongoTemplate.aggregate(Aggregation.newAggregation(operations), "registries", Document.class).getMappedResults();
+    }
+
+
+    public long getTotalViewsForProductReferences(Collection<String> productRefs) {
+        if (productRefs == null || productRefs.isEmpty()) return 0;
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("metadata.productId").in(productRefs)
+                        .and("metadata.dataType").is(RegistryType.PRODUCT_VIEWS)), // Ojo, sin .name() si se guarda como Enum
+                Aggregation.group().sum("metrics.value").as("totalViews")
+        );
+
+        Document result = mongoTemplate.aggregate(aggregation, "registries", Document.class).getUniqueMappedResult();
+        return result != null && result.get("totalViews") != null ? ((Number) result.get("totalViews")).longValue() : 0;
+    }
+
+    public long getTotalSalesForProductReferences(Collection<String> productRefs) {
+        if (productRefs == null || productRefs.isEmpty()) return 0;
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("metadata.productId").in(productRefs)
+                        .and("metadata.dataType").is(RegistryType.PRODUCT_UNITS_SOLD)),
+                Aggregation.sort(Sort.Direction.DESC, "timestamp"),
+                Aggregation.group("metadata.productId").first("metrics.total").as("latestTotal"),
+                Aggregation.group().sum("latestTotal").as("totalSales")
+        );
+
+        Document result = mongoTemplate.aggregate(aggregation, "registries", Document.class).getUniqueMappedResult();
+        return result != null && result.get("totalSales") != null ? ((Number) result.get("totalSales")).longValue() : 0;
     }
 }
