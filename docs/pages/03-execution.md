@@ -58,15 +58,10 @@ docker compose -f oci://mjpulido/frict up -d
 
 #### 3. Access the Application
 
-Because the stack uses self-signed HTTPS certificates generated automatically upon startup, your browser will initially flag the connection as insecure. To access the platform properly:
+Once all containers are healthy, open your browser and navigate to:
 
-* **Trust the backend API:** Firstly, navigate to the main API endpoint at `https://localhost/api/v1`. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
-
-* **Trust the WebSockets endpoint:** Secondly, navigate to the websockets communications endpoint at ``. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
-
-* **Trust the MinIO Certificate (image service):** First, navigate to the MinIO endpoint at `https://localhost:9000`. Your browser will show a security warning (e.g., `CERT_INVALID`); bypass it by clicking "Advanced" and proceeding to the site.
-
-* **Launch the Main App:** Once the MinIO certificate is accepted in your session, navigate to the main application at **`https://localhost`** (which maps to port 443). Also, bypass the security warning if necessary.
+* **Main Application:** **`http://localhost`** (served via HAProxy on port 80)
+* **MinIO Console (optional):** `http://localhost:9001` for managing stored images
 
 &nbsp;
 

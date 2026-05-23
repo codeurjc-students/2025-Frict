@@ -63,8 +63,7 @@ public abstract class BaseApiFunctionalITest {
     @BeforeEach
     public void baseSetUp() {
         RestAssured.reset();
-        RestAssured.baseURI = "https://localhost:" + port;
-        RestAssured.useRelaxedHTTPSValidation();
+        RestAssured.baseURI = "http://localhost:" + port;
 
         // Bypass security to allow Hibernate to see all entities (bypassing @Filter for inactive products, etc.)
         SecurityContextHolder.getContext().setAuthentication(

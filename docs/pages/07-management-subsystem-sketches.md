@@ -125,4 +125,4 @@ Allows delivery drivers to update the status on the order currently assigned to 
 
 &nbsp;
 
-[⬅️ Return to Project Kickoff](/docs/pages/06-project-kickoff.md)
+[⬅️ Return to Project Kickoff](/docs/pages/07-project-kickoff.md)

@@ -62,9 +62,10 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 2. [Detailed Features](docs/pages/02-detailed-features.md)
 3. [Execution](docs/pages/03-execution.md)
 4. [Development Guide](docs/pages/04-development-guide.md)
-5. [Project Tracking](docs/pages/05-progress-tracking.md)
-6. [Project Kickoff](docs/pages/06-project-kickoff.md)
-7. [Authors](docs/pages/06-authors.md)
+5. [AWS Architecture](docs/pages/05-aws-architecture.md)
+6. [Progress Tracking](docs/pages/06-progress-tracking.md)
+7. [Project Kickoff](docs/pages/07-project-kickoff.md)
+8. [Authors](docs/pages/08-authors.md)
 
 &nbsp;
 

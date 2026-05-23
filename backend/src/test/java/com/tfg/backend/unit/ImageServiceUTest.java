@@ -51,7 +51,6 @@ class ImageServiceUTest {
         // Inject @Value properties manually for pure unit testing
         ReflectionTestUtils.setField(imageService, "bucketName", BUCKET_NAME);
         ReflectionTestUtils.setField(imageService, "publicUrl", PUBLIC_URL);
-        ReflectionTestUtils.setField(imageService, "minioUrl", "http://minio:9000");
     }
 
     // --- INIT METHOD TESTS ---

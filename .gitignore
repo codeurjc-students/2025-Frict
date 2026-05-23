@@ -4,3 +4,4 @@ AGENTS.md
 docker/build_commands.txt
 frontend/frontend.iml
 /.scannerwork
+infra/cloudformation/packaged.yml

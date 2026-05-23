@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Frict — RDS MySQL, DocumentDB, and Secrets Manager"
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: frict
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnetAId:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnetBId:
+    Type: AWS::EC2::Subnet::Id
+  RDSSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  DocDBSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  EnableDocDB:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+
+Conditions:
+  CreateDocDB: !Equals [!Ref EnableDocDB, "true"]
+
+Resources:
+
+  # ── Subnet groups ────────────────────────────────────────────────────
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for RDS
+      SubnetIds:
+        - !Ref PrivateSubnetAId
+        - !Ref PrivateSubnetBId
+
+  DocDBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Condition: CreateDocDB
+    Properties:
+      DBSubnetGroupDescription: Private subnets for DocumentDB
+      SubnetIds:
+        - !Ref PrivateSubnetAId
+        - !Ref PrivateSubnetBId
+
+  # ── Secrets ──────────────────────────────────────────────────────────
+  MySQLSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/mysql"
+      Description: RDS MySQL credentials
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "frict_admin"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
+
+  DocDBSecret:
+    Type: AWS::SecretsManager::Secret
+    Condition: CreateDocDB
+    Properties:
+      Name: !Sub "${EnvironmentName}/docdb"
+      Description: DocumentDB credentials
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "frict_admin"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
+
+  JWTSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/jwt-secret"
+      Description: JWT signing key
+      GenerateSecretString:
+        PasswordLength: 64
+        ExcludePunctuation: true
+
+  # ── RDS MySQL ────────────────────────────────────────────────────────
+  MySQLInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub "${EnvironmentName}-mysql"
+      Engine: mysql
+      EngineVersion: "8.0"
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 20
+      StorageType: gp3
+      MasterUsername: !Sub "{{resolve:secretsmanager:${MySQLSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${MySQLSecret}:SecretString:password}}"
+      DBName: Frict
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroupId
+      MultiAZ: false
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      StorageEncrypted: true
+
+  MySQLSecretAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref MySQLSecret
+      TargetId: !Ref MySQLInstance
+      TargetType: AWS::RDS::DBInstance
+
+  # ── DocumentDB ───────────────────────────────────────────────────────
+  DocDBClusterParameterGroup:
+    Type: AWS::DocDB::DBClusterParameterGroup
+    Condition: CreateDocDB
+    Properties:
+      Description: Enable ChangeStreams with extended retention
+      Family: docdb5.0
+      Parameters:
+        change_stream_log_retention_duration: "10800"
+
+  DocDBCluster:
+    Type: AWS::DocDB::DBCluster
+    Condition: CreateDocDB
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBClusterIdentifier: !Sub "${EnvironmentName}-docdb"
+      MasterUsername: !Sub "{{resolve:secretsmanager:${DocDBSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DocDBSecret}:SecretString:password}}"
+      DBSubnetGroupName: !Ref DocDBSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref DocDBSecurityGroupId
+      DBClusterParameterGroupName: !Ref DocDBClusterParameterGroup
+      StorageEncrypted: true
+      EngineVersion: "5.0.0"
+
+  DocDBInstance:
+    Type: AWS::DocDB::DBInstance
+    Condition: CreateDocDB
+    Properties:
+      DBClusterIdentifier: !Ref DocDBCluster
+      DBInstanceIdentifier: !Sub "${EnvironmentName}-docdb-1"
+      DBInstanceClass: db.t3.medium
+
+  DocDBSecretAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Condition: CreateDocDB
+    Properties:
+      SecretId: !Ref DocDBSecret
+      TargetId: !Ref DocDBCluster
+      TargetType: AWS::DocDB::DBCluster
+
+Outputs:
+  MySQLEndpoint:
+    Value: !GetAtt MySQLInstance.Endpoint.Address
+  MySQLPort:
+    Value: !GetAtt MySQLInstance.Endpoint.Port
+  MySQLSecretArn:
+    Value: !Ref MySQLSecret
+  JWTSecretArn:
+    Value: !Ref JWTSecret
+  DocDBEndpoint:
+    Condition: CreateDocDB
+    Value: !GetAtt DocDBCluster.Endpoint
+  DocDBPort:
+    Condition: CreateDocDB
+    Value: !GetAtt DocDBCluster.Port
+  DocDBSecretArn:
+    Condition: CreateDocDB
+    Value: !Ref DocDBSecret
+  DocDBClusterId:
+    Condition: CreateDocDB
+    Value: !Ref DocDBCluster

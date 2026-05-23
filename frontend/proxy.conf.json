@@ -1,13 +1,13 @@
 {
   "/api/**": {
-    "target": "https://localhost:8443",
+    "target": "http://localhost:8080",
     "secure": false,
     "logLevel": "debug",
     "changeOrigin": true,
     "ws": true
   },
   "/actuator/**": {
-    "target": "https://localhost:443",
+    "target": "http://localhost:8080",
     "secure": false,
     "logLevel": "debug",
     "changeOrigin": true

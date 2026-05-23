@@ -1,0 +1,340 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Frict — ECS Fargate cluster, ALB, task definition, service, and autoscaling"
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: frict
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnetAId:
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnetBId:
+    Type: AWS::EC2::Subnet::Id
+  ALBSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  FargateSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  ImageUri:
+    Type: String
+    Description: "Full ECR image URI (repo:tag)"
+  ImagesBucketName:
+    Type: String
+  ImagesBucketArn:
+    Type: String
+  MySQLEndpoint:
+    Type: String
+  MySQLPort:
+    Type: String
+    Default: "3306"
+  MySQLSecretArn:
+    Type: String
+  JWTSecretArn:
+    Type: String
+  DocDBEndpoint:
+    Type: String
+    Default: ""
+  DocDBPort:
+    Type: String
+    Default: "27017"
+  DocDBSecretArn:
+    Type: String
+    Default: ""
+  GeocodingFunctionName:
+    Type: String
+  GeocodingFunctionArn:
+    Type: String
+  ACMCertificateArn:
+    Type: String
+    Description: ACM certificate ARN for HTTPS on the ALB (same region)
+    Default: ""
+  CORSAllowedOrigin:
+    Type: String
+    Default: "*"
+  MinTaskCount:
+    Type: Number
+    Default: 2
+  MaxTaskCount:
+    Type: Number
+    Default: 8
+  EnableDocDB:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+
+Conditions:
+  HasACMCert: !Not [!Equals [!Ref ACMCertificateArn, ""]]
+  HasDocDB: !Equals [!Ref EnableDocDB, "true"]
+
+Resources:
+
+  # ── ECS Cluster ──────────────────────────────────────────────────────
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${EnvironmentName}-cluster"
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  # ── CloudWatch Log Group ─────────────────────────────────────────────
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${EnvironmentName}"
+      RetentionInDays: 14
+
+  # ── IAM — Task Execution Role ────────────────────────────────────────
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-task-execution-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref MySQLSecretArn
+                  - !Ref JWTSecretArn
+                  - !If [HasDocDB, !Ref DocDBSecretArn, !Ref "AWS::NoValue"]
+
+  # ── IAM — Task Role (app permissions) ────────────────────────────────
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-task-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub "${ImagesBucketArn}/*"
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Ref ImagesBucketArn
+        - PolicyName: LambdaInvoke
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Ref GeocodingFunctionArn
+
+  # ── ALB ──────────────────────────────────────────────────────────────
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "${EnvironmentName}-alb"
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - !Ref PublicSubnetAId
+        - !Ref PublicSubnetBId
+      SecurityGroups:
+        - !Ref ALBSecurityGroupId
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub "${EnvironmentName}-tg"
+      VpcId: !Ref VPCId
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /actuator/health
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      HealthCheckTimeoutSeconds: 10
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "30"
+        - Key: stickiness.enabled
+          Value: "true"
+        - Key: stickiness.type
+          Value: lb_cookie
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: "86400"
+
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - !If
+          - HasACMCert
+          - Type: redirect
+            RedirectConfig:
+              Protocol: HTTPS
+              Port: "443"
+              StatusCode: HTTP_301
+          - Type: forward
+            TargetGroupArn: !Ref TargetGroup
+
+  HTTPSListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: HasACMCert
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref ACMCertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  # ── Task Definition ──────────────────────────────────────────────────
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${EnvironmentName}-app"
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: app
+          Image: !Ref ImageUri
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: prod
+            - Name: MYSQL_HOST
+              Value: !Ref MySQLEndpoint
+            - Name: MYSQL_PORT
+              Value: !Ref MySQLPort
+            - Name: MYSQL_DATABASE
+              Value: Frict
+            - Name: APP_STORAGE_BUCKET_NAME
+              Value: !Ref ImagesBucketName
+            - Name: APP_STORAGE_REGION
+              Value: !Ref "AWS::Region"
+            - Name: APP_STORAGE_PUBLIC_URL
+              Value: !Sub "https://${ImagesBucketName}.s3.${AWS::Region}.amazonaws.com"
+            - Name: LAMBDA_GEOCODING_FUNCTION_NAME
+              Value: !Ref GeocodingFunctionName
+            - Name: CORS_ALLOWED_ORIGIN
+              Value: !Ref CORSAllowedOrigin
+            - Name: JAVA_OPTS
+              Value: "-Xmx768m -Xss256k"
+          Secrets:
+            - Name: MYSQL_USERNAME
+              ValueFrom: !Sub "${MySQLSecretArn}:username::"
+            - Name: MYSQL_PASSWORD
+              ValueFrom: !Sub "${MySQLSecretArn}:password::"
+            - Name: JWT_SECRET
+              ValueFrom: !Ref JWTSecretArn
+            - !If
+              - HasDocDB
+              - Name: MONGODB_URI
+                ValueFrom: !Sub "${DocDBSecretArn}:uri::"
+              - !Ref "AWS::NoValue"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: app
+
+  # ── ECS Service ──────────────────────────────────────────────────────
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - HTTPListener
+    Properties:
+      ServiceName: !Sub "${EnvironmentName}-svc"
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: !Ref MinTaskCount
+      LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: 120
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - !Ref PublicSubnetAId
+            - !Ref PublicSubnetBId
+          SecurityGroups:
+            - !Ref FargateSecurityGroupId
+      LoadBalancers:
+        - ContainerName: app
+          ContainerPort: 8080
+          TargetGroupArn: !Ref TargetGroup
+
+  # ── Auto Scaling ─────────────────────────────────────────────────────
+  ScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      ServiceNamespace: ecs
+      ScalableDimension: ecs:service:DesiredCount
+      ResourceId: !Sub "service/${ECSCluster}/${ECSService.Name}"
+      MinCapacity: !Ref MinTaskCount
+      MaxCapacity: !Ref MaxTaskCount
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+
+  ScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub "${EnvironmentName}-cpu-tracking"
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 60
+        ScaleOutCooldown: 60
+        ScaleInCooldown: 300
+
+Outputs:
+  ALBDnsName:
+    Value: !GetAtt ALB.DNSName
+  ALBHostedZoneId:
+    Value: !GetAtt ALB.CanonicalHostedZoneID
+  ALBArn:
+    Value: !Ref ALB
+  ECSClusterName:
+    Value: !Ref ECSCluster
+  ECSServiceName:
+    Value: !GetAtt ECSService.Name
+  TaskExecutionRoleArn:
+    Value: !GetAtt TaskExecutionRole.Arn
+  TaskRoleArn:
+    Value: !GetAtt TaskRole.Arn

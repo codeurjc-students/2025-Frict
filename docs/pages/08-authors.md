@@ -7,6 +7,6 @@ This application will be developed as part of the **Bachelor’s Final Projects 
 
 &nbsp;
 
-[◀️](/docs/pages/06-project-kickoff.md) **Page 7. Authors**
+[◀️](/docs/pages/07-project-kickoff.md) **Page 8. Authors**
 
 [⏪ Return to Index](/README.md)
