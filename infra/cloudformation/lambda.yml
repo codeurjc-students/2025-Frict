@@ -45,7 +45,7 @@ Resources:
       MemorySize: 256
       Timeout: 10
       Role: !GetAtt GeocodingLambdaRole.Arn
-      Code: ../../lambda/geocoding
+      Code: ../lambda/geocoding
 
   # ── IAM — DocDB Auto-Stop Lambda ────────────────────────────────────
   DocDBAutoStopRole:
