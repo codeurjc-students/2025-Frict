@@ -27,13 +27,10 @@ public class ImageService {
 
     private final S3Client s3Client;
 
-    @Value("${minio.url}")
-    private String minioUrl;
-
-    @Value("${minio.public-url}")
+    @Value("${app.storage.public-url}")
     private String publicUrl;
 
-    @Value("${minio.bucket-name}")
+    @Value("${app.storage.bucket-name}")
     private String bucketName;
 
     @PostConstruct

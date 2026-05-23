@@ -19,113 +19,21 @@ import java.util.List;
 @Slf4j
 public class LocationService {
 
-    private final RestClient nominatimRestClient;
+    private final GeocodingClient geocodingClient;
     private final RestClient osrmRestClient;
 
-    public LocationService(@Qualifier("nominatimRestClient") RestClient nominatimRestClient,
+    public LocationService(GeocodingClient geocodingClient,
                            @Qualifier("osrmRestClient") RestClient osrmRestClient) {
-        this.nominatimRestClient = nominatimRestClient;
+        this.geocodingClient = geocodingClient;
         this.osrmRestClient = osrmRestClient;
     }
 
     public AddressDTO reverseGeocode(double latitude, double longitude) {
-        JsonNode response;
-        try {
-            response = nominatimRestClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/reverse")
-                            .queryParam("format", "json")
-                            .queryParam("lat", latitude)
-                            .queryParam("lon", longitude)
-                            .build())
-                    .retrieve()
-                    .body(JsonNode.class);
-        } catch (RestClientException ex) {
-            log.error("Nominatim reverse geocoding call failed", ex);
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Geocoding provider unreachable");
-        }
-
-        if (response == null || !response.hasNonNull("address")) {
-            return null;
-        }
-
-        JsonNode addr = response.get("address");
-
-        AddressDTO dto = new AddressDTO();
-        dto.setStreet(firstNonBlank(
-                addr.path("road").asText(""),
-                addr.path("pedestrian").asText(""),
-                addr.path("street").asText("")));
-        dto.setNumber(addr.path("house_number").asText(""));
-        dto.setCity(firstNonBlank(
-                addr.path("city").asText(""),
-                addr.path("town").asText(""),
-                addr.path("village").asText("")));
-        dto.setPostalCode(addr.path("postcode").asText(""));
-        dto.setCountry(addr.path("country").asText(""));
-        dto.setLatitude(latitude);
-        dto.setLongitude(longitude);
-        return dto;
+        return geocodingClient.reverseGeocode(latitude, longitude);
     }
 
     public CoordinatesDTO directGeocode(AddressDTO address) {
-        String query = buildQuery(address);
-        if (query.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Address query is empty");
-        }
-
-        JsonNode response;
-        try {
-            response = nominatimRestClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/search")
-                            .queryParam("q", query)
-                            .queryParam("format", "json")
-                            .queryParam("limit", 1)
-                            .build())
-                    .retrieve()
-                    .body(JsonNode.class);
-        } catch (RestClientException ex) {
-            log.error("Nominatim direct geocoding call failed", ex);
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Geocoding provider unreachable");
-        }
-
-        if (response == null || !response.isArray() || response.isEmpty()) {
-            return null;
-        }
-
-        JsonNode first = response.get(0);
-        try {
-            double lat = Double.parseDouble(first.path("lat").asText());
-            double lon = Double.parseDouble(first.path("lon").asText());
-            return new CoordinatesDTO(lat, lon);
-        } catch (NumberFormatException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Invalid coordinates returned by geocoding provider");
-        }
-    }
-
-    private String buildQuery(AddressDTO address) {
-        if (address == null) return "";
-
-        String streetAndNumber = String.join(" ",
-                nullSafe(address.getStreet()),
-                nullSafe(address.getNumber())).trim();
-
-        List<String> parts = new ArrayList<>();
-        if (!streetAndNumber.isBlank()) parts.add(streetAndNumber);
-        addIfNotBlank(parts, address.getCity());
-        addIfNotBlank(parts, address.getPostalCode());
-        addIfNotBlank(parts, address.getCountry());
-
-        return String.join(", ", parts);
-    }
-
-    private static void addIfNotBlank(List<String> parts, String value) {
-        if (value != null && !value.isBlank()) parts.add(value);
-    }
-
-    private static String nullSafe(String value) {
-        return value == null ? "" : value;
+        return geocodingClient.directGeocode(address);
     }
 
     public RouteDTO getRoute(double fromLat, double fromLng, double toLat, double toLng) {
@@ -163,12 +71,5 @@ public class LocationService {
             }
         }
         return new RouteDTO(duration, distance, coordinates);
-    }
-
-    private static String firstNonBlank(String... values) {
-        for (String value : values) {
-            if (value != null && !value.isBlank()) return value;
-        }
-        return "";
     }
 }

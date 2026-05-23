@@ -19,13 +19,19 @@ export class NotificationService implements OnDestroy {
   private socketOpenSignal = signal(false);
   private beforeDisconnectSubject = new Subject<void>();
 
+  private reconnectAttempt = 0;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private intentionalClose = false;
+
+  private static readonly BASE_DELAY_MS = 1000;
+  private static readonly MAX_DELAY_MS = 30000;
+
   public unreadNotifications = computed(() =>
     this.notificationsSignal().filter(n => !n.read)
   );
 
   public unreadCount = computed(() => this.unreadNotifications().length);
   public isSocketOpen = computed(() => this.socketOpenSignal());
-  // Fires synchronously right before the socket is closed, while it is still OPEN.
   public beforeDisconnect$ = this.beforeDisconnectSubject.asObservable();
 
   constructor() {
@@ -39,7 +45,6 @@ export class NotificationService implements OnDestroy {
       }
     });
 
-    // Capture tab/browser close so subscribers can flush a final message via WS
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => this.disconnect());
     }
@@ -59,13 +64,29 @@ export class NotificationService implements OnDestroy {
   }
 
   private connect() {
+    this.intentionalClose = false;
+    this.clearReconnectTimer();
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/api/v1/ws/notifications`;
 
     this.socket = new WebSocket(wsUrl);
-    this.socket.onopen = () => this.socketOpenSignal.set(true);
-    this.socket.onclose = () => this.socketOpenSignal.set(false);
+
+    this.socket.onopen = () => {
+      this.reconnectAttempt = 0;
+      this.socketOpenSignal.set(true);
+    };
+
+    this.socket.onclose = () => {
+      this.socketOpenSignal.set(false);
+      this.socket = null;
+      if (!this.intentionalClose && this.authService.isLogged()) {
+        this.scheduleReconnect();
+      }
+    };
+
     this.loadInitialHistory();
+
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
@@ -78,6 +99,23 @@ export class NotificationService implements OnDestroy {
     this.socket.onerror = (error) => {
       console.error('Error in notifications websocket:', error);
     };
+  }
+
+  private scheduleReconnect() {
+    const jitter = Math.random() * 0.5 + 0.75;
+    const delay = Math.min(
+      NotificationService.BASE_DELAY_MS * Math.pow(2, this.reconnectAttempt) * jitter,
+      NotificationService.MAX_DELAY_MS
+    );
+    this.reconnectAttempt++;
+    this.reconnectTimer = setTimeout(() => this.connect(), delay);
+  }
+
+  private clearReconnectTimer() {
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
   }
 
   public getRecentNotifications(type: string, count: number = 5): Observable<Notification[]> {
@@ -141,8 +179,9 @@ export class NotificationService implements OnDestroy {
   }
 
   private disconnect() {
+    this.intentionalClose = true;
+    this.clearReconnectTimer();
     if (this.socket) {
-      // Notify subscribers BEFORE closing so they can push a last frame while the socket is OPEN
       if (this.socket.readyState === WebSocket.OPEN) {
         this.beforeDisconnectSubject.next();
       }

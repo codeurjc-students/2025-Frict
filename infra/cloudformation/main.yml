@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Frict — Root stack orchestrating all nested stacks"
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: frict
+  DomainName:
+    Type: String
+    Description: Fully qualified domain (e.g. app.example.com)
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+    Description: Route53 hosted zone ID for the domain
+  ImageTag:
+    Type: String
+    Default: latest
+    Description: Docker image tag to deploy
+  MinTaskCount:
+    Type: Number
+    Default: 2
+  MaxTaskCount:
+    Type: Number
+    Default: 8
+  EnableDocDB:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+  ALBCertificateArn:
+    Type: String
+    Description: ACM certificate ARN in the deployment region for the ALB
+    Default: ""
+  CloudFrontCertificateArn:
+    Type: String
+    Description: ACM certificate ARN in us-east-1 for CloudFront
+
+Resources:
+
+  # ── Network ──────────────────────────────────────────────────────────
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./network.yml
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+
+  # ── Storage (S3 + ECR) ──────────────────────────────────────────────
+  StorageStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./storage.yml
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        DomainName: !Ref DomainName
+
+  # ── Data (RDS + DocumentDB + Secrets) ────────────────────────────────
+  DataStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./data.yml
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VPCId: !GetAtt NetworkStack.Outputs.VPCId
+        PrivateSubnetAId: !GetAtt NetworkStack.Outputs.PrivateSubnetAId
+        PrivateSubnetBId: !GetAtt NetworkStack.Outputs.PrivateSubnetBId
+        RDSSecurityGroupId: !GetAtt NetworkStack.Outputs.RDSSecurityGroupId
+        DocDBSecurityGroupId: !GetAtt NetworkStack.Outputs.DocDBSecurityGroupId
+        EnableDocDB: !Ref EnableDocDB
+
+  # ── Lambda (geocoding + DocDB auto-stop) ─────────────────────────────
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./lambda.yml
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        DocDBClusterId: !If
+          - DocDBEnabled
+          - !GetAtt DataStack.Outputs.DocDBClusterId
+          - ""
+        EnableDocDB: !Ref EnableDocDB
+
+  # ── Compute (ECS + ALB + autoscaling) ────────────────────────────────
+  ComputeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./compute.yml
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VPCId: !GetAtt NetworkStack.Outputs.VPCId
+        PublicSubnetAId: !GetAtt NetworkStack.Outputs.PublicSubnetAId
+        PublicSubnetBId: !GetAtt NetworkStack.Outputs.PublicSubnetBId
+        ALBSecurityGroupId: !GetAtt NetworkStack.Outputs.ALBSecurityGroupId
+        FargateSecurityGroupId: !GetAtt NetworkStack.Outputs.FargateSecurityGroupId
+        ImageUri: !Sub "${StorageStack.Outputs.ECRRepositoryUri}:${ImageTag}"
+        ImagesBucketName: !GetAtt StorageStack.Outputs.ImagesBucketName
+        ImagesBucketArn: !GetAtt StorageStack.Outputs.ImagesBucketArn
+        MySQLEndpoint: !GetAtt DataStack.Outputs.MySQLEndpoint
+        MySQLPort: !GetAtt DataStack.Outputs.MySQLPort
+        MySQLSecretArn: !GetAtt DataStack.Outputs.MySQLSecretArn
+        JWTSecretArn: !GetAtt DataStack.Outputs.JWTSecretArn
+        DocDBEndpoint: !If
+          - DocDBEnabled
+          - !GetAtt DataStack.Outputs.DocDBEndpoint
+          - ""
+        DocDBPort: !If
+          - DocDBEnabled
+          - !GetAtt DataStack.Outputs.DocDBPort
+          - "27017"
+        DocDBSecretArn: !If
+          - DocDBEnabled
+          - !GetAtt DataStack.Outputs.DocDBSecretArn
+          - ""
+        GeocodingFunctionName: !GetAtt LambdaStack.Outputs.GeocodingFunctionName
+        GeocodingFunctionArn: !GetAtt LambdaStack.Outputs.GeocodingFunctionArn
+        ACMCertificateArn: !Ref ALBCertificateArn
+        CORSAllowedOrigin: !Sub "https://${DomainName}"
+        MinTaskCount: !Ref MinTaskCount
+        MaxTaskCount: !Ref MaxTaskCount
+        EnableDocDB: !Ref EnableDocDB
+
+  # ── Edge (CloudFront + Route53) ──────────────────────────────────────
+  EdgeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./edge.yml
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        DomainName: !Ref DomainName
+        HostedZoneId: !Ref HostedZoneId
+        ALBDnsName: !GetAtt ComputeStack.Outputs.ALBDnsName
+        ALBHostedZoneId: !GetAtt ComputeStack.Outputs.ALBHostedZoneId
+        CloudFrontCertificateArn: !Ref CloudFrontCertificateArn
+
+Conditions:
+  DocDBEnabled: !Equals [!Ref EnableDocDB, "true"]
+
+Outputs:
+  SiteUrl:
+    Value: !GetAtt EdgeStack.Outputs.SiteUrl
+  CloudFrontDomain:
+    Value: !GetAtt EdgeStack.Outputs.CloudFrontDomainName
+  ALBDnsName:
+    Value: !GetAtt ComputeStack.Outputs.ALBDnsName
+  ECSClusterName:
+    Value: !GetAtt ComputeStack.Outputs.ECSClusterName
+  ECSServiceName:
+    Value: !GetAtt ComputeStack.Outputs.ECSServiceName
+  ECRRepositoryUri:
+    Value: !GetAtt StorageStack.Outputs.ECRRepositoryUri
+  MySQLEndpoint:
+    Value: !GetAtt DataStack.Outputs.MySQLEndpoint

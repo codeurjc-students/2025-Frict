@@ -1,0 +1,73 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/cloudformation/**"
+      - "infra/lambda/**"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+  STACK_NAME: frict
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get AWS account ID
+        id: account
+        run: echo "id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure artifact bucket
+        env:
+          BUCKET: ${{ env.STACK_NAME }}-cfn-artifacts-${{ steps.account.outputs.id }}-${{ env.AWS_REGION }}
+        run: |
+          aws s3 mb "s3://$BUCKET" --region $AWS_REGION 2>/dev/null || true
+
+      - name: Package CloudFormation templates
+        env:
+          BUCKET: ${{ env.STACK_NAME }}-cfn-artifacts-${{ steps.account.outputs.id }}-${{ env.AWS_REGION }}
+        run: |
+          aws cloudformation package \
+            --template-file infra/cloudformation/main.yml \
+            --s3-bucket "$BUCKET" \
+            --s3-prefix cfn-templates \
+            --output-template-file infra/cloudformation/packaged.yml \
+            --region $AWS_REGION
+
+      - name: Deploy CloudFormation stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/cloudformation/packaged.yml \
+            --stack-name $STACK_NAME \
+            --region $AWS_REGION \
+            --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+            --parameter-overrides \
+              EnvironmentName=$STACK_NAME \
+              DomainName=${{ secrets.DOMAIN_NAME }} \
+              HostedZoneId=${{ secrets.HOSTED_ZONE_ID }} \
+              CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }} \
+              ALBCertificateArn=${{ secrets.ALB_CERT_ARN }} \
+              EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}
+
+      - name: Print stack outputs
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --region $AWS_REGION \
+            --query "Stacks[0].Outputs" \
+            --output table

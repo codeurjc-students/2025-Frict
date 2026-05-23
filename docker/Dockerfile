@@ -1,4 +1,4 @@
-# Command (from root folder): docker build -t mjpulido/frict -f docker/Dockerfile .
+# Command (from root folder): docker build -t frict-app:local -f docker/Dockerfile .
 # ==========================================
 # STAGE 1: Frontend Build (Angular)
 # ==========================================
@@ -15,7 +15,7 @@ RUN npm ci
 # 3. Source code copy
 COPY /frontend .
 
-# 4. Compile
+# 4. Compile in production mode (minification + tree-shaking + name-mangling)
 RUN npm run build -- --configuration production
 
 
@@ -50,22 +50,14 @@ RUN addgroup -S spring && adduser -S spring -G spring
 
 WORKDIR /app
 
-# Copy JAR and certificate
+# Copy JAR
 COPY --from=backend-build /app-api/target/*.jar frict.jar
-COPY --from=backend-build /app-api/src/main/resources/keystore.p12 /app/keystore.p12
 
 # Permissions
-RUN chown spring:spring frict.jar /app/keystore.p12
+RUN chown spring:spring frict.jar
 
 USER spring:spring
 
-# Expose secure internal port
-EXPOSE 8443
+EXPOSE 8080
 
-# Entrypoint with active SSL
-ENTRYPOINT ["java", \
-            "-Dserver.port=8443", \
-            "-Dserver.ssl.enabled=true", \
-            "-Dserver.ssl.key-store=/app/keystore.p12", \
-            "-Dserver.ssl.key-store-type=PKCS12", \
-            "-jar", "frict.jar"]
+ENTRYPOINT ["java", "-jar", "frict.jar"]

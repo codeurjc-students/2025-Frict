@@ -1,0 +1,61 @@
+name: Load Test (k6)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Target URL (e.g. https://app.example.com)"
+        required: true
+      vus:
+        description: "Max virtual users"
+        required: false
+        default: "100"
+      duration:
+        description: "Sustained phase duration (e.g. 2m, 5m)"
+        required: false
+        default: "2m"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run k6 load test
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}
+          TEST_USER: ${{ secrets.LOAD_TEST_USER }}
+          TEST_PASS: ${{ secrets.LOAD_TEST_PASS }}
+        run: |
+          k6 run infra/k6/load-test.js \
+            --out json=results.json \
+            --summary-export=summary.json \
+            -e BASE_URL="$BASE_URL" \
+            -e TEST_USER="$TEST_USER" \
+            -e TEST_PASS="$TEST_PASS"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results-${{ github.run_id }}
+          path: |
+            results.json
+            summary.json

@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Frict — Lambda geocoding proxy and DocumentDB auto-stop"
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: frict
+  DocDBClusterId:
+    Type: String
+    Default: ""
+  EnableDocDB:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+
+Conditions:
+  CreateAutoStop: !And
+    - !Equals [!Ref EnableDocDB, "true"]
+    - !Not [!Equals [!Ref DocDBClusterId, ""]]
+
+Resources:
+
+  # ── IAM — Geocoding Lambda ──────────────────────────────────────────
+  GeocodingLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-geocoding-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ── Lambda — Geocoding ──────────────────────────────────────────────
+  GeocodingFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentName}-geocoding"
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      MemorySize: 256
+      Timeout: 10
+      Role: !GetAtt GeocodingLambdaRole.Arn
+      Code: ../../lambda/geocoding
+
+  # ── IAM — DocDB Auto-Stop Lambda ────────────────────────────────────
+  DocDBAutoStopRole:
+    Type: AWS::IAM::Role
+    Condition: CreateAutoStop
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-docdb-autostop-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DocDBStopCluster
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rds:StopDBCluster
+                  - rds:DescribeDBClusters
+                Resource: !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:${DocDBClusterId}"
+
+  # ── Lambda — DocDB Auto-Stop ────────────────────────────────────────
+  DocDBAutoStopFunction:
+    Type: AWS::Lambda::Function
+    Condition: CreateAutoStop
+    Properties:
+      FunctionName: !Sub "${EnvironmentName}-docdb-autostop"
+      Runtime: python3.12
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 30
+      Role: !GetAtt DocDBAutoStopRole.Arn
+      Environment:
+        Variables:
+          CLUSTER_ID: !Ref DocDBClusterId
+          MAX_UPTIME_DAYS: "6"
+      Code:
+        ZipFile: |
+          import os, json, boto3
+          from datetime import datetime, timezone, timedelta
+
+          docdb = boto3.client("docdb")
+          CLUSTER_ID = os.environ["CLUSTER_ID"]
+          MAX_DAYS = int(os.environ.get("MAX_UPTIME_DAYS", "6"))
+
+          def handler(event, context):
+              resp = docdb.describe_db_clusters(DBClusterIdentifier=CLUSTER_ID)
+              cluster = resp["DBClusters"][0]
+              status = cluster["Status"]
+
+              if status != "available":
+                  return {"action": "skip", "reason": f"Cluster status is {status}"}
+
+              latest_time = cluster.get("ClusterCreateTime", datetime.now(timezone.utc))
+              for evt_key in ["LatestRestorableTime"]:
+                  if evt_key in cluster and cluster[evt_key]:
+                      latest_time = max(latest_time, cluster[evt_key])
+
+              uptime = datetime.now(timezone.utc) - latest_time.replace(tzinfo=timezone.utc) if latest_time.tzinfo is None else datetime.now(timezone.utc) - latest_time
+              if uptime > timedelta(days=MAX_DAYS):
+                  docdb.stop_db_cluster(DBClusterIdentifier=CLUSTER_ID)
+                  return {"action": "stopped", "uptime_days": uptime.days}
+
+              return {"action": "skip", "uptime_days": uptime.days, "threshold": MAX_DAYS}
+
+  # ── EventBridge — Daily trigger ─────────────────────────────────────
+  AutoStopScheduleRule:
+    Type: AWS::Events::Rule
+    Condition: CreateAutoStop
+    Properties:
+      Name: !Sub "${EnvironmentName}-docdb-autostop-daily"
+      Description: Check DocumentDB uptime daily and stop if > 6 days
+      ScheduleExpression: "rate(1 day)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt DocDBAutoStopFunction.Arn
+          Id: DocDBAutoStopTarget
+
+  AutoStopLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Condition: CreateAutoStop
+    Properties:
+      FunctionName: !Ref DocDBAutoStopFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt AutoStopScheduleRule.Arn
+
+Outputs:
+  GeocodingFunctionName:
+    Value: !Ref GeocodingFunction
+  GeocodingFunctionArn:
+    Value: !GetAtt GeocodingFunction.Arn
