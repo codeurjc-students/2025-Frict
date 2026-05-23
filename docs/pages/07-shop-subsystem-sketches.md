@@ -120,4 +120,4 @@ It is automatically displayed when an error occurred, and allows the user to ret
 
 &nbsp;
 
-[⬅️ Return to Project Kickoff](/docs/pages/06-project-kickoff.md)
+[⬅️ Return to Project Kickoff](/docs/pages/07-project-kickoff.md)

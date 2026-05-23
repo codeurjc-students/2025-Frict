@@ -5,6 +5,6 @@
 
 &nbsp;
 
-[◀️](/docs/pages/04-development-guide.md) **Page 5. Progress tracking** [▶️](/docs/pages/06-project-kickoff.md)
+[◀️](/docs/pages/05-aws-architecture.md) **Page 6. Progress tracking** [▶️](/docs/pages/07-project-kickoff.md)
 
 [⏪ Return to Index](/README.md)

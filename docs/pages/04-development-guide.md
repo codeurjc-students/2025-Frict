@@ -188,7 +188,7 @@ The foundation of the system is built upon a well-defined relational model and a
 
 Communication between the frontend client and the backend server is handled entirely via a standardized RESTful API, utilizing Angular proxies to enable relative routing on the client side.
 
-The API strictly adheres to the **OpenAPI** (Swagger) specification, which serves as a comprehensive and interactive contract for the system's endpoints. This standardization ensures that frontend components and external consumers have a reliable, self-documenting interface to interact with. Once the Docker stack is operational (Check [**Execution**](/docs/pages/03-execution.md) section), developers can dynamically explore, test, and validate API requests in real-time through the built-in **Swagger UI** accessible at `https://localhost/swagger-ui/index.html`.
+The API strictly adheres to the **OpenAPI** (Swagger) specification, which serves as a comprehensive and interactive contract for the system's endpoints. This standardization ensures that frontend components and external consumers have a reliable, self-documenting interface to interact with. Once the Docker stack is operational (Check [**Execution**](/docs/pages/03-execution.md) section), developers can dynamically explore, test, and validate API requests in real-time through the built-in **Swagger UI** accessible at `http://localhost:8080/swagger-ui/index.html`.
 
 > ℹ️ **NOTE:** For quick reference without needing to spin up the application environment, a static HTML-rendered version of the API documentation is readily available [here](../openapi.json).
 
@@ -271,17 +271,17 @@ The bubble chart below correlates **Technical Debt** (X-axis) with **Code Covera
 The application's deployment strategy is designed for portability, automation, and a seamless transition to cloud environments.
 
 * **Single Docker Image:** The entire application is packaged into a unified Docker image. This encapsulates both the compiled Angular client (frontend) and the Spring Boot server (backend), eliminating version mismatches and drastically simplifying the distribution process.
-* **Compose Orchestration:** The execution of the application container, alongside its required external services (MySQL, MongoDB and MinIO), is coordinated locally using **Docker Compose**.
-* **Artifact Distribution:** The packaging process is fully automated via GitHub Actions workflows. The compiled Docker images and OCI artifacts are distributed publicly through DockerHub. You can access and pull the application artifacts directly from:
+* **Compose Orchestration:** The execution of the application container, alongside its required external services (MySQL, MongoDB and MinIO), is coordinated locally using **Docker Compose** with HAProxy for load balancing across multiple replicas.
+* **Artifact Distribution:** Docker images are published to **Amazon ECR** (Elastic Container Registry) for production cloud deployments, and to **DockerHub** for public distribution and local testing. You can access and pull the application artifacts directly from:
 **[Frict DockerHub](https://hub.docker.com/r/mjpulido/frict)**
 
 &nbsp;
 
-#### Future Roadmap: AWS & Continuous Deployment (CD)
+#### AWS Cloud Deployment
 
-In upcoming development phases, the deployment architecture will evolve to a fully automated cloud-based model. The infrastructure will be provisioned and deployed on **Amazon Web Services (AWS)** to guarantee high availability, security, and performance.
+The production environment runs on **Amazon Web Services (AWS)** using a cloud-native architecture with ECS Fargate, horizontal autoscaling, and fully automated CI/CD pipelines via GitHub Actions with OIDC federation. The entire infrastructure is provisioned as **CloudFormation nested stacks** for reproducible, version-controlled deployments.
 
-Furthermore, the current Continuous Integration (CI) pipeline will be expanded to include **Continuous Deployment (CD)**. This will establish a fully automated end-to-end delivery cycle, where new releases and code changes pushed to the main branch are automatically tested, built, and seamlessly deployed directly to the AWS production environment without manual intervention.
+For a comprehensive description of the AWS architecture, services, security model, and cost estimates, see the [AWS Architecture](/docs/pages/05-aws-architecture.md) page.
 
 
 &nbsp;
@@ -358,7 +358,7 @@ Project testing, static code analysis and artifact publishing is automated by us
 
 #### Docker Image and OCI Artifact Publishing (oci_artifact_publishing.yml)
 
-This workflow automates the containerization, versioning, and distribution of the application to Docker Hub.
+This workflow automates the containerization, versioning, and distribution of the application to Docker Hub for public access.
 
 - **Triggers:** Runs automatically when code is pushed or merged into the `main` branch, when a new GitHub Release is published, or manually via workflow dispatch.
 - **Smart Tagging:** Dynamically resolves and assigns image tags based on the trigger context:
@@ -367,6 +367,14 @@ This workflow automates the containerization, versioning, and distribution of th
   - A custom tag combining the branch name, timestamp, and commit SHA for manual executions.
 - **Build & Registry Push:** Safely builds the Docker image and pushes it to the public Docker Hub registry (`mjpulido/frict`).
 - **Compose OCI Artifacts:** Automatically parses the `docker-compose.yml` file to inject the exact generated image tag, and publishes the Compose file itself as an OCI artifact (e.g., `dev-compose` or `latest-compose`). This enables users to seamlessly deploy the entire stack remotely using the `docker compose -f oci://...` command without needing to download any files.
+
+#### AWS Deployment Pipelines (deploy-app.yml, deploy-infra.yml)
+
+These workflows handle production deployment to AWS using OIDC authentication (no stored credentials):
+
+- **deploy-app.yml:** Triggered on push to `main` when backend, frontend, or Dockerfile changes. Builds the Docker image, pushes to **Amazon ECR**, and performs a rolling deploy on ECS Fargate.
+- **deploy-infra.yml:** Triggered on push to `main` when CloudFormation templates or Lambda code changes. Packages and deploys the CloudFormation stack.
+- **load-test.yml:** Manual trigger for k6 load tests against the deployed environment (0→100 VUs ramp).
 
 &nbsp;
 
@@ -457,24 +465,11 @@ This will create a new container in Docker Desktop that will act as a dedicated 
 **4. Deploy the MinIO Object Storage**
 The system uses MinIO for handling image uploads. Spin up a local container using Docker:
 ```bash
-# Create self-signed certificates to serve images via HTTPS (if they do not exist)
-docker run --rm `
-  -v "C:\...\2025-Frict\docker\minio_https\certs:/certs" `
-  alpine/openssl req -x509 -nodes -days 365 -newkey rsa:2048 `
-  -keyout /certs/private.key `
-  -out /certs/public.crt `
-  -subj "/CN=minio" `
-  -addext "subjectAltName = DNS:minio, DNS:localhost, IP:127.0.0.1"
-
-# Create and start a MinIO container that uses the certificates
-docker run -d \
-  --name minio-frict \
+docker run -d --name minio-frict \
   -e MINIO_ROOT_USER=user \
   -e MINIO_ROOT_PASSWORD=password \
-  -p 9000:9000 \
-  -p 9001:9001 \
+  -p 9000:9000 -p 9001:9001 \
   -v minio_frict_data:/data \
-  -v "C:\...\2025-Frict\docker\minio_https\certs:/root/.minio/certs" \
   minio/minio server /data --console-address ":9001"
 ```
 
@@ -482,32 +477,32 @@ docker run -d \
 Thanks to the `spring.config.import` property, Spring Boot natively parses `.env` files. Create a file named `.env` inside the `backend` folder and populate it with the following required variables:
 
 ```env
-MYSQL_URL=jdbc:mysql://localhost:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+SPRING_PROFILES_ACTIVE=local
+
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=Frict
 MYSQL_USERNAME=user
 MYSQL_PASSWORD=password
 
-MONGODB_URI=localhost:27017/Frict?authSource=admin&directConnection=true
-MONGODB_USERNAME=user
-MONGODB_PASSWORD=password
+MONGODB_URI=mongodb://user:password@localhost:27017/Frict?authSource=admin&directConnection=true
 
 JWT_SECRET=A3F7B2E8C1D4F6A9B0E3C2D5F8A1B4E7C0D3F6A9B2E5C8D1F4A7B0E3C6D9F2A5
 DB_ENCRYPTION_KEY=a1b2c3d4e5f6g7h8a1b2c3d4e5f6g7h8
 
-CORS_ALLOWED_ORIGIN=https://localhost:4202
+CORS_ALLOWED_ORIGIN=http://localhost:4200
 
-S3_ENDPOINT=https://localhost:9000
-S3_PUBLIC_URL=https://localhost:9000
-S3_ACCESS_KEY=user
-S3_SECRET_KEY=password
-S3_BUCKET_NAME=images
+APP_STORAGE_ENDPOINT=http://localhost:9000
+APP_STORAGE_PUBLIC_URL=http://localhost:9000
+APP_STORAGE_BUCKET_NAME=images
+APP_STORAGE_REGION=us-east-1
+AWS_ACCESS_KEY_ID=user
+AWS_SECRET_ACCESS_KEY=password
 
 SENDER_MAIL_PORT=587
 SENDER_MAIL_ADDRESS=address@domain.com
 SENDER_MAIL_PASSWORD=aaaa aaaa aaaa aaaa
 GOOGLE_AUTH_CLIENT_ID=123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com
-
-DOCKERHUB_USERNAME=user
-DOCKERHUB_TOKEN=dckr_pat_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678
 
 SONAR_TOKEN=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
 ```
@@ -532,10 +527,8 @@ ng serve
 
 **7. Open the application in your browser**
 Once both servers are running, open your preferred web browser and navigate to:
-- **`https://localhost:4202`** (web client)
-- **`https://localhost:9000`** (MinIO image service)
-
-> ℹ️ NOTE: Because the application uses self-signed certificates for development, your browser will display security warnings. Click on "Advanced" and select "Proceed to localhost" in both URLs to allow image servicing and access the platform.
+- **`http://localhost:4200`** (web client)
+- **`http://localhost:9000`** (MinIO image service)
 
 &nbsp;
 
@@ -550,7 +543,6 @@ As API and integration backend test sets use real database instances, proper Min
 
 ```bash
 #MinIO
-#Make sure valid certificates are located in docker/minio_https or create new ones (command above)
 docker run -d \
   --name minio-fricttest \
   -e MINIO_ROOT_USER=root \
@@ -558,7 +550,6 @@ docker run -d \
   -p 9002:9000 \
   -p 9003:9001 \
   -v minio_fricttest_data:/data \
-  -v "C:\...\2025-Frict\docker\minio_https\certs:/root/.minio/certs" \
   minio/minio server /data --console-address ":9001"
 ```
 
@@ -642,7 +633,7 @@ Since the backend integrates the **OpenAPI** standard and Swagger UI, there is n
 Once the Spring Boot application is running, follow these steps to test any endpoint:
 
 1. Open your web browser and navigate to the Swagger UI panel:
-**`https://localhost/swagger-ui/index.html`**
+**`http://localhost:8080/swagger-ui/index.html`**
 
 
 2. Scroll through the interface to explore the available controllers and expand the endpoint you wish to test (e.g., `GET /api/products/all`).
@@ -658,6 +649,6 @@ Once the Spring Boot application is running, follow these steps to test any endp
 
 &nbsp;
 
-[◀️](/docs/pages/03-execution.md) **Page 4. Development Guide** [▶️](/docs/pages/05-progress-tracking.md)
+[◀️](/docs/pages/03-execution.md) **Page 4. Development Guide** [▶️](/docs/pages/05-aws-architecture.md)
 
 [⏪ Return to Index](/README.md)
