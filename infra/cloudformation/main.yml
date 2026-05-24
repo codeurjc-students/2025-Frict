@@ -32,6 +32,21 @@ Parameters:
   CloudFrontCertificateArn:
     Type: String
     Description: ACM certificate ARN in us-east-1 for CloudFront
+  SenderMailAddress:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailPassword:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailPort:
+    Type: String
+    Default: "587"
+  GoogleAuthClientId:
+    Type: String
+    Default: ""
+    NoEcho: true
   CloudFrontPrefixListId:
     Type: String
     Description: AWS-managed prefix list ID for CloudFront origin-facing IPs
@@ -69,6 +84,10 @@ Resources:
         RDSSecurityGroupId: !GetAtt NetworkStack.Outputs.RDSSecurityGroupId
         DocDBSecurityGroupId: !GetAtt NetworkStack.Outputs.DocDBSecurityGroupId
         EnableDocDB: !Ref EnableDocDB
+        SenderMailAddress: !Ref SenderMailAddress
+        SenderMailPassword: !Ref SenderMailPassword
+        SenderMailPort: !Ref SenderMailPort
+        GoogleAuthClientId: !Ref GoogleAuthClientId
 
   # ── Lambda (geocoding + DocDB auto-stop) ─────────────────────────────
   LambdaStack:
@@ -103,6 +122,8 @@ Resources:
         MySQLSecretArn: !GetAtt DataStack.Outputs.MySQLSecretArn
         JWTSecretArn: !GetAtt DataStack.Outputs.JWTSecretArn
         DBEncryptionKeySecretArn: !GetAtt DataStack.Outputs.DBEncryptionKeySecretArn
+        MailSecretArn: !GetAtt DataStack.Outputs.MailSecretArn
+        GoogleAuthSecretArn: !GetAtt DataStack.Outputs.GoogleAuthSecretArn
         DocDBEndpoint: !If
           - DocDBEnabled
           - !GetAtt DataStack.Outputs.DocDBEndpoint

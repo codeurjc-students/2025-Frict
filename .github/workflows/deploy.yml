@@ -83,7 +83,11 @@ jobs:
               CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }} \
               ALBCertificateArn=${{ secrets.ALB_CERT_ARN }} \
               CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }} \
-              EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}
+              EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }} \
+              SenderMailAddress=${{ secrets.SENDER_MAIL_ADDRESS }} \
+              SenderMailPassword=${{ secrets.SENDER_MAIL_PASSWORD }} \
+              SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }} \
+              GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}
 
       - name: Print stack outputs
         if: always()

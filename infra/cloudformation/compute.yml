@@ -42,6 +42,10 @@ Parameters:
     Default: ""
   DBEncryptionKeySecretArn:
     Type: String
+  MailSecretArn:
+    Type: String
+  GoogleAuthSecretArn:
+    Type: String
   GeocodingFunctionName:
     Type: String
   GeocodingFunctionArn:
@@ -112,6 +116,8 @@ Resources:
                   - !Ref MySQLSecretArn
                   - !Ref JWTSecretArn
                   - !Ref DBEncryptionKeySecretArn
+                  - !Ref MailSecretArn
+                  - !Ref GoogleAuthSecretArn
                   - !If [HasDocDB, !Ref DocDBSecretArn, !Ref "AWS::NoValue"]
 
   # ── IAM — Task Role (app permissions) ────────────────────────────────
@@ -274,6 +280,14 @@ Resources:
               ValueFrom: !Ref JWTSecretArn
             - Name: DB_ENCRYPTION_KEY
               ValueFrom: !Ref DBEncryptionKeySecretArn
+            - Name: SENDER_MAIL_ADDRESS
+              ValueFrom: !Sub "${MailSecretArn}:address::"
+            - Name: SENDER_MAIL_PASSWORD
+              ValueFrom: !Sub "${MailSecretArn}:password::"
+            - Name: SENDER_MAIL_PORT
+              ValueFrom: !Sub "${MailSecretArn}:port::"
+            - Name: GOOGLE_AUTH_CLIENT_ID
+              ValueFrom: !Ref GoogleAuthSecretArn
             - !If
               - HasDocDB
               - Name: DOCDB_USERNAME

@@ -178,7 +178,7 @@ if ($VPC_ID -and $VPC_ID -ne "None") {
 
 # ── Clean up Secrets ──
 Write-Host "[4/7] Purging Secrets Manager..." -ForegroundColor Cyan
-foreach ($SECRET in @("$STACK_NAME/mysql", "$STACK_NAME/docdb", "$STACK_NAME/jwt-secret", "$STACK_NAME/db-encryption-key")) {
+foreach ($SECRET in @("$STACK_NAME/mysql", "$STACK_NAME/docdb", "$STACK_NAME/jwt-secret", "$STACK_NAME/db-encryption-key", "$STACK_NAME/mail", "$STACK_NAME/google-auth")) {
     $exists = aws secretsmanager describe-secret --secret-id $SECRET --region $REGION 2>$null
     if ($exists) {
         Write-Host "  Deleting: $SECRET"

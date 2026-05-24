@@ -203,7 +203,7 @@ jobs:
       - name: Clean up Secrets Manager
         if: always()
         run: |
-          for SECRET in "${STACK_NAME}/mysql" "${STACK_NAME}/docdb" "${STACK_NAME}/jwt-secret" "${STACK_NAME}/db-encryption-key"; do
+          for SECRET in "${STACK_NAME}/mysql" "${STACK_NAME}/docdb" "${STACK_NAME}/jwt-secret" "${STACK_NAME}/db-encryption-key" "${STACK_NAME}/mail" "${STACK_NAME}/google-auth"; do
             if aws secretsmanager describe-secret \
               --secret-id "$SECRET" --region $AWS_REGION 2>/dev/null; then
               echo "Force deleting: $SECRET"
