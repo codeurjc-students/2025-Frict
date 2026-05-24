@@ -32,6 +32,9 @@ Parameters:
   CloudFrontCertificateArn:
     Type: String
     Description: ACM certificate ARN in us-east-1 for CloudFront
+  CloudFrontPrefixListId:
+    Type: String
+    Description: AWS-managed prefix list ID for CloudFront origin-facing IPs
 
 Resources:
 
@@ -42,6 +45,7 @@ Resources:
       TemplateURL: ./network.yml
       Parameters:
         EnvironmentName: !Ref EnvironmentName
+        CloudFrontPrefixListId: !Ref CloudFrontPrefixListId
 
   # ── Storage (S3 + ECR) ──────────────────────────────────────────────
   StorageStack:

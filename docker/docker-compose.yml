@@ -6,7 +6,8 @@ x-app-common: &app-common
     dockerfile: docker/Dockerfile
   restart: unless-stopped
   env_file:
-    - ../backend/.env
+    - path: ../backend/.env
+      required: false
   environment:
     SPRING_PROFILES_ACTIVE: local
     MYSQL_HOST: mysql

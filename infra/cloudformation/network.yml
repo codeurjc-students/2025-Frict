@@ -5,6 +5,9 @@ Parameters:
   EnvironmentName:
     Type: String
     Default: frict
+  CloudFrontPrefixListId:
+    Type: String
+    Description: AWS-managed prefix list ID for CloudFront origin-facing IPs
 
 Mappings:
   SubnetCIDR:
@@ -141,17 +144,13 @@ Resources:
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP/HTTPS from the internet to the ALB
+      GroupDescription: Allow HTTP only from CloudFront
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: "0.0.0.0/0"
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: "0.0.0.0/0"
+          SourcePrefixListId: !Ref CloudFrontPrefixListId
       Tags:
         - Key: Name
           Value: !Sub "${EnvironmentName}-sg-alb"

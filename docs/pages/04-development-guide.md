@@ -368,12 +368,10 @@ This workflow automates the containerization, versioning, and distribution of th
 - **Build & Registry Push:** Safely builds the Docker image and pushes it to the public Docker Hub registry (`mjpulido/frict`).
 - **Compose OCI Artifacts:** Automatically parses the `docker-compose.yml` file to inject the exact generated image tag, and publishes the Compose file itself as an OCI artifact (e.g., `dev-compose` or `latest-compose`). This enables users to seamlessly deploy the entire stack remotely using the `docker compose -f oci://...` command without needing to download any files.
 
-#### AWS Deployment Pipelines (deploy-app.yml, deploy-infra.yml)
+#### AWS Deployment Pipeline (deploy.yml)
 
-These workflows handle production deployment to AWS using OIDC authentication (no stored credentials):
+A single unified workflow handles production deployment to AWS using OIDC authentication (no stored credentials). Triggered on push to `main` when backend, frontend, Dockerfile, CloudFormation, or Lambda code changes. It runs infrastructure provisioning and Docker image build in parallel, then activates the ECS deployment once both complete.
 
-- **deploy-app.yml:** Triggered on push to `main` when backend, frontend, or Dockerfile changes. Builds the Docker image, pushes to **Amazon ECR**, and performs a rolling deploy on ECS Fargate.
-- **deploy-infra.yml:** Triggered on push to `main` when CloudFormation templates or Lambda code changes. Packages and deploys the CloudFormation stack.
 - **load-test.yml:** Manual trigger for k6 load tests against the deployed environment (0→100 VUs ramp).
 
 &nbsp;

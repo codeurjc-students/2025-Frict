@@ -96,7 +96,7 @@ Resources:
         - !Ref RDSSecurityGroupId
       MultiAZ: false
       PubliclyAccessible: false
-      BackupRetentionPeriod: 7
+      BackupRetentionPeriod: 1
       StorageEncrypted: true
 
   MySQLSecretAttachment:
