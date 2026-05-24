@@ -35,9 +35,11 @@ The application is deployed on **Amazon Web Services (AWS)** following a cloud-n
 ```
                   Route53 (domain)
                         |
+                  WAF (IP-based access control)
+                        |
                   CloudFront (static cache + TLS)
                         |
-                  ALB (sticky sessions, ACM cert)
+                  ALB (sticky sessions, CloudFront-only SG)
                         |
             ┌───────────┼───────────┐         ← Application Auto Scaling
         Task 1      Task 2      Task N        (target tracking on CPU 60%)
@@ -63,7 +65,8 @@ The application is deployed on **Amazon Web Services (AWS)** following a cloud-n
 | Service | Purpose | Tier/Size |
 |:---|:---|:---|
 | **ECS Fargate** | Application containers (2-8 tasks) | 0.5 vCPU / 1 GB per task |
-| **ALB** | Load balancing with sticky sessions | Internet-facing |
+| **ALB** | Load balancing with sticky sessions | CloudFront-only ingress |
+| **WAF** | IP-based access control on CloudFront | 1 Web ACL + 1 IP set rule |
 | **RDS MySQL** | Transactional data | db.t4g.micro (free tier) |
 | **DocumentDB** | Notifications + ChangeStreams | db.t3.medium (1 instance) |
 | **S3** | Image storage | Standard |
@@ -101,7 +104,7 @@ infra/scripts/
   docdb-stop.sh   — Stop DocumentDB manually
 ```
 
-**Root stack parameters:** `DomainName`, `HostedZoneId`, `ImageTag`, `MinTaskCount`, `MaxTaskCount`, `EnableDocDB`, `ALBCertificateArn`, `CloudFrontCertificateArn`.
+**Root stack parameters:** `DomainName`, `HostedZoneId`, `ImageTag`, `MinTaskCount`, `MaxTaskCount`, `EnableDocDB`, `ALBCertificateArn`, `CloudFrontCertificateArn`, `CloudFrontPrefixListId`.
 
 &nbsp;
 
@@ -191,10 +194,22 @@ Running multiple ECS tasks behind an ALB requires careful coordination of statef
 
 ### 🔒 Security
 
+The architecture implements defense in depth across multiple layers:
+
+#### Network isolation
+
+- **ALB restricted to CloudFront:** The ALB security group only allows inbound HTTP from the AWS-managed CloudFront prefix list (`com.amazonaws.global.cloudfront.origin-facing`). This prevents direct access to the ALB, forcing all traffic through CloudFront. The prefix list ID is resolved dynamically during deployment.
+- **Internal traffic isolation:** All inter-service traffic within the VPC uses HTTP, isolated by security groups. TLS termination occurs only at the edge (CloudFront and ALB).
+
+#### Access control
+
+- **AWS WAF on CloudFront:** A Web ACL with an IP set rule controls which end-user IPs can access the application. The default action is **Block**, with an explicit **Allow** rule for whitelisted IPs. This is managed via the AWS console (not IaC, as it is intended as a temporary measure during pre-release). WAF costs ~$6/month (Web ACL + 1 rule + requests).
 - **No AWS credentials stored in GitHub:** OIDC federation with an IAM role restricted to the specific repository and branch.
+
+#### Data protection
+
 - **Secrets Manager** for all sensitive values (database passwords, JWT secret) with auto-generated credentials.
 - **S3 block public access** enabled on the images bucket; images are served exclusively via presigned URLs.
-- **Internal traffic isolation:** All inter-service traffic within the VPC uses HTTP, isolated by security groups. TLS termination occurs only at the edge (CloudFront and ALB).
 - **Least-privilege IAM task role:** Scoped to S3 access on the specific bucket and Lambda invoke on the specific geocoding function.
 
 &nbsp;
@@ -212,10 +227,11 @@ Running multiple ECS tasks behind an ALB requires careful coordination of statef
 | **CloudFront** | ~$1/month | ~$2/month | ~$1/month |
 | **S3 + ECR** | ~$1/month | ~$1/month | ~$1/month |
 | **Lambda + EventBridge** | < $1/month | < $1/month | < $1/month |
+| **WAF** (1 Web ACL + 1 rule) | ~$6/month | ~$6/month | ~$6/month |
 | **Route53 + ACM** | ~$1/month | ~$1/month | ~$1/month |
 | **Secrets Manager** | ~$2/month | ~$2/month | ~$2/month |
 | **CloudWatch Logs** | ~$1/month | ~$2/month | ~$1/month |
-| **Total** | **~$39/month** | **~$50/month** | **~$39/month** |
+| **Total** | **~$45/month** | **~$56/month** | **~$45/month** |
 
 &nbsp;
 

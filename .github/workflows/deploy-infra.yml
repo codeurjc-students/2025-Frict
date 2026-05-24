@@ -49,6 +49,15 @@ jobs:
             --output-template-file infra/cloudformation/packaged.yml \
             --region $AWS_REGION
 
+      - name: Lookup CloudFront prefix list ID
+        id: prefix
+        run: |
+          PL_ID=$(aws ec2 describe-managed-prefix-lists \
+            --filters "Name=prefix-list-name,Values=com.amazonaws.global.cloudfront.origin-facing" \
+            --region $AWS_REGION \
+            --query "PrefixLists[0].PrefixListId" --output text)
+          echo "cf_prefix_list=$PL_ID" >> "$GITHUB_OUTPUT"
+
       - name: Deploy CloudFormation stack
         run: |
           aws cloudformation deploy \
@@ -62,6 +71,7 @@ jobs:
               HostedZoneId=${{ secrets.HOSTED_ZONE_ID }} \
               CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }} \
               ALBCertificateArn=${{ secrets.ALB_CERT_ARN }} \
+              CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }} \
               EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}
 
       - name: Print stack outputs
