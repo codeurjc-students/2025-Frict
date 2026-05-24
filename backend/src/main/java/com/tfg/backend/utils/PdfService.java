@@ -37,15 +37,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -121,22 +116,6 @@ public class PdfService {
 
             java.net.URL url = URI.create(imageUrl).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            // --- INICIO BYPASS SSL (Ideal para localhost autofirmado) ---
-            if (connection instanceof HttpsURLConnection httpsConnection) {
-                TrustManager[] trustAllCerts = new TrustManager[]{
-                        new X509TrustManager() {
-                            public X509Certificate[] getAcceptedIssuers() { return null; }
-                            public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                            public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                        }
-                };
-                SSLContext sc = SSLContext.getInstance("SSL");
-                sc.init(null, trustAllCerts, new java.security.SecureRandom());
-                httpsConnection.setSSLSocketFactory(sc.getSocketFactory());
-                httpsConnection.setHostnameVerifier((hostname, session) -> true); // Acepta cualquier host
-            }
-            // --- FIN BYPASS SSL ---
 
             // Disfrazar la petición de Java como si fuera un navegador web real
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");

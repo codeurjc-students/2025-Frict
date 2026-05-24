@@ -65,7 +65,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
             "host": "localhost",
-            "port": 4200,
+            "port": 4202,
+            "ssl": true,
+            "sslCert": "certs/localhost.pem",
+            "sslKey": "certs/localhost-key.pem",
             "proxyConfig": "proxy.conf.json"
           },
           "configurations": {

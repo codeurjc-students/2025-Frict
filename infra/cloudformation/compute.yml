@@ -174,7 +174,7 @@ Resources:
     Properties:
       Name: !Sub "${EnvironmentName}-tg"
       VpcId: !Ref VPCId
-      Port: 8080
+      Port: 8443
       Protocol: HTTP
       TargetType: ip
       HealthCheckPath: /actuator/health
@@ -238,7 +238,7 @@ Resources:
           Image: !Ref ImageUri
           Essential: true
           PortMappings:
-            - ContainerPort: 8080
+            - ContainerPort: 8443
               Protocol: tcp
           Environment:
             - Name: SPRING_PROFILES_ACTIVE
@@ -330,7 +330,7 @@ Resources:
             - !Ref FargateSecurityGroupId
       LoadBalancers:
         - ContainerName: app
-          ContainerPort: 8080
+          ContainerPort: 8443
           TargetGroupArn: !Ref TargetGroup
 
   # ── Auto Scaling ─────────────────────────────────────────────────────

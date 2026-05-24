@@ -153,6 +153,7 @@ Resources:
       Description: Enable ChangeStreams with extended retention
       Family: docdb5.0
       Parameters:
+        tls: disabled
         change_stream_log_retention_duration: "10800"
 
   DocDBCluster:
