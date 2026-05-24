@@ -102,6 +102,7 @@ Resources:
         MySQLPort: !GetAtt DataStack.Outputs.MySQLPort
         MySQLSecretArn: !GetAtt DataStack.Outputs.MySQLSecretArn
         JWTSecretArn: !GetAtt DataStack.Outputs.JWTSecretArn
+        DBEncryptionKeySecretArn: !GetAtt DataStack.Outputs.DBEncryptionKeySecretArn
         DocDBEndpoint: !If
           - DocDBEnabled
           - !GetAtt DataStack.Outputs.DocDBEndpoint

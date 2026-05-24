@@ -76,6 +76,16 @@ Resources:
         PasswordLength: 64
         ExcludePunctuation: true
 
+  DBEncryptionKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/db-encryption-key"
+      Description: AES key for encrypting sensitive fields in the database
+      GenerateSecretString:
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+
   # ── RDS MySQL ────────────────────────────────────────────────────────
   MySQLInstance:
     Type: AWS::RDS::DBInstance
@@ -157,6 +167,8 @@ Outputs:
     Value: !Ref MySQLSecret
   JWTSecretArn:
     Value: !Ref JWTSecret
+  DBEncryptionKeySecretArn:
+    Value: !Ref DBEncryptionKeySecret
   DocDBEndpoint:
     Condition: CreateDocDB
     Value: !GetAtt DocDBCluster.Endpoint

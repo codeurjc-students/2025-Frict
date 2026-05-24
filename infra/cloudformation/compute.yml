@@ -40,6 +40,8 @@ Parameters:
   DocDBSecretArn:
     Type: String
     Default: ""
+  DBEncryptionKeySecretArn:
+    Type: String
   GeocodingFunctionName:
     Type: String
   GeocodingFunctionArn:
@@ -109,6 +111,7 @@ Resources:
                 Resource:
                   - !Ref MySQLSecretArn
                   - !Ref JWTSecretArn
+                  - !Ref DBEncryptionKeySecretArn
                   - !If [HasDocDB, !Ref DocDBSecretArn, !Ref "AWS::NoValue"]
 
   # ── IAM — Task Role (app permissions) ────────────────────────────────
@@ -269,6 +272,8 @@ Resources:
               ValueFrom: !Sub "${MySQLSecretArn}:password::"
             - Name: JWT_SECRET
               ValueFrom: !Ref JWTSecretArn
+            - Name: DB_ENCRYPTION_KEY
+              ValueFrom: !Ref DBEncryptionKeySecretArn
             - !If
               - HasDocDB
               - Name: DOCDB_USERNAME
