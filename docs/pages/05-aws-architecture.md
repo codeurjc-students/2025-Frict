@@ -124,27 +124,19 @@ infra/scripts/
 
 ### 🚀 CI/CD Pipelines
 
-Three GitHub Actions workflows automate the build, infrastructure provisioning, and validation cycle.
+Two GitHub Actions workflows automate the build, infrastructure provisioning, and validation cycle.
 
-#### deploy-app.yml
+#### deploy.yml
 
-Triggered on push to `main` when `backend/**`, `frontend/**`, or `docker/Dockerfile` change:
+Triggered on push to `main` when `backend/**`, `frontend/**`, `docker/Dockerfile`, `infra/cloudformation/**`, or `infra/lambda/**` change. Runs three jobs:
 
-1. Authenticate via OIDC (no stored AWS keys)
-2. Build Docker image (Angular production build + Spring Boot JAR)
-3. Push to ECR with commit SHA and `latest` tags
-4. Rolling deploy on ECS with `force-new-deployment`
-5. Wait for service stability
+1. **Deploy Infrastructure** and **Build & Push Image** run in parallel:
+   - *Infra*: Authenticate via OIDC → package CloudFormation templates → deploy stack
+   - *Build*: Authenticate via OIDC → build Docker image → wait for ECR → push with commit SHA and `latest` tags
+2. **Activate Deployment** runs after both complete:
+   - Force new ECS deployment → wait for service stability
 
-&nbsp;
-
-#### deploy-infra.yml
-
-Triggered on push to `main` when `infra/cloudformation/**` or `infra/lambda/**` change:
-
-1. Authenticate via OIDC
-2. Package CloudFormation templates to S3
-3. Deploy stack with parameter overrides from GitHub Secrets
+This design eliminates the chicken-and-egg problem on first deployments: the Docker image is pushed to ECR while CloudFormation is still creating the database layer (~15 min), ensuring the image is available before ECS starts. On subsequent deployments, CloudFormation exits immediately if there are no infrastructure changes (`--no-fail-on-empty-changeset`), and ECS picks up the new image via `force-new-deployment`.
 
 &nbsp;
 
