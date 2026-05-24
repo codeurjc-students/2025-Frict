@@ -60,19 +60,22 @@ jobs:
 
       - name: Deploy CloudFormation stack
         run: |
-          aws cloudformation deploy \
-            --template-file infra/cloudformation/packaged.yml \
+          aws cloudformation create-stack \
+            --template-body file://infra/cloudformation/packaged.yml \
             --stack-name $STACK_NAME \
             --region $AWS_REGION \
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
-            --parameter-overrides \
-              EnvironmentName=$STACK_NAME \
-              DomainName=${{ secrets.DOMAIN_NAME }} \
-              HostedZoneId=${{ secrets.HOSTED_ZONE_ID }} \
-              CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }} \
-              ALBCertificateArn=${{ secrets.ALB_CERT_ARN }} \
-              CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }} \
-              EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}
+            --disable-rollback \
+            --parameters \
+              ParameterKey=EnvironmentName,ParameterValue=$STACK_NAME \
+              ParameterKey=DomainName,ParameterValue=${{ secrets.DOMAIN_NAME }} \
+              ParameterKey=HostedZoneId,ParameterValue=${{ secrets.HOSTED_ZONE_ID }} \
+              ParameterKey=CloudFrontCertificateArn,ParameterValue=${{ secrets.CF_CERT_ARN }} \
+              ParameterKey=ALBCertificateArn,ParameterValue=${{ secrets.ALB_CERT_ARN }} \
+              ParameterKey=CloudFrontPrefixListId,ParameterValue=${{ steps.prefix.outputs.cf_prefix_list }} \
+              ParameterKey=EnableDocDB,ParameterValue=${{ vars.ENABLE_DOCDB || 'true' }}
+          aws cloudformation wait stack-create-complete \
+            --stack-name $STACK_NAME --region $AWS_REGION || true
 
       - name: Print stack outputs
         run: |
