@@ -250,6 +250,16 @@ Resources:
               Value: !Ref GeocodingFunctionName
             - Name: CORS_ALLOWED_ORIGIN
               Value: !Ref CORSAllowedOrigin
+            - !If
+              - HasDocDB
+              - Name: DOCDB_HOST
+                Value: !Ref DocDBEndpoint
+              - !Ref "AWS::NoValue"
+            - !If
+              - HasDocDB
+              - Name: DOCDB_PORT
+                Value: !Ref DocDBPort
+              - !Ref "AWS::NoValue"
             - Name: JAVA_OPTS
               Value: "-Xmx768m -Xss256k"
           Secrets:
@@ -261,8 +271,13 @@ Resources:
               ValueFrom: !Ref JWTSecretArn
             - !If
               - HasDocDB
-              - Name: MONGODB_URI
-                ValueFrom: !Sub "${DocDBSecretArn}:uri::"
+              - Name: DOCDB_USERNAME
+                ValueFrom: !Sub "${DocDBSecretArn}:username::"
+              - !Ref "AWS::NoValue"
+            - !If
+              - HasDocDB
+              - Name: DOCDB_PASSWORD
+                ValueFrom: !Sub "${DocDBSecretArn}:password::"
               - !Ref "AWS::NoValue"
           LogConfiguration:
             LogDriver: awslogs
