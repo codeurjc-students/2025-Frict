@@ -21,28 +21,6 @@ Parameters:
 
 Resources:
 
-  # ── CloudFront — Cache Policy (no caching for API) ──────────────────
-  APICachePolicy:
-    Type: AWS::CloudFront::CachePolicy
-    Properties:
-      CachePolicyConfig:
-        Name: !Sub "${EnvironmentName}-api-no-cache"
-        DefaultTTL: 0
-        MaxTTL: 0
-        MinTTL: 0
-        ParametersInCacheKeyAndForwardedToOrigin:
-          CookiesConfig:
-            CookieBehavior: all
-          HeadersConfig:
-            HeaderBehavior: whitelist
-            Headers:
-              - Authorization
-              - Accept
-              - Content-Type
-          QueryStringsConfig:
-            QueryStringBehavior: all
-          EnableAcceptEncodingGzip: true
-
   # ── CloudFront — Origin Request Policy (forward all for WS) ─────────
   WSOriginRequestPolicy:
     Type: AWS::CloudFront::OriginRequestPolicy
@@ -52,7 +30,9 @@ Resources:
         CookiesConfig:
           CookieBehavior: all
         HeadersConfig:
-          HeaderBehavior: allViewer
+          HeaderBehavior: allViewerAndWhitelistCloudFront
+          CloudFrontHeaders:
+            - CloudFront-Forwarded-Proto
         QueryStringsConfig:
           QueryStringBehavior: all
 
@@ -95,7 +75,8 @@ Resources:
           - PathPattern: "/api/*"
             TargetOriginId: ALBOrigin
             ViewerProtocolPolicy: redirect-to-https
-            CachePolicyId: !Ref APICachePolicy
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # AllViewerExceptHostHeader
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
 
   # ── Route53 — DNS record ────────────────────────────────────────────

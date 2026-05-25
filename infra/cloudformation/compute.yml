@@ -11,6 +11,10 @@ Parameters:
     Type: AWS::EC2::Subnet::Id
   PublicSubnetBId:
     Type: AWS::EC2::Subnet::Id
+  PrivateSubnetAId:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnetBId:
+    Type: AWS::EC2::Subnet::Id
   ALBSecurityGroupId:
     Type: AWS::EC2::SecurityGroup::Id
   FargateSecurityGroupId:
@@ -50,10 +54,6 @@ Parameters:
     Type: String
   GeocodingFunctionArn:
     Type: String
-  ACMCertificateArn:
-    Type: String
-    Description: ACM certificate ARN for HTTPS on the ALB (same region)
-    Default: ""
   CORSAllowedOrigin:
     Type: String
     Default: "*"
@@ -69,7 +69,6 @@ Parameters:
     Default: "true"
 
 Conditions:
-  HasACMCert: !Not [!Equals [!Ref ACMCertificateArn, ""]]
   HasDocDB: !Equals [!Ref EnableDocDB, "true"]
 
 Resources:
@@ -199,26 +198,6 @@ Resources:
       Port: 80
       Protocol: HTTP
       DefaultActions:
-        - !If
-          - HasACMCert
-          - Type: redirect
-            RedirectConfig:
-              Protocol: HTTPS
-              Port: "443"
-              StatusCode: HTTP_301
-          - Type: forward
-            TargetGroupArn: !Ref TargetGroup
-
-  HTTPSListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Condition: HasACMCert
-    Properties:
-      LoadBalancerArn: !Ref ALB
-      Port: 443
-      Protocol: HTTPS
-      Certificates:
-        - CertificateArn: !Ref ACMCertificateArn
-      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
 
@@ -322,10 +301,10 @@ Resources:
         MaximumPercent: 200
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           Subnets:
-            - !Ref PublicSubnetAId
-            - !Ref PublicSubnetBId
+            - !Ref PrivateSubnetAId
+            - !Ref PrivateSubnetBId
           SecurityGroups:
             - !Ref FargateSecurityGroupId
       LoadBalancers:
