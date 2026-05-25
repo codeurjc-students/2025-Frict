@@ -342,7 +342,6 @@ Resources:
       ResourceId: !Sub "service/${ECSCluster}/${ECSService.Name}"
       MinCapacity: !Ref MinTaskCount
       MaxCapacity: !Ref MaxTaskCount
-      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
 
   ScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
