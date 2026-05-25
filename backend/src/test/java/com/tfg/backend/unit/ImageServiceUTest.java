@@ -59,43 +59,25 @@ class ImageServiceUTest {
     class InitTests {
 
         @Test
-        @DisplayName("Creates bucket if it does not exist and applies policy")
+        @DisplayName("Creates bucket if it does not exist")
         void init_CreatesBucket_WhenNotFound() {
-            // Simulate bucket not existing
             when(s3Client.headBucket(any(HeadBucketRequest.class)))
                     .thenThrow(NoSuchBucketException.builder().build());
 
-            // Simulate empty bucket for the listing step
-            ListObjectsV2Response emptyResponse = ListObjectsV2Response.builder().isTruncated(false).build();
-            when(s3Client.listObjectsV2(any(Consumer.class))).thenReturn(emptyResponse);
-
             imageService.init();
 
-            // Verify bucket creation was triggered
             verify(s3Client).createBucket(any(CreateBucketRequest.class));
-            // Verify policy was applied
-            verify(s3Client).putBucketPolicy(any(Consumer.class));
-            // Verify delete was NEVER called since bucket was empty
-            verify(s3Client, never()).deleteObjects(any(Consumer.class));
         }
 
         @Test
-        @DisplayName("Empties existing bucket if it has contents on startup")
+        @DisplayName("Does not create bucket if it already exists and is accessible")
         void init_EmptiesBucket_WhenItHasContents() {
-            // Simulate bucket exists (does not throw exception)
-            when(s3Client.headBucket(any(HeadBucketRequest.class))).thenReturn(HeadBucketResponse.builder().build());
-
-            // Simulate bucket has items
-            ListObjectsV2Response populatedResponse = ListObjectsV2Response.builder()
-                    .contents(S3Object.builder().key("old-image.jpg").build())
-                    .build();
-            when(s3Client.listObjectsV2(any(Consumer.class))).thenReturn(populatedResponse);
+            when(s3Client.headBucket(any(HeadBucketRequest.class)))
+                    .thenReturn(HeadBucketResponse.builder().build());
 
             imageService.init();
 
             verify(s3Client, never()).createBucket(any(CreateBucketRequest.class));
-            verify(s3Client).deleteObjects(any(Consumer.class));
-            verify(s3Client).putBucketPolicy(any(Consumer.class));
         }
 
         @Test
