@@ -207,7 +207,7 @@ Resources:
     Properties:
       Family: !Sub "${EnvironmentName}-app"
       Cpu: "512"
-      Memory: "1024"
+      Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities: [FARGATE]
       ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
@@ -249,7 +249,7 @@ Resources:
                 Value: !Ref DocDBPort
               - !Ref "AWS::NoValue"
             - Name: JAVA_OPTS
-              Value: "-Xmx768m -Xss256k"
+              Value: "-Xmx1536m -Xss256k -XX:MaxMetaspaceSize=256m"
           Secrets:
             - Name: MYSQL_USERNAME
               ValueFrom: !Sub "${MySQLSecretArn}:username::"
