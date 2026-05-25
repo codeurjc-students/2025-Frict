@@ -21,19 +21,6 @@ Parameters:
 
 Resources:
 
-  # ── CloudFront — Origin Request Policy (forward all for WS) ─────────
-  WSOriginRequestPolicy:
-    Type: AWS::CloudFront::OriginRequestPolicy
-    Properties:
-      OriginRequestPolicyConfig:
-        Name: !Sub "${EnvironmentName}-ws-all-viewer"
-        CookiesConfig:
-          CookieBehavior: all
-        HeadersConfig:
-          HeaderBehavior: allViewerAndWhitelistCloudFront
-        QueryStringsConfig:
-          QueryStringBehavior: all
-
   # ── CloudFront Distribution ─────────────────────────────────────────
   Distribution:
     Type: AWS::CloudFront::Distribution
@@ -68,7 +55,7 @@ Resources:
             TargetOriginId: ALBOrigin
             ViewerProtocolPolicy: redirect-to-https
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
-            OriginRequestPolicyId: !Ref WSOriginRequestPolicy
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # AllViewerExceptHostHeader
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
           - PathPattern: "/api/*"
             TargetOriginId: ALBOrigin
