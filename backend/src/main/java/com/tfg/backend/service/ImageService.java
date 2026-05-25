@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -36,41 +35,13 @@ public class ImageService {
     @PostConstruct
     public void init() {
         try {
-            try {
-                s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
-            } catch (NoSuchBucketException e) {
-                log.info("Bucket '{}' not found. Creating bucket...", bucketName);
-                s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
-            }
-
-            ListObjectsV2Response listRes = s3Client.listObjectsV2(b -> b.bucket(bucketName));
-            if (listRes.hasContents()) {
-                List<ObjectIdentifier> objects = listRes.contents().stream()
-                        .map(o -> ObjectIdentifier.builder().key(o.key()).build())
-                        .toList();
-                s3Client.deleteObjects(b -> b.bucket(bucketName).delete(d -> d.objects(objects)));
-                log.info("Bucket '{}' emptied successfully.", bucketName);
-            }
-
-            String policy = """
-            {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Principal": "*",
-                  "Action": ["s3:GetObject"],
-                  "Resource": ["arn:aws:s3:::%s/*"]
-                }
-              ]
-            }
-            """.formatted(bucketName);
-
-            s3Client.putBucketPolicy(b -> b.bucket(bucketName).policy(policy));
-            log.info("Public policy applied to '{}'.", bucketName);
-
+            s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
+            log.info("Bucket '{}' is accessible.", bucketName);
+        } catch (NoSuchBucketException e) {
+            log.info("Bucket '{}' not found, creating...", bucketName);
+            s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
         } catch (Exception e) {
-            log.error("CRITICAL ERROR initializing storage: {}", e.getMessage());
+            log.error("Could not verify bucket '{}': {}", bucketName, e.getMessage());
         }
     }
 

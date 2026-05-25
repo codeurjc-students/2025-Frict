@@ -200,12 +200,16 @@ Resources:
   VpcEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTPS from Fargate to VPC Endpoints
+      GroupDescription: Allow HTTPS and SMTP from Fargate to VPC Endpoints
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
+          SourceSecurityGroupId: !Ref FargateSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 587
+          ToPort: 587
           SourceSecurityGroupId: !Ref FargateSecurityGroup
       Tags:
         - Key: Name
@@ -259,6 +263,26 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
       VpcEndpointType: Gateway
       RouteTableIds: [!Ref PrivateRouteTable]
+
+  SESSmtpEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.email-smtp"
+      VpcEndpointType: Interface
+      SubnetIds: [!Ref PrivateSubnetA, !Ref PrivateSubnetB]
+      SecurityGroupIds: [!Ref VpcEndpointSecurityGroup]
+      PrivateDnsEnabled: true
+
+  LambdaEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.lambda"
+      VpcEndpointType: Interface
+      SubnetIds: [!Ref PrivateSubnetA, !Ref PrivateSubnetB]
+      SecurityGroupIds: [!Ref VpcEndpointSecurityGroup]
+      PrivateDnsEnabled: true
 
 Outputs:
   VPCId:

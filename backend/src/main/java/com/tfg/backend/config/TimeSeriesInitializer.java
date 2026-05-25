@@ -2,6 +2,7 @@ package com.tfg.backend.config;
 
 import com.tfg.backend.model.Registry;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -19,6 +20,8 @@ public class TimeSeriesInitializer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
+        enableChangeStreams();
+
         if (!mongoTemplate.collectionExists(Registry.class)) {
             try {
                 mongoTemplate.createCollection(Registry.class);
@@ -28,6 +31,20 @@ public class TimeSeriesInitializer {
                 mongoTemplate.getDb().createCollection("registries");
                 log.info("Registries plain collection created.");
             }
+        }
+    }
+
+    private void enableChangeStreams() {
+        try {
+            mongoTemplate.getMongoDatabaseFactory()
+                    .getMongoDatabase("admin")
+                    .runCommand(new Document("modifyChangeStreams", 1)
+                            .append("database", mongoTemplate.getDb().getName())
+                            .append("collection", "")
+                            .append("enable", true));
+            log.info("Change streams enabled on database '{}'.", mongoTemplate.getDb().getName());
+        } catch (Exception e) {
+            log.warn("Could not enable change streams (may already be enabled or not supported): {}", e.getMessage());
         }
     }
 }

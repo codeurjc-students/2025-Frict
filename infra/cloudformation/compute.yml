@@ -154,6 +154,15 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: !Ref GeocodingFunctionArn
+        - PolicyName: SESAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"
 
   # ── ALB ──────────────────────────────────────────────────────────────
   ALB:
@@ -259,8 +268,12 @@ Resources:
               ValueFrom: !Ref JWTSecretArn
             - Name: DB_ENCRYPTION_KEY
               ValueFrom: !Ref DBEncryptionKeySecretArn
+            - Name: SENDER_MAIL_HOST
+              ValueFrom: !Sub "${MailSecretArn}:host::"
             - Name: SENDER_MAIL_ADDRESS
               ValueFrom: !Sub "${MailSecretArn}:address::"
+            - Name: SENDER_MAIL_USERNAME
+              ValueFrom: !Sub "${MailSecretArn}:username::"
             - Name: SENDER_MAIL_PASSWORD
               ValueFrom: !Sub "${MailSecretArn}:password::"
             - Name: SENDER_MAIL_PORT

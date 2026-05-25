@@ -28,7 +28,14 @@ Parameters:
   CloudFrontCertificateArn:
     Type: String
     Description: ACM certificate ARN in us-east-1 for CloudFront
+  SenderMailHost:
+    Type: String
+    Default: "email-smtp.eu-west-1.amazonaws.com"
   SenderMailAddress:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailUsername:
     Type: String
     Default: ""
     NoEcho: true
@@ -80,7 +87,9 @@ Resources:
         RDSSecurityGroupId: !GetAtt NetworkStack.Outputs.RDSSecurityGroupId
         DocDBSecurityGroupId: !GetAtt NetworkStack.Outputs.DocDBSecurityGroupId
         EnableDocDB: !Ref EnableDocDB
+        SenderMailHost: !Ref SenderMailHost
         SenderMailAddress: !Ref SenderMailAddress
+        SenderMailUsername: !Ref SenderMailUsername
         SenderMailPassword: !Ref SenderMailPassword
         SenderMailPort: !Ref SenderMailPort
         GoogleAuthClientId: !Ref GoogleAuthClientId

@@ -19,7 +19,14 @@ Parameters:
     Type: String
     AllowedValues: ["true", "false"]
     Default: "true"
+  SenderMailHost:
+    Type: String
+    Default: "email-smtp.eu-west-1.amazonaws.com"
   SenderMailAddress:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailUsername:
     Type: String
     Default: ""
     NoEcho: true
@@ -106,7 +113,7 @@ Resources:
     Properties:
       Name: !Sub "${EnvironmentName}/mail"
       Description: SMTP mail credentials
-      SecretString: !Sub '{"address":"${SenderMailAddress}","password":"${SenderMailPassword}","port":"${SenderMailPort}"}'
+      SecretString: !Sub '{"host":"${SenderMailHost}","address":"${SenderMailAddress}","username":"${SenderMailUsername}","password":"${SenderMailPassword}","port":"${SenderMailPort}"}'
 
   GoogleAuthSecret:
     Type: AWS::SecretsManager::Secret
