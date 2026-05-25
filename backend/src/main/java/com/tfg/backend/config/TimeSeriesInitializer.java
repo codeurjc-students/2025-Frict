@@ -20,8 +20,14 @@ public class TimeSeriesInitializer {
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
         if (!mongoTemplate.collectionExists(Registry.class)) {
-            mongoTemplate.createCollection(Registry.class);
-            log.info("Registries time series successfully created.");
+            try {
+                mongoTemplate.createCollection(Registry.class);
+                log.info("Registries time series collection created.");
+            } catch (Exception e) {
+                log.warn("Time series not supported, creating plain collection: {}", e.getMessage());
+                mongoTemplate.getDb().createCollection("registries");
+                log.info("Registries plain collection created.");
+            }
         }
     }
 }
