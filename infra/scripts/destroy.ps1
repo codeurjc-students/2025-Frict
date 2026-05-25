@@ -37,8 +37,33 @@ if (-not $VPC_ID -or $VPC_ID -eq "None") {
 Write-Host "VPC:     $VPC_ID"
 Write-Host ""
 
+# ── Pre-clean S3 (must be empty before CF can delete the bucket) ──
+Write-Host "[1/7] Emptying S3 buckets..." -ForegroundColor Cyan
+$IMAGES_BUCKET = "$STACK_NAME-images-$ACCOUNT_ID-$REGION"
+aws s3api head-bucket --bucket $IMAGES_BUCKET --region $REGION 2>$null
+if ($?) {
+    Write-Host "  Emptying: $IMAGES_BUCKET"
+    aws s3 rm "s3://$IMAGES_BUCKET" --recursive --region $REGION 2>$null
+}
+$ARTIFACTS_BUCKET = "$STACK_NAME-cfn-artifacts-$ACCOUNT_ID-$REGION"
+aws s3api head-bucket --bucket $ARTIFACTS_BUCKET --region $REGION 2>$null
+if ($?) {
+    Write-Host "  Deleting artifacts bucket: $ARTIFACTS_BUCKET"
+    aws s3 rm "s3://$ARTIFACTS_BUCKET" --recursive --region $REGION 2>$null
+    aws s3 rb "s3://$ARTIFACTS_BUCKET" --region $REGION 2>$null
+}
+
+# ── Pre-clean ECR (delete images so the repo can be removed) ──
+Write-Host "[2/7] Deleting ECR repository..." -ForegroundColor Cyan
+$REPO = "$STACK_NAME-app"
+$ecrExists = aws ecr describe-repositories --repository-names $REPO --region $REGION 2>$null
+if ($ecrExists) {
+    Write-Host "  Deleting: $REPO"
+    aws ecr delete-repository --repository-name $REPO --force --region $REGION 2>$null
+}
+
 # ── Delete CloudFormation stack ──
-Write-Host "[1/7] Deleting CloudFormation stack..." -ForegroundColor Cyan
+Write-Host "[3/7] Deleting CloudFormation stack..." -ForegroundColor Cyan
 $STATUS = aws cloudformation describe-stacks `
     --stack-name $STACK_NAME `
     --query "Stacks[0].StackStatus" --output text `
@@ -74,7 +99,7 @@ if (-not $STATUS) {
 }
 
 # ── Clean up ENIs ──
-Write-Host "[2/7] Cleaning orphaned ENIs..." -ForegroundColor Cyan
+Write-Host "[4/7] Cleaning orphaned ENIs..." -ForegroundColor Cyan
 if ($VPC_ID -and $VPC_ID -ne "None") {
     $ENIS = aws ec2 describe-network-interfaces `
         --filters "Name=vpc-id,Values=$VPC_ID" `
@@ -103,7 +128,7 @@ if ($VPC_ID -and $VPC_ID -ne "None") {
 }
 
 # ── Clean up VPC ──
-Write-Host "[3/7] Cleaning VPC resources..." -ForegroundColor Cyan
+Write-Host "[5/7] Cleaning VPC resources..." -ForegroundColor Cyan
 if ($VPC_ID -and $VPC_ID -ne "None") {
     $vpcExists = aws ec2 describe-vpcs --vpc-ids $VPC_ID --region $REGION 2>$null
     if ($vpcExists) {
@@ -177,7 +202,7 @@ if ($VPC_ID -and $VPC_ID -ne "None") {
 }
 
 # ── Clean up Secrets ──
-Write-Host "[4/7] Purging Secrets Manager..." -ForegroundColor Cyan
+Write-Host "[6/7] Purging Secrets Manager..." -ForegroundColor Cyan
 foreach ($SECRET in @("$STACK_NAME/mysql", "$STACK_NAME/docdb", "$STACK_NAME/jwt-secret", "$STACK_NAME/db-encryption-key", "$STACK_NAME/mail", "$STACK_NAME/google-auth")) {
     $exists = aws secretsmanager describe-secret --secret-id $SECRET --region $REGION 2>$null
     if ($exists) {
@@ -187,29 +212,6 @@ foreach ($SECRET in @("$STACK_NAME/mysql", "$STACK_NAME/docdb", "$STACK_NAME/jwt
             --force-delete-without-recovery `
             --region $REGION 2>$null
     }
-}
-
-# ── Clean up S3 ──
-Write-Host "[5/7] Deleting S3 buckets..." -ForegroundColor Cyan
-foreach ($BUCKET in @(
-    "$STACK_NAME-images-$ACCOUNT_ID-$REGION",
-    "$STACK_NAME-cfn-artifacts-$ACCOUNT_ID-$REGION"
-)) {
-    $exists = aws s3api head-bucket --bucket $BUCKET --region $REGION 2>$null
-    if ($?) {
-        Write-Host "  Deleting: $BUCKET"
-        aws s3 rm "s3://$BUCKET" --recursive --region $REGION 2>$null
-        aws s3 rb "s3://$BUCKET" --region $REGION 2>$null
-    }
-}
-
-# ── Clean up ECR ──
-Write-Host "[6/7] Deleting ECR repository..." -ForegroundColor Cyan
-$REPO = "$STACK_NAME-app"
-$ecrExists = aws ecr describe-repositories --repository-names $REPO --region $REGION 2>$null
-if ($ecrExists) {
-    Write-Host "  Deleting: $REPO"
-    aws ecr delete-repository --repository-name $REPO --force --region $REGION 2>$null
 }
 
 # ── Summary ──

@@ -55,6 +55,40 @@ jobs:
           echo "Account: $ACCOUNT_ID"
           echo "VPC:     $VPC_ID"
 
+      - name: Pre-clean S3 and ECR
+        run: |
+          ACCOUNT_ID="${{ steps.info.outputs.account_id }}"
+
+          # Empty images bucket so CloudFormation can delete it
+          IMAGES_BUCKET="${STACK_NAME}-images-${ACCOUNT_ID}-${AWS_REGION}"
+          if aws s3api head-bucket --bucket "$IMAGES_BUCKET" \
+            --region $AWS_REGION 2>/dev/null; then
+            echo "Emptying bucket: $IMAGES_BUCKET"
+            aws s3 rm "s3://$IMAGES_BUCKET" --recursive \
+              --region $AWS_REGION 2>/dev/null || true
+          fi
+
+          # Delete artifacts bucket entirely (not managed by CF)
+          ARTIFACTS_BUCKET="${STACK_NAME}-cfn-artifacts-${ACCOUNT_ID}-${AWS_REGION}"
+          if aws s3api head-bucket --bucket "$ARTIFACTS_BUCKET" \
+            --region $AWS_REGION 2>/dev/null; then
+            echo "Deleting artifacts bucket: $ARTIFACTS_BUCKET"
+            aws s3 rm "s3://$ARTIFACTS_BUCKET" --recursive \
+              --region $AWS_REGION 2>/dev/null || true
+            aws s3 rb "s3://$ARTIFACTS_BUCKET" \
+              --region $AWS_REGION 2>/dev/null || true
+          fi
+
+          # Delete ECR repository with all images before CF stack deletion
+          REPO="${STACK_NAME}-app"
+          if aws ecr describe-repositories \
+            --repository-names "$REPO" --region $AWS_REGION 2>/dev/null; then
+            echo "Deleting ECR: $REPO"
+            aws ecr delete-repository \
+              --repository-name "$REPO" --force \
+              --region $AWS_REGION 2>/dev/null || true
+          fi
+
       - name: Delete CloudFormation stack
         run: |
           STATUS=$(aws cloudformation describe-stacks \
@@ -213,36 +247,6 @@ jobs:
                 --region $AWS_REGION 2>/dev/null || true
             fi
           done
-
-      - name: Clean up S3 buckets
-        if: always()
-        run: |
-          ACCOUNT_ID="${{ steps.info.outputs.account_id }}"
-
-          for BUCKET in \
-            "${STACK_NAME}-images-${ACCOUNT_ID}-${AWS_REGION}" \
-            "${STACK_NAME}-cfn-artifacts-${ACCOUNT_ID}-${AWS_REGION}"; do
-            if aws s3api head-bucket --bucket "$BUCKET" \
-              --region $AWS_REGION 2>/dev/null; then
-              echo "Deleting bucket: $BUCKET"
-              aws s3 rm "s3://$BUCKET" --recursive \
-                --region $AWS_REGION 2>/dev/null || true
-              aws s3 rb "s3://$BUCKET" \
-                --region $AWS_REGION 2>/dev/null || true
-            fi
-          done
-
-      - name: Clean up ECR
-        if: always()
-        run: |
-          REPO="${STACK_NAME}-app"
-          if aws ecr describe-repositories \
-            --repository-names "$REPO" --region $AWS_REGION 2>/dev/null; then
-            echo "Deleting ECR: $REPO"
-            aws ecr delete-repository \
-              --repository-name "$REPO" --force \
-              --region $AWS_REGION 2>/dev/null || true
-          fi
 
       - name: Summary
         if: always()
