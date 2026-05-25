@@ -77,13 +77,18 @@ jobs:
             --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
             --no-fail-on-empty-changeset \
             --parameter-overrides \
-              EnvironmentName=$STACK_NAME \
-              DomainName=${{ secrets.DOMAIN_NAME }} \
-              HostedZoneId=${{ secrets.HOSTED_ZONE_ID }} \
-              CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }} \
-              ALBCertificateArn=${{ secrets.ALB_CERT_ARN }} \
-              CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }} \
-              EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}
+              "EnvironmentName=$STACK_NAME" \
+              "DomainName=${{ secrets.DOMAIN_NAME }}" \
+              "HostedZoneId=${{ secrets.HOSTED_ZONE_ID }}" \
+              "CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }}" \
+              "CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }}" \
+              "EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}" \
+              "SenderMailHost=${{ secrets.SENDER_MAIL_HOST }}" \
+              "SenderMailAddress=${{ secrets.SENDER_MAIL_ADDRESS }}" \
+              "SenderMailUsername=${{ secrets.SENDER_MAIL_USERNAME }}" \
+              "SenderMailPassword=${{ secrets.SENDER_MAIL_PASSWORD }}" \
+              "SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }}" \
+              "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}"
 
       - name: Print stack outputs
         if: always()

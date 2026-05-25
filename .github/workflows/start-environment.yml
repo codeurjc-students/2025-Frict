@@ -1,0 +1,78 @@
+name: Start Environment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+  ECS_CLUSTER: frict-cluster
+  ECS_SERVICE: frict-svc
+  RDS_INSTANCE: frict-mysql
+  DOCDB_CLUSTER: frict-docdb
+
+jobs:
+  start:
+    name: Start All Services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Start RDS MySQL
+        run: |
+          STATUS=$(aws rds describe-db-instances \
+            --db-instance-identifier $RDS_INSTANCE \
+            --query "DBInstances[0].DBInstanceStatus" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "not-found")
+          if [ "$STATUS" = "stopped" ]; then
+            aws rds start-db-instance \
+              --db-instance-identifier $RDS_INSTANCE \
+              --region $AWS_REGION
+            echo "RDS MySQL starting..."
+          else
+            echo "RDS MySQL status: $STATUS"
+          fi
+
+      - name: Start DocumentDB
+        run: |
+          STATUS=$(aws rds describe-db-clusters \
+            --db-cluster-identifier $DOCDB_CLUSTER \
+            --query "DBClusters[0].Status" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "not-found")
+          if [ "$STATUS" = "stopped" ]; then
+            aws rds start-db-cluster \
+              --db-cluster-identifier $DOCDB_CLUSTER \
+              --region $AWS_REGION
+            echo "DocumentDB starting..."
+          else
+            echo "DocumentDB status: $STATUS"
+          fi
+
+      - name: Scale ECS service up
+        run: |
+          aws application-autoscaling register-scalable-target \
+            --service-namespace ecs \
+            --scalable-dimension ecs:service:DesiredCount \
+            --resource-id "service/$ECS_CLUSTER/$ECS_SERVICE" \
+            --min-capacity 2 --max-capacity 8 \
+            --region $AWS_REGION
+          echo "ECS autoscaling restored to 2-8 tasks"
+
+      - name: Summary
+        run: |
+          echo "==============================="
+          echo "  Start orders sent"
+          echo "==============================="
+          echo "RDS MySQL:    starting"
+          echo "DocumentDB:   starting (if enabled)"
+          echo "ECS Fargate:  scaling to 2 tasks"
+          echo ""
+          echo "Run 'Environment Status' workflow to"
+          echo "check when everything is READY (~15 min)."

@@ -19,6 +19,28 @@ Parameters:
     Type: String
     AllowedValues: ["true", "false"]
     Default: "true"
+  SenderMailHost:
+    Type: String
+    Default: "email-smtp.eu-west-1.amazonaws.com"
+  SenderMailAddress:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailUsername:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailPassword:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailPort:
+    Type: String
+    Default: "587"
+  GoogleAuthClientId:
+    Type: String
+    Default: ""
+    NoEcho: true
 
 Conditions:
   CreateDocDB: !Equals [!Ref EnableDocDB, "true"]
@@ -76,6 +98,30 @@ Resources:
         PasswordLength: 64
         ExcludePunctuation: true
 
+  DBEncryptionKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/db-encryption-key"
+      Description: AES key for encrypting sensitive fields in the database
+      GenerateSecretString:
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+
+  MailSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/mail"
+      Description: SMTP mail credentials
+      SecretString: !Sub '{"host":"${SenderMailHost}","address":"${SenderMailAddress}","username":"${SenderMailUsername}","password":"${SenderMailPassword}","port":"${SenderMailPort}"}'
+
+  GoogleAuthSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/google-auth"
+      Description: Google OAuth Client ID
+      SecretString: !Ref GoogleAuthClientId
+
   # ── RDS MySQL ────────────────────────────────────────────────────────
   MySQLInstance:
     Type: AWS::RDS::DBInstance
@@ -114,6 +160,7 @@ Resources:
       Description: Enable ChangeStreams with extended retention
       Family: docdb5.0
       Parameters:
+        tls: disabled
         change_stream_log_retention_duration: "10800"
 
   DocDBCluster:
@@ -157,6 +204,12 @@ Outputs:
     Value: !Ref MySQLSecret
   JWTSecretArn:
     Value: !Ref JWTSecret
+  DBEncryptionKeySecretArn:
+    Value: !Ref DBEncryptionKeySecret
+  MailSecretArn:
+    Value: !Ref MailSecret
+  GoogleAuthSecretArn:
+    Value: !Ref GoogleAuthSecret
   DocDBEndpoint:
     Condition: CreateDocDB
     Value: !GetAtt DocDBCluster.Endpoint

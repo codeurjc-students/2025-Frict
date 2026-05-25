@@ -55,6 +55,12 @@ public class UserLoginService {
 	@Value("${google.auth.clientId}")
 	private String googleClientId;
 
+	@Value("${app.cookie.secure}")
+	private boolean cookieSecure;
+
+	@Value("${app.cookie.same-site}")
+	private String cookieSameSite;
+
 	@Transactional
 	public AuthResponse loginWithGoogle(HttpServletResponse response, GoogleTokenDTO tokenDTO) {
 		GoogleIdToken idToken;
@@ -214,9 +220,9 @@ public class UserLoginService {
 		ResponseCookie cookie = ResponseCookie.from(type.cookieName, token)
 				.maxAge(type.duration)
 				.httpOnly(true)
-				.secure(true)
+				.secure(cookieSecure)
 				.path("/")
-				.sameSite("None")
+				.sameSite(cookieSameSite)
 				.build();
 		response.addHeader("Set-Cookie", cookie.toString());
 	}
@@ -225,9 +231,9 @@ public class UserLoginService {
 		ResponseCookie cookie = ResponseCookie.from(type.cookieName, "")
 				.maxAge(0)
 				.httpOnly(true)
-				.secure(true)
+				.secure(cookieSecure)
 				.path("/")
-				.sameSite("None")
+				.sameSite(cookieSameSite)
 				.build();
 		response.addHeader("Set-Cookie", cookie.toString());
 	}

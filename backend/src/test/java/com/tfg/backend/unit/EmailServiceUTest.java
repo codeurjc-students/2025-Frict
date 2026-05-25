@@ -3,6 +3,7 @@ package com.tfg.backend.unit;
 import com.tfg.backend.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +47,7 @@ class EmailServiceUTest {
 
     @BeforeEach
     void setUp() {
-        // Always need to return a valid MimeMessage mock when asked
+        ReflectionTestUtils.setField(emailService, "fromAddress", "");
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
     }
 

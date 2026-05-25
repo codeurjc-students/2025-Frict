@@ -25,13 +25,31 @@ Parameters:
     Type: String
     AllowedValues: ["true", "false"]
     Default: "true"
-  ALBCertificateArn:
-    Type: String
-    Description: ACM certificate ARN in the deployment region for the ALB
-    Default: ""
   CloudFrontCertificateArn:
     Type: String
     Description: ACM certificate ARN in us-east-1 for CloudFront
+  SenderMailHost:
+    Type: String
+    Default: "email-smtp.eu-west-1.amazonaws.com"
+  SenderMailAddress:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailUsername:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailPassword:
+    Type: String
+    Default: ""
+    NoEcho: true
+  SenderMailPort:
+    Type: String
+    Default: "587"
+  GoogleAuthClientId:
+    Type: String
+    Default: ""
+    NoEcho: true
   CloudFrontPrefixListId:
     Type: String
     Description: AWS-managed prefix list ID for CloudFront origin-facing IPs
@@ -69,6 +87,12 @@ Resources:
         RDSSecurityGroupId: !GetAtt NetworkStack.Outputs.RDSSecurityGroupId
         DocDBSecurityGroupId: !GetAtt NetworkStack.Outputs.DocDBSecurityGroupId
         EnableDocDB: !Ref EnableDocDB
+        SenderMailHost: !Ref SenderMailHost
+        SenderMailAddress: !Ref SenderMailAddress
+        SenderMailUsername: !Ref SenderMailUsername
+        SenderMailPassword: !Ref SenderMailPassword
+        SenderMailPort: !Ref SenderMailPort
+        GoogleAuthClientId: !Ref GoogleAuthClientId
 
   # ── Lambda (geocoding + DocDB auto-stop) ─────────────────────────────
   LambdaStack:
@@ -93,6 +117,8 @@ Resources:
         VPCId: !GetAtt NetworkStack.Outputs.VPCId
         PublicSubnetAId: !GetAtt NetworkStack.Outputs.PublicSubnetAId
         PublicSubnetBId: !GetAtt NetworkStack.Outputs.PublicSubnetBId
+        PrivateSubnetAId: !GetAtt NetworkStack.Outputs.PrivateSubnetAId
+        PrivateSubnetBId: !GetAtt NetworkStack.Outputs.PrivateSubnetBId
         ALBSecurityGroupId: !GetAtt NetworkStack.Outputs.ALBSecurityGroupId
         FargateSecurityGroupId: !GetAtt NetworkStack.Outputs.FargateSecurityGroupId
         ImageUri: !Sub "${StorageStack.Outputs.ECRRepositoryUri}:${ImageTag}"
@@ -102,6 +128,9 @@ Resources:
         MySQLPort: !GetAtt DataStack.Outputs.MySQLPort
         MySQLSecretArn: !GetAtt DataStack.Outputs.MySQLSecretArn
         JWTSecretArn: !GetAtt DataStack.Outputs.JWTSecretArn
+        DBEncryptionKeySecretArn: !GetAtt DataStack.Outputs.DBEncryptionKeySecretArn
+        MailSecretArn: !GetAtt DataStack.Outputs.MailSecretArn
+        GoogleAuthSecretArn: !GetAtt DataStack.Outputs.GoogleAuthSecretArn
         DocDBEndpoint: !If
           - DocDBEnabled
           - !GetAtt DataStack.Outputs.DocDBEndpoint
@@ -116,7 +145,6 @@ Resources:
           - ""
         GeocodingFunctionName: !GetAtt LambdaStack.Outputs.GeocodingFunctionName
         GeocodingFunctionArn: !GetAtt LambdaStack.Outputs.GeocodingFunctionArn
-        ACMCertificateArn: !Ref ALBCertificateArn
         CORSAllowedOrigin: !Sub "https://${DomainName}"
         MinTaskCount: !Ref MinTaskCount
         MaxTaskCount: !Ref MaxTaskCount

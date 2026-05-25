@@ -1,28 +1,9 @@
 name: frict-dev
 
 services:
-  # ----------------------------------------------------------------
-  # 1. HTTPS CERTIFICATES GENERATOR (Init Container)
-  # ----------------------------------------------------------------
-  cert-gen:
-    image: alpine/openssl
-    container_name: cert-gen-dev
-    volumes:
-      - minio_certs:/certs
-    working_dir: /certs
-    command: >
-      req -x509 -nodes -days 365 -newkey rsa:2048 
-      -keyout private.key 
-      -out public.crt 
-      -subj "/CN=minio" 
-      -addext "subjectAltName = DNS:minio, DNS:localhost, IP:127.0.0.1"
-
-  # ----------------------------------------------------------------
-  # 2. DATABASE SERVICE (MYSQL)
-  # ----------------------------------------------------------------
   mysql:
     image: mysql:8.0
-    container_name: db-dev
+    container_name: frict-dev-mysql
     restart: unless-stopped
     ports:
       - "3306:3306"
@@ -40,12 +21,9 @@ services:
       retries: 5
       start_period: 30s
 
-  # ----------------------------------------------------------------
-  # 3. DATABASE SERVICE (MONGODB)
-  # ----------------------------------------------------------------
   mongodb:
     image: mongo:latest
-    container_name: frict-mongo-dev
+    container_name: frict-dev-mongo
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -61,19 +39,16 @@ services:
       - mongodb_data_dev:/data/db
     healthcheck:
       test: >
-        mongosh --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin
+        mongosh --username user --password password --authenticationDatabase admin
         --eval "try { rs.status() } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" --quiet
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  # ----------------------------------------------------------------
-  # 4. MINIO HTTPS SERVICE
-  # ----------------------------------------------------------------
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: minio_https_dev
+    container_name: frict-dev-minio
     restart: unless-stopped
     ports:
       - "9000:9000"
@@ -85,61 +60,47 @@ services:
       MINIO_BROWSER_REDIRECT_URL: "https://localhost:9001"
     command: server /data --console-address ":9001"
     volumes:
-      - minio_data_https:/data
-      - minio_certs:/root/.minio/certs
-    depends_on:
-      cert-gen:
-        condition: service_completed_successfully
+      - minio_data_dev:/data
+      - ./certs/public.crt:/root/.minio/certs/public.crt:ro
+      - ./certs/private.key:/root/.minio/certs/private.key:ro
     healthcheck:
       test: ["CMD", "curl", "-k", "-f", "https://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ----------------------------------------------------------------
-  # 5. APPLICATION (Spring Boot + Angular)
-  # ----------------------------------------------------------------
   app:
     image: mjpulido/frict:dev
-    container_name: app-dev
+    container_name: frict-dev-app
     restart: unless-stopped
-
     build:
       context: ..
       dockerfile: docker/Dockerfile
-
     ports:
       - "443:8443"
-
     environment:
-      # --- MySQL Database ---
-      MYSQL_URL: jdbc:mysql://mysql:3306/Frict?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_PROFILES_ACTIVE: local
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: Frict
       MYSQL_USERNAME: user
       MYSQL_PASSWORD: password
-
-      # --- MongoDB Database ---
-      MONGODB_URI: mongodb:27017/Frict?authSource=admin&replicaSet=rs0
-      MONGODB_USERNAME: user
-      MONGODB_PASSWORD: password
-
-      # --- MinIO (Mapped to S3 variables) ---
-      S3_ENDPOINT: https://minio:9000
-      S3_PUBLIC_URL: https://localhost:9000
-      S3_ACCESS_KEY: user
-      S3_SECRET_KEY: password
-      S3_BUCKET_NAME: images
-
-      # --- Security (Fixed test values) ---
+      MONGODB_URI: "mongodb://user:password@mongodb:27017/Frict?authSource=admin&replicaSet=rs0"
+      APP_STORAGE_ENDPOINT: https://minio:9000
+      APP_STORAGE_PUBLIC_URL: https://localhost:9000
+      APP_STORAGE_BUCKET_NAME: images
+      AWS_ACCESS_KEY_ID: user
+      AWS_SECRET_ACCESS_KEY: password
       JWT_SECRET: c3VwZXJfc2VjcmV0X2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXNfb25seV8xMjM0NTY3ODkw
-      CARDS_DB_KEY: 1234567890123456
+      DB_ENCRYPTION_KEY: "1234567890123456"
       CORS_ALLOWED_ORIGIN: https://localhost
-
-      # --- Email and Auth (External variables required) ---
-      SENDER_MAIL_PORT: ${SENDER_MAIL_PORT}
-      SENDER_MAIL_ADDRESS: ${SENDER_MAIL_ADDRESS}
-      SENDER_MAIL_PASSWORD: ${SENDER_MAIL_PASSWORD}
+      SENDER_MAIL_HOST: ${SENDER_MAIL_HOST:-smtp.gmail.com}
+      SENDER_MAIL_PORT: ${SENDER_MAIL_PORT:-587}
+      SENDER_MAIL_ADDRESS: ${SENDER_MAIL_ADDRESS:-}
+      SENDER_MAIL_PASSWORD: ${SENDER_MAIL_PASSWORD:-}
       GOOGLE_AUTH_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID}
-
+    volumes:
+      - ./certs:/certs:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -150,6 +111,5 @@ services:
 
 volumes:
   mysql_data_dev:
-  minio_data_https:
-  minio_certs:
   mongodb_data_dev:
+  minio_data_dev:

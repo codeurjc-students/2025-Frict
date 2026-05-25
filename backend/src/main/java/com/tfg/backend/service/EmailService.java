@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -22,6 +23,9 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+
+    @Value("${app.mail.from:}")
+    private String fromAddress;
 
     // @Async allows that this function can be executed concurrently
     @Async
@@ -41,6 +45,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            if (!fromAddress.isBlank()) helper.setFrom(fromAddress);
             helper.setTo(to);
             helper.setSubject("Confirmación de Pedido - " + orderRef);
             helper.setText(htmlContent, true); //It is true that is HTML
@@ -75,6 +80,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            if (!fromAddress.isBlank()) helper.setFrom(fromAddress);
             helper.setTo(to);
             helper.setSubject("Código de recuperación: " + otpCode + " - MiTienda");
             helper.setText(htmlContent, true);

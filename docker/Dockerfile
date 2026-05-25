@@ -50,14 +50,15 @@ RUN addgroup -S spring && adduser -S spring -G spring
 
 WORKDIR /app
 
-# Copy JAR
+# Copy JAR and entrypoint
 COPY --from=backend-build /app-api/target/*.jar frict.jar
+COPY docker/entrypoint.sh entrypoint.sh
 
 # Permissions
-RUN chown spring:spring frict.jar
+RUN chown spring:spring frict.jar entrypoint.sh && chmod +x entrypoint.sh
 
 USER spring:spring
 
-EXPOSE 8080
+EXPOSE 8443
 
-ENTRYPOINT ["java", "-jar", "frict.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]

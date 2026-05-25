@@ -1,0 +1,263 @@
+name: Destroy Environment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+  STACK_NAME: frict
+
+jobs:
+  destroy:
+    name: Destroy All Resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 7200
+
+      - name: Identify stack resources
+        id: info
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+
+          # Try to get VPC from stack
+          VPC_ID="None"
+          NETWORK_STACK=$(aws cloudformation list-stack-resources \
+            --stack-name $STACK_NAME \
+            --query "StackResourceSummaries[?LogicalResourceId=='NetworkStack'].PhysicalResourceId | [0]" \
+            --output text --region $AWS_REGION 2>/dev/null || echo "None")
+
+          if [ "$NETWORK_STACK" != "None" ] && [ -n "$NETWORK_STACK" ]; then
+            VPC_ID=$(aws cloudformation describe-stacks \
+              --stack-name "$NETWORK_STACK" \
+              --query "Stacks[0].Outputs[?OutputKey=='VPCId'].OutputValue | [0]" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "None")
+          fi
+
+          # Fallback: search for orphaned VPC by CloudFormation tags
+          if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
+            VPC_ID=$(aws ec2 describe-vpcs \
+              --filters "Name=isDefault,Values=false" \
+              --query "Vpcs[?Tags[?contains(Value,'${STACK_NAME}')]].VpcId | [0]" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "None")
+          fi
+
+          echo "vpc_id=$VPC_ID" >> "$GITHUB_OUTPUT"
+          echo "Account: $ACCOUNT_ID"
+          echo "VPC:     $VPC_ID"
+
+      - name: Pre-clean S3 and ECR
+        run: |
+          ACCOUNT_ID="${{ steps.info.outputs.account_id }}"
+
+          # Empty images bucket so CloudFormation can delete it
+          IMAGES_BUCKET="${STACK_NAME}-images-${ACCOUNT_ID}-${AWS_REGION}"
+          if aws s3api head-bucket --bucket "$IMAGES_BUCKET" \
+            --region $AWS_REGION 2>/dev/null; then
+            echo "Emptying bucket: $IMAGES_BUCKET"
+            aws s3 rm "s3://$IMAGES_BUCKET" --recursive \
+              --region $AWS_REGION 2>/dev/null || true
+          fi
+
+          # Delete artifacts bucket entirely (not managed by CF)
+          ARTIFACTS_BUCKET="${STACK_NAME}-cfn-artifacts-${ACCOUNT_ID}-${AWS_REGION}"
+          if aws s3api head-bucket --bucket "$ARTIFACTS_BUCKET" \
+            --region $AWS_REGION 2>/dev/null; then
+            echo "Deleting artifacts bucket: $ARTIFACTS_BUCKET"
+            aws s3 rm "s3://$ARTIFACTS_BUCKET" --recursive \
+              --region $AWS_REGION 2>/dev/null || true
+            aws s3 rb "s3://$ARTIFACTS_BUCKET" \
+              --region $AWS_REGION 2>/dev/null || true
+          fi
+
+          # Delete ECR repository with all images before CF stack deletion
+          REPO="${STACK_NAME}-app"
+          if aws ecr describe-repositories \
+            --repository-names "$REPO" --region $AWS_REGION 2>/dev/null; then
+            echo "Deleting ECR: $REPO"
+            aws ecr delete-repository \
+              --repository-name "$REPO" --force \
+              --region $AWS_REGION 2>/dev/null || true
+          fi
+
+      - name: Delete CloudFormation stack
+        run: |
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query "Stacks[0].StackStatus" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "NOT_FOUND")
+
+          echo "Stack status: $STATUS"
+
+          if [ "$STATUS" = "NOT_FOUND" ]; then
+            echo "Stack does not exist, skipping to cleanup"
+            exit 0
+          fi
+
+          aws cloudformation delete-stack \
+            --stack-name $STACK_NAME --region $AWS_REGION
+          echo "Delete initiated"
+
+      - name: Wait for deletion
+        run: |
+          echo "Waiting for stack deletion..."
+
+          aws cloudformation wait stack-delete-complete \
+            --stack-name $STACK_NAME --region $AWS_REGION 2>/dev/null && exit 0
+
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query "Stacks[0].StackStatus" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "DELETED")
+
+          if [ "$STATUS" = "DELETE_FAILED" ]; then
+            echo "Deletion failed — retrying with retained resources..."
+
+            FAILED=$(aws cloudformation describe-stack-resources \
+              --stack-name $STACK_NAME \
+              --query "StackResources[?ResourceStatus=='DELETE_FAILED'].LogicalResourceId" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+
+            echo "Retaining: $FAILED"
+            aws cloudformation delete-stack \
+              --stack-name $STACK_NAME \
+              --retain-resources $FAILED \
+              --region $AWS_REGION
+
+            aws cloudformation wait stack-delete-complete \
+              --stack-name $STACK_NAME --region $AWS_REGION 2>/dev/null || true
+          fi
+
+          echo "Stack deletion complete"
+
+      - name: Clean up orphaned ENIs
+        if: always()
+        run: |
+          VPC_ID="${{ steps.info.outputs.vpc_id }}"
+          [ "$VPC_ID" = "None" ] && exit 0
+
+          echo "Cleaning ENIs in VPC $VPC_ID..."
+
+          ENIS=$(aws ec2 describe-network-interfaces \
+            --filters "Name=vpc-id,Values=$VPC_ID" \
+            --query "NetworkInterfaces[].[NetworkInterfaceId,Status,Attachment.AttachmentId]" \
+            --output text --region $AWS_REGION 2>/dev/null || echo "")
+
+          [ -z "$ENIS" ] && echo "No ENIs found" && exit 0
+
+          echo "$ENIS" | while read ENI_ID STATUS ATTACH_ID; do
+            echo "  ENI $ENI_ID ($STATUS)"
+            if [ "$STATUS" = "in-use" ] && [ "$ATTACH_ID" != "None" ] && [ -n "$ATTACH_ID" ]; then
+              aws ec2 detach-network-interface \
+                --attachment-id "$ATTACH_ID" --force \
+                --region $AWS_REGION 2>/dev/null || true
+              sleep 5
+            fi
+            aws ec2 delete-network-interface \
+              --network-interface-id "$ENI_ID" \
+              --region $AWS_REGION 2>/dev/null || true
+          done
+
+      - name: Clean up VPC resources
+        if: always()
+        run: |
+          VPC_ID="${{ steps.info.outputs.vpc_id }}"
+          [ "$VPC_ID" = "None" ] && exit 0
+          aws ec2 describe-vpcs --vpc-ids "$VPC_ID" \
+            --region $AWS_REGION 2>/dev/null || exit 0
+
+          echo "Cleaning VPC $VPC_ID..."
+
+          # Security groups (except default)
+          for SG in $(aws ec2 describe-security-groups \
+            --filters "Name=vpc-id,Values=$VPC_ID" \
+            --query "SecurityGroups[?GroupName!='default'].GroupId" \
+            --output text --region $AWS_REGION 2>/dev/null); do
+            echo "  Deleting SG $SG"
+            aws ec2 delete-security-group --group-id "$SG" \
+              --region $AWS_REGION 2>/dev/null || true
+          done
+
+          # Subnets
+          for SUB in $(aws ec2 describe-subnets \
+            --filters "Name=vpc-id,Values=$VPC_ID" \
+            --query "Subnets[].SubnetId" --output text \
+            --region $AWS_REGION 2>/dev/null); do
+            echo "  Deleting subnet $SUB"
+            aws ec2 delete-subnet --subnet-id "$SUB" \
+              --region $AWS_REGION 2>/dev/null || true
+          done
+
+          # Internet gateways
+          for IGW in $(aws ec2 describe-internet-gateways \
+            --filters "Name=attachment.vpc-id,Values=$VPC_ID" \
+            --query "InternetGateways[].InternetGatewayId" \
+            --output text --region $AWS_REGION 2>/dev/null); do
+            aws ec2 detach-internet-gateway \
+              --internet-gateway-id "$IGW" --vpc-id "$VPC_ID" \
+              --region $AWS_REGION 2>/dev/null || true
+            echo "  Deleting IGW $IGW"
+            aws ec2 delete-internet-gateway \
+              --internet-gateway-id "$IGW" \
+              --region $AWS_REGION 2>/dev/null || true
+          done
+
+          # Route tables (non-main)
+          for RT in $(aws ec2 describe-route-tables \
+            --filters "Name=vpc-id,Values=$VPC_ID" \
+            --query "RouteTables[?Associations[0].Main!=\`true\`].RouteTableId" \
+            --output text --region $AWS_REGION 2>/dev/null); do
+            for ASSOC in $(aws ec2 describe-route-tables \
+              --route-table-ids "$RT" \
+              --query "RouteTables[0].Associations[?!Main].RouteTableAssociationId" \
+              --output text --region $AWS_REGION 2>/dev/null); do
+              aws ec2 disassociate-route-table \
+                --association-id "$ASSOC" \
+                --region $AWS_REGION 2>/dev/null || true
+            done
+            echo "  Deleting route table $RT"
+            aws ec2 delete-route-table --route-table-id "$RT" \
+              --region $AWS_REGION 2>/dev/null || true
+          done
+
+          # VPC
+          echo "  Deleting VPC $VPC_ID"
+          aws ec2 delete-vpc --vpc-id "$VPC_ID" \
+            --region $AWS_REGION 2>/dev/null || true
+
+      - name: Clean up Secrets Manager
+        if: always()
+        run: |
+          for SECRET in "${STACK_NAME}/mysql" "${STACK_NAME}/docdb" "${STACK_NAME}/jwt-secret" "${STACK_NAME}/db-encryption-key" "${STACK_NAME}/mail" "${STACK_NAME}/google-auth"; do
+            if aws secretsmanager describe-secret \
+              --secret-id "$SECRET" --region $AWS_REGION 2>/dev/null; then
+              echo "Force deleting: $SECRET"
+              aws secretsmanager delete-secret \
+                --secret-id "$SECRET" \
+                --force-delete-without-recovery \
+                --region $AWS_REGION 2>/dev/null || true
+            fi
+          done
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "==============================="
+          echo "  Environment destroyed"
+          echo "==============================="
+          echo "Stack:     deleted"
+          echo "Secrets:   purged"
+          echo "S3:        deleted"
+          echo "ECR:       deleted"
+          echo "VPC:       cleaned"
+          echo ""
+          echo "Ready for a clean re-deploy."

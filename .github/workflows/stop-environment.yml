@@ -1,0 +1,93 @@
+name: Stop Environment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+  ECS_CLUSTER: frict-cluster
+  ECS_SERVICE: frict-svc
+  RDS_INSTANCE: frict-mysql
+  DOCDB_CLUSTER: frict-docdb
+
+jobs:
+  stop:
+    name: Stop All Services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Scale ECS to zero
+        run: |
+          aws application-autoscaling register-scalable-target \
+            --service-namespace ecs \
+            --scalable-dimension ecs:service:DesiredCount \
+            --resource-id "service/$ECS_CLUSTER/$ECS_SERVICE" \
+            --min-capacity 0 --max-capacity 0 \
+            --region $AWS_REGION
+          echo "ECS autoscaling set to 0/0"
+
+      - name: Wait for ECS tasks to drain
+        run: |
+          echo "Waiting for running tasks to stop..."
+          while true; do
+            COUNT=$(aws ecs describe-services \
+              --cluster $ECS_CLUSTER --services $ECS_SERVICE \
+              --query "services[0].runningCount" --output text \
+              --region $AWS_REGION)
+            [ "$COUNT" = "0" ] && break
+            echo "  Running tasks: $COUNT"
+            sleep 15
+          done
+          echo "All ECS tasks stopped"
+
+      - name: Stop RDS MySQL
+        run: |
+          STATUS=$(aws rds describe-db-instances \
+            --db-instance-identifier $RDS_INSTANCE \
+            --query "DBInstances[0].DBInstanceStatus" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "not-found")
+          if [ "$STATUS" = "available" ]; then
+            aws rds stop-db-instance \
+              --db-instance-identifier $RDS_INSTANCE \
+              --region $AWS_REGION
+            echo "RDS MySQL stopping"
+          else
+            echo "RDS MySQL status: $STATUS (skipped)"
+          fi
+
+      - name: Stop DocumentDB
+        run: |
+          STATUS=$(aws rds describe-db-clusters \
+            --db-cluster-identifier $DOCDB_CLUSTER \
+            --query "DBClusters[0].Status" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "not-found")
+          if [ "$STATUS" = "available" ]; then
+            aws rds stop-db-cluster \
+              --db-cluster-identifier $DOCDB_CLUSTER \
+              --region $AWS_REGION
+            echo "DocumentDB stopping"
+          else
+            echo "DocumentDB status: $STATUS (skipped)"
+          fi
+
+      - name: Summary
+        run: |
+          echo "==============================="
+          echo "  Environment stopped"
+          echo "==============================="
+          echo "ECS Fargate:  0 tasks"
+          echo "RDS MySQL:    stopped"
+          echo "DocumentDB:   stopped (if enabled)"
+          echo ""
+          echo "Note: AWS auto-restarts stopped databases"
+          echo "after 7 days. Re-run this workflow to"
+          echo "stop them again if needed."
