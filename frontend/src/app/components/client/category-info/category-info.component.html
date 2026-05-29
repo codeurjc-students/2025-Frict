@@ -4,35 +4,35 @@
 
 <div *ngIf="!loading && !error" class="min-h-screen pb-12 font-sans text-surface-900">
 
-  <header class="border-b bg-surface-50 border-surface-200 shadow-sm">
-    <div class="max-w-[95%] xl:max-w-[83%] mx-auto pb-8">
+  <header class="relative border-b border-surface-200 shadow-md overflow-hidden bg-gradient-to-br from-white via-surface-50 to-primary-50/30">
+    <div class="max-w-[95%] xl:max-w-[83%] mx-auto pb-10">
       <app-breadcrumb-reload (onReload)="loadMainCategory()"></app-breadcrumb-reload>
 
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mt-8">
 
-        <div class="flex items-center gap-6">
-          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white border border-surface-200 p-2 flex items-center justify-center shadow-inner shrink-0">
+        <div class="flex items-center gap-8">
+          <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden bg-white border-2 border-surface-200 p-3 flex items-center justify-center shadow-lg shrink-0">
             <img [src]="mainCategory.imageInfo.imageUrl"
                  [alt]="mainCategory.name"
                  class="max-w-full max-h-full object-contain mix-blend-multiply">
           </div>
 
-          <div class="flex flex-col justify-center">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight mb-1">
+          <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-surface-900 tracking-tight leading-tight">
               {{ mainCategory.name }}
             </h1>
-            <p class="text-surface-500 font-medium text-sm sm:text-base max-w-xl leading-tight">
+            <p class="text-base sm:text-lg text-surface-500 font-medium max-w-xl leading-relaxed">
               {{ mainCategory.bannerText || mainCategory.shortDescription }}
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-6 bg-white p-4 rounded-xl border border-surface-100 shrink-0 self-stretch md:self-auto justify-between md:justify-end shadow-inner">
+        <div class="flex items-center gap-6 bg-white/80 backdrop-blur-sm p-5 rounded-2xl border border-surface-200 shrink-0 self-stretch md:self-auto justify-between md:justify-end shadow-md">
           <div class="text-right">
-            <span class="block text-2xl font-black text-primary-600 leading-none mb-1">
+            <span class="block text-3xl font-black text-primary-600 leading-none mb-1">
               {{ totalProductsCount }}
             </span>
-            <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest block">Productos Totales</span>
+            <span class="text-xs font-bold text-surface-500 uppercase tracking-widest block">Productos Totales</span>
           </div>
           <p-button
             label="Ver todos los productos"
@@ -45,153 +45,162 @@
         </div>
 
       </div>
+
+      <div *ngIf="subCategories.length > 0" class="flex flex-wrap items-center gap-3 mt-8 pt-6 border-t border-surface-200">
+        <span class="text-sm font-bold text-surface-500 uppercase tracking-wider shrink-0">Explora también...</span>
+        @for (sub of subCategories; track sub.id) {
+          <a [routerLink]="['/category', sub.id]" class="no-underline">
+            <p-tag
+              [value]="sub.name"
+              [icon]="sub.icon || 'pi pi-tag'"
+              [severity]="tagSeverities[$index % tagSeverities.length]"
+              styleClass="cursor-pointer hover:opacity-75 transition-opacity !text-sm !font-bold">
+            </p-tag>
+          </a>
+        }
+      </div>
+
     </div>
   </header>
 
-  <div class="max-w-[95%] xl:max-w-[83%] mx-auto mt-8">
-    <div class="flex flex-col lg:flex-row gap-8 items-start relative">
+  <div class="max-w-[95%] xl:max-w-[83%] mx-auto mt-10 flex flex-col gap-10">
 
-      <div class="w-full lg:w-2/3 flex flex-col gap-8">
-
-        <div>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-1.5 h-6 bg-primary-500 rounded-full"></div>
-            <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Información</h2>
-          </div>
-
-          <div class="bg-white rounded-3xl border border-surface-200 overflow-hidden shadow-sm">
-            <div class="grid grid-cols-3 bg-surface-50/50 border-b border-surface-100 divide-x divide-surface-100">
-              <div class="p-6 text-center">
-                <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Ventas Totales</span>
-                <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalSalesCount | number }}</span>
-              </div>
-              <div class="p-6 text-center">
-                <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Visualizaciones Totales</span>
-                <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalViewsCount | number }}</span>
-              </div>
-              <div class="p-6 text-center">
-                <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-2">Tiendas Activas Totales</span>
-                <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalShopsCount }}</span>
-              </div>
-            </div>
-
-            <div class="p-8 md:p-10">
-              <div class="prose prose-sm max-w-none text-surface-600 leading-relaxed whitespace-pre-line">
-                {{ mainCategory.longDescription }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <section *ngIf="subCategories.length > 0">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-1.5 h-8 bg-cyan-500 rounded-full"></div>
-            <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Subcategorías</h2>
-          </div>
-
-          <div class="flex flex-wrap gap-4">
-            @for (sub of subCategories; track sub.id) {
-              <div
-                [routerLink]="['/category', sub.id]"
-                class="flex-1 min-w-[140px] flex flex-col items-center gap-3 bg-white border border-surface-200 p-4 rounded-2xl cursor-pointer shadow-sm hover:border-primary-500 hover:shadow-md transition-all duration-300 group">
-
-                <div class="w-14 h-14 rounded-full bg-surface-50 border border-surface-100 flex items-center justify-center text-surface-600 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
-                  <i [class]="(sub.icon || 'pi pi-tag') + ' !text-2xl'"></i>
-                </div>
-
-                <span class="text-xs font-bold text-surface-700 group-hover:text-primary-600 text-center truncate w-full">
-                  {{ sub.name }}
-                </span>
-
-              </div>
-            }
-          </div>
-        </section>
-      </div>
-
-      <div class="w-full lg:w-1/3 shrink-0 sticky top-6 flex flex-col gap-6">
-
-        <div class="bg-white rounded-3xl border border-surface-200 p-6 shadow-sm min-w-[300px]">
-
-          <h3 class="font-bold text-surface-900 text-sm uppercase tracking-wider mb-6 flex items-center gap-2">
-            <i class="pi pi-chart-line text-primary-500"></i> Estadísticas
-          </h3>
-
-          <div class="space-y-6">
-            <div>
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Visualizaciones totales</span>
-                <p-dropdown [options]="timeRanges" [(ngModel)]="selectedViewsRange" (onChange)="onViewsRangeChange()" optionLabel="label" optionValue="value" styleClass="p-dropdown-xs"></p-dropdown>
-              </div>
-              <div class="h-32">
-                <p-chart type="line" [data]="viewsChartData" [options]="chartOptions"></p-chart>
-              </div>
-            </div>
-
-            <div class="pt-6 border-t border-surface-100">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Ventas Totales</span>
-                <p-dropdown [options]="timeRanges" [(ngModel)]="selectedSalesRange" (onChange)="onSalesRangeChange()" optionLabel="label" optionValue="value" styleClass="p-dropdown-xs"></p-dropdown>
-              </div>
-              <div class="h-32">
-                <p-chart type="line" [data]="salesChartData" [options]="chartOptions"></p-chart>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-3xl border border-surface-200 p-5 shadow-sm min-w-[280px]">
-          <h3 class="text-xs font-bold text-surface-900 mb-4 uppercase tracking-wider">Categorías Similares</h3>
-          <div class="flex flex-col gap-3">
-            @for (cat of similarCategories; track cat.id) {
-              <div [routerLink]="['/category', cat.id]" class="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-50 cursor-pointer transition-all border border-transparent hover:border-surface-200 group">
-                <div class="w-10 h-10 bg-surface-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center border border-surface-200 p-1">
-                  <img [src]="cat.imageInfo.imageUrl" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
-                </div>
-                <div class="overflow-hidden text-left flex-1">
-                  <h4 class="text-xs font-bold text-surface-800 truncate group-hover:text-primary-600 transition-colors">{{ cat.name }}</h4>
-                  <p class="text-[10px] text-surface-400 truncate">{{ cat.shortDescription }}</p>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-
-    </div>
-    <section class="mt-16">
+    <section>
       <div class="flex items-center gap-3 mb-6">
-        <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
-        <h2 class="text-2xl md:text-3xl font-bold text-surface-900 tracking-tight">Los más vendidos en {{ mainCategory.name }}</h2>
+        <div class="w-1.5 h-8 bg-primary-500 rounded-full"></div>
+        <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Información</h2>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl border border-surface-200 shadow-sm min-h-[380px]">
+      <div class="bg-white rounded-3xl border border-surface-200 overflow-hidden shadow">
+        <div class="grid grid-cols-3 bg-surface-50/50 border-b border-surface-200 divide-x divide-surface-200">
+          <div class="p-6 text-center">
+            <span class="block text-xs font-bold text-surface-500 uppercase tracking-widest mb-2">Ventas Totales</span>
+            <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalSalesCount | number }}</span>
+          </div>
+          <div class="p-6 text-center">
+            <span class="block text-xs font-bold text-surface-500 uppercase tracking-widest mb-2">Visualizaciones Totales</span>
+            <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalViewsCount | number }}</span>
+          </div>
+          <div class="p-6 text-center">
+            <span class="block text-xs font-bold text-surface-500 uppercase tracking-widest mb-2">Tiendas Activas Totales</span>
+            <span class="text-2xl md:text-3xl font-black text-surface-900">{{ totalShopsCount }}</span>
+          </div>
+        </div>
 
-        <ng-container *ngIf="topSalesProducts.length > 0 && !topSalesLoading && !topSalesError; else noTopSales">
-          <p-carousel [value]="topSalesProducts" [numVisible]="4" [circular]="true" [responsiveOptions]="responsiveOptions" [showIndicators]="false">
-            <ng-template let-p pTemplate="item">
-              <div class="p-2 h-full">
-                <app-product-card
-                  [product]="p"
-                  [elementId]="'topSales-' + p.id"
-                  [navState]="{ from: 'category', categoryName: mainCategory.name, categoryId: mainCategory.id }">
-                </app-product-card>
-              </div>
-            </ng-template>
-          </p-carousel>
-        </ng-container>
-
-        <ng-template #noTopSales>
-          <app-loading
-            [loading]="topSalesLoading"
-            [error]="topSalesError"
-            [numElements]="topSalesProducts.length"
-            elementsType="productos populares">
-          </app-loading>
-        </ng-template>
-
+        <div class="p-8 md:p-10">
+          <div class="prose prose-slate max-w-none leading-relaxed"
+               [innerHTML]="mainCategory.longDescription | safeHtml">
+          </div>
+        </div>
       </div>
     </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <section>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-8 bg-sky-500 rounded-full"></div>
+          <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Visualizaciones</h2>
+        </div>
+        <div class="bg-white rounded-3xl border border-surface-200 p-8 shadow">
+          <div class="flex justify-end mb-4">
+            <p-dropdown [options]="timeRanges" [(ngModel)]="selectedViewsRange" (onChange)="onViewsRangeChange()" optionLabel="label" optionValue="value" styleClass="p-dropdown-xs"></p-dropdown>
+          </div>
+          <div class="h-48">
+            <p-chart type="line" [data]="viewsChartData" [options]="chartOptions"></p-chart>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-8 bg-emerald-500 rounded-full"></div>
+          <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Ventas</h2>
+        </div>
+        <div class="bg-white rounded-3xl border border-surface-200 p-8 shadow">
+          <div class="flex justify-end mb-4">
+            <p-dropdown [options]="timeRanges" [(ngModel)]="selectedSalesRange" (onChange)="onSalesRangeChange()" optionLabel="label" optionValue="value" styleClass="p-dropdown-xs"></p-dropdown>
+          </div>
+          <div class="h-48">
+            <p-chart type="line" [data]="salesChartData" [options]="chartOptions"></p-chart>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <section>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-8 bg-violet-500 rounded-full"></div>
+          <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Categorías Similares</h2>
+        </div>
+        <div class="bg-white rounded-3xl border border-surface-200 shadow overflow-hidden">
+          <div class="overflow-y-auto max-h-[380px] p-4 flex flex-col gap-1">
+            @for (cat of similarCategories; track cat.id) {
+              <div [routerLink]="['/category', cat.id]" class="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-50 cursor-pointer transition-all border border-transparent hover:border-surface-200 group">
+                <div class="w-12 h-12 bg-surface-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center border border-surface-200 p-1">
+                  <img [src]="cat.imageInfo.imageUrl" [alt]="cat.name" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
+                </div>
+                <div class="overflow-hidden flex-1">
+                  <h4 class="text-sm font-bold text-surface-800 truncate group-hover:text-primary-600 transition-colors">{{ cat.name }}</h4>
+                  <p class="text-xs text-surface-500 truncate">{{ cat.shortDescription }}</p>
+                </div>
+                <i class="pi pi-chevron-right text-surface-400 text-xs shrink-0"></i>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
+          <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Lo más vendido</h2>
+        </div>
+        <div class="bg-white rounded-3xl border border-surface-200 shadow overflow-hidden">
+          <ng-container *ngIf="!topSalesLoading && !topSalesError && topSalesProducts.length > 0; else noTopSales">
+            <div class="overflow-y-auto max-h-[560px] p-4 flex flex-col gap-1">
+              @for (p of topSalesProducts; track p.id) {
+                <div [routerLink]="['/product', p.id]" [state]="{ from: 'category', categoryName: mainCategory.name, categoryId: mainCategory.id }" class="flex items-center gap-4 p-4 rounded-xl hover:bg-surface-50 cursor-pointer transition-all border border-transparent hover:border-surface-200 group">
+                  <div class="w-16 h-16 bg-surface-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-surface-200 p-1.5">
+                    <img [src]="p.imagesInfo[0].imageUrl" [alt]="p.name" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300">
+                  </div>
+                  <div class="flex-1 overflow-hidden min-w-0">
+                    <p class="text-sm font-bold text-surface-800 line-clamp-2 group-hover:text-primary-600 transition-colors leading-snug mb-1.5">{{ p.name }}</p>
+                    <div class="mb-1.5">
+                      <app-stock-tag [product]="p"></app-stock-tag>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                      <span class="text-base font-black text-primary-600">{{ p.currentPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                      @if (p.previousPrice > 0 && p.previousPrice > p.currentPrice) {
+                        <span class="text-xs text-surface-400 line-through font-medium">{{ p.previousPrice | currency:'EUR':'symbol':'1.2-2' }}</span>
+                      }
+                      @if (p.discount && p.discount.startsWith('-')) {
+                        <p-tag [value]="p.discount" severity="danger" styleClass="!text-[0.6rem] !font-bold"></p-tag>
+                      }
+                    </div>
+                    <div class="flex items-center gap-1 text-xs">
+                      <i class="pi pi-star-fill text-yellow-400 text-[0.65rem]"></i>
+                      <span class="font-bold text-surface-700">{{ p.averageRating | number:'1.1-1' }}</span>
+                      <span class="text-surface-500">({{ p.totalReviews }})</span>
+                    </div>
+                  </div>
+                  <i class="pi pi-chevron-right text-surface-400 text-xs shrink-0"></i>
+                </div>
+              }
+            </div>
+          </ng-container>
+          <ng-template #noTopSales>
+            <div class="p-8">
+              <app-loading [loading]="topSalesLoading" [error]="topSalesError" [numElements]="topSalesProducts.length" elementsType="productos populares"></app-loading>
+            </div>
+          </ng-template>
+        </div>
+      </section>
+
+    </div>
 
   </div>
 </div>

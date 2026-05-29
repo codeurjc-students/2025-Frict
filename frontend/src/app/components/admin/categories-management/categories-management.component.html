@@ -60,7 +60,7 @@
 
                     <div class="text-center">
                       <span class="font-bold text-slate-700 block text-sm">{{ node.data.name }}</span>
-                      <span class="text-[10px] text-slate-400 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 inline-block">
+                      <span class="text-[10px] text-slate-500 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-200 inline-block">
                               {{ node.data.timesUsed }} {{ node.data.timesUsed == 1 ? 'uso' : 'usos' }}
                           </span>
                     </div>
@@ -78,7 +78,7 @@
 
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
             <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">Categorías Totales {{ listModeSelected ? '' : ' (página actual)'}}</p>
+              <p class="text-xs font-bold text-slate-500 uppercase">Categorías Totales {{ listModeSelected ? '' : ' (página actual)'}}</p>
               <p class="text-3xl font-extrabold text-slate-800">{{ totalCategories() }}</p>
             </div>
             <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -88,8 +88,8 @@
 
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
             <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">Profundidad Máxima {{ listModeSelected ? '' : ' (página actual)'}}</p>
-              <p class="text-3xl font-extrabold text-slate-800">{{ maxDepth() }} <span class="text-sm font-normal text-slate-400">niveles</span></p>
+              <p class="text-xs font-bold text-slate-500 uppercase">Profundidad Máxima {{ listModeSelected ? '' : ' (página actual)'}}</p>
+              <p class="text-3xl font-extrabold text-slate-800">{{ maxDepth() }} <span class="text-sm font-normal text-slate-500">niveles</span></p>
             </div>
             <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
               <i class="pi pi-align-left text-xl"></i>
@@ -98,8 +98,8 @@
 
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between flex-1">
             <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">Porcentaje de uso {{ listModeSelected ? '' : ' (página actual)'}}</p>
-              <p class="text-3xl font-extrabold text-slate-800">{{ usagePercentage() }} <span class="text-sm font-normal text-slate-400">% ({{ totalVolume() }} usos)</span></p>
+              <p class="text-xs font-bold text-slate-500 uppercase">Porcentaje de uso {{ listModeSelected ? '' : ' (página actual)'}}</p>
+              <p class="text-3xl font-extrabold text-slate-800">{{ usagePercentage() }} <span class="text-sm font-normal text-slate-500">% ({{ totalVolume() }} usos)</span></p>
             </div>
             <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
               <i class="pi pi-chart-line text-xl"></i>
@@ -113,7 +113,7 @@
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="font-bold text-slate-800">Análisis de Catálogo</h3>
-              <p class="text-xs text-slate-400">
+              <p class="text-xs text-slate-500">
                 @if(productsViewSelected) { Número de usos por categoría raíz }
                 @else { Categorías con mayor inventario }
               </p>
@@ -166,7 +166,7 @@
           </ng-template>
 
           <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
-            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 group">
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 group">
 
               <td style="width: 25%" class="pl-6">
                 <div class="flex items-center">

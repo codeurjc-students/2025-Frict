@@ -27,7 +27,7 @@
 
         <div class="lg:col-span-1 flex flex-col gap-6">
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información del Vehículo</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Información del Vehículo</h2>
 
             <div class="flex flex-col gap-5">
               <div class="flex flex-col gap-2">
@@ -115,7 +115,7 @@
 
         <div class="lg:col-span-2 flex flex-col gap-6">
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm h-full">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Última Ubicación Conocida</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Última Ubicación Conocida</h2>
 
             <div class="flex flex-col gap-4">
               <div class="relative w-full h-[400px] rounded-xl overflow-hidden border border-slate-300 shadow-inner">
@@ -152,13 +152,13 @@
                 </div>
               </div>
 
-              <div formGroupName="address" class="grid grid-cols-2 gap-4 mt-4 border-t pt-4 border-slate-100">
+              <div formGroupName="address" class="grid grid-cols-2 gap-4 mt-4 border-t pt-4 border-slate-200">
                 <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-slate-400 uppercase">Latitud (GPS)</label>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase">Latitud (GPS)</label>
                   <p-inputNumber formControlName="latitude" [minFractionDigits]="6" [readonly]="true" styleClass="w-full bg-slate-50"></p-inputNumber>
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-slate-400 uppercase">Longitud (GPS)</label>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase">Longitud (GPS)</label>
                   <p-inputNumber formControlName="longitude" [minFractionDigits]="6" [readonly]="true" styleClass="w-full bg-slate-50"></p-inputNumber>
                 </div>
               </div>
@@ -171,7 +171,7 @@
       @if (truck()?.driverLocation; as loc) {
         <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-start-2 lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-200 pb-3">
               <h2 class="text-lg font-bold text-slate-800">Posición GPS en Tiempo Real</h2>
               <div class="flex items-center gap-2">
                 <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
@@ -188,24 +188,24 @@
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100 md:col-span-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Calle</span>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 md:col-span-2">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Calle</span>
                 <span class="text-sm font-medium text-slate-700">{{ loc.address.street }} {{ loc.address.number }}</span>
               </div>
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ciudad</span>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ciudad</span>
                 <span class="text-sm font-medium text-slate-700">{{ loc.address.city }}</span>
               </div>
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Código Postal</span>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Código Postal</span>
                 <span class="text-sm font-medium text-slate-700">{{ loc.address.postalCode }}</span>
               </div>
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">País</span>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">País</span>
                 <span class="text-sm font-medium text-slate-700">{{ loc.address.country }}</span>
               </div>
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Latitud</span>
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Latitud</span>
                 <span class="text-sm font-mono text-slate-700">{{ loc.address.latitude | number:'1.6-6' }}</span>
               </div>
             </div>

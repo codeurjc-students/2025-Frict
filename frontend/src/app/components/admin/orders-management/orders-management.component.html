@@ -51,7 +51,7 @@
                       <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                     </div>
                     <div class="flex flex-col items-end shrink-0">
-                      <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{{ order.createdAt }}</span>
+                      <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">{{ order.createdAt }}</span>
                     </div>
                   </div>
 
@@ -104,7 +104,7 @@
                   <span class="text-xs font-mono text-slate-500 font-medium truncate">{{ order.referenceCode }}</span>
                 </div>
                 <div class="flex flex-col items-end shrink-0">
-                  <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{{ order.createdAt }}</span>
+                  <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">{{ order.createdAt }}</span>
                 </div>
               </div>
 
@@ -165,7 +165,7 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-order>
-          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-100" (click)="openOrderDetails(order)">
+          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-200" (click)="openOrderDetails(order)">
             <td class="py-3 px-4 font-mono text-sm font-medium text-slate-600">{{ order.referenceCode }}</td>
             <td class="py-3 px-4 text-sm text-slate-800 font-bold flex items-center gap-2">
               <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
@@ -278,7 +278,7 @@
   </ng-template>
 
   <div *ngIf="selectedOrder">
-    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200 mt-2">
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Productos distintos</span><span class="text-xl font-bold text-slate-800">{{ selectedOrder.orderItems.length || 0 }}</span></div>
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Artículos totales</span><span class="text-xl font-bold text-slate-800">{{ selectedOrder.totalItems }}</span></div>
       <div class="flex flex-col"><span class="text-xs font-bold text-slate-500 uppercase">Subtotal</span><span class="text-xl font-bold text-slate-800">{{ formatPrice(selectedOrder.subtotalCost) }}</span></div>
@@ -308,7 +308,7 @@
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-item>
-                  <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <tr class="border-t border-slate-200 hover:bg-slate-50">
                     <td class="p-3 text-sm font-medium text-slate-700">{{ getItemName(item) }}</td>
                     <td class="p-3 text-center"><span class="bg-slate-100 px-2.5 py-1 rounded text-xs text-slate-700 font-bold">{{ item.quantity }}</span></td>
                     <td class="p-3 text-right text-sm text-slate-600">{{ formatPrice(item.productPrice) }}</td>
@@ -341,18 +341,18 @@
                   <div class="relative">
                     <div class="absolute -left-[25px] bg-white w-6 h-6 rounded-full border-2 flex items-center justify-center border-blue-200 text-blue-500"><i class="text-xs" [ngClass]="log.icon || getOrderStatusTagInfo(log.status).icon"></i></div>
                     <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-200">
-                      <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-100">
+                      <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-200">
                         <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">{{ log.status }}</span>
                         <span class="text-xs text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded">{{ (log.updates && log.updates.length > 0) ? log.updates[0].date : 'Sin fecha' }}</span>
                       </div>
                       <div class="flex flex-col gap-3">
                         @for (update of log.updates; track $index) {
-                          <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                          <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
                             <div class="flex items-center gap-1.5 mb-1.5"><i class="pi pi-clock text-xs text-slate-400"></i><span class="text-xs font-bold text-slate-500">{{ update.date }}</span></div>
                             <p class="text-sm text-slate-600 leading-relaxed">{{ update.description }}</p>
                           </div>
                         }
-                        @if (!log.updates || log.updates.length === 0) { <p class="text-xs text-slate-400 italic">No hay actualizaciones registradas para este estado.</p> }
+                        @if (!log.updates || log.updates.length === 0) { <p class="text-xs text-slate-500 italic">No hay actualizaciones registradas para este estado.</p> }
                       </div>
                     </div>
                   </div>
@@ -377,18 +377,18 @@
       <div class="lg:col-span-1 flex flex-col gap-6 pt-12">
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
             <i class="pi pi-truck"></i> Gestión de Camión
           </h4>
 
           <div *ngIf="selectedTruck">
 
-            <div class="flex items-center gap-2 text-sm text-slate-700 font-bold mb-3 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2 text-sm text-slate-700 font-bold mb-3 pb-3 border-b border-slate-200">
               <i class="pi pi-id-card text-slate-400"></i> Ref: {{ selectedTruck.referenceCode }}
             </div>
 
             <div class="mb-4">
-              <p class="text-xs text-surface-400 mb-1 font-bold text-left uppercase">
+              <p class="text-xs text-surface-500 mb-1 font-bold text-left uppercase">
                 Capacidad:
               </p>
               <p-progressBar
@@ -397,12 +397,12 @@
                 [style]="{'height': '6px'}"
                 styleClass="!bg-surface-100">
               </p-progressBar>
-              <p class="text-xs text-surface-400 mt-1 font-bold text-right">
+              <p class="text-xs text-surface-500 mt-1 font-bold text-right">
                 {{ selectedTruck.currentCapacity | number:'1.0-1' }} / {{ selectedTruck.maxCapacity | number:'1.0-1' }} · {{ selectedTruck.ordersToDeliver }} pedidos
               </p>
             </div>
 
-            <div *ngIf="selectedTruck.assignedDriver" class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+            <div *ngIf="selectedTruck.assignedDriver" class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
               <img [src]="selectedTruck.assignedDriver.imageInfo.imageUrl || 'assets/default-user.png'" class="w-10 h-10 rounded-full border border-slate-200 object-cover shrink-0" alt="Conductor">
               <div class="flex flex-col min-w-0">
                 <div class="flex items-center gap-1.5">
@@ -425,7 +425,7 @@
             <i class="pi pi-exclamation-triangle text-amber-500"></i> Sin camión asignado
           </div>
 
-          <div class="mt-4 pt-4 border-t border-slate-100">
+          <div class="mt-4 pt-4 border-t border-slate-200">
             <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Asignar / Cambiar Camión</label>
             <p-select
               [options]="availableTrucks"
@@ -470,11 +470,11 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
             <i class="pi pi-shop"></i> Tienda de Origen
           </h4>
           <div *ngIf="selectedShop">
-            <div class="flex items-start gap-3 mb-4 pb-3 border-b border-slate-100">
+            <div class="flex items-start gap-3 mb-4 pb-3 border-b border-slate-200">
               <img [src]="selectedShop.imageInfo.imageUrl || 'assets/default-shop.png'" class="w-12 h-12 rounded-lg border border-slate-200 object-cover shrink-0" alt="Tienda">
               <div class="flex flex-col">
                 <p class="text-sm font-bold text-slate-800">{{ selectedShop.name }}</p>
@@ -484,7 +484,7 @@
               </div>
             </div>
 
-            <div *ngIf="selectedShop.assignedManager" class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+            <div *ngIf="selectedShop.assignedManager" class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
               <img [src]="selectedShop.assignedManager.imageInfo.imageUrl || 'assets/default-user.png'" class="w-8 h-8 rounded-full border border-slate-200 object-cover shrink-0" alt="Manager">
               <div class="flex flex-col min-w-0">
                 <p class="text-[10px] font-bold text-slate-500 uppercase leading-none mb-1">Manager de Tienda</p>
@@ -504,11 +504,11 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
             <i class="pi pi-user"></i> Destinatario
           </h4>
 
-          <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200">
             <p-avatar [image]="selectedOrder.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-9 h-9 bg-blue-100 text-blue-700 font-bold text-sm shrink-0"></p-avatar>
             <div class="flex flex-col min-w-0">
               <div class="flex items-center gap-2">
@@ -521,7 +521,7 @@
             </div>
           </div>
 
-          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-700 flex items-start gap-2">
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm text-slate-700 flex items-start gap-2">
             <i class="pi pi-map-marker text-slate-400"></i>
             <span class="leading-relaxed text-xs text-slate-600">{{ formatAddress(selectedOrder.sendingAddress) }}</span>
           </div>

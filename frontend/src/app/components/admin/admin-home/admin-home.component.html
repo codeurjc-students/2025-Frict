@@ -17,7 +17,7 @@
             <h1 class="text-3xl font-bold text-primary-600 tracking-tight">
               {{ authService.isDriver() ? 'Hoja de Ruta' : 'Panel de Control' }}
             </h1>
-            <p-tag [value]="(currentDate | date:'EEEE, d MMMM') ?? ''" severity="secondary" styleClass="uppercase"></p-tag>
+            <p-tag [value]="(currentDate | date:'EEEE, d MMMM') ?? ''" severity="info" styleClass="uppercase"></p-tag>
           </div>
 
           @if (!authService.isDriver() || driverTruck()) {
@@ -36,7 +36,7 @@
                   Información del camión asociado
                 }
               </span>
-              <span class="text-slate-300">|</span>
+              <span class="text-slate-400">|</span>
               <span>Vista operativa actualizada</span>
             </p>
           }
@@ -114,7 +114,7 @@
             <div class="flex-1 min-h-0 w-full relative">
               <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 mt-[-40px]">
                 <span class="text-3xl font-black text-slate-800 leading-none">{{ globalKpis().activeOrders + ordersChartData().datasets[0]?.data[0] || 0 }}</span>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Totales</span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Totales</span>
               </div>
 
               <p-chart type="doughnut"
@@ -184,7 +184,7 @@
               <i class="pi pi-shop text-[12rem]"></i>
             </div>
 
-            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Información Operativa</h2>
+            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Información Operativa</h2>
 
             <div class="flex flex-col gap-5 relative z-10 h-full">
               <div class="flex items-center gap-4">
@@ -216,7 +216,7 @@
                 }
               </div>
 
-              <div class="border-t border-slate-100 my-1"></div>
+              <div class="border-t border-slate-200 my-1"></div>
 
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
@@ -229,7 +229,7 @@
                 </div>
               </div>
 
-              <div class="mt-auto pt-4 border-t border-slate-100">
+              <div class="mt-auto pt-4 border-t border-slate-200">
                 @if (driverShop()?.assignedManager; as mgr) {
                   <p-button label="Soporte Técnico" icon="pi pi-headphones"
                             styleClass="p-button-secondary w-full"
@@ -252,7 +252,7 @@
 
         @if (!authService.isDriver() || driverTruck()) {
           <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
               <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="pi pi-list text-primary-400"></i> {{ authService.isDriver() ? 'Mis Próximas Entregas' : 'Pedidos Recientes' }}
               </h2>
@@ -263,7 +263,7 @@
 
             <p-table [value]="recentOrders()" styleClass="p-datatable-sm" responsiveLayout="scroll">
               <ng-template pTemplate="header">
-                <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
+                <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
                   <th class="py-3 pl-5">Referencia</th>
                   <th class="py-3">Creado el</th>
                   <th class="py-3">Cliente</th>
@@ -277,7 +277,7 @@
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-order>
-                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 last:border-0 cursor-pointer">
                   <td class="py-3 pl-5 text-sm font-mono text-slate-600 font-medium">{{ order.referenceCode }}</td>
                   <td class="py-3 pl-5 text-sm text-slate-600 font-medium">{{ order.createdAt }}</td>
                   <td class="py-3 text-sm font-bold text-slate-800">
@@ -323,7 +323,7 @@
 
         @if (!authService.isDriver() || driverTruck()) {
           <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-auto">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+            <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50 shrink-0">
               <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="pi pi-bell text-red-500 animate-pulse"></i> {{ authService.isDriver() ? 'Notificaciones de Camión' : 'Notificaciones del Sistema' }}
               </h2>
@@ -332,7 +332,7 @@
 
             <div class="flex-grow overflow-y-auto custom-scrollbar p-5 flex flex-col gap-3">
               @for (notif of recentNotifications(); track notif.id) {
-                <div (click)="goToNotification(notif)" class="flex gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
+                <div (click)="goToNotification(notif)" class="flex gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
 
                   @if (!notif.read) {
                     <div class="absolute top-3 right-3 w-2 h-2 bg-primary-500 rounded-full"></div>

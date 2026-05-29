@@ -24,7 +24,7 @@
       </div>
 
       <div class="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm overflow-x-auto">
-        <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Jerarquía Visual</h2>
+        <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Jerarquía Visual</h2>
 
         <div class="flex justify-center min-w-[600px]">
           <p-organizationChart
@@ -44,7 +44,7 @@
 
                   <div class="text-center">
                     <span class="font-bold text-slate-700 block text-sm">{{ node.data.name }}</span>
-                    <span class="text-[10px] text-slate-400 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100 inline-block">
+                    <span class="text-[10px] text-slate-500 font-mono mt-1 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-200 inline-block">
                               {{ node.data.timesUsed }} {{ node.data.timesUsed == 1 ? 'uso' : 'usos' }}
                           </span>
                   </div>
@@ -56,7 +56,7 @@
         </div>
 
         @if (!orgChartNodes() || orgChartNodes().length === 0) {
-          <p class="text-center text-xs text-slate-400 mt-4">
+          <p class="text-center text-xs text-slate-500 mt-4">
             Selecciona una categoría hija para visualizar la jerarquía.
           </p>
         }
@@ -66,7 +66,7 @@
 
         <div class="lg:col-span-2 flex flex-col gap-6">
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Información General</h2>
 
             <div class="grid grid-cols-1 gap-6">
 
@@ -163,7 +163,7 @@
 
         <div class="flex flex-col gap-6">
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm sticky top-6">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-4">
               <h2 class="text-lg font-bold text-slate-800 m-0">Imagen de Categoría</h2>
               <p-button label="Restaurar" (click)="restoreImage()" icon="pi pi-undo" [text]="true" severity="info" />
             </div>

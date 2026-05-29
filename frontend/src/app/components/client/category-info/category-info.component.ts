@@ -6,7 +6,6 @@ import { TagModule } from 'primeng/tag';
 import { RatingModule } from 'primeng/rating';
 import { FormsModule } from '@angular/forms';
 import { ChartModule } from 'primeng/chart';
-import { CarouselModule } from 'primeng/carousel';
 import { DropdownModule } from 'primeng/dropdown';
 
 import { ProductCardComponent } from '../product-card/product-card.component';
@@ -20,19 +19,22 @@ import { LoadingScreenComponent } from '../../common/loading-screen/loading-scre
 import { LoadingSectionComponent } from '../../common/loading-section/loading-section.component';
 import { carouselResponsiveOptions } from '../../../app.config';
 import {RegistryService} from '../../../services/registry.service';
+import { SafeHtmlPipe } from '../../../utils/safe-html.pipe';
+import { StockTagComponent } from '../../common/stock-tag/stock-tag.component';
 
 @Component({
   selector: 'app-category-info',
   standalone: true,
   imports: [
     CommonModule,
+    SafeHtmlPipe,
+    StockTagComponent,
     RouterModule,
     ButtonModule,
     TagModule,
     RatingModule,
     FormsModule,
     ChartModule,
-    CarouselModule,
     DropdownModule,
     ProductCardComponent,
     BreadcrumbReloadComponent,
@@ -50,6 +52,8 @@ export class CategoryInfoComponent implements OnInit {
   private router = inject(Router);
   private breadcrumbService = inject(BreadcrumbService);
   private locale = inject(LOCALE_ID);
+
+  readonly tagSeverities: Array<'success' | 'info' | 'warn' | 'danger' | 'secondary'> = ['success', 'info', 'warn', 'danger', 'secondary'];
 
   // Estados generales
   loading: boolean = true;

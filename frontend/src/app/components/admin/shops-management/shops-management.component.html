@@ -43,19 +43,19 @@
 
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col h-full">
 
-          <div class="flex items-center gap-5 p-6 bg-slate-50 border border-slate-100 rounded-xl mb-6 relative overflow-hidden shrink-0">
+          <div class="flex items-center gap-5 p-6 bg-slate-50 border border-slate-200 rounded-xl mb-6 relative overflow-hidden shrink-0">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-primary-100 rounded-full blur-xl opacity-60"></div>
 
-            <div class="w-16 h-16 shrink-0 bg-white rounded-full shadow-sm flex items-center justify-center z-10 border border-slate-100">
+            <div class="w-16 h-16 shrink-0 bg-white rounded-full shadow-sm flex items-center justify-center z-10 border border-slate-200">
               <i class="pi pi-shop text-3xl text-primary-500" style="font-size: 1.5rem"></i>
             </div>
 
             <div class="flex flex-col z-10">
               @if (authService.isAdmin()) {
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiendas Totales</span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tiendas Totales</span>
               }
               @if (authService.isManager()) {
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiendas Asignadas</span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tiendas Asignadas</span>
               }
 
               <div class="flex items-center gap-3 mt-1">
@@ -73,7 +73,7 @@
             <div class="flex flex-col gap-2 overflow-y-auto max-h-[380px] pr-1 custom-scrollbar">
 
               @for(alert of recentShopsNotifications(); track alert.id) {
-                <div (click)="goToNotification(alert)" class="group relative flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer">
+                <div (click)="goToNotification(alert)" class="group relative flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer">
 
                   @if (!alert.read) {
                     <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary-500 rounded-full"></div>
@@ -92,14 +92,14 @@
                   </div>
 
                   <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="pi pi-chevron-right text-xs text-slate-300"></i>
+                    <i class="pi pi-chevron-right text-xs text-slate-400"></i>
                   </div>
                 </div>
               }
 
               @if (recentShopsNotifications().length === 0) {
                 <div class="flex-1 h-full min-h-[200px] flex flex-col items-center justify-center text-slate-400">
-                  <i class="pi pi-check-circle text-2xl mb-2 text-slate-300"></i>
+                  <i class="pi pi-check-circle text-2xl mb-2 text-slate-400"></i>
                   <p class="text-xs font-medium">No hay notificaciones recientes.</p>
                 </div>
               }
@@ -148,7 +148,7 @@
           </ng-template>
 
           <ng-template pTemplate="body" let-shop>
-            <tr [pSelectableRow]="shop" class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group">
+            <tr [pSelectableRow]="shop" class="hover:bg-slate-50 transition-colors border-b border-slate-200 last:border-0 group">
               <td class="pl-4 font-mono text-sm text-slate-500">{{ shop.referenceCode }}</td>
 
               @if (authService.isAdmin()) {
@@ -185,7 +185,7 @@
               </td>
 
               <td class="text-sm text-slate-600">
-                <i class="pi pi-map-marker text-slate-300 mr-1 md:hidden"></i>{{ formatAddress(shop.address) }}
+                <i class="pi pi-map-marker text-slate-400 mr-1 md:hidden"></i>{{ formatAddress(shop.address) }}
               </td>
 
               <td class="text-center">
@@ -223,7 +223,7 @@
             <tr>
               <td colspan="7" class="p-0 border-0">
                 <div class="flex flex-col items-center justify-center w-full h-32 text-slate-400 bg-slate-50">
-                  <i class="pi pi-shop text-4xl mb-2 text-slate-300"></i>
+                  <i class="pi pi-shop text-4xl mb-2 text-slate-400"></i>
                   <span class="font-medium">No hay tiendas disponibles.</span>
                 </div>
               </td>

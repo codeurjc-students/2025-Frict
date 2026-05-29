@@ -28,7 +28,7 @@
         <div class="lg:col-span-2 flex flex-col gap-6">
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Información General</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="flex flex-col gap-2 md:col-span-2">
@@ -90,18 +90,18 @@
           </div>
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Descripción Detallada</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Descripción Detallada</h2>
             <div class="flex flex-col gap-2">
               <p-editor formControlName="description" [style]="{ height: '320px' }" />
-              <small class="text-slate-400">Utiliza las herramientas de formato para estructurar la descripción del producto.</small>
+              <small class="text-slate-500">Utiliza las herramientas de formato para estructurar la descripción del producto.</small>
             </div>
           </div>
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Especificaciones Técnicas</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Especificaciones Técnicas</h2>
 
             @if (specs().length > 0) {
-              <div class="flex flex-col divide-y divide-slate-100 mb-4 border border-slate-100 rounded-xl overflow-hidden">
+              <div class="flex flex-col divide-y divide-slate-200 mb-4 border border-slate-200 rounded-xl overflow-hidden">
                 @for (spec of specs(); track spec.name) {
                   <div class="px-4 py-3 bg-white hover:bg-slate-50">
                     <span class="text-sm font-semibold text-slate-700">{{ spec.name }}</span>
@@ -109,7 +109,7 @@
                       @for (val of spec.values; track val) {
                         <span class="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
                           {{ val }}
-                          <button type="button" (click)="removeSpecValue(spec.name, val)" class="text-slate-400 hover:text-red-400">
+                          <button type="button" (click)="removeSpecValue(spec.name, val)" class="text-slate-500 hover:text-red-400">
                             <i class="pi pi-times text-[9px]"></i>
                           </button>
                         </span>
@@ -146,18 +146,18 @@
         <div class="flex flex-col gap-6">
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Visibilidad</h2>
-            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Visibilidad</h2>
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
               <span class="text-slate-700 font-medium">Disponible para tiendas</span>
               <p-toggleswitch formControlName="active"></p-toggleswitch>
             </div>
-            <p class="text-xs text-slate-400 mt-2">
+            <p class="text-xs text-slate-500 mt-2">
               Si se desactiva, ninguna tienda podrá vender el producto aunque tenga stock.
             </p>
           </div>
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Galería de Imágenes</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Galería de Imágenes</h2>
 
             @if (existingImages().length > 0 || newImages().length > 0) {
               <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -210,13 +210,13 @@
 
                 <ng-template #content>
                   @if (newImages().length === 0) {
-                    <div class="flex flex-col items-center justify-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                      <i class="pi pi-cloud-upload text-4xl mb-2 text-slate-300"></i>
+                    <div class="flex flex-col items-center justify-center py-8 text-slate-500 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
+                      <i class="pi pi-cloud-upload text-4xl mb-2 text-slate-400"></i>
                       <p class="text-sm font-medium">Arrastra imágenes o haz clic para seleccionar</p>
                     </div>
                   }
                   @if (newImages().length > 0) {
-                    <div class="py-4 text-center text-slate-400 text-sm">
+                    <div class="py-4 text-center text-slate-500 text-sm">
                       Sigue seleccionando para añadir más...
                     </div>
                   }
