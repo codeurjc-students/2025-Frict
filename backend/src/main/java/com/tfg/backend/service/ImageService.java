@@ -59,8 +59,7 @@ public class ImageService {
                 RequestBody.fromBytes(data)
         );
 
-        // Use publicUrl instead of minioUrl
-        String url = String.format("%s/%s/%s", publicUrl, bucketName, key);
+        String url = String.format("%s/%s", publicUrl, key);
         return Map.of("key", key, "url", url);
     }
 

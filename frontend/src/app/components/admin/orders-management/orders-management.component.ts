@@ -77,10 +77,10 @@ export class OrdersManagementComponent implements OnInit {
   cancelledOrders = signal<Order[]>([]);
 
   kanbanColumns = [
-    { id: 'Pedido Realizado', title: 'Pedido Realizado', data: this.ordersMade },
-    { id: 'Enviado', title: 'Enviado', data: this.shippedOrders },
-    { id: 'En Reparto', title: 'En Reparto', data: this.inDeliveryOrders },
-    { id: 'Completado', title: 'Completado', data: this.completedOrders }
+    { id: 'Pedido Realizado', title: 'Pedido Realizado', data: this.ordersMade,       bg: 'bg-blue-50/70 border-blue-200',    title_class: 'text-blue-900',   badge: 'bg-blue-100 text-blue-700',     icon: 'pi pi-file-edit',    icon_class: 'text-blue-500' },
+    { id: 'Enviado',          title: 'Enviado',          data: this.shippedOrders,    bg: 'bg-purple-50/70 border-purple-200',title_class: 'text-purple-900', badge: 'bg-purple-100 text-purple-700', icon: 'pi pi-send',         icon_class: 'text-purple-500' },
+    { id: 'En Reparto',       title: 'En Reparto',       data: this.inDeliveryOrders, bg: 'bg-orange-50/70 border-orange-200',title_class: 'text-orange-900', badge: 'bg-orange-100 text-orange-700', icon: 'pi pi-truck',        icon_class: 'text-orange-500' },
+    { id: 'Completado',       title: 'Completado',       data: this.completedOrders,  bg: 'bg-green-50/70 border-green-200',  title_class: 'text-green-900',  badge: 'bg-green-100 text-green-700',   icon: 'pi pi-check-circle', icon_class: 'text-green-500' }
   ];
 
   displayOrderDialog = false;

@@ -19,7 +19,7 @@ x-app-common: &app-common
     MYSQL_PASSWORD: password
     MONGODB_URI: "mongodb://user:password@mongodb:27017/Frict?authSource=admin&replicaSet=rs0"
     APP_STORAGE_ENDPOINT: http://minio:9000
-    APP_STORAGE_PUBLIC_URL: http://localhost:9000
+    APP_STORAGE_PUBLIC_URL: http://localhost:9000/images
     APP_STORAGE_BUCKET_NAME: images
     AWS_ACCESS_KEY_ID: user
     AWS_SECRET_ACCESS_KEY: password

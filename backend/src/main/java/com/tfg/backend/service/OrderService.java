@@ -310,7 +310,8 @@ public class OrderService {
                 Shop shop = order.getAssignedShop();
                 shop.setOccupiedCapacity(Math.max(0, shop.getOccupiedCapacity() - order.getTotalCapacity()));
 
-                Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, -order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), order.getAssignedTruck().getAssignedDriver().getUsername(), order.getAssignedTruck().getAssignedDriver().getName(), null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
+                User truckDriver = order.getAssignedTruck().getAssignedDriver();
+                Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, -order.getTotalCapacity(), order.getAssignedShop().getReferenceCode(), order.getAssignedShop().getName(), truckDriver != null ? truckDriver.getUsername() : null, truckDriver != null ? truckDriver.getName() : null, null, null, order.getReferenceCode(), "Pedido " + order.getReferenceCode());
                 eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
             }
 

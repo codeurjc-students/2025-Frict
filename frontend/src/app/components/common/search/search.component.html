@@ -3,7 +3,7 @@
 
   <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
-  <div class="sticky top-0 z-40 w-full mb-8 rounded-3xl border-x border-b border-t border-surface-200/50 bg-surface-50/95 backdrop-blur-md shadow-sm transition-all duration-300">
+  <div class="sticky top-0 z-40 w-full mb-8 rounded-3xl border-x border-b border-t border-surface-200/50 bg-white backdrop-blur-md shadow-sm transition-all duration-300">
     <div class="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
 
       <h1 class="text-xl sm:text-2xl text-surface-900 tracking-tight flex items-center gap-2">
@@ -13,7 +13,7 @@
         <span class="font-bold">resultados</span>
         @if (searchQuery) {
           <span class="text-surface-400 font-light mx-1">|</span>
-          <span class="text-surface-600">búsqueda:</span>
+          <span class="text-surface-600">Búsqueda:</span>
           <span class="italic font-bold text-surface-900">"{{ searchQuery }}"</span>
         }
       </h1>

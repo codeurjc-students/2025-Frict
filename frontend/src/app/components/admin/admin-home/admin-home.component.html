@@ -17,7 +17,7 @@
             <h1 class="text-3xl font-bold text-primary-600 tracking-tight">
               {{ authService.isDriver() ? 'Hoja de Ruta' : 'Panel de Control' }}
             </h1>
-            <p-tag [value]="(currentDate | date:'EEEE, d MMMM') ?? ''" severity="info" styleClass="uppercase"></p-tag>
+            <p-tag [value]="(currentDate | date:dateFormat) ?? ''" severity="info" styleClass="uppercase"></p-tag>
           </div>
 
           @if (!authService.isDriver() || driverTruck()) {

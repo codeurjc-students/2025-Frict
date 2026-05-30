@@ -52,6 +52,7 @@ export class AdminHomeComponent implements OnInit {
   loadingNotifications = true;
   error = false;
   currentDate = new Date();
+  readonly dateFormat = "EEEE, d 'de' MMMM 'de' y";
 
   driverTruck = signal<any | null>(null);
   driverShop = signal<any | null>(null);
@@ -307,8 +308,6 @@ export class AdminHomeComponent implements OnInit {
         })
       ).subscribe({
         next: (results: any[]) => {
-          console.log(results);
-
           if (results.length === 0) return;
 
           const labels = results[0].data.map((item: any) => formatDate(item._id, 'dd MMM', this.locale));

@@ -34,10 +34,11 @@
     <div *ngIf="!listModeSelected" cdkDropListGroup class="flex flex-col gap-8">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
         @for (col of kanbanColumns; track col.id) {
-          <div class="bg-slate-100/50 rounded-2xl p-4 border border-slate-200 flex flex-col h-[600px] min-w-0">
-            <div class="flex items-center justify-between mb-4 px-1 shrink-0">
-              <h3 class="font-bold text-slate-700 truncate mr-2">{{ col.title }}</h3>
-              <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">{{ col.data().length }}</span>
+          <div [class]="'rounded-2xl p-4 border flex flex-col h-[600px] min-w-0 shadow-sm ' + col.bg">
+            <div class="flex items-center justify-start gap-3 mb-4 px-1 shrink-0">
+              <i [class]="col.icon + ' text-xl ' + col.icon_class"></i>
+              <h3 [class]="'font-bold truncate ' + col.title_class">{{ col.title }}</h3>
+              <span [class]="'text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ' + col.badge">{{ col.data().length }}</span>
             </div>
 
             <div cdkDropList [cdkDropListData]="col.data()" (cdkDropListDropped)="drop($event, col.id)"
@@ -90,7 +91,7 @@
       <div class="bg-red-50/50 rounded-2xl p-5 border border-red-100 shadow-sm min-w-0 mt-4">
         <div class="flex items-center justify-start gap-3 mb-4 px-1">
           <i class="pi pi-times-circle text-red-500 text-xl"></i>
-          <h3 class="font-bold text-red-900">Cancelados</h3>
+          <h3 class="font-bold text-red-900">Cancelado</h3>
           <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ cancelledOrders().length }}</span>
         </div>
         <div cdkDropList [cdkDropListData]="cancelledOrders()" (cdkDropListDropped)="drop($event, 'Cancelado')" class="flex flex-wrap gap-4 min-h-[100px] p-2 bg-white/50 rounded-xl border border-red-50/50 border-dashed">

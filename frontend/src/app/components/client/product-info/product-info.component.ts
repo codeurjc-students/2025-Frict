@@ -308,7 +308,6 @@ export class ProductInfoComponent implements OnInit {
       interval: this.selectedViewInterval
     }).subscribe({
       next: (res: any) => {
-        console.log(res);
         const rawData = res.items || res;
         this.buildViewsChart(rawData);
         this.isViewsLoading = false;

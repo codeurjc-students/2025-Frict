@@ -85,7 +85,7 @@
           </p-galleria>
         </div>
 
-        <div class="bg-white rounded-2xl border border-surface-200 shadow p-6 md:p-8">
+        <div class="bg-white rounded-xl border border-surface-200 shadow p-6 md:p-8">
           <p-tabs value="0">
             <p-tablist class="!border-b !border-surface-200 mb-6">
               <p-tab value="0" class="!font-bold">Información</p-tab>
@@ -253,7 +253,7 @@
           </div>
 
           @if (authService.isLogged() && authService.isUser() && !reviewStats.userReviewed) {
-            <div class="my-8 bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
+            <div class="my-8 bg-white border border-surface-200 rounded-xl p-6 shadow-sm">
               <h3 class="text-lg font-bold mb-4">Escribe tu reseña</h3>
               <div class="flex gap-4">
                 <p-avatar [image]="loggedUserInfo.imageUrl" shape="circle" size="large"></p-avatar>
@@ -267,7 +267,7 @@
                       <button (click)="setRecommendation(true)" [class]="newReview.recommended ? 'bg-green-100 text-green-700 shadow-sm' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
                         <i class="pi pi-thumbs-up"></i> Recomendado
                       </button>
-                      <button (click)="setRecommendation(false)" [class]="!newReview.recommended && newReview.recommended !== null ? 'bg-red-100 text-red-700 shadow-sm' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
+                      <button (click)="setRecommendation(false)" [class]="!newReview.recommended && newReview.recommended !== null ? 'bg-red-100 text-red-700' : 'text-surface-500 hover:bg-surface-100'" class="px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2">
                         <i class="pi pi-thumbs-down"></i> No recomendado
                       </button>
                     </div>
@@ -297,8 +297,14 @@
           </div>
 
           <div class="space-y-4">
+            @if (reviewsPage.items.length === 0) {
+              <div class="bg-white flex flex-col items-center justify-center py-16 text-center rounded-xl shadow">
+                <i class="pi pi-comment text-4xl text-surface-300 mb-4"></i>
+                <p class="text-surface-500 font-medium">Todavía no hay reseñas de este producto</p>
+              </div>
+            }
             @for (review of reviewsPage.items; track review.id) {
-              <div class="bg-white p-6 rounded-2xl border border-surface-200 shadow-sm hover:border-surface-300 transition-colors">
+              <div class="bg-white p-6 rounded-xl border border-surface-200 shadow hover:border-surface-300 transition-colors">
                 <div class="flex justify-between items-start mb-4">
                   <div class="flex items-center gap-3">
                     <div class="relative flex">
@@ -350,7 +356,7 @@
             [rowsPerPageOptions]="[10, 20, 30]"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} reseñas"
-            styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-b-2xl mt-4">
+            styleClass="border-t border-slate-200 bg-slate-50 text-sm rounded-xl mt-4 shadow">
           </p-paginator>
         </div>
       </div>

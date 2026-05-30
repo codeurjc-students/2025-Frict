@@ -24,9 +24,9 @@ Resources:
       BucketName: !Sub "${EnvironmentName}-images-${AWS::AccountId}-${AWS::Region}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: false
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        RestrictPublicBuckets: false
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ["*"]
@@ -57,6 +57,11 @@ Resources:
             Resource:
               - !GetAtt ImagesBucket.Arn
               - !Sub "${ImagesBucket.Arn}/*"
+          - Sid: AllowPublicRead
+            Effect: Allow
+            Principal: "*"
+            Action: "s3:GetObject"
+            Resource: !Sub "${ImagesBucket.Arn}/*"
 
   # ── ECR ──────────────────────────────────────────────────────────────
   ECRRepository:

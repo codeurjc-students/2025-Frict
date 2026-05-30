@@ -133,8 +133,11 @@
       <section class="lg:col-span-1 space-y-8">
         <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-surface-900">
-              <i class="pi pi-id-card text-primary-500 mr-2"></i>Datos personales</h3>
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-7 bg-primary-500 rounded-full"></div>
+              <i class="pi pi-id-card text-primary-500 text-lg"></i>
+              <h3 class="text-xl font-bold text-surface-900">Datos personales</h3>
+            </div>
             <p-button (click)="showDataDialog()" icon="pi pi-pen-to-square" [text]="true" [rounded]="true" size="small" />
           </div>
           <div class="space-y-4">
@@ -190,7 +193,11 @@
         @if (authService.isUser()) {
           <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-bold text-surface-900">Direcciones</h3>
+              <div class="flex items-center gap-3">
+                <div class="w-1.5 h-7 bg-green-500 rounded-full"></div>
+                <i class="pi pi-map-marker text-green-500 text-lg"></i>
+                <h3 class="text-lg font-bold text-surface-900">Direcciones</h3>
+              </div>
               <p-button (click)="showAddressCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
             </div>
             <div class="space-y-3">
@@ -294,7 +301,11 @@
         @if (authService.isUser()) {
           <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-bold text-surface-900">Métodos de Pago</h3>
+              <div class="flex items-center gap-3">
+                <div class="w-1.5 h-7 bg-emerald-500 rounded-full"></div>
+                <i class="pi pi-credit-card text-emerald-500 text-lg"></i>
+                <h3 class="text-lg font-bold text-surface-900">Métodos de Pago</h3>
+              </div>
               <p-button (click)="showCardCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
             </div>
             <div class="space-y-3">
@@ -404,7 +415,11 @@
 
         <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-surface-900">Estado del Sistema</h3>
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-7 bg-slate-500 rounded-full"></div>
+              <i class="pi pi-desktop text-slate-500 text-lg"></i>
+              <h3 class="text-lg font-bold text-surface-900">Estado del Sistema</h3>
+            </div>
           </div>
 
           <div class="space-y-3">
@@ -490,8 +505,12 @@
         <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
           <div class="flex justify-between items-end mb-6">
             <div>
-              <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Personalización</h2>
-              <p class="text-surface-500 text-sm mt-1">Adapta la experiencia de la aplicación a tu gusto.</p>
+              <div class="flex items-center gap-3 mb-1">
+                <div class="w-1.5 h-8 bg-violet-500 rounded-full"></div>
+                <i class="pi pi-sliders-h text-violet-500 text-lg"></i>
+                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Personalización</h2>
+              </div>
+              <p class="text-surface-500 text-sm mt-1 ml-8">Adapta la experiencia de la aplicación a tu gusto.</p>
             </div>
           </div>
 
@@ -564,8 +583,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Pedidos</h2>
-                <p class="text-surface-500 text-sm mt-1">Historial de tus últimas compras</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-blue-500 rounded-full"></div>
+                  <i class="pi pi-shopping-bag text-blue-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Pedidos</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Historial de tus últimas compras</p>
               </div>
             </div>
 
@@ -618,8 +641,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Reseñas</h2>
-                <p class="text-surface-500 text-sm mt-1">Consulta tus comentarios sobre productos.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
+                  <i class="pi pi-star text-amber-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Reseñas</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Consulta tus comentarios sobre productos.</p>
               </div>
             </div>
 
@@ -667,8 +694,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Lugares de Trabajo</h2>
-                <p class="text-surface-500 text-sm mt-1">Tiendas a las que estás asignado actualmente.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-emerald-500 rounded-full"></div>
+                  <i class="pi pi-shop text-emerald-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Lugares de Trabajo</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Tiendas a las que estás asignado actualmente.</p>
               </div>
             </div>
 
@@ -710,8 +741,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Vehículo Asignado</h2>
-                <p class="text-surface-500 text-sm mt-1">Información de tu vehículo de reparto.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-sky-500 rounded-full"></div>
+                  <i class="pi pi-truck text-sky-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Vehículo Asignado</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Información de tu vehículo de reparto.</p>
               </div>
             </div>
 
@@ -743,8 +778,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Estado de la Cuenta</h2>
-                <p class="text-surface-500 text-sm mt-1">Información sobre tus privilegios en el sistema.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-primary-500 rounded-full"></div>
+                  <i class="pi pi-shield text-primary-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Estado de la Cuenta</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Información sobre tus privilegios en el sistema.</p>
               </div>
             </div>
 
