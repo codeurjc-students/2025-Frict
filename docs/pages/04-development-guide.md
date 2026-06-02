@@ -37,17 +37,17 @@ The system is built upon a strictly decoupled Client-Server model, ensuring high
 
 To ensure data protection and safe access, the system utilizes **Spring Security** integrated with **JWT (JSON Web Tokens)** for internal session management and **OAuth2** for third-party authentication. Additionally, the API is built with production readiness in mind: it is fully documented using **Swagger (OpenAPI)** to ensure the documentation is always synchronized with the codebase, and relies on **Spring Boot Actuator** to provide real-time health checks and system monitoring.
 
-| Feature | Technologies & Patterns                                                             |
-| :--- |:------------------------------------------------------------------------------------|
-| **Architecture & Patterns** | SPA, Strict MVC, Facade Pattern (Service Orchestrators).                            |
-| **Backend Technologies** | Java, Spring Boot, Spring Security (JWT & OAuth2), Spring Data JPA, Lombok.         |
-| **Frontend Technologies** | Angular 19 (Standalone Components, Signals), TypeScript, HTML, Tailwind CSS.        |
-| **API & Monitoring** | Swagger (OpenAPI), Spring Boot Actuator.                                            |
-| **Data & Storage** | MySQL, MongoDB, MinIO (S3-compatible Object Storage).                               |
-| **Testing & QA** | JUnit, Mockito, REST Assured, Jasmine, Selenium, JaCoCo, Istambul, SonarQube Cloud. |
-| **Tools & IDEs** | IntelliJ IDEA, MySQL Workbench, MongoDB Compass, Git.                               |
-| **Deployment** | Docker Compose, Amazon Web Services (AWS).                                          |
-| **Development Process** | Feature branches, Pull Requests, GitHub Actions (Strict CI validation).             |
+| Feature | Technologies & Patterns                                                           |
+| :--- |:----------------------------------------------------------------------------------|
+| **Architecture & Patterns** | SPA, Strict MVC, Facade Pattern (Service Orchestrators).                          |
+| **Backend Technologies** | Java, Spring Boot, Spring Security (JWT & OAuth2), Spring Data JPA, Lombok.       |
+| **Frontend Technologies** | Angular 19 (Standalone Components, Signals), TypeScript, HTML, Tailwind CSS.      |
+| **API & Monitoring** | Swagger (OpenAPI), Spring Boot Actuator.                                          |
+| **Data & Storage** | MySQL, MongoDB, MinIO (S3-compatible Object Storage).                             |
+| **Testing & QA** | JUnit, Mockito, REST Assured, Jasmine, JaCoCo, Istambul, SonarQube Cloud.         |
+| **Tools & IDEs** | IntelliJ IDEA, MySQL Workbench, MongoDB Compass, Git.                             |
+| **Deployment** | Docker Compose, Amazon Web Services (AWS).                                        |
+| **Development Process** | Feature branches, Pull Requests, GitHub Actions (Strict CI validation).           |
 
 &nbsp;
 
@@ -115,9 +115,6 @@ To ensure data protection and safe access, the system utilizes **Spring Security
 
 
 - [**Jasmine**](https://jasmine.github.io/): Behavior-driven development framework used to execute robust client-side tests for the Angular application.
-
-
-- [**Selenium**](https://www.selenium.dev/): Automates web browsers to execute comprehensive End-to-End (E2E) testing.
 
 
 - [**JaCoCo**](https://www.jacoco.org/), [**Istambul**](https://istanbul.js.org/) & [**SonarQube Cloud**](https://sonarcloud.io/): Provide detailed code coverage and continuous static code analysis to maintain high-quality standards.
@@ -240,7 +237,6 @@ The platform's reliability is validated through multiple automated testing layer
 - **Unit & Integration Testing:** Powered by **JUnit** and **Mockito**, isolating backend business logic and verifying proper database communication.
 - **API Testing:** Using **REST Assured** to validate HTTP responses, JSON payloads, and security constraints.
 - **Client-Side Testing:** **Jasmine** is utilized to test the Angular Standalone components and signals logic.
-- **End-to-End (E2E) Testing:** **Selenium** automates browser interactions to validate the complete system flow.
 
 &nbsp;
 
