@@ -37,9 +37,11 @@ public class DatabaseInitializer {
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
 
-    // Read a list separated by commas. Default: empty list
     @Value("#{'${app.db.init:}'.split(',')}")
     private List<String> initEntities;
+
+    @Value("${app.storage.upload-defaults:true}")
+    private boolean uploadDefaults;
 
     // Static resources defined as fields
     private final ClassPathResource defaultProductResource = new ClassPathResource("static/img/defaultProductImage.jpg");
@@ -53,6 +55,7 @@ public class DatabaseInitializer {
         // Critical: Initialize Global Defaults first (Static Holder Pattern)
         // This ensures GlobalDefaults.USER_IMAGE, etc., are available for the whole app and for the data loading below.
         initGlobalImages();
+        assignDefaultImageToUsersWithoutOne();
 
         // Normalize input (trim blank spaces and lower cases)
         List<String> entities = initEntities.stream()
@@ -103,12 +106,19 @@ public class DatabaseInitializer {
     }
 
     private void initGlobalImages() {
-        log.info(">>> Uploading Global Default Images to S3...");
-        // Upload once, assign to Static Holder
-        GlobalDefaults.USER_IMAGE = uploadDefaultImage(defaultUserResource, "users");
-        GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories");
-        GlobalDefaults.PRODUCT_IMAGE = uploadDefaultImage(defaultProductResource, "products");
-        GlobalDefaults.SHOP_IMAGE = uploadDefaultImage(defaultShopResource, "shops");
+        if (uploadDefaults) {
+            log.info(">>> Uploading Global Default Images to S3...");
+            GlobalDefaults.USER_IMAGE     = uploadDefaultImage(defaultUserResource,     "users/default-user.jpg");
+            GlobalDefaults.CATEGORY_IMAGE = uploadDefaultImage(defaultCategoryResource, "categories/default-category.jpg");
+            GlobalDefaults.PRODUCT_IMAGE  = uploadDefaultImage(defaultProductResource,  "products/default-product.jpg");
+            GlobalDefaults.SHOP_IMAGE     = uploadDefaultImage(defaultShopResource,     "shops/default-shop.jpg");
+        } else {
+            log.info(">>> Resolving Global Default Image references from S3...");
+            GlobalDefaults.USER_IMAGE     = imageService.buildImageInfo("users/default-user.jpg",           "defaultUserImage.jpg");
+            GlobalDefaults.CATEGORY_IMAGE = imageService.buildImageInfo("categories/default-category.jpg",  "defaultCategoryImage.jpg");
+            GlobalDefaults.PRODUCT_IMAGE  = imageService.buildImageInfo("products/default-product.jpg",     "defaultProductImage.jpg");
+            GlobalDefaults.SHOP_IMAGE     = imageService.buildImageInfo("shops/default-shop.jpg",           "defaultShopImage.jpg");
+        }
     }
 
     // --------------------------------------------------------------------------------
@@ -546,17 +556,10 @@ public class DatabaseInitializer {
     }
 
     // --- AUXILIARY METHODS ---
-    private ImageInfo uploadDefaultImage(ClassPathResource resource, String folder) {
+    private ImageInfo uploadDefaultImage(ClassPathResource resource, String fixedKey) {
         try {
-            // Use getContentAsByteArray() instead of getInputStream()
             byte[] bytes = resource.getContentAsByteArray();
-            Map<String, String> result = imageService.uploadFile(
-                    bytes,
-                    resource.getFilename(),
-                    "image/jpeg",
-                    folder
-            );
-            return new ImageInfo(result.get("url"), result.get("key"), resource.getFilename());
+            return imageService.uploadFileWithFixedKey(bytes, "image/jpeg", fixedKey, resource.getFilename());
         } catch (Exception e) {
             log.error("FATAL ERROR uploading default image {}: {}", resource.getFilename(), e.getMessage());
             throw new RuntimeException("CRITICAL: Error uploading default image: " + resource.getFilename(), e);
@@ -571,5 +574,15 @@ public class DatabaseInitializer {
                 "image/jpeg",
                 folder
         );
+    }
+
+    private void assignDefaultImageToUsersWithoutOne() {
+        ImageInfo defaultImage = GlobalDefaults.getDefaultUserImage();
+        if (defaultImage == null) return;
+        List<User> usersWithoutImage = userRepository.findByUserImageImageUrlIsNull();
+        if (usersWithoutImage.isEmpty()) return;
+        log.info(">>> Assigning default image to {} user(s) without one...", usersWithoutImage.size());
+        usersWithoutImage.forEach(u -> u.setUserImage(defaultImage));
+        userRepository.saveAll(usersWithoutImage);
     }
 }

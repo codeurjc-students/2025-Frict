@@ -67,6 +67,22 @@ public class ImageService {
         return uploadFile(file.getBytes(), file.getOriginalFilename(), file.getContentType(), folderName);
     }
 
+    public ImageInfo uploadFileWithFixedKey(byte[] data, String contentType, String fixedKey, String fileName) {
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(fixedKey)
+                        .contentType(contentType)
+                        .build(),
+                RequestBody.fromBytes(data)
+        );
+        return new ImageInfo(String.format("%s/%s", publicUrl, fixedKey), fixedKey, fileName);
+    }
+
+    public ImageInfo buildImageInfo(String fixedKey, String fileName) {
+        return new ImageInfo(String.format("%s/%s", publicUrl, fixedKey), fixedKey, fileName);
+    }
+
     public void deleteFile(String key) {
         if (key != null && !key.isBlank()) {
             s3Client.deleteObject(b -> b.bucket(bucketName).key(key));

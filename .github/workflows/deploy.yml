@@ -90,6 +90,29 @@ jobs:
               "SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }}" \
               "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}"
 
+      - name: Upload default images to S3
+        run: |
+          ACCOUNT_ID="${{ steps.account.outputs.id }}"
+          BUCKET="${STACK_NAME}-images-${ACCOUNT_ID}-${AWS_REGION}"
+
+          declare -A IMAGES=(
+            ["backend/src/main/resources/static/img/defaultUserImage.jpg"]="users/default-user.jpg"
+            ["backend/src/main/resources/static/img/defaultCategoryImage.jpg"]="categories/default-category.jpg"
+            ["backend/src/main/resources/static/img/defaultProductImage.jpg"]="products/default-product.jpg"
+            ["backend/src/main/resources/static/img/defaultShopImage.jpg"]="shops/default-shop.jpg"
+          )
+
+          for LOCAL in "${!IMAGES[@]}"; do
+            KEY="${IMAGES[$LOCAL]}"
+            if aws s3api head-object --bucket "$BUCKET" --key "$KEY" --region $AWS_REGION 2>/dev/null; then
+              echo "Already exists: $KEY"
+            else
+              echo "Uploading: $KEY"
+              aws s3 cp "$LOCAL" "s3://$BUCKET/$KEY" \
+                --content-type image/jpeg --region $AWS_REGION
+            fi
+          done
+
       - name: Print stack outputs
         if: always()
         run: |

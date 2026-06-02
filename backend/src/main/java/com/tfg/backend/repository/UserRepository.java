@@ -31,6 +31,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRolesContaining(String role);
 
+    List<User> findByUserImageImageUrlIsNull();
+
     @Query("SELECT u.username FROM User u JOIN u.roles r WHERE r = :role")
     List<String> findUsernamesByRole(@Param("role") String role);
 
