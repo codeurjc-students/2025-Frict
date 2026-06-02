@@ -14,7 +14,8 @@
 
         <div class="relative">
           <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-3xl font-bold text-primary-600 tracking-tight">
+            <h1 class="text-3xl font-bold text-primary-600 tracking-tight flex items-center gap-2">
+              <i [class]="'pi ' + (authService.isDriver() ? 'pi-truck' : 'pi-gauge')" style="font-size: 1.35rem"></i>
               {{ authService.isDriver() ? 'Hoja de Ruta' : 'Panel de Control' }}
             </h1>
             <p-tag [value]="(currentDate | date:dateFormat) ?? ''" severity="info" styleClass="uppercase"></p-tag>
