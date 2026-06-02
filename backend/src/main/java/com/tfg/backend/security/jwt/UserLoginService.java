@@ -1,15 +1,13 @@
 package com.tfg.backend.security.jwt;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.event.UserEvent;
 import com.tfg.backend.model.User;
 import com.tfg.backend.security.GoogleTokenDTO;
 import com.tfg.backend.service.EmailService;
+import com.tfg.backend.security.oauth2.GoogleAuthPayload;
+import com.tfg.backend.security.oauth2.GoogleAuthVerifier;
 import com.tfg.backend.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,7 +31,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.UUID;
 
 @Service
@@ -51,9 +47,7 @@ public class UserLoginService {
 	private final EmailService emailService;
 	private final PasswordEncoder passwordEncoder;
 	private final ApplicationEventPublisher eventPublisher;
-
-	@Value("${google.auth.clientId}")
-	private String googleClientId;
+	private final GoogleAuthVerifier googleAuthVerifier;
 
 	@Value("${app.cookie.secure}")
 	private boolean cookieSecure;
@@ -63,22 +57,9 @@ public class UserLoginService {
 
 	@Transactional
 	public AuthResponse loginWithGoogle(HttpServletResponse response, GoogleTokenDTO tokenDTO) {
-		GoogleIdToken idToken;
-		try {
-			GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-					.setAudience(Collections.singletonList(googleClientId))
-					.build();
-			idToken = verifier.verify(tokenDTO.token());
-		} catch (Exception e) {
-			throw new BadCredentialsException("Error while verifying Google token.", e);
-		}
+		GoogleAuthPayload payload = googleAuthVerifier.verify(tokenDTO.token());
 
-		if (idToken == null) {
-			throw new BadCredentialsException("Invalid or expired Google token.");
-		}
-
-		GoogleIdToken.Payload payload = idToken.getPayload();
-		String email = payload.getEmail();
+		String email = payload.email();
 
 		if(userService.isBannedByEmail(email)){
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This user is banned.");
@@ -96,7 +77,7 @@ public class UserLoginService {
 			String uniqueUuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
 			String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 			user = userService.registerUser(new UserSignupDTO(
-					(String) payload.get("name"), "google_" + uniqueUuid, dummyPassword, email, "USER"
+					payload.name(), "google_" + uniqueUuid, dummyPassword, email, "USER"
 			));
 		}
 
