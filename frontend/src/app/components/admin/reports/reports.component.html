@@ -12,7 +12,7 @@
 
       <div class="my-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-primary-600">Gestor de Informes</h1>
+          <h1 class="text-3xl font-bold text-primary-600 flex items-center gap-2"><i class="pi pi-chart-bar" style="font-size: 1.35rem"></i> Gestor de Informes</h1>
           <p class="text-slate-500">Genera informes acerca de las métricas globales de la organización.</p>
         </div>
       </div>
@@ -28,14 +28,14 @@
               <i class="absolute -right-4 -top-4 opacity-5 text-8xl pi pi-chart-line"></i>
             </div>
 
-            <div class="z-10 border-b border-slate-50 pb-4">
+            <div class="z-10 border-b border-slate-200 pb-4">
               <h1 class="text-xl font-bold text-slate-800 flex items-center gap-3">
                 <i class="pi pi-filter text-blue-600"></i> Filtros de informe
               </h1>
             </div>
 
-            <div class="flex flex-col gap-4 z-10 border-b border-slate-50 pb-4">
-              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">1. Rango de Tiempo *</label>
+            <div class="flex flex-col gap-4 z-10 border-b border-slate-200 pb-4">
+              <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1">1. Rango de Tiempo *</label>
 
               <div class="flex gap-2">
                 <p-datepicker
@@ -73,7 +73,7 @@
             </div>
 
             <div class="flex flex-col gap-2 z-10">
-              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">2. Entidad Principal *</label>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1">2. Entidad Principal *</label>
               <p-select
                 [options]="entityOptions()"
                 [ngModel]="selectedEntity()"
@@ -85,7 +85,7 @@
             </div>
 
             <div class="flex flex-col gap-2 z-10">
-              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">3. Métrica *</label>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1">3. Métrica *</label>
               <p-select
                 [options]="metricOptions()"
                 [ngModel]="selectedMetric()"
@@ -98,7 +98,7 @@
             </div>
 
             <div class="flex flex-col gap-4 mt-2 z-10" [class.opacity-50]="!selectedMetric()">
-              <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1 border-b border-slate-100 pb-2">4. Cruce de Datos (Opcional)</label>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1 border-b border-slate-200 pb-2">4. Cruce de Datos (Opcional)</label>
 
               <p-multiSelect
                 [options]="productOptions()"
@@ -146,7 +146,7 @@
               </p-multiSelect>
             </div>
 
-            <div class="mt-4 pt-4 border-t border-slate-100 z-10">
+            <div class="mt-4 pt-4 border-t border-slate-200 z-10">
               <p-button
                 [label]="isLoadingReport() ? 'Procesando...' : 'Generar Informe'"
                 [icon]="isLoadingReport() ? 'pi pi-spin pi-spinner' : 'pi pi-file'"
@@ -165,7 +165,7 @@
           <!-- CHARTS -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col min-h-[500px] sm:h-[500px]">
 
-            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 rounded-t-2xl">
+            <div class="p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 rounded-t-2xl">
               <h3 class="font-bold text-slate-700 flex items-center gap-2 shrink-0">
                 <i class="pi pi-chart-bar text-blue-500"></i> Visualización de Datos
               </h3>
@@ -222,8 +222,8 @@
 
               @if (graphData().length === 0 && !isLoadingReport()) {
                 <div class="text-slate-400 flex flex-col items-center gap-3 p-4">
-                  <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                    <i class="pi pi-search text-2xl text-slate-300"></i>
+                  <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200">
+                    <i class="pi pi-search text-2xl text-slate-400"></i>
                   </div>
                   <span class="text-sm font-medium text-center">Configura los filtros a la izquierda y pulsa Generar Analítica</span>
                 </div>
@@ -253,7 +253,7 @@
 
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden h-[500px]">
 
-            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4 shrink-0">
+            <div class="p-5 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4 shrink-0">
               <h3 class="font-bold text-slate-700 flex items-center gap-2">
                 <i class="pi pi-table text-blue-500"></i> Registros en bruto
                 @if (selectedEntity() && selectedMetric()) {
@@ -296,7 +296,7 @@
                 paginatorDropdownAppendTo="body">
 
                 <ng-template pTemplate="header">
-                  <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                  <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
                     @for (col of tableColumns(); track $index) {
                       <th class="py-4 pl-6">
                         {{ getColumnLabel(col) }}
@@ -306,7 +306,7 @@
                 </ng-template>
 
                 <ng-template pTemplate="body" let-row>
-                  <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                  <tr class="hover:bg-slate-50 border-b border-slate-200 last:border-0 transition-colors">
                     @for (col of tableColumns(); track $index) {
                       <td class="py-3 pl-6 text-sm text-slate-600">
                         @if (col === 'timestamp') {

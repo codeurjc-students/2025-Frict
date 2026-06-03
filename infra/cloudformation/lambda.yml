@@ -47,6 +47,33 @@ Resources:
       Role: !GetAtt GeocodingLambdaRole.Arn
       Code: ../lambda/geocoding
 
+  # ── IAM — Google Auth Lambda ─────────────────────────────────────────
+  GoogleAuthLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-google-auth-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ── Lambda — Google Auth ─────────────────────────────────────────────
+  GoogleAuthFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentName}-google-auth"
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      MemorySize: 256
+      Timeout: 15
+      Role: !GetAtt GoogleAuthLambdaRole.Arn
+      Code: ../lambda/google-auth
+
   # ── IAM — DocDB Auto-Stop Lambda ────────────────────────────────────
   DocDBAutoStopRole:
     Type: AWS::IAM::Role
@@ -144,3 +171,7 @@ Outputs:
     Value: !Ref GeocodingFunction
   GeocodingFunctionArn:
     Value: !GetAtt GeocodingFunction.Arn
+  GoogleAuthFunctionName:
+    Value: !Ref GoogleAuthFunction
+  GoogleAuthFunctionArn:
+    Value: !GetAtt GoogleAuthFunction.Arn

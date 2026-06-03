@@ -3,7 +3,6 @@ import {CommonModule, formatDate} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Button} from 'primeng/button';
 import {UIChart} from 'primeng/chart';
-import {DropdownModule} from 'primeng/dropdown';
 import {TableModule} from 'primeng/table';
 import {ToggleSwitch} from 'primeng/toggleswitch';
 import {Paginator, PaginatorState} from 'primeng/paginator';
@@ -26,7 +25,7 @@ import {RegistryService} from '../../../services/registry.service';
   selector: 'app-products-management',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, Button, UIChart, DropdownModule, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag, BreadcrumbReloadComponent, LoadingScreenComponent,
+    CommonModule, FormsModule, Button, UIChart, TableModule, ToggleSwitch, Paginator, Tooltip, RouterLink, Select, Tag, BreadcrumbReloadComponent, LoadingScreenComponent,
   ],
   templateUrl: './products-management.component.html',
   styleUrl: 'products-management.component.css'

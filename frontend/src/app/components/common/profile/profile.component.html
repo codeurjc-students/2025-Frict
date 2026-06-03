@@ -33,7 +33,7 @@
             <ng-template #headless>
               <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-[90vw] max-w-md mx-auto border border-surface-200">
 
-                <div class="px-6 py-4 border-b border-surface-100 flex justify-between items-center bg-surface-50">
+                <div class="px-6 py-4 border-b border-surface-200 flex justify-between items-center bg-surface-50">
                   <h3 class="font-bold text-lg text-surface-900">Foto de perfil</h3>
                   <button (click)="cancelUploadImage()" class="text-surface-400 hover:text-surface-600 focus:outline-none transition-colors">
                     <i class="pi pi-times"></i>
@@ -42,7 +42,7 @@
 
                 <div class="p-8 flex flex-col items-center gap-6">
 
-                  <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface-100 shadow-inner shrink-0">
+                  <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface-200 shadow-inner shrink-0">
                     <img [src]="previewUrl || user.imageInfo.imageUrl" class="w-full h-full object-cover" alt="Foto de perfil actual"/>
                   </div>
 
@@ -68,7 +68,7 @@
                             {{ isDragging ? '¡Suelta la imagen aquí!' : 'Haz clic o arrastra aquí' }}
                           </p>
                           @if (!isDragging) {
-                            <p class="text-xs text-surface-400 mt-1">JPG (Max 2MB)</p>
+                            <p class="text-xs text-surface-500 mt-1">JPG (Max 2MB)</p>
                           }
                         </div>
                       </div>
@@ -96,7 +96,7 @@
                   </div>
                 </div>
 
-                <div class="px-6 py-4 bg-surface-50 border-t border-surface-100 flex justify-end gap-3">
+                <div class="px-6 py-4 bg-surface-50 border-t border-surface-200 flex justify-end gap-3">
                   <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="cancelUploadImage()"></p-button>
                   <p-button label="Guardar cambios" icon="pi pi-check" [disabled]="!selectedImage" (onClick)="submitUploadImage()"></p-button>
                 </div>
@@ -133,8 +133,11 @@
       <section class="lg:col-span-1 space-y-8">
         <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-surface-900">
-              <i class="pi pi-id-card text-primary-500 mr-2"></i>Datos personales</h3>
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-7 bg-primary-500 rounded-full"></div>
+              <i class="pi pi-id-card text-primary-500 text-lg"></i>
+              <h3 class="text-xl font-bold text-surface-900">Datos personales</h3>
+            </div>
             <p-button (click)="showDataDialog()" icon="pi pi-pen-to-square" [text]="true" [rounded]="true" size="small" />
           </div>
           <div class="space-y-4">
@@ -190,12 +193,16 @@
         @if (authService.isUser()) {
           <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-bold text-surface-900">Direcciones</h3>
+              <div class="flex items-center gap-3">
+                <div class="w-1.5 h-7 bg-green-500 rounded-full"></div>
+                <i class="pi pi-map-marker text-green-500 text-lg"></i>
+                <h3 class="text-lg font-bold text-surface-900">Direcciones</h3>
+              </div>
               <p-button (click)="showAddressCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
             </div>
             <div class="space-y-3">
               @for (addr of user.addresses; track $index) {
-                <div class="flex items-start gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors cursor-pointer group">
+                <div class="flex items-start gap-3 p-3 bg-surface-50 rounded-xl border border-surface-200 hover:border-primary-200 transition-colors cursor-pointer group">
 
                   <div class="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 mt-1 group-hover:bg-primary-500 group-hover:text-white transition-colors">
                     <i class="pi pi-map-marker text-sm"></i>
@@ -294,12 +301,16 @@
         @if (authService.isUser()) {
           <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-bold text-surface-900">Métodos de Pago</h3>
+              <div class="flex items-center gap-3">
+                <div class="w-1.5 h-7 bg-emerald-500 rounded-full"></div>
+                <i class="pi pi-credit-card text-emerald-500 text-lg"></i>
+                <h3 class="text-lg font-bold text-surface-900">Métodos de Pago</h3>
+              </div>
               <p-button (click)="showCardCreationDialog()" icon="pi pi-plus" [text]="true" [rounded]="true" size="small" />
             </div>
             <div class="space-y-3">
               @for (card of user.cards; track $index) {
-                <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors cursor-pointer group">
+                <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-200 hover:border-primary-200 transition-colors cursor-pointer group">
 
                   <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-colors shrink-0">
                     <i class="pi pi-credit-card"></i>
@@ -404,11 +415,15 @@
 
         <div class="bg-white border border-surface-200 rounded-2xl p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-surface-900">Estado del Sistema</h3>
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-7 bg-slate-500 rounded-full"></div>
+              <i class="pi pi-desktop text-slate-500 text-lg"></i>
+              <h3 class="text-lg font-bold text-surface-900">Estado del Sistema</h3>
+            </div>
           </div>
 
           <div class="space-y-3">
-            <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors group cursor-default">
+            <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-200 hover:border-primary-200 transition-colors group cursor-default">
               <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-colors shrink-0">
                 <i class="pi pi-database"></i>
               </div>
@@ -442,7 +457,7 @@
 
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 bg-surface-50 rounded-xl border border-surface-100 hover:border-primary-200 transition-colors cursor-default divide-y md:divide-y-0 md:divide-x divide-surface-200">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 bg-surface-50 rounded-xl border border-surface-200 hover:border-primary-200 transition-colors cursor-default divide-y md:divide-y-0 md:divide-x divide-surface-200">
 
               <div class="flex items-center gap-3 md:pr-3 py-2 md:py-0">
                 <div class="relative flex shrink-0">
@@ -490,8 +505,12 @@
         <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
           <div class="flex justify-between items-end mb-6">
             <div>
-              <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Personalización</h2>
-              <p class="text-surface-500 text-sm mt-1">Adapta la experiencia de la aplicación a tu gusto.</p>
+              <div class="flex items-center gap-3 mb-1">
+                <div class="w-1.5 h-8 bg-violet-500 rounded-full"></div>
+                <i class="pi pi-sliders-h text-violet-500 text-lg"></i>
+                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Personalización</h2>
+              </div>
+              <p class="text-surface-500 text-sm mt-1 ml-8">Adapta la experiencia de la aplicación a tu gusto.</p>
             </div>
           </div>
 
@@ -564,14 +583,18 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Pedidos</h2>
-                <p class="text-surface-500 text-sm mt-1">Historial de tus últimas compras</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-blue-500 rounded-full"></div>
+                  <i class="pi pi-shopping-bag text-blue-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Pedidos</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Historial de tus últimas compras</p>
               </div>
             </div>
 
             <div class="flex flex-col gap-4">
               @for (order of foundOrders.items; track $index) {
-                <div class="group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-surface-100 hover:border-primary-200 hover:shadow-md transition-all bg-surface-50/50 hover:bg-white cursor-pointer"
+                <div class="group flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-surface-200 hover:border-primary-200 hover:shadow-md transition-all bg-surface-50/50 hover:bg-white cursor-pointer"
                      [routerLink]="['/order', order.id]">
 
                   <div class="flex items-center gap-4 mb-4 md:mb-0">
@@ -618,8 +641,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Reseñas</h2>
-                <p class="text-surface-500 text-sm mt-1">Consulta tus comentarios sobre productos.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-amber-500 rounded-full"></div>
+                  <i class="pi pi-star text-amber-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Mis Reseñas</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Consulta tus comentarios sobre productos.</p>
               </div>
             </div>
 
@@ -650,7 +677,7 @@
                     }
                   </div>
 
-                  <p class="text-sm text-surface-600 italic bg-surface-50 p-3 rounded-lg border border-surface-100">
+                  <p class="text-sm text-surface-600 italic bg-surface-50 p-3 rounded-lg border border-surface-200">
                     "{{ review.text }}"
                   </p>
                 </div>
@@ -667,8 +694,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Lugares de Trabajo</h2>
-                <p class="text-surface-500 text-sm mt-1">Tiendas a las que estás asignado actualmente.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-emerald-500 rounded-full"></div>
+                  <i class="pi pi-shop text-emerald-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Lugares de Trabajo</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Tiendas a las que estás asignado actualmente.</p>
               </div>
             </div>
 
@@ -710,8 +741,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Vehículo Asignado</h2>
-                <p class="text-surface-500 text-sm mt-1">Información de tu vehículo de reparto.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-sky-500 rounded-full"></div>
+                  <i class="pi pi-truck text-sky-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Vehículo Asignado</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Información de tu vehículo de reparto.</p>
               </div>
             </div>
 
@@ -743,8 +778,12 @@
           <section class="bg-white border border-surface-200 rounded-2xl p-6 md:p-8 shadow-sm">
             <div class="flex justify-between items-end mb-6">
               <div>
-                <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Estado de la Cuenta</h2>
-                <p class="text-surface-500 text-sm mt-1">Información sobre tus privilegios en el sistema.</p>
+                <div class="flex items-center gap-3 mb-1">
+                  <div class="w-1.5 h-8 bg-primary-500 rounded-full"></div>
+                  <i class="pi pi-shield text-primary-500 text-lg"></i>
+                  <h2 class="text-2xl font-bold text-surface-900 tracking-tight">Estado de la Cuenta</h2>
+                </div>
+                <p class="text-surface-500 text-sm mt-1 ml-8">Información sobre tus privilegios en el sistema.</p>
               </div>
             </div>
 

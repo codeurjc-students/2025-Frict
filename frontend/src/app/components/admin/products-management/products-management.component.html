@@ -12,13 +12,13 @@
 
       <div class="my-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-primary-600">Gestor de Productos</h1>
+          <h1 class="text-3xl font-bold text-primary-600 flex items-center gap-2"><i class="pi pi-box" style="font-size: 1.35rem"></i> Gestor de Productos</h1>
           <p class="text-slate-500">Administra el catálogo, modifica datos o gestiona los productos disponibles.</p>
         </div>
       </div>
 
       <div class="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Acciones</h2>
+        <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Acciones</h2>
         <div class="flex flex-wrap gap-3">
           <p-button routerLink="/admin/products/new" label="Nuevo Producto" icon="pi pi-plus" styleClass="p-button-warning" rounded="true"></p-button>
 
@@ -35,7 +35,7 @@
           <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
             <i class="pi pi-box text-primary-600"></i> Distribución de Stock (página actual)
           </h3>
-          <p class="text-sm text-slate-400 mb-4">Unidades disponibles para venta online.</p>
+          <p class="text-sm text-slate-500 mb-4">Unidades disponibles para venta online.</p>
           <div class="card flex justify-center">
             <p-chart type="doughnut" [data]="pieData()" [options]="pieOptions()" class="w-full md:w-[25rem]"></p-chart>
           </div>
@@ -47,7 +47,7 @@
               <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="pi pi-chart-line text-cyan-600"></i> Historial de Ventas
               </h3>
-              <p class="text-sm text-slate-400">Unidades vendidas durante los últimos 6 meses.</p>
+              <p class="text-sm text-slate-500">Unidades vendidas durante los últimos 6 meses.</p>
             </div>
             <p-select [options]="productsPage.items" [(ngModel)]="chartProductSelector" (onChange)="onChartProductChange($event)" optionLabel="name" placeholder="Seleccionar Producto" class="w-48 text-sm" appendTo="body"/>
           </div>
@@ -93,7 +93,7 @@
           </ng-template>
 
           <ng-template pTemplate="body" let-product>
-            <tr class="transition-colors hover:bg-slate-50 border-b border-slate-100 last:border-0 text-slate-700">
+            <tr class="transition-colors hover:bg-slate-50 border-b border-slate-200 last:border-0 text-slate-700">
 
               <td class="text-center">
                 <p-toggleswitch [ngModel]="product.active" (onChange)="onToggleActive(product, $event)"></p-toggleswitch>
@@ -145,7 +145,7 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="6" class="text-center p-8 text-slate-500">
-                <i class="pi pi-inbox text-4xl mb-2 block text-slate-300"></i>
+                <i class="pi pi-inbox text-4xl mb-2 block text-slate-400"></i>
                 No se encontraron productos en el catálogo.
               </td>
             </tr>

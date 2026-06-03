@@ -54,6 +54,10 @@ Parameters:
     Type: String
   GeocodingFunctionArn:
     Type: String
+  GoogleAuthFunctionName:
+    Type: String
+  GoogleAuthFunctionArn:
+    Type: String
   CORSAllowedOrigin:
     Type: String
     Default: "*"
@@ -153,7 +157,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !Ref GeocodingFunctionArn
+                Resource:
+                  - !Ref GeocodingFunctionArn
+                  - !Ref GoogleAuthFunctionArn
         - PolicyName: SESAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -245,6 +251,8 @@ Resources:
               Value: !Sub "https://${ImagesBucketName}.s3.${AWS::Region}.amazonaws.com"
             - Name: LAMBDA_GEOCODING_FUNCTION_NAME
               Value: !Ref GeocodingFunctionName
+            - Name: LAMBDA_GOOGLE_AUTH_FUNCTION_NAME
+              Value: !Ref GoogleAuthFunctionName
             - Name: CORS_ALLOWED_ORIGIN
               Value: !Ref CORSAllowedOrigin
             - !If

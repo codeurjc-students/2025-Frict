@@ -77,7 +77,7 @@
 ### 🔴 Advanced features
 | Ready? | Advanced feature description                              | Anon User | Registered User | Store Manager | Delivery driver | Administrator |
 |--------|-----------------------------------------------------------|-----------|-----------------|-------------|-----------------|---------------|
-| 🔄     | Check shops, trucks and/or addresses approximate location |           | ✅               | ✅           | ✅               | ✅             |
+| ✅     | Check shops, trucks and/or addresses approximate location |           | ✅               | ✅           | ✅               | ✅             |
 | ✅     | View stored use data displayed in charts                  |           |                 |             |                 | ✅             |
 | ✅     | Real-Time use-data tracking and history visualization     |           |                 |            |                 | ✅             |
 | ✅     | Read unique QR code for order reception                   |           |                 | ✅           | ✅               |               |

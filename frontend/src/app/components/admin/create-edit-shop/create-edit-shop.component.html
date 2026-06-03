@@ -12,8 +12,8 @@
 
       <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="mt-2">
-          <h1 class="text-3xl font-bold text-primary-600">
-            {{ shopId() ? 'Editar Tienda' : 'Nueva Tienda' }}
+          <h1 class="text-3xl font-bold text-primary-600 flex items-center gap-2">
+            <i class="pi pi-shop" style="font-size: 1.35rem"></i> {{ shopId() ? 'Editar Tienda' : 'Nueva Tienda' }}
           </h1>
           <p class="text-slate-500">Gestiona la ubicación e información logística del punto de venta.</p>
         </div>
@@ -28,7 +28,7 @@
         <div class="lg:col-span-2 flex flex-col gap-6">
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Información General</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Información General</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="flex flex-col gap-2">
@@ -47,7 +47,7 @@
               </div>
 
               <div class="flex flex-col gap-2">
-                <label for="maxCapacity" class="text-sm font-semibold text-slate-600">Capacidad máxima de almacén <span class="text-red-500">*</span> <span class="text-slate-400 font-normal">(0 = ilimitada)</span></label>
+                <label for="maxCapacity" class="text-sm font-semibold text-slate-600">Capacidad máxima de almacén <span class="text-red-500">*</span> <span class="text-slate-500 font-normal">(0 = ilimitada)</span></label>
                 <p-inputNumber id="maxCapacity" formControlName="maxCapacity" [showButtons]="true" buttonLayout="horizontal" [min]="0" [minFractionDigits]="0" [maxFractionDigits]="2" decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" styleClass="w-full" [inputStyleClass]="isInvalid('maxCapacity') ? 'text-center font-bold !border-red-500' : 'text-center font-bold'"></p-inputNumber>
               </div>
 
@@ -70,7 +70,7 @@
           </div>
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Ubicación y Dirección</h2>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Ubicación y Dirección</h2>
 
             <div class="flex flex-col gap-4">
               <div class="relative w-full h-[350px] rounded-lg overflow-hidden border border-slate-300">
@@ -111,7 +111,7 @@
                 </div>
               </div>
 
-              <div formGroupName="address" class="grid grid-cols-2 gap-4 mt-2 border-t pt-4 border-slate-100">
+              <div formGroupName="address" class="grid grid-cols-2 gap-4 mt-2 border-t pt-4 border-slate-200">
                 <div class="flex flex-col gap-1">
                   <label class="text-xs text-slate-500">Latitud</label>
                   <p-inputNumber formControlName="latitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
@@ -129,7 +129,7 @@
         <div class="flex flex-col gap-6">
 
           <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-4">
               <h2 class="text-lg font-bold text-slate-800 m-0">Imagen de Tienda</h2>
               <p-button label="Restaurar" (click)="restoreImage()" icon="pi pi-undo" [text]="true" severity="info" />
             </div>

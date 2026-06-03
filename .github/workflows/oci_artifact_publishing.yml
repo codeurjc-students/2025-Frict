@@ -78,3 +78,14 @@ jobs:
         run: |
           sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" ${{ env.COMPOSE_FILE }}
           yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_latest }}
+
+      # --- 6. EXPORT IMAGE TAG FOR DOWNSTREAM WORKFLOWS ---
+      - name: Save image tag artifact
+        run: echo "${{ env.IMAGE_TAG }}" > image_tag.txt
+
+      - name: Upload image tag artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag
+          path: image_tag.txt
+          retention-days: 1

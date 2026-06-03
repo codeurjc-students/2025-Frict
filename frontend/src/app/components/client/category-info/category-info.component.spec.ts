@@ -308,8 +308,8 @@ describe('CategoryInfoComponent', () => {
     expect(fixture.nativeElement.textContent).toContain(mockMainCategory.longDescription);
   });
 
-  it('should render "Los más vendidos en Cámaras" heading', () => {
-    expect(fixture.nativeElement.textContent).toContain(`Los más vendidos en ${mockMainCategory.name}`);
+  it('should render "Lo más vendido" heading', () => {
+    expect(fixture.nativeElement.textContent).toContain('Lo más vendido');
   });
 
   // ─── DOM: sub-categories ──────────────────────────────────────────────────────

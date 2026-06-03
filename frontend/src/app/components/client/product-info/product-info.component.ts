@@ -6,10 +6,8 @@ import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
 import {FormsModule} from '@angular/forms';
 import {InputNumber} from 'primeng/inputnumber';
 import {Button} from 'primeng/button';
-import {Carousel} from 'primeng/carousel';
 import {LoadingSectionComponent} from '../../common/loading-section/loading-section.component';
-import {ProductCardComponent} from '../product-card/product-card.component';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {MessageService} from 'primeng/api';
 import {ProductService} from '../../../services/product.service';
 import {formatPrice} from '../../../utils/textFormat.util';
@@ -32,6 +30,7 @@ import {TableModule} from 'primeng/table';
 import {ShopStock} from '../../../models/shopStock.model';
 import {OrderService} from '../../../services/order.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {SafeHtmlPipe} from '../../../utils/safe-html.pipe';
 import {Image} from 'primeng/image';
 import {Shop} from '../../../models/shop.model';
 import {ShopService} from '../../../services/shop.service';
@@ -42,7 +41,7 @@ import {Tag} from 'primeng/tag';
 import {ChartModule} from 'primeng/chart';
 import {Select} from 'primeng/select';
 import {RegistryService} from '../../../services/registry.service';
-import {DecimalPipe, formatDate} from '@angular/common';
+import {CurrencyPipe, DecimalPipe, formatDate} from '@angular/common';
 import {DatePicker} from 'primeng/datepicker';
 
 
@@ -50,6 +49,9 @@ import {DatePicker} from 'primeng/datepicker';
   selector: 'app-product-info',
   standalone: true,
   imports: [
+    SafeHtmlPipe,
+    RouterLink,
+    CurrencyPipe,
     GalleriaModule,
     Tabs,
     TabList,
@@ -59,9 +61,7 @@ import {DatePicker} from 'primeng/datepicker';
     FormsModule,
     InputNumber,
     Button,
-    Carousel,
     LoadingSectionComponent,
-    ProductCardComponent,
     Dialog,
     Avatar,
     Rating,
@@ -308,7 +308,6 @@ export class ProductInfoComponent implements OnInit {
       interval: this.selectedViewInterval
     }).subscribe({
       next: (res: any) => {
-        console.log(res);
         const rawData = res.items || res;
         this.buildViewsChart(rawData);
         this.isViewsLoading = false;

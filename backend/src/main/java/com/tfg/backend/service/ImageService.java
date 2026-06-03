@@ -32,8 +32,18 @@ public class ImageService {
     @Value("${app.storage.bucket-name}")
     private String bucketName;
 
+    @Value("${app.storage.endpoint:#{null}}")
+    private String endpoint;
+
     @PostConstruct
     public void init() {
+        // Bucket lifecycle (existence + public-read policy) is only managed on
+        // local MinIO. In AWS the endpoint is empty and both the bucket and its
+        // policy are provisioned by CloudFormation, so this is a full no-op.
+        if (endpoint == null || endpoint.isBlank()) {
+            return;
+        }
+
         try {
             s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
             log.info("Bucket '{}' is accessible.", bucketName);
@@ -42,6 +52,38 @@ public class ImageService {
             s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
         } catch (Exception e) {
             log.error("Could not verify bucket '{}': {}", bucketName, e.getMessage());
+        }
+
+        applyLocalPublicReadPolicy();
+    }
+
+    /**
+     * Grants anonymous read access to the local MinIO bucket. Only reached when
+     * running against a local endpoint (see the guard in {@link #init()}).
+     */
+    private void applyLocalPublicReadPolicy() {
+        String policy = """
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {"AWS": ["*"]},
+                      "Action": ["s3:GetObject"],
+                      "Resource": ["arn:aws:s3:::%s/*"]
+                    }
+                  ]
+                }
+                """.formatted(bucketName);
+
+        try {
+            s3Client.putBucketPolicy(PutBucketPolicyRequest.builder()
+                    .bucket(bucketName)
+                    .policy(policy)
+                    .build());
+            log.info("Applied public-read policy to local MinIO bucket '{}'.", bucketName);
+        } catch (Exception e) {
+            log.warn("Could not apply public-read policy to bucket '{}': {}", bucketName, e.getMessage());
         }
     }
 
@@ -59,13 +101,28 @@ public class ImageService {
                 RequestBody.fromBytes(data)
         );
 
-        // Use publicUrl instead of minioUrl
-        String url = String.format("%s/%s/%s", publicUrl, bucketName, key);
+        String url = String.format("%s/%s", publicUrl, key);
         return Map.of("key", key, "url", url);
     }
 
     public Map<String, String> uploadFile(MultipartFile file, String folderName) throws IOException {
         return uploadFile(file.getBytes(), file.getOriginalFilename(), file.getContentType(), folderName);
+    }
+
+    public ImageInfo uploadFileWithFixedKey(byte[] data, String contentType, String fixedKey, String fileName) {
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(fixedKey)
+                        .contentType(contentType)
+                        .build(),
+                RequestBody.fromBytes(data)
+        );
+        return new ImageInfo(String.format("%s/%s", publicUrl, fixedKey), fixedKey, fileName);
+    }
+
+    public ImageInfo buildImageInfo(String fixedKey, String fileName) {
+        return new ImageInfo(String.format("%s/%s", publicUrl, fixedKey), fixedKey, fileName);
     }
 
     public void deleteFile(String key) {

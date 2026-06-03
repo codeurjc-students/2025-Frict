@@ -11,12 +11,12 @@
       <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="mt-6 mb-8">
-        <h1 class="text-3xl font-bold text-primary-600">Gestor de usuarios</h1>
+        <h1 class="text-3xl font-bold text-primary-600 flex items-center gap-2"><i class="pi pi-users" style="font-size: 1.35rem"></i> Gestor de usuarios</h1>
         <p class="text-slate-500">Administra las cuentas de los usuarios de la organización.</p>
       </div>
 
       <div class="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Acciones Globales</h2>
+        <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Acciones Globales</h2>
         <div class="flex flex-wrap gap-3">
           <p-button label="Nuevo Usuario" (click)="this.visibleNewInternalUserDialog = true" icon="pi pi-plus" styleClass="p-button-warning" rounded="true"></p-button>
 
@@ -203,7 +203,7 @@
                           <div class="text-right flex flex-col items-end justify-between gap-2">
                             <div>
                               <p class="text-xl font-bold text-primary-600">{{ formatPrice(order.totalCost) }}</p>
-                              <p class="text-xs text-slate-400">Termina en *{{ order.cardNumberEnding }}</p>
+                              <p class="text-xs text-slate-500">Termina en *{{ order.cardNumberEnding }}</p>
                             </div>
                             @if (canDeleteOrder(order)) {
                               <p-button icon="pi pi-trash" severity="danger" [outlined]="true" size="small" (onClick)="deleteOrder(order.id, $event)" pTooltip="Eliminar pedido"></p-button>
@@ -320,7 +320,7 @@
           </ng-template>
 
           <ng-template #body let-user>
-            <tr [pSelectableRow]="user" class="cursor-pointer transition-colors hover:bg-slate-50 text-slate-700 border-b border-slate-100 last:border-0">
+            <tr [pSelectableRow]="user" class="cursor-pointer transition-colors hover:bg-slate-50 text-slate-700 border-b border-slate-200 last:border-0">
               <td class="font-mono text-slate-500 text-md pl-4">#{{ user.id }}</td>
               <td>
                 <div class="flex items-center gap-3">

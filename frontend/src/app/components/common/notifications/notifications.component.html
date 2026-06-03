@@ -31,7 +31,7 @@
 
         <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col h-[700px] overflow-hidden">
 
-          <div class="p-4 border-b border-slate-100 bg-slate-50/80 shrink-0 z-10">
+          <div class="p-4 border-b border-slate-200 bg-slate-50/80 shrink-0 z-10">
             <h3 class="font-bold text-slate-700 text-sm">Bandeja de entrada</h3>
           </div>
 
@@ -45,15 +45,15 @@
 
             <div class="flex-grow overflow-y-auto custom-scrollbar flex flex-col">
               @if (notificationsPage.items.length === 0) {
-                <div class="h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center">
-                  <i class="pi pi-inbox text-4xl mb-3 text-slate-300"></i>
+                <div class="h-full flex flex-col items-center justify-center text-slate-500 p-6 text-center">
+                  <i class="pi pi-inbox text-4xl mb-3 text-slate-400"></i>
                   <p class="text-sm">No tienes notificaciones en este momento.</p>
                 </div>
               }
 
               @for (notif of notificationsPage.items; track $index) {
                 <div (click)="selectNotification(notif)"
-                     class="p-4 border-b border-slate-100 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 relative"
+                     class="p-4 border-b border-slate-200 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 relative"
                      [ngClass]="{'bg-blue-50/30': !notif.read, 'bg-slate-100/50 border-l-4 border-l-primary-500': selectedNotification()?.id === notif.id}">
 
                   @if (!notif.read) {
@@ -67,7 +67,7 @@
                   <div class="flex flex-col min-w-0 pr-4">
                     <span class="text-sm font-bold truncate mb-0.5" [ngClass]="!notif.read ? 'text-slate-900' : 'text-slate-700'">{{ notif.subject }}</span>
                     <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">{{ notif.description }}</p>
-                    <span class="text-[10px] font-mono text-slate-400 mt-2">{{ notif.timestamp | date:'dd/MM/yy HH:mm' }}</span>
+                    <span class="text-[10px] font-mono text-slate-500 mt-2">{{ notif.timestamp | date:'dd/MM/yy HH:mm' }}</span>
                   </div>
                 </div>
               }
@@ -91,9 +91,9 @@
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm h-[700px] flex flex-col relative overflow-hidden">
 
           @if (!selectedNotification()) {
-            <div class="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-50/50">
+            <div class="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center bg-slate-50/50">
               <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-                <i class="pi pi-envelope text-6xl text-slate-300"></i>
+                <i class="pi pi-envelope text-6xl text-slate-400"></i>
               </div>
               <h2 class="text-xl font-bold text-slate-600 mb-2">Ningún mensaje seleccionado</h2>
               <p class="text-slate-500 max-w-md">Selecciona una notificación de la lista lateral para visualizar sus detalles completos y tomar acciones.</p>
@@ -103,7 +103,7 @@
           @if (selectedNotification(); as detail) {
             <div class="flex flex-col h-full animate-fade-in">
 
-              <div class="p-4 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center shrink-0">
+              <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex justify-between items-center shrink-0">
                 <p-tag [value]="detail.type | uppercase" [severity]="uiService.getVisualsByType(detail.type).tag" styleClass="!text-[10px] !font-bold tracking-widest"></p-tag>
                 <div class="flex gap-2">
                   <p-button icon="pi pi-trash" [text]="true" severity="danger" size="small" pTooltip="Eliminar Notificación" tooltipPosition="left" (onClick)="deleteNotification(detail.id)"></p-button>
@@ -118,13 +118,13 @@
                   <div class="flex flex-col pt-1">
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">{{ detail.subject }}</h2>
                     <div class="flex items-center gap-2 text-sm text-slate-500 font-mono">
-                      <i class="pi pi-calendar text-slate-400"></i>
+                      <i class="pi pi-calendar text-slate-500"></i>
                       <span>{{ detail.timestamp | date:'EEEE, d MMMM y, HH:mm' }}</span>
                     </div>
                   </div>
                 </div>
 
-                <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 text-slate-700 leading-relaxed text-[15px]">
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 text-slate-700 leading-relaxed text-[15px]">
                   {{ detail.description }}
                 </div>
 

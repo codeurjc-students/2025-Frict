@@ -51,6 +51,8 @@ class ImageServiceUTest {
         // Inject @Value properties manually for pure unit testing
         ReflectionTestUtils.setField(imageService, "bucketName", BUCKET_NAME);
         ReflectionTestUtils.setField(imageService, "publicUrl", PUBLIC_URL);
+        // Non-blank endpoint => behaves like local MinIO, so init() manages the bucket
+        ReflectionTestUtils.setField(imageService, "endpoint", "https://localhost:9000");
     }
 
     // --- INIT METHOD TESTS ---
@@ -89,6 +91,18 @@ class ImageServiceUTest {
             // assertDoesNotThrow ensures the catch(Exception e) block works
             assertDoesNotThrow(() -> imageService.init());
         }
+
+        @Test
+        @DisplayName("Skips all bucket management when endpoint is empty (AWS)")
+        void init_DoesNothing_WhenEndpointBlank() {
+            // Empty endpoint => running against AWS S3, where the bucket and its
+            // policy are provisioned by CloudFormation. init() must be a no-op.
+            ReflectionTestUtils.setField(imageService, "endpoint", "");
+
+            imageService.init();
+
+            verifyNoInteractions(s3Client);
+        }
     }
 
     // --- UPLOAD & DELETE TESTS ---
@@ -117,7 +131,7 @@ class ImageServiceUTest {
 
             // Verify returned Map
             assertNotNull(result.get("key"));
-            assertEquals(PUBLIC_URL + "/" + BUCKET_NAME + "/" + result.get("key"), result.get("url"));
+            assertEquals(PUBLIC_URL + "/" + result.get("key"), result.get("url"));
         }
 
         @Test

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Frict — S3 bucket for images and ECR repository"
+Description: "Frict — S3 bucket for images"
 
 Parameters:
   EnvironmentName:
@@ -24,9 +24,9 @@ Resources:
       BucketName: !Sub "${EnvironmentName}-images-${AWS::AccountId}-${AWS::Region}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
+        BlockPublicPolicy: false
         IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        RestrictPublicBuckets: false
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ["*"]
@@ -57,41 +57,14 @@ Resources:
             Resource:
               - !GetAtt ImagesBucket.Arn
               - !Sub "${ImagesBucket.Arn}/*"
-
-  # ── ECR ──────────────────────────────────────────────────────────────
-  ECRRepository:
-    Type: AWS::ECR::Repository
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      RepositoryName: !Sub "${EnvironmentName}-app"
-      ImageScanningConfiguration:
-        ScanOnPush: true
-      LifecyclePolicy:
-        LifecyclePolicyText: |
-          {
-            "rules": [
-              {
-                "rulePriority": 1,
-                "description": "Keep last 10 images",
-                "selection": {
-                  "tagStatus": "any",
-                  "countType": "imageCountMoreThan",
-                  "countNumber": 10
-                },
-                "action": {
-                  "type": "expire"
-                }
-              }
-            ]
-          }
+          - Sid: AllowPublicRead
+            Effect: Allow
+            Principal: "*"
+            Action: "s3:GetObject"
+            Resource: !Sub "${ImagesBucket.Arn}/*"
 
 Outputs:
   ImagesBucketName:
     Value: !Ref ImagesBucket
   ImagesBucketArn:
     Value: !GetAtt ImagesBucket.Arn
-  ECRRepositoryUri:
-    Value: !GetAtt ECRRepository.RepositoryUri
-  ECRRepositoryArn:
-    Value: !GetAtt ECRRepository.Arn

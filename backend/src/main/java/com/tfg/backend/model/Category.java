@@ -28,8 +28,10 @@ public class Category {
 
     private String bannerText;
 
+    @Column(length = 2000)
     private String shortDescription;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String longDescription;
 
     @Embedded

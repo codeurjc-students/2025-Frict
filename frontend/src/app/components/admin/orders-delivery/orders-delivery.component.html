@@ -14,7 +14,7 @@
   <div class="min-h-[80vh] flex items-center justify-center p-4">
     <div class="bg-white p-10 rounded-3xl shadow-sm border border-slate-200 flex flex-col items-center max-w-lg text-center animate-fade-in">
       <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-red-100">
-        <i class="pi pi-truck text-5xl text-red-400"></i>
+        <i class="pi pi-truck text-5xl text-red-400" style="font-size: 2rem"></i>
       </div>
       <h2 class="text-2xl font-bold text-slate-800 mb-3">Sin vehículo asignado</h2>
       <p class="text-slate-500 mb-8 leading-relaxed">
@@ -40,12 +40,12 @@
         @if (myTruck()) {
           <div class="flex items-center gap-4 shrink-0">
             <div class="flex flex-col gap-1 min-w-[120px]">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Carga del Camión</span>
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Carga del Camión</span>
               <p-progressBar [value]="getLoadPercentage(myTruck()!.currentCapacity, myTruck()!.maxCapacity)" [showValue]="false" [style]="{'height': '6px'}" styleClass="!bg-surface-100" />
               <p class="text-xs text-slate-500 font-bold text-right">{{ myTruck()!.currentCapacity | number:'1.0-1' }} / {{ myTruck()!.maxCapacity | number:'1.0-1' }}</p>
             </div>
             <div class="flex flex-col items-end gap-1">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estado del Camión</span>
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Estado del Camión</span>
               <p-tag
                 [value]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(myTruck())).message"
                 [icon]="getTruckHistoryStatusTagInfo(getTruckCurrentStatus(myTruck())).icon"
@@ -113,7 +113,7 @@
                       </div>
 
                       <div class="bg-white border rounded-xl p-4 shadow-sm border-surface-200">
-                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-surface-100">
+                        <div class="flex justify-between items-center mb-3 pb-3 border-b border-surface-200">
                           <span class="text-sm font-bold text-surface-800 uppercase tracking-wider">{{ log.status }}</span>
                           <span class="text-xs text-surface-500 font-mono bg-surface-100 px-2 py-1 rounded">
                             {{ (log.updates && log.updates.length > 0) ? log.updates[0].date : 'Sin fecha' }}
@@ -122,7 +122,7 @@
 
                         <div class="flex flex-col gap-3">
                           @for (update of log.updates; track $index) {
-                            <div class="bg-surface-50 rounded-lg p-3 border border-surface-100">
+                            <div class="bg-surface-50 rounded-lg p-3 border border-surface-200">
                               <div class="flex items-center gap-1.5 mb-1.5">
                                 <i class="pi pi-clock text-xs text-surface-400"></i>
                                 <span class="text-xs font-bold text-surface-500">{{ update.date }}</span>
@@ -157,7 +157,7 @@
               <div class="p-6 flex flex-col gap-6">
 
                 <div class="flex flex-col gap-2">
-                  <label class="block text-[10px] font-bold text-slate-400 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
+                  <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
 
                   <p-select
                     [options]="ordersPage().items"
@@ -209,14 +209,14 @@
                           <p-tabpanel value="content">
                             <p-table [value]="selectedOrder()?.orderItems || []" styleClass="p-datatable-sm" responsiveLayout="scroll">
                               <ng-template pTemplate="header">
-                                <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                                <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
                                   <th class="py-4 pl-6 w-40 text-center">Identificador</th>
                                   <th class="py-4">Artículo</th>
                                   <th class="py-4 text-center w-24">Cantidad</th>
                                 </tr>
                               </ng-template>
                               <ng-template pTemplate="body" let-item>
-                                <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                                <tr class="hover:bg-slate-50 border-b border-slate-200 last:border-0 transition-colors">
                                   <td class="py-4 pl-6 text-center">
                                     <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200" pTooltip="{{ item.id }}" tooltipPosition="top">
                                       {{ item.id }}
@@ -224,7 +224,7 @@
                                   </td>
                                   <td class="py-4">
                                     <div class="flex items-center gap-3">
-                                      <img [src]="item.productImageUrl || 'assets/no-image.png'" class="w-12 h-12 rounded-lg object-cover border border-slate-100 shadow-sm" [alt]="item.productName">
+                                      <img [src]="item.productImageUrl || 'assets/no-image.png'" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm" [alt]="item.productName">
                                       <div class="flex flex-col">
                                         <span class="text-md font-bold text-slate-800">{{ item.productName }}</span>
                                         <span class="text-xs text-slate-400 font-medium">{{ item.productPrice | currency:'EUR' }} / ud.</span>
@@ -239,7 +239,7 @@
                                 </tr>
                               </ng-template>
                               <ng-template pTemplate="emptymessage">
-                                <tr><td colspan="3" class="text-center py-24 text-slate-400 italic">No hay productos en este pedido.</td></tr>
+                                <tr><td colspan="3" class="text-center py-24 text-slate-500 italic">No hay productos en este pedido.</td></tr>
                               </ng-template>
                             </p-table>
                           </p-tabpanel>
@@ -247,7 +247,7 @@
                           <p-tabpanel value="history">
                             <div class="p-6 flex flex-col gap-8">
 
-                              <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
+                              <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-sm">
                                 <textarea
                                   pTextarea
                                   [(ngModel)]="newComment"
@@ -274,14 +274,14 @@
                                         <i class="text-xs" [ngClass]="log.icon || 'pi pi-info-circle'"></i>
                                       </div>
 
-                                      <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-100">
-                                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-50">
+                                      <div class="bg-white border rounded-xl p-4 shadow-sm border-slate-200">
+                                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
                                           <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">{{ log.status }}</span>
                                         </div>
 
                                         <div class="flex flex-col gap-3">
                                           @for (update of log.updates; track $index) {
-                                            <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                                            <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
                                               <div class="flex items-center gap-1.5 mb-1.5">
                                                 <i class="pi pi-clock text-xs text-slate-400"></i>
                                                 <span class="text-xs font-bold text-slate-500">{{ update.date }}</span>
@@ -291,7 +291,7 @@
                                           }
 
                                           @if (!log.updates || log.updates.length === 0) {
-                                            <p class="text-xs text-slate-400 italic">No hay actualizaciones adicionales registradas para esta fase.</p>
+                                            <p class="text-xs text-slate-500 italic">No hay actualizaciones adicionales registradas para esta fase.</p>
                                           }
                                         </div>
                                       </div>
@@ -300,7 +300,7 @@
                                   }
                                 </div>
                               } @else {
-                                <div class="text-center py-10 text-slate-400 italic">No hay historial registrado para este pedido.</div>
+                                <div class="text-center py-10 text-slate-500 italic">No hay historial registrado para este pedido.</div>
                               }
 
                             </div>
@@ -315,13 +315,13 @@
                   <div class="lg:col-span-1 flex flex-col gap-6">
 
                     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col gap-6 h-fit">
-                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Destino del envío</h3>
+                      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">Destino del envío</h3>
 
                       <div class="flex flex-col gap-6">
                         <div class="flex items-start gap-4">
                           <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><i class="pi pi-user"></i></div>
                           <div class="flex flex-col min-w-0">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">Destinatario</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Destinatario</span>
                             <span class="text-md font-bold text-slate-800 truncate">{{ selectedOrder()?.user?.name || '--' }}</span>
                           </div>
                         </div>
@@ -329,7 +329,7 @@
                         <div class="flex items-start gap-4">
                           <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><i class="pi pi-map-marker"></i></div>
                           <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">Ubicación de entrega</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Ubicación de entrega</span>
                             <span class="text-sm text-slate-600 leading-relaxed">{{ selectedOrder() ? formatAddress(selectedOrder()!.sendingAddress) : '--' }}</span>
                           </div>
                         </div>
@@ -337,13 +337,13 @@
                         <div class="flex items-start gap-4">
                           <div class="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0"><i class="pi pi-info-circle"></i></div>
                           <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">Fase Logística</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Fase Logística</span>
                             <div class="mt-1">
                               @if (selectedOrder()) {
                                 <p-tag [value]="getOrderStatusTagInfo(getCurrentStatus(selectedOrder())).message" [icon]="getOrderStatusTagInfo(getCurrentStatus(selectedOrder())).icon" [severity]="getOrderStatusTagInfo(getCurrentStatus(selectedOrder())).severity" styleClass="!px-3 !py-1.5 !font-bold !rounded-lg"></p-tag>
                               }
                               @if (!selectedOrder()) {
-                                <span class="text-slate-300 italic">Sin datos</span>
+                                <span class="text-slate-500 italic">Sin datos</span>
                               }
                             </div>
                           </div>
@@ -464,7 +464,7 @@
                       }
 
                       @if (!selectedOrder()) {
-                        <span class="text-slate-300 text-sm font-bold italic z-10">Esperando selección...</span>
+                        <span class="text-slate-500 text-sm font-bold italic z-10">Esperando selección...</span>
                       }
                     </div>
 
@@ -495,7 +495,7 @@
                   }
                 </div>
 
-                <div class="flex flex-wrap justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
+                <div class="flex flex-wrap justify-center gap-6 mt-4 pt-4 border-t border-slate-200">
                   <div class="flex items-center gap-2">
                     <img src="/shopIcon.png" class="w-5 h-5 object-contain" alt="Tienda">
                     <span class="text-xs text-slate-600 font-bold">Tienda Base</span>
@@ -609,7 +609,7 @@
       </button>
     </div>
 
-    <div class="text-center px-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+    <div class="text-center px-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
       <p class="text-sm font-medium text-slate-600">Por favor, encuadre el código QR que el cliente tiene disponible en su panel de usuario.</p>
     </div>
 

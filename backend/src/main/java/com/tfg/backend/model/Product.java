@@ -39,7 +39,7 @@ public class Product {
     @JsonManagedReference
     private List<ProductImageInfo> images = new ArrayList<>();
 
-    @Column (length = 5000)
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     private double supplyPrice;

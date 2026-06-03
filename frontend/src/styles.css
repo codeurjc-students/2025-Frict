@@ -4,6 +4,7 @@
 @import "primeicons/primeicons.css";
 @import "leaflet/dist/leaflet.css";
 @plugin "tailwindcss-primeui";
+@plugin "@tailwindcss/typography";
 @layer tailwind, primeng;
 
 .p-image-mask {
@@ -24,4 +25,28 @@
 .tag-standard i {
   font-size: 14px !important;
 }
+
+/* Quill editor output — text alignment */
+.ql-align-center  { text-align: center; }
+.ql-align-right   { text-align: right; }
+.ql-align-justify { text-align: justify; }
+
+/* Quill editor output — font sizes */
+.ql-size-small { font-size: 0.75em; }
+.ql-size-large { font-size: 1.5em; }
+.ql-size-huge  { font-size: 2em; }
+
+/* Quill editor output — indentation */
+.ql-indent-1 { padding-left: 3em; }
+.ql-indent-2 { padding-left: 6em; }
+.ql-indent-3 { padding-left: 9em; }
+.ql-indent-4 { padding-left: 12em; }
+.ql-indent-5 { padding-left: 15em; }
+.ql-indent-6 { padding-left: 18em; }
+.ql-indent-7 { padding-left: 21em; }
+.ql-indent-8 { padding-left: 24em; }
+
+/* Quill editor output — blockquote and code */
+.prose blockquote { border-left: 4px solid; }
+.prose pre code { background: transparent; padding: 0; }
 
