@@ -1,9 +1,7 @@
 name: frict
 
 x-app-common: &app-common
-  build:
-    context: ..
-    dockerfile: docker/Dockerfile
+  image: mjpulido/frict:${IMAGE_TAG}
   restart: unless-stopped
   env_file:
     - path: ../backend/.env

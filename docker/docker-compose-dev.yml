@@ -73,9 +73,6 @@ services:
     image: mjpulido/frict:dev
     container_name: frict-dev-app
     restart: unless-stopped
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
     ports:
       - "443:8443"
     environment:

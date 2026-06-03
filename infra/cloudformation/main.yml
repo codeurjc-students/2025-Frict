@@ -121,7 +121,7 @@ Resources:
         PrivateSubnetBId: !GetAtt NetworkStack.Outputs.PrivateSubnetBId
         ALBSecurityGroupId: !GetAtt NetworkStack.Outputs.ALBSecurityGroupId
         FargateSecurityGroupId: !GetAtt NetworkStack.Outputs.FargateSecurityGroupId
-        ImageUri: !Sub "${StorageStack.Outputs.ECRRepositoryUri}:${ImageTag}"
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EnvironmentName}-app:${ImageTag}"
         ImagesBucketName: !GetAtt StorageStack.Outputs.ImagesBucketName
         ImagesBucketArn: !GetAtt StorageStack.Outputs.ImagesBucketArn
         MySQLEndpoint: !GetAtt DataStack.Outputs.MySQLEndpoint
@@ -180,6 +180,6 @@ Outputs:
   ECSServiceName:
     Value: !GetAtt ComputeStack.Outputs.ECSServiceName
   ECRRepositoryUri:
-    Value: !GetAtt StorageStack.Outputs.ECRRepositoryUri
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EnvironmentName}-app"
   MySQLEndpoint:
     Value: !GetAtt DataStack.Outputs.MySQLEndpoint

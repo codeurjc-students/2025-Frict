@@ -10,6 +10,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 env:
   AWS_REGION: eu-west-1
@@ -26,6 +27,8 @@ jobs:
     name: Push Image to ECR
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      tag: ${{ steps.tag.outputs.value }}
     steps:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -37,21 +40,46 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Wait for ECR repository
+      - name: Ensure ECR repository exists
         run: |
-          until aws ecr describe-repositories \
+          aws ecr describe-repositories \
             --repository-names $ECR_REPOSITORY \
-            --region $AWS_REGION 2>/dev/null; do
-            sleep 15
-          done
+            --region $AWS_REGION 2>/dev/null || \
+          aws ecr create-repository \
+            --repository-name $ECR_REPOSITORY \
+            --image-scanning-configuration scanOnPush=true \
+            --region $AWS_REGION
+
+          aws ecr put-lifecycle-policy \
+            --repository-name $ECR_REPOSITORY \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"Keep last 10 images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' \
+            --region $AWS_REGION 2>/dev/null || true
+
+      - name: Download image tag artifact
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: image-tag
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Resolve image tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "value=$(cat image_tag.txt)" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ vars.DEPLOY_IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Pull from Docker Hub and push to ECR
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: ${{ steps.tag.outputs.value }}
         run: |
-          docker pull $DOCKERHUB_IMAGE:${{ vars.DEPLOY_IMAGE_TAG }}
-          docker tag $DOCKERHUB_IMAGE:${{ vars.DEPLOY_IMAGE_TAG }} $REGISTRY/$ECR_REPOSITORY:${{ vars.DEPLOY_IMAGE_TAG }}
-          docker push $REGISTRY/$ECR_REPOSITORY:${{ vars.DEPLOY_IMAGE_TAG }}
+          docker pull $DOCKERHUB_IMAGE:$TAG
+          docker tag $DOCKERHUB_IMAGE:$TAG $REGISTRY/$ECR_REPOSITORY:$TAG
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
 
   # ── 2. Deploy infrastructure ─────────────────────────────────────────
   infra:
@@ -119,7 +147,7 @@ jobs:
               "SenderMailPassword=${{ secrets.SENDER_MAIL_PASSWORD }}" \
               "SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }}" \
               "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}" \
-              "ImageTag=${{ vars.DEPLOY_IMAGE_TAG }}"
+              "ImageTag=${{ needs.push-to-ecr.outputs.tag }}"
 
       - name: Upload default images to S3
         run: |
