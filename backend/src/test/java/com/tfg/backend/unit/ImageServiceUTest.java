@@ -117,7 +117,7 @@ class ImageServiceUTest {
 
             // Verify returned Map
             assertNotNull(result.get("key"));
-            assertEquals(PUBLIC_URL + "/" + BUCKET_NAME + "/" + result.get("key"), result.get("url"));
+            assertEquals(PUBLIC_URL + "/" + result.get("key"), result.get("url"));
         }
 
         @Test

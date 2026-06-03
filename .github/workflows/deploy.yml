@@ -1,14 +1,10 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Publish Docker Image & Compose OCI"]
+    types: [completed]
     branches: [main]
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - "docker/Dockerfile"
-      - "infra/cloudformation/**"
-      - "infra/lambda/**"
   workflow_dispatch:
 
 permissions:
@@ -21,12 +17,46 @@ env:
   ECR_REPOSITORY: frict-app
   ECS_CLUSTER: frict-cluster
   ECS_SERVICE: frict-svc
+  DOCKERHUB_IMAGE: mjpulido/frict
 
 jobs:
 
-  # ── Infra & Image build run in parallel ──────────────────────────────
+  # ── 1. Pull image from Docker Hub and push to ECR ────────────────────
+  push-to-ecr:
+    name: Push Image to ECR
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Wait for ECR repository
+        run: |
+          until aws ecr describe-repositories \
+            --repository-names $ECR_REPOSITORY \
+            --region $AWS_REGION 2>/dev/null; do
+            sleep 15
+          done
+
+      - name: Pull from Docker Hub and push to ECR
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker pull $DOCKERHUB_IMAGE:${{ vars.DEPLOY_IMAGE_TAG }}
+          docker tag $DOCKERHUB_IMAGE:${{ vars.DEPLOY_IMAGE_TAG }} $REGISTRY/$ECR_REPOSITORY:${{ vars.DEPLOY_IMAGE_TAG }}
+          docker push $REGISTRY/$ECR_REPOSITORY:${{ vars.DEPLOY_IMAGE_TAG }}
+
+  # ── 2. Deploy infrastructure ─────────────────────────────────────────
   infra:
     name: Deploy Infrastructure
+    needs: [push-to-ecr]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +118,8 @@ jobs:
               "SenderMailUsername=${{ secrets.SENDER_MAIL_USERNAME }}" \
               "SenderMailPassword=${{ secrets.SENDER_MAIL_PASSWORD }}" \
               "SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }}" \
-              "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}"
+              "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}" \
+              "ImageTag=${{ vars.DEPLOY_IMAGE_TAG }}"
 
       - name: Upload default images to S3
         run: |
@@ -122,52 +153,10 @@ jobs:
             --query "Stacks[0].Outputs" \
             --output table 2>/dev/null || true
 
-  build-and-push:
-    name: Build & Push Image
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Docker image
-        env:
-          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build \
-            -f docker/Dockerfile \
-            -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $REGISTRY/$ECR_REPOSITORY:latest \
-            .
-
-      - name: Wait for ECR repository
-        run: |
-          echo "Waiting for ECR repository..."
-          until aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region $AWS_REGION 2>/dev/null; do
-            sleep 15
-          done
-
-      - name: Push Docker image
-        env:
-          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $REGISTRY/$ECR_REPOSITORY:latest
-
-  # ── Runs after both jobs complete ────────────────────────────────────
+  # ── 3. Activate new image in ECS ─────────────────────────────────────
   activate:
     name: Activate Deployment
-    needs: [infra, build-and-push]
+    needs: [infra]
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials (OIDC)
