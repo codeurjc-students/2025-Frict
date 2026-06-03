@@ -32,8 +32,18 @@ public class ImageService {
     @Value("${app.storage.bucket-name}")
     private String bucketName;
 
+    @Value("${app.storage.endpoint:#{null}}")
+    private String endpoint;
+
     @PostConstruct
     public void init() {
+        // Bucket lifecycle (existence + public-read policy) is only managed on
+        // local MinIO. In AWS the endpoint is empty and both the bucket and its
+        // policy are provisioned by CloudFormation, so this is a full no-op.
+        if (endpoint == null || endpoint.isBlank()) {
+            return;
+        }
+
         try {
             s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
             log.info("Bucket '{}' is accessible.", bucketName);
@@ -42,6 +52,38 @@ public class ImageService {
             s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
         } catch (Exception e) {
             log.error("Could not verify bucket '{}': {}", bucketName, e.getMessage());
+        }
+
+        applyLocalPublicReadPolicy();
+    }
+
+    /**
+     * Grants anonymous read access to the local MinIO bucket. Only reached when
+     * running against a local endpoint (see the guard in {@link #init()}).
+     */
+    private void applyLocalPublicReadPolicy() {
+        String policy = """
+                {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {"AWS": ["*"]},
+                      "Action": ["s3:GetObject"],
+                      "Resource": ["arn:aws:s3:::%s/*"]
+                    }
+                  ]
+                }
+                """.formatted(bucketName);
+
+        try {
+            s3Client.putBucketPolicy(PutBucketPolicyRequest.builder()
+                    .bucket(bucketName)
+                    .policy(policy)
+                    .build());
+            log.info("Applied public-read policy to local MinIO bucket '{}'.", bucketName);
+        } catch (Exception e) {
+            log.warn("Could not apply public-read policy to bucket '{}': {}", bucketName, e.getMessage());
         }
     }
 
