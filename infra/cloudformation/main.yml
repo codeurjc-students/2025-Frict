@@ -25,6 +25,11 @@ Parameters:
     Type: String
     AllowedValues: ["true", "false"]
     Default: "true"
+  HibernateDdlAuto:
+    Type: String
+    AllowedValues: ["update", "validate", "none"]
+    Default: "update"
+    Description: "update on first deploy; switch to validate once schema exists"
   CloudFrontCertificateArn:
     Type: String
     Description: ACM certificate ARN in us-east-1 for CloudFront
@@ -151,6 +156,7 @@ Resources:
         MinTaskCount: !Ref MinTaskCount
         MaxTaskCount: !Ref MaxTaskCount
         EnableDocDB: !Ref EnableDocDB
+        HibernateDdlAuto: !Ref HibernateDdlAuto
 
   # ── Edge (CloudFront + Route53) ──────────────────────────────────────
   EdgeStack:

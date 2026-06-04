@@ -61,6 +61,11 @@ Parameters:
   CORSAllowedOrigin:
     Type: String
     Default: "*"
+  HibernateDdlAuto:
+    Type: String
+    AllowedValues: ["update", "validate", "none"]
+    Default: "update"
+    Description: "update on first deploy to create the schema; switch to validate afterwards"
   MinTaskCount:
     Type: Number
     Default: 2
@@ -265,6 +270,8 @@ Resources:
               - Name: DOCDB_PORT
                 Value: !Ref DocDBPort
               - !Ref "AWS::NoValue"
+            - Name: HIBERNATE_DDL_AUTO
+              Value: !Ref HibernateDdlAuto
             - Name: JAVA_OPTS
               Value: "-Xmx1536m -Xss256k -XX:MaxMetaspaceSize=256m"
           Secrets:
