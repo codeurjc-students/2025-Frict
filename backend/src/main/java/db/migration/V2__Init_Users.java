@@ -11,18 +11,18 @@ import java.sql.ResultSet;
 public class V2__Init_Users extends BaseJavaMigration {
 
     private static final String INSERT_USER =
-            "INSERT IGNORE INTO `user` (name, username, encoded_password, email, is_banned, is_deleted) " +
+            "INSERT IGNORE INTO `app_users` (name, username, encoded_password, email, is_banned, is_deleted) " +
             "VALUES (?, ?, ?, ?, FALSE, FALSE)";
 
     private static final String INSERT_ROLE =
-            "INSERT IGNORE INTO user_roles (user_id, roles) " +
-            "SELECT id, ? FROM `user` WHERE username = ?";
+            "INSERT IGNORE INTO app_users_roles (app_users_id, roles) " +
+            "SELECT id, ? FROM `app_users` WHERE username = ?";
 
     @Override
     public void migrate(Context context) throws Exception {
         Connection conn = context.getConnection();
 
-        try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM `user`");
+        try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM `app_users`");
              ResultSet rs = ps.executeQuery()) {
             rs.next();
             if (rs.getLong(1) > 0) return;
