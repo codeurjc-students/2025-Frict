@@ -71,7 +71,8 @@ jobs:
         run: |
           # No --with-env: the published compose keeps ${VAR} references (e.g. MAIL_SENDER)
           # unresolved so the end user supplies them at runtime, instead of baking CI's values.
-          docker compose -f ${{ env.COMPOSE_FILE }} publish --yes ${{ steps.vars.outputs.artifact_tag }}
+          # echo "y" confirms the bind-mount declaration prompt without the broken-pipe risk of `yes |`.
+          echo "y" | docker compose -f ${{ env.COMPOSE_FILE }} publish ${{ steps.vars.outputs.artifact_tag }}
 
       # --- 5. PUBLISH LATEST COMPOSE FILE (releases only) ---
       # Renders the specific tag again in the Compose file with the tag "latest", then publishes
@@ -79,7 +80,7 @@ jobs:
         if: steps.vars.outputs.is_release == 'true'
         run: |
           sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" ${{ env.COMPOSE_FILE }}
-          docker compose -f ${{ env.COMPOSE_FILE }} publish --yes ${{ steps.vars.outputs.compose_tag_latest }}
+          echo "y" | docker compose -f ${{ env.COMPOSE_FILE }} publish ${{ steps.vars.outputs.compose_tag_latest }}
 
       # --- 6. EXPORT IMAGE TAG FOR DOWNSTREAM WORKFLOWS ---
       - name: Save image tag artifact
