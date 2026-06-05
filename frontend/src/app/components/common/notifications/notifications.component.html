@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800 pb-12">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4">
         <div>
@@ -52,7 +52,7 @@
               }
 
               @for (notif of notificationsPage.items; track $index) {
-                <div (click)="selectNotification(notif)"
+                <div (click)="selectNotification(notif)" (keydown.enter)="selectNotification(notif)" tabindex="0"
                      class="p-4 border-b border-slate-200 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 relative"
                      [ngClass]="{'bg-blue-50/30': !notif.read, 'bg-slate-100/50 border-l-4 border-l-primary-500': selectedNotification()?.id === notif.id}">
 

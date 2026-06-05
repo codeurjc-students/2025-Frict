@@ -581,7 +581,7 @@ class ProductServiceUTest {
         @DisplayName("createProduct maps ProductSpecDTO list to ProductSpec entities on the saved product")
         void createProduct_WithSpecs_PersistsSpecifications() {
             when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
-            productDTO.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Rojo", "Azul"))));
+            productDTO.setSpecifications(List.of(new ProductSpecDTO(null, "Color", List.of("Rojo", "Azul"))));
             when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
 
             Product result = productService.createProduct(productDTO);
@@ -603,7 +603,7 @@ class ProductServiceUTest {
             when(userService.getLoggedUser()).thenReturn(Optional.empty());
 
             productDTO.setCategories(null);
-            productDTO.setSpecifications(List.of(new ProductSpecDTO("Talla", List.of("M", "XL"))));
+            productDTO.setSpecifications(List.of(new ProductSpecDTO(null, "Talla", List.of("M", "XL"))));
 
             Product result = productService.updateProduct(1L, productDTO);
 

@@ -39,6 +39,7 @@ public class UserLoginService {
 
 	private static final Logger log = LoggerFactory.getLogger(UserLoginService.class);
 
+	private final SecureRandom secureRandom = new SecureRandom();
 	private final AuthenticationManager authenticationManager;
 	private final UserDetailsService userDetailsService;
 	private final JwtTokenProvider jwtTokenProvider;
@@ -148,7 +149,6 @@ public class UserLoginService {
 	public void recoverPassword(String username){
 		User user = userService.findUserHelper(username);
 
-		SecureRandom secureRandom = new SecureRandom();
 		String newOtp = String.format("%06d", secureRandom.nextInt(1000000));
 		user.setOtpCode(newOtp);
 		user.setOtpExpiration(LocalDateTime.now().plusMinutes(15));

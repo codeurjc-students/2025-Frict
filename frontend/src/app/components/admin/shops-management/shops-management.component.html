@@ -9,7 +9,7 @@
 
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="mt-2">
@@ -73,7 +73,7 @@
             <div class="flex flex-col gap-2 overflow-y-auto max-h-[380px] pr-1 custom-scrollbar">
 
               @for(alert of recentShopsNotifications(); track alert.id) {
-                <div (click)="goToNotification(alert)" class="group relative flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer">
+                <div (click)="goToNotification(alert)" (keydown.enter)="goToNotification(alert)" tabindex="0" class="group relative flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer">
 
                   @if (!alert.read) {
                     <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary-500 rounded-full"></div>
@@ -135,15 +135,15 @@
 
           <ng-template pTemplate="header">
             <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
-              <th class="font-semibold">Código de referencia</th>
+              <th scope="col" class="font-semibold">Código de referencia</th>
               @if (authService.isAdmin()) {
-                <th class="font-semibold">Gerente</th>
+                <th scope="col" class="font-semibold">Gerente</th>
               }
-              <th class="font-semibold">Tienda</th>
-              <th class="font-semibold">Dirección</th>
-              <th class="font-semibold">Productos totales</th>
-              <th class="font-semibold">Camiones asignados</th>
-              <th class="font-semibold">Acciones</th>
+              <th scope="col" class="font-semibold">Tienda</th>
+              <th scope="col" class="font-semibold">Dirección</th>
+              <th scope="col" class="font-semibold">Productos totales</th>
+              <th scope="col" class="font-semibold">Camiones asignados</th>
+              <th scope="col" class="font-semibold">Acciones</th>
             </tr>
           </ng-template>
 

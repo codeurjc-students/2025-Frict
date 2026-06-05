@@ -5,7 +5,7 @@
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div class="mt-2">
@@ -45,7 +45,7 @@
                  class="flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3 min-h-[100px] pb-4 pr-1">
 
               @for (order of col.data(); track order.id) {
-                <div cdkDrag (click)="openOrderDetails(order)" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
+                <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
                   <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <div class="flex items-center gap-2 min-w-0 mr-2">
                       <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getOrderStatusColorClass(getCurrentStatus(order))"></i>
@@ -96,7 +96,7 @@
         </div>
         <div cdkDropList [cdkDropListData]="cancelledOrders()" (cdkDropListDropped)="drop($event, 'Cancelado')" class="flex flex-wrap gap-4 min-h-[100px] p-2 bg-white/50 rounded-xl border border-red-50/50 border-dashed">
           @for (order of cancelledOrders(); track order.id) {
-            <div cdkDrag (click)="openOrderDetails(order)"
+            <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0"
                  class="w-full sm:w-[280px] md:w-[330px] shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-red-400 hover:shadow-md transition-all min-w-0">
 
               <div class="flex justify-between items-start mb-2 pointer-events-none">
@@ -166,7 +166,7 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-order>
-          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-200" (click)="openOrderDetails(order)">
+          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-200" (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)">
             <td class="py-3 px-4 font-mono text-sm font-medium text-slate-600">{{ order.referenceCode }}</td>
             <td class="py-3 px-4 text-sm text-slate-800 font-bold flex items-center gap-2">
               <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
