@@ -137,7 +137,7 @@
 
                       <!-- NUEVO: Rango de fechas -->
                       <div class="flex flex-col gap-1.5">
-                        <label class="text-[10px] font-bold text-surface-500 uppercase">Rango de fechas</label>
+                        <span class="text-[10px] font-bold text-surface-500 uppercase">Rango de fechas</span>
                         <div class="flex items-center gap-2">
                           <p-datepicker
                             [(ngModel)]="viewsStartDate"
@@ -166,8 +166,9 @@
 
                       <!-- Agrupación (Conservada) -->
                       <div class="flex flex-col gap-1.5">
-                        <label class="text-[10px] font-bold text-surface-500 uppercase">Agrupación gráfica</label>
+                        <label for="view-interval" class="text-[10px] font-bold text-surface-500 uppercase">Agrupación gráfica</label>
                         <p-select
+                          inputId="view-interval"
                           [options]="viewIntervalOptions"
                           [(ngModel)]="selectedViewInterval"
                           (onChange)="loadViewsData()"
@@ -435,7 +436,7 @@
           <div class="space-y-4 mb-6">
             <div class="bg-surface-50 p-3 rounded-xl border border-surface-200 transition-opacity"
                  [class.opacity-50]="!authService.isUser() || !authService.selectedShopId() || product.availableUnits <= 0">
-              <label class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
+              <label for="horizontal" class="text-xs font-bold text-surface-500 uppercase mb-1 block pl-1">Cantidad</label>
               <p-inputNumber [(ngModel)]="quantity" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
                              [min]="1" [max]="(product.availableUnits - inCartUnits) || 1"
                              [disabled]="!authService.isUser() || !authService.selectedShopId() || (product.availableUnits - inCartUnits) <= 0"
@@ -496,14 +497,14 @@
           </div>
 
           <div class="mt-6 space-y-3 pt-6 border-t border-surface-200">
-            <div (click)="showShippingDialog()" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
+            <div (click)="showShippingDialog()" (keydown.enter)="showShippingDialog()" tabindex="0" role="button" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
               <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="pi pi-truck"></i></div>
               <div>
                 <p class="font-bold text-sm text-surface-900">Envío Gratis</p>
                 <p class="text-xs text-surface-500">En pedidos +50€. Entrega estimada: 24/48h.</p>
               </div>
             </div>
-            <div (click)="showAvailabilityDialog()" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
+            <div (click)="showAvailabilityDialog()" (keydown.enter)="showAvailabilityDialog()" tabindex="0" role="button" class="flex items-start gap-3 p-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors group">
               <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="pi pi-map-marker"></i></div>
               <div>
                 <p class="font-bold text-sm text-surface-900">Stock en tienda</p>

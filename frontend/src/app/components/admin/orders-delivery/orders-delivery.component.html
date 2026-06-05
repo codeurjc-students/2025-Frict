@@ -74,7 +74,7 @@
               <div class="p-6">
 
                 <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-2">
-                  <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</label>
+                  <span class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</span>
                   <div class="flex flex-col gap-3">
                     <p-select
                       [options]="truckStatusOptions"
@@ -157,9 +157,10 @@
               <div class="p-6 flex flex-col gap-6">
 
                 <div class="flex flex-col gap-2">
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
+                  <label for="delivery-order" class="block text-[10px] font-bold text-slate-500 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
 
                   <p-select
+                    inputId="delivery-order"
                     [options]="ordersPage().items"
                     [ngModel]="selectedOrderId()"
                     (onChange)="onOrderSelectionChange($event.value)"

@@ -283,26 +283,22 @@
             <ul [class.hidden]="!isCategoriesExpanded()" class="list-none p-0 m-0 overflow-hidden block">
 
               @if (!authService.isAdmin() && !authService.isManager() && !authService.isDriver()) {
-                <div>
-                  <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
-                </div>
+                <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
               }
 
               @if (authService.isAdmin() || authService.isManager() || authService.isDriver()) {
-                <div>
-                  @for (item of adminItems; track item.link) {
-                    @if (canViewItem(item)) {
-                      <li>
-                        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
-                           [routerLink]="item.link"
-                           routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
-                          <i [class]="item.icon + ' mr-3'"></i>
-                          <span class="font-medium">{{ item.label }}</span>
-                        </a>
-                      </li>
-                    }
+                @for (item of adminItems; track item.link) {
+                  @if (canViewItem(item)) {
+                    <li>
+                      <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
+                         [routerLink]="item.link"
+                         routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
+                        <i [class]="item.icon + ' mr-3'"></i>
+                        <span class="font-medium">{{ item.label }}</span>
+                      </a>
+                    </li>
                   }
-                </div>
+                }
               }
             </ul>
           </li>

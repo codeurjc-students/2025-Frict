@@ -75,7 +75,7 @@
             </ng-template>
 
             <ng-template pTemplate="body" let-truck>
-              <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 last:border-0 group cursor-pointer" (click)="focusTruckOnMap(truck)">
+              <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 last:border-0 group cursor-pointer" (click)="focusTruckOnMap(truck)" (keydown.enter)="focusTruckOnMap(truck)" tabindex="0" role="button">
 
                 <!-- Matrícula + Ref -->
                 <td class="pl-4 py-3">
@@ -411,7 +411,7 @@
             </div>
 
             <div class="mb-4">
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Unidades a reponer</label>
+              <label for="replenish" class="block text-xs font-bold text-slate-500 uppercase mb-2">Unidades a reponer</label>
               <p-inputNumber [(ngModel)]="restockQuantity" [showButtons]="true" buttonLayout="horizontal"
                              inputId="replenish" [min]="1" [max]="getMaxRestockAllowed()"
                              decrementButtonClass="p-button-secondary p-button-outlined"

@@ -246,7 +246,7 @@ export class UsersManagementComponent implements OnInit {
     const stat = this.rawStats().find(s => s.label === category);
     if (!stat) return 0;
     const numericValue = Number(stat.value);
-    return isNaN(numericValue) ? 0 : numericValue;
+    return Number.isNaN(numericValue) ? 0 : numericValue;
   }
 
 

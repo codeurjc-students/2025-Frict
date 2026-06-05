@@ -204,7 +204,7 @@
     <div class="py-2">
 
       <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-2">
-        <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</label>
+        <span class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</span>
         <div class="flex flex-col gap-3">
           <p-select [options]="statusOptions" [(ngModel)]="newHistoryStatus" optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full sm:w-64"></p-select>
           <textarea pTextarea [(ngModel)]="newHistoryComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario sobre la ruta o incidencia..."></textarea>

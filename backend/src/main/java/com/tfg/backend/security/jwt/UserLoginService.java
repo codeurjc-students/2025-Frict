@@ -31,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Service
@@ -151,7 +152,7 @@ public class UserLoginService {
 
 		String newOtp = String.format("%06d", secureRandom.nextInt(1000000));
 		user.setOtpCode(newOtp);
-		user.setOtpExpiration(LocalDateTime.now().plusMinutes(15));
+		user.setOtpExpiration(LocalDateTime.now(ZoneId.of("UTC")).plusMinutes(15));
 
 		// Saved automatically
 

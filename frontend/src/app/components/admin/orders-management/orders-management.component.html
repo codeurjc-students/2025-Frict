@@ -214,9 +214,10 @@
   header="Confirmar cambio de estado">
 
   <div class="flex flex-col gap-3 pt-2">
-    <label class="text-sm font-bold text-slate-700">Comentario (opcional)</label>
+    <label for="order-comment" class="text-sm font-bold text-slate-700">Comentario (opcional)</label>
     <textarea
       pTextarea
+      id="order-comment"
       [(ngModel)]="pendingStatusComment"
       rows="4"
       class="w-full text-sm !border-slate-200 !rounded-lg focus:!ring-blue-500"
@@ -323,8 +324,9 @@
             <p-tabpanel value="1">
               <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-4">
                 <ng-container *ngIf="listModeSelected">
-                  <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Estado del pedido</label>
+                  <label for="order-status" class="block text-xs font-bold text-blue-800 uppercase mb-2">Estado del pedido</label>
                   <p-select
+                    inputId="order-status"
                     [options]="orderStatuses"
                     [(ngModel)]="selectedStatusForUpdate"
                     appendTo="body"
@@ -332,7 +334,7 @@
                     class="w-full mb-3">
                   </p-select>
                 </ng-container>
-                <label *ngIf="!listModeSelected" class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</label>
+                <span *ngIf="!listModeSelected" class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</span>
                 <textarea pInputTextarea [(ngModel)]="newComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario o nota..."></textarea>
                 <div class="flex justify-end mt-2"><p-button label="Publicar comentario" icon="pi pi-send" size="small" (click)="addComment()" [disabled]="!newComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button></div>
               </div>
@@ -427,8 +429,9 @@
           </div>
 
           <div class="mt-4 pt-4 border-t border-slate-200">
-            <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Asignar / Cambiar Camión</label>
+            <label for="order-truck" class="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Asignar / Cambiar Camión</label>
             <p-select
+              inputId="order-truck"
               [options]="availableTrucks"
               [(ngModel)]="selectedTruck"
               optionLabel="referenceCode"
