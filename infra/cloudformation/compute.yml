@@ -58,6 +58,10 @@ Parameters:
     Type: String
   GoogleAuthFunctionArn:
     Type: String
+  OsrmFunctionName:
+    Type: String
+  OsrmFunctionArn:
+    Type: String
   CORSAllowedOrigin:
     Type: String
     Default: "*"
@@ -165,6 +169,7 @@ Resources:
                 Resource:
                   - !Ref GeocodingFunctionArn
                   - !Ref GoogleAuthFunctionArn
+                  - !Ref OsrmFunctionArn
         - PolicyName: SESAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -258,6 +263,8 @@ Resources:
               Value: !Ref GeocodingFunctionName
             - Name: LAMBDA_GOOGLE_AUTH_FUNCTION_NAME
               Value: !Ref GoogleAuthFunctionName
+            - Name: LAMBDA_OSRM_FUNCTION_NAME
+              Value: !Ref OsrmFunctionName
             - Name: CORS_ALLOWED_ORIGIN
               Value: !Ref CORSAllowedOrigin
             - !If

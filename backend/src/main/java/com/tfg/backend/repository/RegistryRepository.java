@@ -51,12 +51,7 @@ public class RegistryRepository {
                     : new Document("$sum", "$metrics.value");
 
             AggregationOperation groupStage = context -> new Document("$group",
-                    new Document("_id",
-                            new Document("$dateTrunc",
-                                    new Document("date", "$timestamp")
-                                            .append("unit", interval != null ? interval.toLowerCase() : "day")
-                            )
-                    )
+                    new Document("_id", buildDateGroupId("$timestamp", interval))
                             .append("totalValue", groupAccumulator)
                             .append("recordCount", new Document("$sum", 1))
             );
@@ -198,6 +193,34 @@ public class RegistryRepository {
         return mongoTemplate.save(r, "registries");
     }
 
+    // $dateTrunc (MongoDB 5.0+) is not supported by DocumentDB. This produces an equivalent
+    // date-truncation expression using $dateFromParts, which is available from MongoDB 3.6.
+    private Document buildDateGroupId(String field, String interval) {
+        String unit = interval != null ? interval.toLowerCase() : "day";
+        if ("week".equals(unit)) {
+            return new Document("$dateFromParts", new Document()
+                    .append("isoWeekYear", new Document("$isoWeekYear", field))
+                    .append("isoWeek",     new Document("$isoWeek",     field)));
+        }
+        Document parts = new Document("year", new Document("$year", field));
+        switch (unit) {
+            case "hour":
+                parts.append("month", new Document("$month",      field))
+                     .append("day",   new Document("$dayOfMonth", field))
+                     .append("hour",  new Document("$hour",       field));
+                break;
+            case "month":
+                parts.append("month", new Document("$month", field));
+                break;
+            case "year":
+                break;
+            default: // day
+                parts.append("month", new Document("$month",      field))
+                     .append("day",   new Document("$dayOfMonth", field));
+        }
+        return new Document("$dateFromParts", parts);
+    }
+
 
     public List<Document> getProductsTimelineStats(Collection<String> productRefs, String dataType, int days) {
         if (productRefs == null || productRefs.isEmpty()) {
@@ -212,11 +235,8 @@ public class RegistryRepository {
                 .and("timestamp").gte(sinceDate)));
         
         AggregationOperation groupStage = context -> new Document("$group",
-                new Document("_id",
-                        new Document("$dateTrunc",
-                                new Document("date", "$timestamp").append("unit", "day")
-                        )
-                ).append("value", new Document("$sum", "$metrics.value"))
+                new Document("_id", buildDateGroupId("$timestamp", "day"))
+                        .append("value", new Document("$sum", "$metrics.value"))
         );
         operations.add(groupStage);
         operations.add(Aggregation.sort(Sort.Direction.ASC, "_id"));

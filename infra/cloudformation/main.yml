@@ -152,6 +152,8 @@ Resources:
         GeocodingFunctionArn: !GetAtt LambdaStack.Outputs.GeocodingFunctionArn
         GoogleAuthFunctionName: !GetAtt LambdaStack.Outputs.GoogleAuthFunctionName
         GoogleAuthFunctionArn: !GetAtt LambdaStack.Outputs.GoogleAuthFunctionArn
+        OsrmFunctionName: !GetAtt LambdaStack.Outputs.OsrmFunctionName
+        OsrmFunctionArn: !GetAtt LambdaStack.Outputs.OsrmFunctionArn
         CORSAllowedOrigin: !Sub "https://${DomainName}"
         MinTaskCount: !Ref MinTaskCount
         MaxTaskCount: !Ref MaxTaskCount
