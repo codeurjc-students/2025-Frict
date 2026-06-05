@@ -333,7 +333,7 @@
 
             <div class="flex-grow overflow-y-auto custom-scrollbar p-5 flex flex-col gap-3">
               @for (notif of recentNotifications(); track notif.id) {
-                <div (click)="goToNotification(notif)" (keydown.enter)="goToNotification(notif)" tabindex="0" class="flex gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
+                <div (click)="goToNotification(notif)" (keydown.enter)="goToNotification(notif)" tabindex="0" role="button" class="flex gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
 
                   @if (!notif.read) {
                     <div class="absolute top-3 right-3 w-2 h-2 bg-primary-500 rounded-full"></div>

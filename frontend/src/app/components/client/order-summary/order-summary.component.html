@@ -40,7 +40,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       @for (addr of user.addresses; track $index) {
-                        <div (click)="changeAddress(addr)" (keydown.enter)="changeAddress(addr)" tabindex="0"
+                        <div (click)="changeAddress(addr)" (keydown.enter)="changeAddress(addr)" tabindex="0" role="button"
                              [ngClass]="selectedAddress == addr? 'border-primary-500 bg-primary-50' : 'border-surface-200 bg-white hover:border-surface-300'"
                              class="cursor-pointer border rounded-xl p-4 transition-all relative">
 
@@ -61,7 +61,7 @@
                         </div>
                       }
 
-                      <div (click)="toggleAddressForm()" (keydown.enter)="toggleAddressForm()" tabindex="0"
+                      <div (click)="toggleAddressForm()" (keydown.enter)="toggleAddressForm()" tabindex="0" role="button"
                            class="cursor-pointer border-2 border-dashed border-surface-200 rounded-xl p-4 flex flex-col items-center justify-center text-surface-500 hover:border-primary-400 hover:text-primary-600 transition-colors bg-surface-50/50 min-h-[104px]">
                         <i class="pi pi-plus text-2xl mb-2"></i>
                         <span class="font-medium">Nueva dirección</span>
@@ -130,7 +130,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       @for (method of user.cards; track $index) {
-                        <div (click)="changePaymentCard(method)" (keydown.enter)="changePaymentCard(method)" tabindex="0"
+                        <div (click)="changePaymentCard(method)" (keydown.enter)="changePaymentCard(method)" tabindex="0" role="button"
                              [ngClass]="selectedPaymentCard == method? 'border-primary-500 bg-primary-50' : 'bg-white border-surface-200 hover:border-surface-300'"
                              class="cursor-pointer border rounded-xl p-4 flex flex-col justify-between transition-all relative h-32">
 
@@ -155,7 +155,7 @@
                         </div>
                       }
 
-                      <div (click)="togglePaymentForm()" (keydown.enter)="togglePaymentForm()" tabindex="0"
+                      <div (click)="togglePaymentForm()" (keydown.enter)="togglePaymentForm()" tabindex="0" role="button"
                            class="cursor-pointer border-2 border-dashed border-surface-200 rounded-xl p-4 flex flex-col items-center justify-center text-surface-500 hover:border-primary-400 hover:text-primary-600 transition-colors bg-surface-50/50 min-h-[104px]">
                         <i class="pi pi-credit-card text-2xl mb-2"></i>
                         <span class="font-medium">Añadir tarjeta</span>

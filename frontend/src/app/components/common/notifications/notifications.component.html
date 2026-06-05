@@ -52,7 +52,7 @@
               }
 
               @for (notif of notificationsPage.items; track $index) {
-                <div (click)="selectNotification(notif)" (keydown.enter)="selectNotification(notif)" tabindex="0"
+                <div (click)="selectNotification(notif)" (keydown.enter)="selectNotification(notif)" tabindex="0" role="button"
                      class="p-4 border-b border-slate-200 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 relative"
                      [ngClass]="{'bg-blue-50/30': !notif.read, 'bg-slate-100/50 border-l-4 border-l-primary-500': selectedNotification()?.id === notif.id}">
 

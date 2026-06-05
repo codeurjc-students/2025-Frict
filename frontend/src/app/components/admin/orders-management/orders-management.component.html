@@ -45,7 +45,7 @@
                  class="flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3 min-h-[100px] pb-4 pr-1">
 
               @for (order of col.data(); track order.id) {
-                <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
+                <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0" role="button" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
                   <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <div class="flex items-center gap-2 min-w-0 mr-2">
                       <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getOrderStatusColorClass(getCurrentStatus(order))"></i>
@@ -96,7 +96,7 @@
         </div>
         <div cdkDropList [cdkDropListData]="cancelledOrders()" (cdkDropListDropped)="drop($event, 'Cancelado')" class="flex flex-wrap gap-4 min-h-[100px] p-2 bg-white/50 rounded-xl border border-red-50/50 border-dashed">
           @for (order of cancelledOrders(); track order.id) {
-            <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0"
+            <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0" role="button"
                  class="w-full sm:w-[280px] md:w-[330px] shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-red-400 hover:shadow-md transition-all min-w-0">
 
               <div class="flex justify-between items-start mb-2 pointer-events-none">
@@ -155,14 +155,14 @@
       <p-table [value]="ordersPage.items" styleClass="p-datatable-sm" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
           <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-            <th class="py-3 px-4 font-bold">Referencia</th>
-            <th class="py-3 px-4 font-bold">Destinatario</th>
-            <th class="py-3 px-4 font-bold">Estado</th>
-            <th class="py-3 px-4 font-bold">Tienda asignada</th>
-            <th class="py-3 px-4 font-bold">Camión asignado</th>
-            <th class="py-3 px-4 font-bold">Dirección</th>
-            <th class="py-3 px-4 font-bold text-center">Artículos</th>
-            <th class="py-3 px-4 font-bold text-right">Total</th>
+            <th scope="col" class="py-3 px-4 font-bold">Referencia</th>
+            <th scope="col" class="py-3 px-4 font-bold">Destinatario</th>
+            <th scope="col" class="py-3 px-4 font-bold">Estado</th>
+            <th scope="col" class="py-3 px-4 font-bold">Tienda asignada</th>
+            <th scope="col" class="py-3 px-4 font-bold">Camión asignado</th>
+            <th scope="col" class="py-3 px-4 font-bold">Dirección</th>
+            <th scope="col" class="py-3 px-4 font-bold text-center">Artículos</th>
+            <th scope="col" class="py-3 px-4 font-bold text-right">Total</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-order>
@@ -302,10 +302,10 @@
               <p-table [value]="selectedOrder.orderItems" [paginator]="true" [rows]="5" styleClass="p-datatable-sm mt-4 border border-slate-200 rounded-lg overflow-hidden">
                 <ng-template pTemplate="header">
                   <tr class="bg-slate-50 text-slate-500 text-xs">
-                    <th class="font-medium p-3">Producto</th>
-                    <th class="font-medium p-3 text-center w-24">Cant.</th>
-                    <th class="font-medium p-3 text-right w-32">Precio Und.</th>
-                    <th class="font-medium p-3 text-right w-32">Subtotal</th>
+                    <th scope="col" class="font-medium p-3">Producto</th>
+                    <th scope="col" class="font-medium p-3 text-center w-24">Cant.</th>
+                    <th scope="col" class="font-medium p-3 text-right w-32">Precio Und.</th>
+                    <th scope="col" class="font-medium p-3 text-right w-32">Subtotal</th>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-item>
