@@ -193,32 +193,33 @@ public class RegistryRepository {
         return mongoTemplate.save(r, "registries");
     }
 
-    // $dateTrunc (MongoDB 5.0+) is not supported by DocumentDB. This produces an equivalent
-    // date-truncation expression using $dateFromParts, which is available from MongoDB 3.6.
+    // $dateTrunc (MongoDB 5.0+) and $dateFromParts (MongoDB 3.6+) are not supported by DocumentDB.
+    // $dateToString is supported from MongoDB 3.0 and works in DocumentDB.
+    // Results are ISO date strings ("2026-05-30") that Angular's formatDate handles correctly.
     private Document buildDateGroupId(String field, String interval) {
         String unit = interval != null ? interval.toLowerCase() : "day";
-        if ("week".equals(unit)) {
-            return new Document("$dateFromParts", new Document()
-                    .append("isoWeekYear", new Document("$isoWeekYear", field))
-                    .append("isoWeek",     new Document("$isoWeek",     field)));
-        }
-        Document parts = new Document("year", new Document("$year", field));
         switch (unit) {
             case "hour":
-                parts.append("month", new Document("$month",      field))
-                     .append("day",   new Document("$dayOfMonth", field))
-                     .append("hour",  new Document("$hour",       field));
-                break;
+                return dateToString("%Y-%m-%dT%H:00:00", field);
+            case "week":
+                // Subtract days since Monday to truncate to start of ISO week.
+                // $dayOfWeek: 1=Sun..7=Sat → days since Monday = ($dayOfWeek + 5) % 7
+                Document daysSinceMonday = new Document("$mod", List.of(
+                        new Document("$add", List.of(new Document("$dayOfWeek", field), 5)), 7));
+                Document msToSubtract = new Document("$multiply", List.of(daysSinceMonday, 86400000L));
+                Document monday = new Document("$subtract", List.of(field, msToSubtract));
+                return dateToString("%Y-%m-%d", monday);
             case "month":
-                parts.append("month", new Document("$month", field));
-                break;
+                return dateToString("%Y-%m-01", field);
             case "year":
-                break;
+                return dateToString("%Y-01-01", field);
             default: // day
-                parts.append("month", new Document("$month",      field))
-                     .append("day",   new Document("$dayOfMonth", field));
+                return dateToString("%Y-%m-%d", field);
         }
-        return new Document("$dateFromParts", parts);
+    }
+
+    private Document dateToString(String format, Object dateExpr) {
+        return new Document("$dateToString", new Document("format", format).append("date", dateExpr));
     }
 
 
