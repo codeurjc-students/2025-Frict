@@ -64,7 +64,7 @@ public class ProductDTO {
         this.categories = dtos;
 
         for (ProductSpec s : p.getSpecifications()) {
-            this.specifications.add(new ProductSpecDTO(s.getName(), new ArrayList<>(s.getValues())));
+            this.specifications.add(new ProductSpecDTO(s.getId(), s.getName(), new ArrayList<>(s.getValues())));
         }
 
         int totalUnits = 0;
