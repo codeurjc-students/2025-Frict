@@ -17,7 +17,7 @@ import {AuthService} from '../../../services/auth.service';
 })
 export class BreadcrumbReloadComponent implements OnInit {
 
-  @Output() onReload = new EventEmitter<void>();
+  @Output() reload = new EventEmitter<void>();
 
   home: MenuItem = { label: 'Inicio', routerLink: '/' };
 
@@ -43,7 +43,7 @@ export class BreadcrumbReloadComponent implements OnInit {
   }
 
   triggerReload(): void {
-    this.onReload.emit();
+    this.reload.emit();
   }
 
   private configureHomeNode(): void {
@@ -63,18 +63,15 @@ export class BreadcrumbReloadComponent implements OnInit {
     const children: ActivatedRoute[] = route.children;
     if (children.length === 0) return breadcrumbs;
 
-    for (const child of children) {
-      const routeURL: string = child.snapshot.url.map(segment => segment.path).join('/');
-      if (routeURL !== '') url += `/${routeURL}`;
+    const child = children[0];
+    const routeURL: string = child.snapshot.url.map(segment => segment.path).join('/');
+    if (routeURL !== '') url += `/${routeURL}`;
 
-      const label = child.snapshot.data['breadcrumb'];
-
-      if (label && label !== 'Inicio') {
-        breadcrumbs.push({ label, routerLink: url });
-      }
-
-      return this.createBreadcrumbs(child, url, breadcrumbs);
+    const label = child.snapshot.data['breadcrumb'];
+    if (label && label !== 'Inicio') {
+      breadcrumbs.push({ label, routerLink: url });
     }
-    return breadcrumbs;
+
+    return this.createBreadcrumbs(child, url, breadcrumbs);
   }
 }

@@ -240,7 +240,6 @@ public class OrderService {
 
         // Constructor computes totalCapacity (and all other totals) while products are still set
         Order newOrder = new Order(loggedUser, cartItems, selectedShop, address, card);
-        newOrder.setFullSendingAddress(address);
         newOrder.setCardNumberEnding(card.getNumber().substring(card.getNumber().length() - 4));
 
         // Null products only after the constructor has finished reading them

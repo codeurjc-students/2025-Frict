@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="loadProducts()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="loadProducts()"></app-breadcrumb-reload>
 
       <div class="my-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -82,13 +82,13 @@
 
           <ng-template pTemplate="header">
             <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
-              <th>Activo</th>
-              <th>Nombre / Referencia</th>
-              <th>Categorías</th>
-              <th>Precio</th>
-              <th>Stock Total</th>
-              <th>Tiendas con Stock</th>
-              <th style="width: 8rem">Acciones</th>
+              <th scope="col">Activo</th>
+              <th scope="col">Nombre / Referencia</th>
+              <th scope="col">Categorías</th>
+              <th scope="col">Precio</th>
+              <th scope="col">Stock Total</th>
+              <th scope="col">Tiendas con Stock</th>
+              <th scope="col" style="width: 8rem">Acciones</th>
             </tr>
           </ng-template>
 
@@ -102,7 +102,7 @@
               <td>
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
-                    <img [src]="product.imagesInfo[0].imageUrl" class="w-full h-full object-cover">
+                    <img [src]="product.imagesInfo[0].imageUrl" class="w-full h-full object-cover" alt="">
                   </div>
                   <div class="flex flex-col">
                     <span class="font-bold text-slate-900 text-sm">{{ product.name }}</span>

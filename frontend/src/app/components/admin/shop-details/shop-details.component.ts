@@ -410,8 +410,8 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
           this.routePolylines.push(poly);
           marker.getPopup()?.setContent(marker.getPopup()!.getContent() + `<br><b style="color:#3b82f6">⏱ ETA: ${formatDuration(route.durationSeconds)}</b>`);
         });
-      } else if (status === 'En Reparto' && truck.selectedOrderAddress?.latitude && truck.selectedOrderAddress?.longitude) {
-        this.locationService.getRoute(pos.lat, pos.lng, truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude).subscribe(route => {
+      } else if (status === 'En Reparto' && truck.selectedOrderAddressLat && truck.selectedOrderAddressLng) {
+        this.locationService.getRoute(pos.lat, pos.lng, truck.selectedOrderAddressLat, truck.selectedOrderAddressLng).subscribe(route => {
           if (!route || !this.map) return;
           const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
           const poly = L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.75 }).addTo(this.map!);

@@ -25,6 +25,11 @@ Parameters:
     Type: String
     AllowedValues: ["true", "false"]
     Default: "true"
+  HibernateDdlAuto:
+    Type: String
+    AllowedValues: ["update", "validate", "none"]
+    Default: "update"
+    Description: "update on first deploy; switch to validate once schema exists"
   CloudFrontCertificateArn:
     Type: String
     Description: ACM certificate ARN in us-east-1 for CloudFront
@@ -147,10 +152,13 @@ Resources:
         GeocodingFunctionArn: !GetAtt LambdaStack.Outputs.GeocodingFunctionArn
         GoogleAuthFunctionName: !GetAtt LambdaStack.Outputs.GoogleAuthFunctionName
         GoogleAuthFunctionArn: !GetAtt LambdaStack.Outputs.GoogleAuthFunctionArn
+        OsrmFunctionName: !GetAtt LambdaStack.Outputs.OsrmFunctionName
+        OsrmFunctionArn: !GetAtt LambdaStack.Outputs.OsrmFunctionArn
         CORSAllowedOrigin: !Sub "https://${DomainName}"
         MinTaskCount: !Ref MinTaskCount
         MaxTaskCount: !Ref MaxTaskCount
         EnableDocDB: !Ref EnableDocDB
+        HibernateDdlAuto: !Ref HibernateDdlAuto
 
   # ── Edge (CloudFront + Route53) ──────────────────────────────────────
   EdgeStack:

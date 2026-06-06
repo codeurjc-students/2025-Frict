@@ -1,5 +1,6 @@
 import {Component, computed, inject, OnInit, signal, ViewChild, WritableSignal} from '@angular/core';
-import {IsActiveMatchOptions, Router, RouterLink, RouterLinkActive} from '@angular/router';
+import {IsActiveMatchOptions, NavigationStart, Router, RouterLink, RouterLinkActive} from '@angular/router';
+import {filter} from 'rxjs';
 import {DatePipe, NgClass, NgOptimizedImage, NgTemplateOutlet} from '@angular/common';
 import {Button} from 'primeng/button';
 import {Drawer} from 'primeng/drawer';
@@ -96,13 +97,15 @@ export class NavbarComponent implements OnInit {
 
   toggleSubmenu(categoryId: number, isRouteActive: boolean) {
     const currentState = this.shouldExpand(categoryId, isRouteActive);
-
-    // Invert current state
-    this.manualToggleState.update(map => {
-      const newMap = new Map(map);
+    this.manualToggleState.update(() => {
+      const newMap = new Map<number, boolean>();
       newMap.set(categoryId, !currentState);
       return newMap;
     });
+  }
+
+  closeDrawerDelayed(): void {
+    setTimeout(() => this.visible = false, 200);
   }
 
   toggleCategories() {
@@ -136,6 +139,10 @@ export class NavbarComponent implements OnInit {
   public categories : Category[] = [];
 
   ngOnInit() {
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationStart)
+    ).subscribe(() => this.closeDrawerDelayed());
+
     this.categoryService.getAllCategories().subscribe({
       next: (list) => {
         this.categories = list;

@@ -36,7 +36,7 @@ import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {LocationService} from '../../../services/location.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
+import {formatDuration, formatPrice} from '../../../utils/textFormat.util';
 import {getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass} from '../../../utils/tagManager.util';
 
 import * as L from 'leaflet';
@@ -242,26 +242,38 @@ export class OrdersManagementComponent implements OnInit {
 
     this.markersGroup = L.featureGroup().addTo(this.orderMap);
 
+    const formatAddr = (a: { street: string; number: string; floor: string; city: string }): string => {
+      let line = `${a.street} ${a.number}`.trim();
+      if (a.floor) line += `, ${a.floor}`;
+      if (a.city) line += `<br>${a.city}`;
+      return line;
+    };
+
     // Destinations pointer
-    if (this.selectedOrder?.sendingAddress?.latitude && this.selectedOrder?.sendingAddress?.longitude) {
-      L.marker([this.selectedOrder.sendingAddress.latitude, this.selectedOrder.sendingAddress.longitude], { icon: orderIcon })
-        .bindPopup('<b>Destino</b><br>' + this.selectedOrder.user.name)
+    if (this.selectedOrder?.sendingAddressLat && this.selectedOrder?.sendingAddressLng) {
+      const destPopup = `<b>Destino de entrega</b><br>${this.selectedOrder.user.name}<br><span style="font-size:11px;color:#94a3b8">${this.selectedOrder.sendingAddress}</span>`;
+      L.marker([this.selectedOrder.sendingAddressLat, this.selectedOrder.sendingAddressLng], { icon: orderIcon })
+        .bindPopup(destPopup, { maxWidth: 240 })
         .addTo(this.markersGroup);
     }
 
     // Shops pointer
     if (this.selectedShop?.address?.latitude && this.selectedShop?.address?.longitude) {
+      const shopPopup = `<b>Tienda Origen</b><br>${this.selectedShop.name}<br><span style="font-size:11px;color:#94a3b8">${formatAddr(this.selectedShop.address)}</span>`;
       L.marker([this.selectedShop.address.latitude, this.selectedShop.address.longitude], { icon: shopIcon })
-        .bindPopup('<b>Tienda Origen</b><br>' + this.selectedShop.name)
+        .bindPopup(shopPopup, { maxWidth: 240 })
         .addTo(this.markersGroup);
     }
 
     // Truck pointer (use effective position)
     const truckPos = this.getEffectiveTruckPosition();
     if (truckPos) {
-      const posLabel = truckPos.source === 'gps' ? '📍 GPS conductor' : '📍 Última posición guardada';
+      const addrDetail = truckPos.source === 'gps'
+        ? '📍 Posición GPS actual'
+        : `📍 ${formatAddr(this.selectedTruck!.address)}`;
+      const truckPopup = `<b>Camión</b><br>${this.selectedTruck?.referenceCode} · ${this.selectedTruck?.plateNumber}<br><span style="font-size:11px;color:#94a3b8">${addrDetail}</span>`;
       L.marker([truckPos.lat, truckPos.lng], { icon: truckIcon })
-        .bindPopup(`<b>Camión</b><br>${this.selectedTruck?.referenceCode}<br><span style="font-size:11px;color:#94a3b8">${posLabel}</span>`)
+        .bindPopup(truckPopup, { maxWidth: 240 })
         .addTo(this.markersGroup);
     }
 
@@ -301,19 +313,44 @@ export class OrdersManagementComponent implements OnInit {
     if (truckStatus === 'Descanso' || truckStatus === 'Fuera de servicio') return;
 
     const isActiveOrder = truck.selectedOrderId === order?.id;
+    const orderStatus = order ? this.getCurrentStatus(order) : '';
 
     if (truckStatus === 'En ruta a la tienda' && truck.shopAddress?.latitude && truck.shopAddress?.longitude) {
-      this.locationService.getRoute(truckPos.lat, truckPos.lng, truck.shopAddress.latitude, truck.shopAddress.longitude)
-        .subscribe(route => {
-          if (!route || !this.orderMap) return;
-          if (this.routePolyline) this.routePolyline.remove();
-          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
-          this.routePolyline = L.polyline(latlngs, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.orderMap);
-          this.orderMapEta = formatDuration(route.durationSeconds);
+      const shopLat = truck.shopAddress.latitude;
+      const shopLng = truck.shopAddress.longitude;
+      if (orderStatus === 'En Reparto' && order?.sendingAddressLat && order?.sendingAddressLng) {
+        forkJoin({
+          leg1: this.locationService.getRoute(truckPos.lat, truckPos.lng, shopLat, shopLng),
+          leg2: this.locationService.getRoute(shopLat, shopLng, order.sendingAddressLat, order.sendingAddressLng)
+        }).subscribe(({ leg1, leg2 }) => {
+          if (!this.orderMap) return;
+          if (leg1) {
+            const ll1: L.LatLngTuple[] = leg1.coordinates.map(([lng, lat]) => [lat, lng]);
+            L.polyline(ll1, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.orderMap);
+          }
+          if (leg2) {
+            const ll2: L.LatLngTuple[] = leg2.coordinates.map(([lng, lat]) => [lat, lng]);
+            const dashArray = isActiveOrder ? undefined : '8, 8';
+            L.polyline(ll2, { color: '#8b5cf6', weight: 5, opacity: 0.75, dashArray }).addTo(this.orderMap);
+          }
+          if (leg1 && leg2) {
+            const eta = formatDuration(leg1.durationSeconds + leg2.durationSeconds);
+            this.orderMapEta = isActiveOrder ? eta : '>= ' + eta;
+          }
         });
+      } else {
+        this.locationService.getRoute(truckPos.lat, truckPos.lng, shopLat, shopLng)
+          .subscribe(route => {
+            if (!route || !this.orderMap) return;
+            const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+            L.polyline(latlngs, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.orderMap);
+            const eta = formatDuration(route.durationSeconds);
+            this.orderMapEta = isActiveOrder ? eta : '>= ' + eta;
+          });
+      }
 
-    } else if (truckStatus === 'En Reparto' && order?.sendingAddress?.latitude && order?.sendingAddress?.longitude) {
-      this.locationService.getRoute(truckPos.lat, truckPos.lng, order.sendingAddress.latitude, order.sendingAddress.longitude)
+    } else if (truckStatus === 'En Reparto' && order?.sendingAddressLat && order?.sendingAddressLng) {
+      this.locationService.getRoute(truckPos.lat, truckPos.lng, order.sendingAddressLat, order.sendingAddressLng)
         .subscribe(route => {
           if (!route || !this.orderMap) return;
           if (this.routePolyline) this.routePolyline.remove();
@@ -536,7 +573,6 @@ export class OrdersManagementComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
-  protected readonly formatAddress = formatAddress;
   protected readonly formatDuration = formatDuration;
   protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
   protected readonly getOrderStatusColorClass = getOrderStatusColorClass;

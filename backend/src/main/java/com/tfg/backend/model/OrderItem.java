@@ -53,7 +53,7 @@ public class OrderItem {
 
         //Rubbish values until the order is placed (orderId not null)
         this.productName = product.getName();
-        this.productImageUrl = product.getImages().getFirst().getImageUrl();
+        this.productImageUrl = product.getImages().isEmpty() ? null : product.getImages().getFirst().getImageUrl();
         this.productPrice = product.getCurrentPrice();
 
         this.user = user;

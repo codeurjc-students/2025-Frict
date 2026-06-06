@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800 pb-12">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="mt-2">
@@ -82,43 +82,43 @@
 
               <div formGroupName="address" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div class="flex flex-col gap-2 md:col-span-2">
-                  <label class="text-sm font-semibold text-slate-600">Alias de dirección</label>
-                  <input pInputText formControlName="alias" class="w-full"/>
+                  <label for="shop-alias" class="text-sm font-semibold text-slate-600">Alias de dirección</label>
+                  <input id="shop-alias" pInputText formControlName="alias" class="w-full"/>
                 </div>
                 <div class="flex flex-col gap-2 md:col-span-2">
-                  <label class="text-sm font-semibold text-slate-600">Calle / Avenida <span class="text-red-500">*</span></label>
-                  <input pInputText formControlName="street" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.street')}"/>
+                  <label for="shop-street" class="text-sm font-semibold text-slate-600">Calle / Avenida <span class="text-red-500">*</span></label>
+                  <input id="shop-street" pInputText formControlName="street" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.street')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Número <span class="text-red-500">*</span></label>
-                  <input pInputText formControlName="number" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.number')}"/>
+                  <label for="shop-number" class="text-sm font-semibold text-slate-600">Número <span class="text-red-500">*</span></label>
+                  <input id="shop-number" pInputText formControlName="number" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.number')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Piso</label>
-                  <input pInputText formControlName="floor" class="w-full"/>
+                  <label for="shop-floor" class="text-sm font-semibold text-slate-600">Piso</label>
+                  <input id="shop-floor" pInputText formControlName="floor" class="w-full"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Ciudad <span class="text-red-500">*</span></label>
-                  <input pInputText formControlName="city" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.city')}"/>
+                  <label for="shop-city" class="text-sm font-semibold text-slate-600">Ciudad <span class="text-red-500">*</span></label>
+                  <input id="shop-city" pInputText formControlName="city" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.city')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">Código Postal <span class="text-red-500">*</span></label>
-                  <input pInputText formControlName="postalCode" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.postalCode')}"/>
+                  <label for="shop-postal" class="text-sm font-semibold text-slate-600">Código Postal <span class="text-red-500">*</span></label>
+                  <input id="shop-postal" pInputText formControlName="postalCode" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.postalCode')}"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <label class="text-sm font-semibold text-slate-600">País <span class="text-red-500">*</span></label>
-                  <input pInputText formControlName="country" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.country')}"/>
+                  <label for="shop-country" class="text-sm font-semibold text-slate-600">País <span class="text-red-500">*</span></label>
+                  <input id="shop-country" pInputText formControlName="country" class="w-full" [ngClass]="{'!border-red-500': isInvalid('address.country')}"/>
                 </div>
               </div>
 
               <div formGroupName="address" class="grid grid-cols-2 gap-4 mt-2 border-t pt-4 border-slate-200">
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs text-slate-500">Latitud</label>
-                  <p-inputNumber formControlName="latitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
+                  <label for="shop-lat" class="text-xs text-slate-500">Latitud</label>
+                  <p-inputNumber inputId="shop-lat" formControlName="latitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs text-slate-500">Longitud</label>
-                  <p-inputNumber formControlName="longitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
+                  <label for="shop-lon" class="text-xs text-slate-500">Longitud</label>
+                  <p-inputNumber inputId="shop-lon" formControlName="longitude" [minFractionDigits]="6" [readonly]="true" styleClass="bg-slate-50"></p-inputNumber>
                 </div>
               </div>
             </div>
@@ -138,7 +138,7 @@
 
               @if (existingImage()) {
                 <div class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-video">
-                  <img [src]="existingImage()" class="w-full h-full object-cover">
+                  <img [src]="existingImage()" class="w-full h-full object-cover" alt="">
                   <span class="absolute top-2 left-2 bg-blue-500/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Actual</span>
                   <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
@@ -150,7 +150,7 @@
 
               @if (newImage(); as img) {
                 <div class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-video">
-                  <img [src]="img.previewUrl | safeUrl" class="w-full h-full object-cover">
+                  <img [src]="img.previewUrl | safeUrl" class="w-full h-full object-cover" alt="">
                   <span class="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">Nueva</span>
                   <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button type="button" (click)="removeImage()" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
@@ -170,7 +170,7 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="text-sm font-semibold text-slate-600">Cambiar Foto</label>
+              <span class="text-sm font-semibold text-slate-600">Cambiar Foto</span>
 
               <p-fileupload
                 #fileUploader

@@ -57,7 +57,7 @@ const mockOrder: any = {
   id: 'order-1', referenceCode: 'ORD-001', createdAt: '2025-01-01',
   user: { name: 'Cliente', imageInfo: { imageUrl: '' }, connection: { online: true } },
   history: [{ status: 'CREATED' }], totalCost: 100,
-  sendingAddress: { street: 'Main St', city: 'Madrid', zipCode: '28001' }
+  sendingAddress: 'Main St, 1 28001 Madrid (España)'
 };
 
 const mockNotification: Notification = {

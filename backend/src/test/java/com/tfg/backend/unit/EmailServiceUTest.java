@@ -45,9 +45,12 @@ class EmailServiceUTest {
     private final String USERNAME = "testuser";
     private final String OTP_CODE = "123456";
 
+    private final String FRONTEND_URL = "https://localhost:4202";
+
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(emailService, "fromAddress", "");
+        ReflectionTestUtils.setField(emailService, "frontendUrl", FRONTEND_URL);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
     }
 
@@ -67,7 +70,7 @@ class EmailServiceUTest {
 
         assertEquals(USERNAME, capturedContext.getVariable("username"));
         assertEquals(OTP_CODE, capturedContext.getVariable("otpCode"));
-        assertEquals("https://localhost:4202/reset?username=" + USERNAME, capturedContext.getVariable("resetLink"));
+        assertEquals(FRONTEND_URL + "/reset?username=" + USERNAME, capturedContext.getVariable("resetLink"));
 
         // Assert 2: Verify mail sender was called
         verify(mailSender).send(mimeMessage);

@@ -551,6 +551,137 @@ class OrderServiceUTest {
         }
 
         @Test
+        @DisplayName("commentAndOrUpdateOrderStatus to ON_DELIVERY releases shop capacity and publishes a SHOP_USED_CAPACITY registry")
+        void commentAndOrUpdateOrderStatus_OnDelivery_ReleasesShopCapacity() {
+            User driver = new User();
+            driver.setUsername("driver");
+            driver.setName("Driver Name");
+            Truck truck = new Truck();
+            truck.setAssignedDriver(driver);
+            order.setAssignedTruck(truck);
+            order.setTotalCapacity(4.0);
+            selectedShop.setOccupiedCapacity(10.0);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+            orderService.commentAndOrUpdateOrderStatus(1L, OrderStatus.ON_DELIVERY, "On the way");
+
+            assertEquals(OrderStatus.ON_DELIVERY, order.getCurrentStatus());
+            assertEquals(6.0, selectedShop.getOccupiedCapacity(), "Shop capacity must be released by the order capacity (10 - 4)");
+            verify(eventPublisher).publishEvent(any(RegistryEvent.class)); // capacity registry
+            verify(eventPublisher).publishEvent(any(OrderEvent.class));     // STATUS_CHANGED
+        }
+
+        @Test
+        @DisplayName("commentAndOrUpdateOrderStatus to COMPLETED releases the assigned truck's capacity")
+        void commentAndOrUpdateOrderStatus_Completed_ReleasesTruckCapacity() {
+            User driver = new User();
+            driver.setUsername("driver");
+            driver.setName("Driver Name");
+            Truck truck = new Truck();
+            truck.setAssignedDriver(driver);
+            truck.setCurrentCapacity(7.0);
+            order.setAssignedTruck(truck);
+            order.setTotalCapacity(3.0);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            orderService.commentAndOrUpdateOrderStatus(1L, OrderStatus.COMPLETED, "Delivered");
+
+            assertEquals(4.0, truck.getCurrentCapacity(), "Truck capacity must be reduced by the order capacity (7 - 3)");
+        }
+
+        @Test
+        @DisplayName("commentAndOrUpdateOrderStatus to COMPLETED without an assigned truck publishes no driver RegistryEvent")
+        void commentAndOrUpdateOrderStatus_CompletedWithoutTruck_NoDriverRegistry() {
+            order.setAssignedTruck(null);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            orderService.commentAndOrUpdateOrderStatus(1L, OrderStatus.COMPLETED, "Done");
+
+            assertEquals(OrderStatus.COMPLETED, order.getCurrentStatus());
+            verify(eventPublisher, never()).publishEvent(any(RegistryEvent.class));
+            verify(eventPublisher).publishEvent(any(OrderEvent.class));
+        }
+
+        @Test
+        @DisplayName("commentAndOrUpdateOrderStatus to CANCELLED restores stock, releases truck capacity and publishes capacity + driver registries")
+        void commentAndOrUpdateOrderStatus_Cancelled_RestoresStockAndPublishesRegistries() {
+            User driver = new User();
+            driver.setUsername("driver");
+            driver.setName("Driver Name");
+            Truck truck = new Truck();
+            truck.setAssignedDriver(driver);
+            truck.setCurrentCapacity(5.0);
+            order.setAssignedTruck(truck);
+            order.setTotalCapacity(2.0);
+
+            OrderItem item = new OrderItem();
+            item.setProductReferenceCode("PRD-1");
+            item.setQuantity(3);
+            order.setItems(List.of(item));
+
+            ShopStock stock = new ShopStock(selectedShop, new Product(), 4);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            when(shopStockRepository.findByShop_IdAndProduct_ReferenceCode(10L, "PRD-1")).thenReturn(Optional.of(stock));
+
+            orderService.commentAndOrUpdateOrderStatus(1L, OrderStatus.CANCELLED, "Cancelled by admin");
+
+            assertEquals(OrderStatus.CANCELLED, order.getCurrentStatus());
+            assertEquals(7, stock.getUnits(), "Stock must be restored (4 + 3)");
+            assertEquals(3.0, truck.getCurrentCapacity(), "Truck capacity must be released (5 - 2)");
+            // capacity registry (CANCELLED) + driver registry (truck + driver)
+            verify(eventPublisher, times(2)).publishEvent(any(RegistryEvent.class));
+            verify(eventPublisher).publishEvent(any(OrderEvent.class));
+        }
+
+        @Test
+        @DisplayName("cancelOrder restores shop stock for each item that has a product reference code")
+        void cancelOrder_RestoresShopStock() {
+            OrderItem item = new OrderItem();
+            item.setProductReferenceCode("PRD-9");
+            item.setQuantity(2);
+            order.setItems(List.of(item));
+
+            ShopStock stock = new ShopStock(selectedShop, new Product(), 1);
+
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(shopStockRepository.findByShop_IdAndProduct_ReferenceCode(10L, "PRD-9")).thenReturn(Optional.of(stock));
+
+            orderService.cancelOrder(1L);
+
+            assertEquals(OrderStatus.CANCELLED, order.getCurrentStatus());
+            assertEquals(3, stock.getUnits(), "Stock must be restored (1 + 2)");
+        }
+
+        @Test
+        @DisplayName("cancelOrder restores shop capacity only when the order had reached ON_DELIVERY, and skips items with no reference code")
+        void cancelOrder_RestoresShopCapacity_WhenWasOnDelivery_AndSkipsNullRefItems() {
+            order.changeOrderStatus(OrderStatus.ON_DELIVERY, "On the way");
+            order.setTotalCapacity(5.0);
+            selectedShop.setOccupiedCapacity(8.0);
+
+            OrderItem noRefItem = new OrderItem(); // null productReferenceCode → must be skipped
+            noRefItem.setQuantity(2);
+            order.setItems(List.of(noRefItem));
+
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+            orderService.cancelOrder(1L);
+
+            assertEquals(OrderStatus.CANCELLED, order.getCurrentStatus());
+            assertEquals(13.0, selectedShop.getOccupiedCapacity(), "Shop capacity must be restored (8 + 5) since order was ON_DELIVERY");
+            verify(shopStockRepository, never()).findByShop_IdAndProduct_ReferenceCode(anyLong(), any());
+        }
+
+        @Test
         @DisplayName("cancelOrder throws FORBIDDEN if order does not belong to user")
         void cancelOrder_ThrowsForbidden_WhenNotUsersOrder() {
             when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
@@ -756,6 +887,59 @@ class OrderServiceUTest {
             Order result = orderService.unassignAsFinished(1L);
 
             assertNull(result.getAssignedTruck());
+        }
+
+        @Test
+        @DisplayName("unassignAsFinished throws NOT_FOUND when the assigned truck has no driver")
+        void unassignAsFinished_ThrowsNotFound_WhenTruckHasNoDriver() {
+            order.changeOrderStatus(OrderStatus.COMPLETED, "Done");
+            truck.setAssignedDriver(null);
+            order.setAssignedTruck(truck);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> orderService.unassignAsFinished(1L));
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        }
+
+        @Test
+        @DisplayName("unassignAsFinished clears the truck's selected order when it points to this same order")
+        void unassignAsFinished_ClearsSelectedOrder_WhenItIsThisOrder() {
+            order.changeOrderStatus(OrderStatus.COMPLETED, "Done");
+            loggedUser.setUsername("the-driver");
+            truck.setAssignedDriver(loggedUser);
+            truck.setSelectedOrder(order);
+            order.setAssignedTruck(truck);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            Order result = orderService.unassignAsFinished(1L);
+
+            assertNull(result.getAssignedTruck());
+            assertNull(truck.getSelectedOrder(), "Truck's selected order must be cleared when it is the unassigned order");
+        }
+
+        @Test
+        @DisplayName("unassignAsFinished keeps the truck's selected order when it points to a different order")
+        void unassignAsFinished_KeepsSelectedOrder_WhenDifferentOrder() {
+            order.changeOrderStatus(OrderStatus.COMPLETED, "Done");
+            loggedUser.setUsername("the-driver");
+            truck.setAssignedDriver(loggedUser);
+
+            Order otherSelected = new Order();
+            otherSelected.setId(2L);
+            truck.setSelectedOrder(otherSelected);
+            order.setAssignedTruck(truck);
+
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+            when(userService.findLoggedUserHelper()).thenReturn(loggedUser);
+
+            orderService.unassignAsFinished(1L);
+
+            assertSame(otherSelected, truck.getSelectedOrder(), "A different selected order must remain untouched");
+            assertNull(order.getAssignedTruck());
         }
     }
 

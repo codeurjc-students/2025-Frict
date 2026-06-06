@@ -8,7 +8,7 @@
 @if (!loading && !error) {
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
 
-    <app-breadcrumb-reload (onReload)="loadOrder()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (reload)="loadOrder()"></app-breadcrumb-reload>
 
     <div class="mt-6 mb-4">
       <a routerLink="/profile" class="inline-flex items-center gap-2 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer font-bold text-sm">
@@ -183,7 +183,7 @@
             <i class="pi pi-map-marker text-lg text-primary-500"></i> Dirección de Envío
           </h3>
           <p class="text-surface-600 leading-relaxed mb-12">
-            {{ formatAddress(order.sendingAddress) }}
+            {{ order.sendingAddress }}
           </p>
         </div>
 

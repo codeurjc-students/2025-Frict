@@ -27,6 +27,9 @@ public class EmailService {
     @Value("${app.mail.from:}")
     private String fromAddress;
 
+    @Value("${app.frontend.url:https://localhost:4202}")
+    private String frontendUrl;
+
     // @Async allows that this function can be executed concurrently
     @Async
     public void sendOrderConfirmation(String to, String userName, String orderRef, List<OrderItem> items, Double total) {
@@ -65,7 +68,7 @@ public class EmailService {
     public void sendRecoveryOtp(String to, String username, String otpCode) {
         try {
             // Build redirection URL
-            String targetUrl = "https://localhost:4202/reset?username=" + username;
+            String targetUrl = frontendUrl + "/reset?username=" + username;
 
             // Set Thymeleaf variables
             Context context = new Context();

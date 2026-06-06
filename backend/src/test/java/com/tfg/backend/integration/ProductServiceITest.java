@@ -223,8 +223,8 @@ public class ProductServiceITest {
         dto.setCurrentPrice(30.0);
         dto.setCategories(new ArrayList<>());
         dto.setSpecifications(List.of(
-                new ProductSpecDTO("Color", List.of("Rojo", "Azul")),
-                new ProductSpecDTO("Talla", List.of("M", "XL"))
+                new ProductSpecDTO(null, "Color", List.of("Rojo", "Azul")),
+                new ProductSpecDTO(null, "Talla", List.of("M", "XL"))
         ));
 
         Product created = productService.createProduct(dto);
@@ -248,7 +248,7 @@ public class ProductServiceITest {
         createDto.setSupplyPrice(10.0);
         createDto.setCurrentPrice(20.0);
         createDto.setCategories(new ArrayList<>());
-        createDto.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Verde"))));
+        createDto.setSpecifications(List.of(new ProductSpecDTO(null, "Color", List.of("Verde"))));
         Product created = productService.createProduct(createDto);
 
         entityManager.flush();
@@ -259,7 +259,7 @@ public class ProductServiceITest {
         updateDto.setSupplyPrice(10.0);
         updateDto.setCurrentPrice(20.0);
         updateDto.setCategories(new ArrayList<>());
-        updateDto.setSpecifications(List.of(new ProductSpecDTO("Talla", List.of("S", "M"))));
+        updateDto.setSpecifications(List.of(new ProductSpecDTO(null, "Talla", List.of("S", "M"))));
         productService.updateProduct(created.getId(), updateDto);
 
         entityManager.flush();
@@ -280,7 +280,7 @@ public class ProductServiceITest {
         dtoRojo.setSupplyPrice(10.0);
         dtoRojo.setCurrentPrice(20.0);
         dtoRojo.setCategories(new ArrayList<>());
-        dtoRojo.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Rojo"))));
+        dtoRojo.setSpecifications(List.of(new ProductSpecDTO(null, "Color", List.of("Rojo"))));
         Product prodRojo = productService.createProduct(dtoRojo);
 
         ProductDTO dtoAzul = new ProductDTO();
@@ -288,7 +288,7 @@ public class ProductServiceITest {
         dtoAzul.setSupplyPrice(10.0);
         dtoAzul.setCurrentPrice(20.0);
         dtoAzul.setCategories(new ArrayList<>());
-        dtoAzul.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Azul"))));
+        dtoAzul.setSpecifications(List.of(new ProductSpecDTO(null, "Color", List.of("Azul"))));
         productService.createProduct(dtoAzul);
 
         entityManager.flush();
@@ -310,8 +310,8 @@ public class ProductServiceITest {
         dto.setCurrentPrice(10.0);
         dto.setCategories(new ArrayList<>());
         dto.setSpecifications(List.of(
-                new ProductSpecDTO("Color", List.of("Rojo", "Azul")),
-                new ProductSpecDTO("Talla", List.of("M"))
+                new ProductSpecDTO(null, "Color", List.of("Rojo", "Azul")),
+                new ProductSpecDTO(null, "Talla", List.of("M"))
         ));
         productService.createProduct(dto);
 

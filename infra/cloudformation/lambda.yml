@@ -74,6 +74,33 @@ Resources:
       Role: !GetAtt GoogleAuthLambdaRole.Arn
       Code: ../lambda/google-auth
 
+  # ── IAM — OSRM Lambda ───────────────────────────────────────────────
+  OsrmLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-osrm-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ── Lambda — OSRM ───────────────────────────────────────────────────
+  OsrmFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentName}-osrm"
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      MemorySize: 256
+      Timeout: 15
+      Role: !GetAtt OsrmLambdaRole.Arn
+      Code: ../lambda/osrm
+
   # ── IAM — DocDB Auto-Stop Lambda ────────────────────────────────────
   DocDBAutoStopRole:
     Type: AWS::IAM::Role
@@ -175,3 +202,7 @@ Outputs:
     Value: !Ref GoogleAuthFunction
   GoogleAuthFunctionArn:
     Value: !GetAtt GoogleAuthFunction.Arn
+  OsrmFunctionName:
+    Value: !Ref OsrmFunction
+  OsrmFunctionArn:
+    Value: !GetAtt OsrmFunction.Arn

@@ -20,7 +20,7 @@
       </div>
     }
 
-    <p-button (click)="visible = !visible" iconPos="left" styleClass="h-11 !bg-primary-500/90 hover:!bg-primary/70">
+    <p-button (onClick)="visible = !visible" iconPos="left" styleClass="h-11 !bg-primary-500/90 hover:!bg-primary/70">
       <ng-template pTemplate="content">
         <i class="pi pi-bars text-white"></i>
         <span class="hidden lg:inline ml-2 font-bold text-white">Menú</span>
@@ -121,14 +121,14 @@
                     </div>
                   } @else {
                     @for (notif of notificationService.unreadNotifications(); track notif.id) {
-                      <div (click)="goToNotification(notif)" class="p-4 border-b border-surface-700/50 hover:bg-surface-700 transition-colors flex justify-between items-start gap-3 group cursor-pointer">
+                      <div (click)="goToNotification(notif)" (keydown.enter)="goToNotification(notif)" tabindex="0" role="button" class="p-4 border-b border-surface-700/50 hover:bg-surface-700 transition-colors flex justify-between items-start gap-3 group cursor-pointer">
                         <div class="flex flex-col gap-1.5 flex-1 min-w-0">
                           <span class="font-semibold text-white text-sm line-clamp-1" [title]="notif.subject">{{ notif.subject }}</span>
                           <span class="text-surface-300 text-xs line-clamp-2" [title]="notif.description">{{ notif.description }}</span>
                           <span class="text-surface-500 text-[10px] mt-0.5"><i class="pi pi-clock text-[9px] mr-1"></i>{{ notif.timestamp | date:'dd/MM/yyyy HH:mm' }}</span>
                         </div>
 
-                        <p-button (click)="notificationService.markAsRead(notif.id); $event.stopPropagation()"
+                        <p-button (onClick)="notificationService.markAsRead(notif.id); $event.stopPropagation()"
                                   icon="pi pi-check"
                                   [rounded]="true" [text]="true"
                                   styleClass="!p-0 !w-8 !h-8 !text-surface-400 hover:!text-green-400 hover:!bg-green-400/10 transition-colors shrink-0"
@@ -142,14 +142,14 @@
                 <div class="p-2 border-t border-surface-700 bg-surface-800 rounded-b-lg flex gap-2">
 
                   <p-button label="Ver todas"
-                            (click)="notifPopover.hide()"
+                            (onClick)="notifPopover.hide()"
                             [routerLink]="authService.isUser() ? '/notifications' : '/admin/notifications'"
                             class="flex-1"
                             styleClass="w-full !bg-transparent hover:!bg-surface-700 !text-primary-400 border-none !text-sm !font-semibold h-10 transition-colors">
                   </p-button>
 
                   <p-button icon="pi pi-wave-pulse"
-                            (click)="triggerTest()"
+                            (onClick)="triggerTest()"
                             styleClass="!bg-transparent hover:!bg-surface-700 !text-primary-400 border-none !text-sm !font-semibold h-10 transition-colors shrink-0">
                   </p-button>
 
@@ -185,7 +185,7 @@
   </div>
 </nav>
 
-<p-drawer #drawerRef [(visible)]="visible" [autoZIndex]="true" [baseZIndex]="40" [blockScroll]="true" styleClass="!bg-surface-800 !border-none !w-90">
+<p-drawer #drawerRef [(visible)]="visible" [autoZIndex]="true" [baseZIndex]="40" [blockScroll]="true" [transitionOptions]="'150ms ease-in-out'" styleClass="!bg-surface-800 !border-none !w-90">
   <ng-template #headless>
     <div class="mt-22 flex flex-col h-full overflow-y-auto">
 
@@ -227,7 +227,7 @@
                  [ngClass]="productService.searchScope() === 'GLOBAL'
                ? 'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default'
                : 'text-surface-100 hover:bg-surface-700 cursor-pointer'"
-                 (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null">
+                 (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null; closeDrawerDelayed()">
                 <i class="pi pi-globe mr-3 text-lg"></i>
                 <span class="font-medium">Global</span>
               </a>
@@ -240,7 +240,7 @@
          'text-surface-100 hover:bg-surface-700 cursor-pointer': productService.searchScope() !== 'LOCAL' && authService.hasShopSelected(),
          'text-surface-500 opacity-50 cursor-not-allowed': !authService.hasShopSelected()
        }"
-                 (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null">
+                 (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null; closeDrawerDelayed()">
                 <i class="pi pi-map-marker mr-3 text-lg"></i>
                 <span class="font-medium">Tienda seleccionada</span>
                 @if (!authService.hasShopSelected()) {
@@ -272,7 +272,7 @@
           </li>
 
           <li>
-            <div (click)="toggleCategories()"
+            <div (click)="toggleCategories()" (keydown.enter)="toggleCategories()" tabindex="0" role="button"
                  class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-primary-400 transition-colors p-ripple">
               <span class="font-medium uppercase tracking-wider text-sm">Categorías</span>
               <i class="pi pi-chevron-down transition-transform duration-300"
@@ -283,26 +283,22 @@
             <ul [class.hidden]="!isCategoriesExpanded()" class="list-none p-0 m-0 overflow-hidden block">
 
               @if (!authService.isAdmin() && !authService.isManager() && !authService.isDriver()) {
-                <div>
-                  <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
-                </div>
+                <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: categories, level: 0 }"></ng-container>
               }
 
               @if (authService.isAdmin() || authService.isManager() || authService.isDriver()) {
-                <div>
-                  @for (item of adminItems; track item.link) {
-                    @if (canViewItem(item)) {
-                      <li>
-                        <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
-                           [routerLink]="item.link"
-                           routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
-                          <i [class]="item.icon + ' mr-3'"></i>
-                          <span class="font-medium">{{ item.label }}</span>
-                        </a>
-                      </li>
-                    }
+                @for (item of adminItems; track item.link) {
+                  @if (canViewItem(item)) {
+                    <li>
+                      <a class="flex items-center cursor-pointer p-4 rounded-border text-surface-100 hover:bg-surface-700 hover:text-primary-400 duration-150 transition-colors"
+                         [routerLink]="item.link"
+                         routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white">
+                        <i [class]="item.icon + ' mr-3'"></i>
+                        <span class="font-medium">{{ item.label }}</span>
+                      </a>
+                    </li>
                   }
-                </div>
+                }
               }
             </ul>
           </li>
@@ -312,7 +308,7 @@
           <div>
             <ul class="list-none p-4 m-0 pt-0">
               <li>
-                <div (click)="toggleAccount()"
+                <div (click)="toggleAccount()" (keydown.enter)="toggleAccount()" tabindex="0" role="button"
                      class="p-4 flex items-center justify-between text-surface-200 cursor-pointer hover:text-primary-400 transition-colors p-ripple">
                   <span class="font-medium uppercase tracking-wider text-sm">Cuenta</span>
                   <i class="pi pi-chevron-down transition-transform duration-300"
@@ -337,7 +333,7 @@
                     </a>
                   </li>
                   <li>
-                    <a class="flex items-center cursor-pointer p-4 rounded-border hover:bg-surface-700 duration-150 transition-colors text-red-300 hover:text-red-200" (click)="logout()">
+                    <a class="flex items-center cursor-pointer p-4 rounded-border hover:bg-surface-700 duration-150 transition-colors text-red-300 hover:text-red-200" (click)="logout()" (keydown.enter)="logout()" tabindex="0" role="button">
                       <i class="pi pi-sign-out mr-3"></i>
                       <span class="font-medium">Cerrar sesión</span>
                     </a>
@@ -363,6 +359,7 @@
              routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
              [routerLinkActiveOptions]="{ exact: false }"
              #rla="routerLinkActive"
+             (click)="toggleSubmenu(+cat.id, rla.isActive)"
              class="flex-1 flex items-center cursor-pointer p-4 text-surface-100 hover:text-primary-400 transition-colors"
              [style.padding-left.rem]="1 + (level * 1.5)">
 
@@ -372,7 +369,7 @@
 
           @let isOpen = shouldExpand(+cat.id, rla.isActive);
 
-          <div (click)="toggleSubmenu(+cat.id, rla.isActive)"
+          <div (click)="toggleSubmenu(+cat.id, rla.isActive)" (keydown.enter)="toggleSubmenu(+cat.id, rla.isActive)" tabindex="0" role="button"
                [class.bg-surface-700]="rla.isActive"
                [class.text-white]="rla.isActive"
                [class.text-surface-400]="!rla.isActive"

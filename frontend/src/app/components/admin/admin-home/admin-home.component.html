@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800 pb-12">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="getLoginInfo()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="getLoginInfo()"></app-breadcrumb-reload>
 
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10 pt-6">
 
@@ -265,15 +265,15 @@
             <p-table [value]="recentOrders()" styleClass="p-datatable-sm" responsiveLayout="scroll">
               <ng-template pTemplate="header">
                 <tr class="bg-white text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-                  <th class="py-3 pl-5">Referencia</th>
-                  <th class="py-3">Creado el</th>
-                  <th class="py-3">Cliente</th>
+                  <th scope="col" class="py-3 pl-5">Referencia</th>
+                  <th scope="col" class="py-3">Creado el</th>
+                  <th scope="col" class="py-3">Cliente</th>
                   @if (authService.isDriver()) {
-                    <th class="py-3">Dirección</th>
+                    <th scope="col" class="py-3">Dirección</th>
                   }
-                  <th class="py-3">Estado</th>
+                  <th scope="col" class="py-3">Estado</th>
                   @if (authService.isAdmin() || authService.isManager()) {
-                    <th class="py-3 text-right pr-5">Importe</th>
+                    <th scope="col" class="py-3 text-right pr-5">Importe</th>
                   }
                 </tr>
               </ng-template>
@@ -296,7 +296,7 @@
                     </div>
                   </td>
                   @if (authService.isDriver()) {
-                    <td class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ formatAddress(order.sendingAddress) }}</td>
+                    <td class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ order.sendingAddress }}</td>
                   }
                   <td class="py-3">
                     <p-tag [value]="order.history[order.history.length - 1].status" severity="secondary"></p-tag>
@@ -333,7 +333,7 @@
 
             <div class="flex-grow overflow-y-auto custom-scrollbar p-5 flex flex-col gap-3">
               @for (notif of recentNotifications(); track notif.id) {
-                <div (click)="goToNotification(notif)" class="flex gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
+                <div (click)="goToNotification(notif)" (keydown.enter)="goToNotification(notif)" tabindex="0" role="button" class="flex gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer relative">
 
                   @if (!notif.read) {
                     <div class="absolute top-3 right-3 w-2 h-2 bg-primary-500 rounded-full"></div>

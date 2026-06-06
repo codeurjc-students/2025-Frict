@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800 pb-12">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="mt-2">
@@ -74,9 +74,10 @@
               </div>
 
               <div class="flex flex-col gap-2 md:col-span-2">
-                <label class="text-sm font-semibold text-slate-600">Categorías</label>
+                <label for="categories" class="text-sm font-semibold text-slate-600">Categorías</label>
 
                 <p-treeSelect
+                  inputId="categories"
                   containerStyleClass="w-full"
                   [options]="categories"
                   formControlName="selectedCategories"
@@ -122,16 +123,16 @@
 
             <div class="flex gap-2 items-end">
               <div class="flex flex-col gap-1 flex-1">
-                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Especificación</label>
-                <p-autocomplete [(ngModel)]="pendingSpecName" [ngModelOptions]="{standalone: true}"
+                <label for="spec-name" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Especificación</label>
+                <p-autocomplete inputId="spec-name" [(ngModel)]="pendingSpecName" [ngModelOptions]="{standalone: true}"
                   [suggestions]="filteredSpecNames" (completeMethod)="searchSpecNames($event.query)"
                   (onSelect)="searchSpecValues('')" [forceSelection]="false"
                   placeholder="Ej: Color" styleClass="w-full" appendTo="body">
                 </p-autocomplete>
               </div>
               <div class="flex flex-col gap-1 flex-1">
-                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Valor</label>
-                <p-autocomplete [(ngModel)]="pendingSpecValue" [ngModelOptions]="{standalone: true}"
+                <label for="spec-value" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Valor</label>
+                <p-autocomplete inputId="spec-value" [(ngModel)]="pendingSpecValue" [ngModelOptions]="{standalone: true}"
                   [suggestions]="filteredSpecValues" (completeMethod)="searchSpecValues($event.query)"
                   [forceSelection]="false" placeholder="Ej: Rojo" styleClass="w-full" appendTo="body">
                 </p-autocomplete>
@@ -164,7 +165,7 @@
 
                 @for(img of existingImages(); track $index) {
                   <div class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
-                    <img [src]="img.imageUrl" class="w-full h-full object-cover">
+                    <img [src]="img.imageUrl" class="w-full h-full object-cover" alt="">
                     <span class="absolute top-1 left-1 bg-blue-500/80 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">Guardada</span>
 
                     <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -177,7 +178,7 @@
 
                 @for(imgInfo of newImages(); track $index) {
                   <div class="relative group rounded-lg overflow-hidden border border-green-200 ring-2 ring-green-100 aspect-square">
-                    <img [src]="imgInfo.previewUrl | safeUrl" class="w-full h-full object-cover opacity-90">
+                    <img [src]="imgInfo.previewUrl | safeUrl" class="w-full h-full object-cover opacity-90" alt="">
                     <span class="absolute top-1 left-1 bg-green-500/90 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">Nueva</span>
 
                     <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -191,7 +192,7 @@
             }
 
             <div class="flex flex-col gap-2">
-              <label class="text-sm font-semibold text-slate-600">Añadir más fotos</label>
+              <span class="text-sm font-semibold text-slate-600">Añadir más fotos</span>
 
               <p-fileupload
                 mode="advanced"

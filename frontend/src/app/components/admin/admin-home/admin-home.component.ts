@@ -13,7 +13,7 @@ import {Notification} from '../../../models/notification.model'
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
 import {AuthService} from '../../../services/auth.service';
 import {StatService} from '../../../services/stat.service';
-import {formatAddress, formatPrice} from '../../../utils/textFormat.util';
+import {formatPrice} from '../../../utils/textFormat.util';
 import {LoginInfo} from '../../../models/loginInfo.model';
 import {OrderService} from '../../../services/order.service';
 import {Order} from '../../../models/order.model';
@@ -506,5 +506,4 @@ export class AdminHomeComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
-  protected readonly formatAddress = formatAddress;
 }

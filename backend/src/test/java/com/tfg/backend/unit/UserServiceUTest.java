@@ -634,10 +634,10 @@ class UserServiceUTest {
             loggedUser.setPhone("555-555-555");
             loggedUser.setOtpCode("1234");
 
-            Address orderAddr = new Address();
-            orderAddr.setStreet("Street");
             Order order = new Order();
-            order.setFullSendingAddress(orderAddr);
+            order.setFullSendingAddress("Calle Mayor, 1 2A 28001 Madrid (España)");
+            order.setSendingAddressLat(40.4168);
+            order.setSendingAddressLng(-3.7038);
             loggedUser.getRegisteredOrders().add(order);
 
             loggedUser.getAddresses().add(new Address());

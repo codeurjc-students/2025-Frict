@@ -47,7 +47,9 @@ const mockOrder: Order = {
   estimatedCompletionTime: 60,
   totalItems: 3, subtotalCost: 30, totalDiscount: 0, shippingCost: 5, totalCost: 35, totalCapacity: 1,
   cardNumberEnding: '1234',
-  sendingAddress: mockAddress as any,
+  sendingAddress: 'Calle Mayor, 1 2A 28001 Madrid (España)',
+  sendingAddressLat: 40.4168,
+  sendingAddressLng: -3.7038,
   createdAt: '2025-01-01'
 };
 
@@ -760,6 +762,51 @@ describe('OrdersManagementComponent', () => {
 
       expect(component.first).toBe(0);
       expect(component.rows).toBe(10);
+    });
+  });
+
+  // ── onDialogHide ─────────────────────────────────────────────────────────────
+
+  describe('onDialogHide', () => {
+    it('should set routePolyline to undefined', () => {
+      (component as any).routePolyline = {};
+      component.onDialogHide();
+      expect((component as any).routePolyline).toBeUndefined();
+    });
+
+    it('should set orderMapEta to null', () => {
+      (component as any).orderMapEta = 42;
+      component.onDialogHide();
+      expect((component as any).orderMapEta).toBeNull();
+    });
+  });
+
+  // ── onTabChange ───────────────────────────────────────────────────────────────
+
+  describe('onTabChange', () => {
+    it('should not throw when tab is not "2"', () => {
+      expect(() => component.onTabChange('0')).not.toThrow();
+      expect(() => component.onTabChange(1)).not.toThrow();
+    });
+
+    it('should accept numeric value without throwing', () => {
+      expect(() => component.onTabChange(2)).not.toThrow();
+    });
+  });
+
+  // ── addComment (listModeSelected) ─────────────────────────────────────────────
+
+  describe('addComment with listModeSelected=true', () => {
+    it('should use selectedStatusForUpdate instead of getCurrentStatus when listModeSelected is true', () => {
+      orderServiceSpy.commentAndOrUpdateOrderStatus.and.callFake(() => of({ ...mockOrder }));
+      component.selectedOrder = { ...mockOrder };
+      component.newComment = 'Test comment';
+      component.listModeSelected = true;
+      component.selectedStatusForUpdate = 'Enviado';
+      component.addComment();
+      expect(orderServiceSpy.commentAndOrUpdateOrderStatus).toHaveBeenCalledWith(
+        'order-1', 'Enviado', 'Test comment'
+      );
     });
   });
 

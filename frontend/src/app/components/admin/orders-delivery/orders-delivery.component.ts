@@ -1,4 +1,5 @@
 import {Component, computed, inject, OnDestroy, OnInit, signal} from '@angular/core';
+import {forkJoin} from 'rxjs';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
@@ -17,7 +18,7 @@ import {TruckService} from '../../../services/truck.service';
 import {ShopService} from '../../../services/shop.service';
 import {LocationService} from '../../../services/location.service';
 import {AuthService} from '../../../services/auth.service';
-import {formatAddress, formatDuration} from '../../../utils/textFormat.util';
+import {formatDuration} from '../../../utils/textFormat.util';
 import {getOrderStatusTagInfo, getTruckHistoryStatusTagInfo} from '../../../utils/tagManager.util';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
@@ -82,6 +83,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
 
   private map: L.Map | undefined;
   private routePolyline: L.Polyline | undefined;
+  private routePolyline2: L.Polyline | undefined;
   protected markers: L.Marker[] = [];
   deliveryMapEta: string | null = null;
 
@@ -231,7 +233,11 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     if (!mapEl) return;
     this.map = L.map('delivery-map', { zoomControl: false }).setView([40.4168, -3.7038], 6);
     L.control.zoom({ position: 'topright' }).addTo(this.map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(this.map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(this.map);
+    this.map.attributionControl.setPrefix('Leaflet');
   }
 
   private updateMapPositions() {
@@ -239,19 +245,34 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     this.markers.forEach(m => m.remove());
     this.markers = [];
     if (this.routePolyline) { this.routePolyline.remove(); this.routePolyline = undefined; }
+    if (this.routePolyline2) { this.routePolyline2.remove(); this.routePolyline2 = undefined; }
     this.deliveryMapEta = null;
     const bounds = L.latLngBounds([]);
 
-    const addCustomMarker = (lat: number, lng: number, iconUrl: string, popupText: string) => {
+    const addCustomMarker = (lat: number, lng: number, iconUrl: string, popupHtml: string) => {
       const customIcon = L.icon({ iconUrl, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
-      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map!).bindPopup(`<strong>${popupText}</strong>`);
+      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.map!).bindPopup(popupHtml, { maxWidth: 240 });
       this.markers.push(marker);
       bounds.extend([lat, lng]);
     };
 
+    const formatAddr = (a: { street: string; number: string; floor: string; city: string }): string => {
+      let line = `${a.street} ${a.number}`.trim();
+      if (a.floor) line += `, ${a.floor}`;
+      if (a.city) line += `<br>${a.city}`;
+      return line;
+    };
+
     const shop = this.myShop();
     if (shop?.address?.latitude != null && shop?.address?.longitude != null) {
-      addCustomMarker(shop.address.latitude, shop.address.longitude, '/shopIcon.png', 'Tienda Base');
+      const shopPopup = `<b>Tienda Base</b><br>${shop.name}<br><span style="font-size:11px;color:#94a3b8">${formatAddr(shop.address)}</span>`;
+      addCustomMarker(shop.address.latitude, shop.address.longitude, '/shopIcon.png', shopPopup);
+    }
+
+    const order = this.selectedOrder();
+    if (order?.sendingAddressLat != null && order?.sendingAddressLng != null) {
+      const destPopup = `<b>Destino de entrega</b><br>${order.user.name}<br><span style="font-size:11px;color:#94a3b8">${order.sendingAddress}</span>`;
+      addCustomMarker(order.sendingAddressLat, order.sendingAddressLng, '/location-pointer.png', destPopup);
     }
 
     const truck = this.myTruck();
@@ -261,42 +282,64 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
       if (truck.assignedDriver && truck.driverLocation?.address?.latitude && truck.driverLocation?.address?.longitude) {
         truckLat = truck.driverLocation.address.latitude;
         truckLng = truck.driverLocation.address.longitude;
-        addCustomMarker(truckLat, truckLng, '/truckIcon.png', 'Mi Camión (GPS)');
+        const truckPopup = `<b>Mi Camión</b><br>${truck.referenceCode} · ${truck.plateNumber}<br><span style="font-size:11px;color:#94a3b8">📍 Posición GPS actual</span>`;
+        addCustomMarker(truckLat, truckLng, '/truckIcon.png', truckPopup);
       } else if (truck.address?.latitude != null && truck.address?.longitude != null) {
         truckLat = truck.address.latitude;
         truckLng = truck.address.longitude;
-        addCustomMarker(truckLat, truckLng, '/truckIcon.png', 'Mi Camión (última posición)');
+        const truckPopup = `<b>Mi Camión</b><br>${truck.referenceCode} · ${truck.plateNumber}<br><span style="font-size:11px;color:#94a3b8">📍 ${formatAddr(truck.address)}</span>`;
+        addCustomMarker(truckLat, truckLng, '/truckIcon.png', truckPopup);
       }
     }
 
-    // Active delivery order destination
     const truckStatus = this.getTruckCurrentStatus(truck);
-    const activeOrder = this.ordersPage().items.find(o => o.id === truck?.selectedOrderId);
+    const isActiveOrder = truck?.selectedOrderId === this.selectedOrder()?.id;
+    const orderStatus = this.getCurrentStatus(this.selectedOrder());
 
     if (truckStatus === 'En ruta a la tienda' && shop?.address?.latitude && shop?.address?.longitude) {
       if (truckLat !== null && truckLng !== null) {
-        this.locationService.getRoute(truckLat, truckLng, shop.address.latitude, shop.address.longitude).subscribe(route => {
-          if (!route || !this.map) return;
-          const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
-          this.routePolyline = L.polyline(latlngs, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.map!);
-          this.deliveryMapEta = formatDuration(route.durationSeconds);
-        });
+        const shopLat = shop.address.latitude;
+        const shopLng = shop.address.longitude;
+        if (orderStatus === 'En Reparto' && order?.sendingAddressLat && order?.sendingAddressLng) {
+          forkJoin({
+            leg1: this.locationService.getRoute(truckLat, truckLng, shopLat, shopLng),
+            leg2: this.locationService.getRoute(shopLat, shopLng, order.sendingAddressLat, order.sendingAddressLng)
+          }).subscribe(({ leg1, leg2 }) => {
+            if (!this.map) return;
+            if (leg1) {
+              const ll1: L.LatLngTuple[] = leg1.coordinates.map(([lng, lat]) => [lat, lng]);
+              this.routePolyline = L.polyline(ll1, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.map);
+            }
+            if (leg2) {
+              const ll2: L.LatLngTuple[] = leg2.coordinates.map(([lng, lat]) => [lat, lng]);
+              const dashArray = isActiveOrder ? undefined : '8, 8';
+              this.routePolyline2 = L.polyline(ll2, { color: '#8b5cf6', weight: 5, opacity: 0.75, dashArray }).addTo(this.map);
+            }
+            if (leg1 && leg2) {
+              const eta = formatDuration(leg1.durationSeconds + leg2.durationSeconds);
+              this.deliveryMapEta = isActiveOrder ? eta : '>= ' + eta;
+            }
+          });
+        } else {
+          this.locationService.getRoute(truckLat, truckLng, shopLat, shopLng).subscribe(route => {
+            if (!route || !this.map) return;
+            const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
+            this.routePolyline = L.polyline(latlngs, { color: '#3b82f6', weight: 5, opacity: 0.75 }).addTo(this.map!);
+            const eta = formatDuration(route.durationSeconds);
+            this.deliveryMapEta = isActiveOrder ? eta : '>= ' + eta;
+          });
+        }
       }
-    } else if (truckStatus === 'En Reparto' && activeOrder?.sendingAddress?.latitude && activeOrder?.sendingAddress?.longitude) {
-      addCustomMarker(activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido Activo');
+    } else if (truckStatus === 'En Reparto' && orderStatus === 'En Reparto' && order?.sendingAddressLat && order?.sendingAddressLng) {
       if (truckLat !== null && truckLng !== null) {
-        this.locationService.getRoute(truckLat, truckLng, activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude).subscribe(route => {
+        this.locationService.getRoute(truckLat, truckLng, order.sendingAddressLat, order.sendingAddressLng).subscribe(route => {
           if (!route || !this.map) return;
           const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
-          this.routePolyline = L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.75 }).addTo(this.map!);
-          this.deliveryMapEta = formatDuration(route.durationSeconds);
+          const dashArray = isActiveOrder ? undefined : '8, 8';
+          this.routePolyline = L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.75, dashArray }).addTo(this.map!);
+          const eta = formatDuration(route.durationSeconds);
+          this.deliveryMapEta = isActiveOrder ? eta : '>= ' + eta;
         });
-      }
-    } else {
-      // No active route: show selected order destination for reference
-      const order = this.selectedOrder();
-      if (order?.sendingAddress?.latitude != null && order?.sendingAddress?.longitude != null) {
-        addCustomMarker(order.sendingAddress.latitude, order.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido');
       }
     }
 
@@ -499,7 +542,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected readonly formatAddress = formatAddress;
 
   getLoadPercentage(active: number, max: number): number {
     return max === 0 ? 0 : Math.round((active / max) * 100);

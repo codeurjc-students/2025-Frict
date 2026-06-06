@@ -20,7 +20,7 @@ import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {LocationService} from '../../../services/location.service';
 import {LoadingScreenComponent} from '../loading-screen/loading-screen.component';
-import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
+import {formatDuration, formatPrice} from '../../../utils/textFormat.util';
 import {BreadcrumbReloadComponent} from '../breadcrumb-reload/breadcrumb-reload.component';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {QRCodeComponent} from 'angularx-qrcode';
@@ -157,33 +157,45 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
     const shopIcon = L.icon({ iconUrl: './shopIcon.png', iconSize: [35, 35], iconAnchor: [17, 35], popupAnchor: [0, -35] });
     const truckIcon = L.icon({ iconUrl: './truckIcon.png', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
 
-    if (this.order.sendingAddress?.latitude && this.order.sendingAddress?.longitude) {
-      L.marker([this.order.sendingAddress.latitude, this.order.sendingAddress.longitude], { icon: destIcon })
-        .bindPopup('<b>Tu dirección de entrega</b>')
+    const formatAddr = (a: { street: string; number: string; floor: string; city: string }): string => {
+      let line = `${a.street} ${a.number}`.trim();
+      if (a.floor) line += `, ${a.floor}`;
+      if (a.city) line += `<br>${a.city}`;
+      return line;
+    };
+
+    if (this.order.sendingAddressLat && this.order.sendingAddressLng) {
+      const destPopup = `<b>Tu dirección de entrega</b><br>${this.order.user.name}<br><span style="font-size:11px;color:#94a3b8">${this.order.sendingAddress}</span>`;
+      L.marker([this.order.sendingAddressLat, this.order.sendingAddressLng], { icon: destIcon })
+        .bindPopup(destPopup, { maxWidth: 240 })
         .addTo(markersGroup);
     }
 
     if (this.shop?.address?.latitude && this.shop?.address?.longitude) {
+      const shopPopup = `<b>Tienda de origen</b><br>${this.shop.name}<br><span style="font-size:11px;color:#94a3b8">${formatAddr(this.shop.address)}</span>`;
       L.marker([this.shop.address.latitude, this.shop.address.longitude], { icon: shopIcon })
-        .bindPopup('<b>Tienda de origen</b><br>' + this.shop.name)
+        .bindPopup(shopPopup, { maxWidth: 240 })
         .addTo(markersGroup);
     }
 
     let truckLat: number | undefined;
     let truckLng: number | undefined;
+    let truckPopupHtml = '';
     if (this.truck) {
       if (this.truck.assignedDriver && this.truck.driverLocation?.address?.latitude && this.truck.driverLocation?.address?.longitude) {
         truckLat = this.truck.driverLocation.address.latitude;
         truckLng = this.truck.driverLocation.address.longitude;
+        truckPopupHtml = `<b>Tu camión de reparto</b><br>${this.truck.plateNumber}<br><span style="font-size:11px;color:#94a3b8">📍 Posición GPS actual</span>`;
       } else if (this.truck.address?.latitude && this.truck.address?.longitude) {
         truckLat = this.truck.address.latitude;
         truckLng = this.truck.address.longitude;
+        truckPopupHtml = `<b>Tu camión de reparto</b><br>${this.truck.plateNumber}<br><span style="font-size:11px;color:#94a3b8">📍 ${formatAddr(this.truck.address)}</span>`;
       }
     }
 
     if (truckLat !== undefined && truckLng !== undefined) {
       L.marker([truckLat, truckLng], { icon: truckIcon })
-        .bindPopup('<b>Tu camión de reparto</b><br>' + this.truck?.plateNumber)
+        .bindPopup(truckPopupHtml, { maxWidth: 240 })
         .addTo(markersGroup);
     }
 
@@ -204,12 +216,12 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
 
     if (truckStatus === 'En ruta a la tienda'
         && this.shop?.address?.latitude && this.shop?.address?.longitude
-        && this.order?.sendingAddress?.latitude && this.order?.sendingAddress?.longitude) {
+        && this.order?.sendingAddressLat && this.order?.sendingAddressLng) {
 
       const shopLat = this.shop.address.latitude;
       const shopLng = this.shop.address.longitude;
-      const destLat = this.order.sendingAddress.latitude;
-      const destLng = this.order.sendingAddress.longitude;
+      const destLat = this.order.sendingAddressLat;
+      const destLng = this.order.sendingAddressLng;
 
       forkJoin({
         leg1: this.locationService.getRoute(truckLat, truckLng, shopLat, shopLng),
@@ -232,9 +244,9 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
       });
 
     } else if (truckStatus === 'En Reparto'
-        && this.order?.sendingAddress?.latitude && this.order?.sendingAddress?.longitude) {
+        && this.order?.sendingAddressLat && this.order?.sendingAddressLng) {
 
-      this.locationService.getRoute(truckLat, truckLng, this.order.sendingAddress.latitude, this.order.sendingAddress.longitude)
+      this.locationService.getRoute(truckLat, truckLng, this.order.sendingAddressLat, this.order.sendingAddressLng)
         .subscribe(route => {
           if (!route || !this.orderMap) return;
           const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
@@ -317,7 +329,6 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected readonly formatAddress = formatAddress;
   protected readonly formatPrice = formatPrice;
   protected readonly formatDuration = formatDuration;
   protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;

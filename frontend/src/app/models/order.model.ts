@@ -1,6 +1,5 @@
 import {OrderItem} from './orderItem.model';
 import {OrderStatusLog} from './orderStatusLog.model';
-import {Address} from './address.model';
 import {User} from './user.model';
 
 export interface Order {
@@ -21,7 +20,9 @@ export interface Order {
   totalCapacity: number;
 
   cardNumberEnding: string;
-  sendingAddress: Address;
+  sendingAddress: string;
+  sendingAddressLat?: number;
+  sendingAddressLng?: number;
 
   createdAt: string;
 }

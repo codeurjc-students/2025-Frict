@@ -3,7 +3,7 @@
 @if (!loading && !error) {
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto pb-12">
 
-    <app-breadcrumb-reload (onReload)="loadUser()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (reload)="loadUser()"></app-breadcrumb-reload>
 
     <section class="mt-6 mb-12 relative">
       <div class="bg-surface-900 rounded-[2rem] p-8 md:p-12 shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 border border-surface-700">
@@ -14,7 +14,7 @@
         <div class="relative z-10 inline-block">
           <div class="p-1 bg-gradient-to-br from-primary-400 to-cyan-400 rounded-full">
 
-            <div class="relative group cursor-pointer rounded-full overflow-hidden" (click)="visibleImageDialog = true">
+            <div class="relative group cursor-pointer rounded-full overflow-hidden" (click)="visibleImageDialog = true" (keydown.enter)="visibleImageDialog = true" tabindex="0" role="button">
               <p-avatar [image]="user.imageInfo.imageUrl" shape="circle" styleClass="!w-30 !h-30 border-4 border-surface-900 block"/>
               <div class="absolute inset-[0px] rounded-full bg-surface-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                 <i class="pi pi-pencil text-white text-2xl drop-shadow-md"></i>
@@ -142,19 +142,19 @@
           </div>
           <div class="space-y-4">
             <div>
-              <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Nombre Completo</label>
+              <span class="text-xs text-surface-500 font-bold uppercase tracking-wide">Nombre Completo</span>
               <p class="text-surface-900 font-medium text-lg">{{ user.name }}</p>
             </div>
             <div>
-              <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Nombre de usuario</label>
+              <span class="text-xs text-surface-500 font-bold uppercase tracking-wide">Nombre de usuario</span>
               <p class="text-surface-900 font-medium text-lg">{{ user.username }}</p>
             </div>
             <div>
-              <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Email</label>
+              <span class="text-xs text-surface-500 font-bold uppercase tracking-wide">Email</span>
               <p class="text-surface-900 font-medium text-lg">{{ user.email }}</p>
             </div>
             <div>
-              <label class="text-xs text-surface-500 font-bold uppercase tracking-wide">Teléfono</label>
+              <span class="text-xs text-surface-500 font-bold uppercase tracking-wide">Teléfono</span>
               <p class="text-surface-900 font-medium text-lg">{{ user.phone || 'No asignado' }}</p>
             </div>
           </div>
@@ -165,20 +165,20 @@
                 <h4 class="font-bold mb-4">Editar datos personales:</h4>
                 <div class="grid grid-cols-1 gap-4">
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre completo</label>
-                    <input pInputText placeholder="Nombre y apellidos" [(ngModel)]="newUserData.name" class="w-full"/>
+                    <label for="profile-name" class="text-sm font-medium text-surface-600 mb-1 block">Nombre completo</label>
+                    <input id="profile-name" pInputText placeholder="Nombre y apellidos" [(ngModel)]="newUserData.name" class="w-full"/>
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre de usuario</label>
-                    <input pInputText placeholder="Alias" [(ngModel)]="newUserData.username" class="w-full md:col-span-2" />
+                    <label for="profile-username" class="text-sm font-medium text-surface-600 mb-1 block">Nombre de usuario</label>
+                    <input id="profile-username" pInputText placeholder="Alias" [(ngModel)]="newUserData.username" class="w-full md:col-span-2" />
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Correo electrónico</label>
-                    <input pInputText placeholder="Dirección de correo" [(ngModel)]="newUserData.email" class="w-full md:col-span-2" />
+                    <label for="profile-email" class="text-sm font-medium text-surface-600 mb-1 block">Correo electrónico</label>
+                    <input id="profile-email" pInputText placeholder="Dirección de correo" [(ngModel)]="newUserData.email" class="w-full md:col-span-2" />
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Teléfono</label>
-                    <input pInputText placeholder="Número de teléfono" [(ngModel)]="newUserData.phone" class="w-full md:col-span-2" />
+                    <label for="profile-phone" class="text-sm font-medium text-surface-600 mb-1 block">Teléfono</label>
+                    <input id="profile-phone" pInputText placeholder="Número de teléfono" [(ngModel)]="newUserData.phone" class="w-full md:col-span-2" />
                   </div>
                 </div>
                 <div class="flex justify-end mt-4 gap-2">
@@ -260,32 +260,32 @@
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Alias <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Nombre preferido..." [(ngModel)]="newAddress.alias" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.alias)}"/>
+                      <label for="addr-alias" class="text-sm font-medium text-surface-600 mb-1 block">Alias <span class="text-red-500">*</span></label>
+                      <input id="addr-alias" pInputText placeholder="Nombre preferido..." [(ngModel)]="newAddress.alias" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.alias)}"/>
                     </div>
                     <div class="md:col-span-2">
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Calle <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Tipo y nombre de vía..." [(ngModel)]="newAddress.street" (ngModelChange)="onAddressFieldChange()" class="w-full md:col-span-2" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.street)}" />
+                      <label for="addr-street" class="text-sm font-medium text-surface-600 mb-1 block">Calle <span class="text-red-500">*</span></label>
+                      <input id="addr-street" pInputText placeholder="Tipo y nombre de vía..." [(ngModel)]="newAddress.street" (ngModelChange)="onAddressFieldChange()" class="w-full md:col-span-2" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.street)}" />
                     </div>
                     <div>
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Número <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Número de domicilio..." [(ngModel)]="newAddress.number" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.number)}"/>
+                      <label for="addr-number" class="text-sm font-medium text-surface-600 mb-1 block">Número <span class="text-red-500">*</span></label>
+                      <input id="addr-number" pInputText placeholder="Número de domicilio..." [(ngModel)]="newAddress.number" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.number)}"/>
                     </div>
                     <div>
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Piso</label>
-                      <input pInputText placeholder="Piso y letra..." [(ngModel)]="newAddress.floor" class="w-full" />
+                      <label for="addr-floor" class="text-sm font-medium text-surface-600 mb-1 block">Piso</label>
+                      <input id="addr-floor" pInputText placeholder="Piso y letra..." [(ngModel)]="newAddress.floor" class="w-full" />
                     </div>
                     <div>
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Código postal <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Código postal..." [(ngModel)]="newAddress.postalCode" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.postalCode)}" />
+                      <label for="addr-postal" class="text-sm font-medium text-surface-600 mb-1 block">Código postal <span class="text-red-500">*</span></label>
+                      <input id="addr-postal" pInputText placeholder="Código postal..." [(ngModel)]="newAddress.postalCode" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.postalCode)}" />
                     </div>
                     <div>
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Ciudad <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Nombre de población..." [(ngModel)]="newAddress.city" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.city)}" />
+                      <label for="addr-city" class="text-sm font-medium text-surface-600 mb-1 block">Ciudad <span class="text-red-500">*</span></label>
+                      <input id="addr-city" pInputText placeholder="Nombre de población..." [(ngModel)]="newAddress.city" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.city)}" />
                     </div>
                     <div class="md:col-span-2">
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">País <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Nombre de país..." [(ngModel)]="newAddress.country" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.country)}"/>
+                      <label for="addr-country" class="text-sm font-medium text-surface-600 mb-1 block">País <span class="text-red-500">*</span></label>
+                      <input id="addr-country" pInputText placeholder="Nombre de país..." [(ngModel)]="newAddress.country" (ngModelChange)="onAddressFieldChange()" class="w-full" [ngClass]="{'!border-red-500': isAddressFieldInvalid(newAddress.country)}"/>
                     </div>
                   </div>
                   <div class="flex justify-end mt-4 gap-2">
@@ -360,12 +360,12 @@
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Alias de la tarjeta <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Nombre completo" [(ngModel)]="newCard.alias" class="w-full" [ngClass]="{'!border-red-500': isCardFieldInvalid(newCard.alias)}" />
+                      <label for="card-alias" class="text-sm font-medium text-surface-600 mb-1 block">Alias de la tarjeta <span class="text-red-500">*</span></label>
+                      <input id="card-alias" pInputText placeholder="Nombre completo" [(ngModel)]="newCard.alias" class="w-full" [ngClass]="{'!border-red-500': isCardFieldInvalid(newCard.alias)}" />
                     </div>
 
                     <div class="md:col-span-2">
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Número de tarjeta <span class="text-red-500">*</span></label>
+                      <span class="text-sm font-medium text-surface-600 mb-1 block">Número de tarjeta <span class="text-red-500">*</span></span>
                       @if (newCard.id) {
                         <div>
                           <input pInputText [disabled]="true" [placeholder]="newCard.number" class="w-full" />
@@ -379,17 +379,17 @@
                     </div>
 
                     <div class="md:col-span-2">
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Titular de la tarjeta <span class="text-red-500">*</span></label>
-                      <input pInputText placeholder="Nombre completo" [(ngModel)]="newCard.cardOwnerName" class="w-full" [ngClass]="{'!border-red-500': isCardFieldInvalid(newCard.cardOwnerName)}" />
+                      <label for="card-owner" class="text-sm font-medium text-surface-600 mb-1 block">Titular de la tarjeta <span class="text-red-500">*</span></label>
+                      <input id="card-owner" pInputText placeholder="Nombre completo" [(ngModel)]="newCard.cardOwnerName" class="w-full" [ngClass]="{'!border-red-500': isCardFieldInvalid(newCard.cardOwnerName)}" />
                     </div>
 
                     <div>
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">Caducidad <span class="text-red-500">*</span></label>
-                      <p-inputmask mask="99/99" [(ngModel)]="newCard.dueDate" placeholder="MM/AA" [styleClass]="isCardDueDateInvalid() ? 'w-full !border-red-500' : 'w-full'" />
+                      <label for="card-expiry" class="text-sm font-medium text-surface-600 mb-1 block">Caducidad <span class="text-red-500">*</span></label>
+                      <p-inputmask inputId="card-expiry" mask="99/99" [(ngModel)]="newCard.dueDate" placeholder="MM/AA" [styleClass]="isCardDueDateInvalid() ? 'w-full !border-red-500' : 'w-full'" />
                     </div>
 
                     <div>
-                      <label class="text-sm font-medium text-surface-600 mb-1 block">CVV <span class="text-red-500">*</span></label>
+                      <span class="text-sm font-medium text-surface-600 mb-1 block">CVV <span class="text-red-500">*</span></span>
                       @if (newCard.id) {
                         <div>
                           <input pInputText [disabled]="true" [placeholder]="newCard.cvv" class="w-full" />

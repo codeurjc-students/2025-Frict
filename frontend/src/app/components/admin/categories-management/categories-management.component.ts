@@ -115,7 +115,7 @@ export class CategoriesManagementComponent implements OnInit {
       const percentage = stats.totalNodes > 0
         ? (stats.activeNodes / stats.totalNodes) * 100
         : 0;
-      this.usagePercentage.set(parseFloat(percentage.toFixed(2)));
+      this.usagePercentage.set(Number.parseFloat(percentage.toFixed(2)));
 
       this.orgChartNodes.set([rootNode]);
       this.treeTableNodes.set(items.map(c => this.mapToTreeTable(c)));

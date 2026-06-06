@@ -207,15 +207,6 @@
             <artifactId>lambda</artifactId>
         </dependency>
 
-        <!-- Flyway database migrations (enabled only in prod profile) -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-mysql</artifactId>
-        </dependency>
     </dependencies>
 
     <build>

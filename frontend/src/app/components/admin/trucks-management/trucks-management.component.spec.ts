@@ -666,6 +666,42 @@ describe('TrucksManagementComponent', () => {
     expect(component.selectedViewMode).toBe('chart');
   });
 
+  it('should show a message when the confirmation dialog is rejected', () => {
+    spyOn(confirmationService, 'confirm').and.callFake((config: any) => config.reject());
+    component.deleteTruck(mockTruckAvailable.id);
+    expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'error' }));
+  });
+
+  it('should not update trucksPage when confirmAssignment fails', () => {
+    component.selectedDriver = mockDriver;
+    truckServiceSpy.assignDriver.and.returnValue(throwError(() => new Error('500')));
+    const originalDriver = component.trucksPage.items.find(t => t.id === mockTruckOnRoute.id)?.assignedDriver;
+    component.confirmAssignment(mockTruckOnRoute.id);
+    expect(component.trucksPage.items.find(t => t.id === mockTruckOnRoute.id)?.assignedDriver).toEqual(originalDriver);
+  });
+
+  // ─── getStatusLabel ───────────────────────────────────────────────────────────
+
+  describe('getStatusLabel', () => {
+    it('should capitalize the first letter of the status', () => {
+      expect(component.getStatusLabel('disponible')).toBe('Disponible');
+    });
+
+    it('should return "Desconocido" for an empty string', () => {
+      expect(component.getStatusLabel('')).toBe('Desconocido');
+    });
+  });
+
+  // ─── locateTruckOnMap ─────────────────────────────────────────────────────────
+
+  describe('locateTruckOnMap', () => {
+    it('should switch selectedViewMode to "map"', () => {
+      component.selectedViewMode = 'chart';
+      component.locateTruckOnMap(mockTruckAvailable);
+      expect(component.selectedViewMode).toBe('map');
+    });
+  });
+
   // ─── DOM: loading / error screen ──────────────────────────────────────────────
 
   it('should show the loading screen when loading=true', () => {

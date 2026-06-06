@@ -150,7 +150,7 @@ public class ProductApiFunctionalITest extends BaseApiFunctionalITest {
         newProduct.setSupplyPrice(10.0);
         newProduct.setCurrentPrice(20.0);
         newProduct.setActive(true);
-        newProduct.setSpecifications(List.of(new ProductSpecDTO("Color", List.of("Rojo", "Azul"))));
+        newProduct.setSpecifications(List.of(new ProductSpecDTO(null, "Color", List.of("Rojo", "Azul"))));
 
         given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
                 .body(newProduct)
@@ -168,7 +168,7 @@ public class ProductApiFunctionalITest extends BaseApiFunctionalITest {
         specProduct.setSupplyPrice(10.0);
         specProduct.setCurrentPrice(20.0);
         specProduct.setActive(true);
-        specProduct.setSpecifications(List.of(new ProductSpecDTO("Material", List.of("Madera"))));
+        specProduct.setSpecifications(List.of(new ProductSpecDTO(null, "Material", List.of("Madera"))));
 
         given().spec(getSpec(BASE_URL_PRODUCTS, adminCookie))
                 .body(specProduct)

@@ -31,7 +31,9 @@ public class OrderDTO {
     private double totalCapacity;
 
     private String cardNumberEnding;
-    private AddressDTO sendingAddress;
+    private String sendingAddress;
+    private double sendingAddressLat;
+    private double sendingAddressLng;
 
     @JsonFormat(pattern = "dd/MM/yy HH:mm")
     private LocalDateTime createdAt;
@@ -65,9 +67,9 @@ public class OrderDTO {
         this.totalCapacity = o.getTotalCapacity();
 
         this.cardNumberEnding = o.getCardNumberEnding();
-        if (o.getFullSendingAddress() != null){
-            this.sendingAddress = new AddressDTO(o.getFullSendingAddress());
-        }
+        this.sendingAddress = o.getFullSendingAddress();
+        this.sendingAddressLat = o.getSendingAddressLat();
+        this.sendingAddressLng = o.getSendingAddressLng();
         this.createdAt = o.getCreatedAt();
     }
 }

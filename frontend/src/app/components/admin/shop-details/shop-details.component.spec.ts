@@ -764,4 +764,67 @@ describe('ShopDetailsComponent', () => {
       expect(fixture.nativeElement.textContent).not.toContain('Reponer Stock');
     });
   });
+
+  // ── getTruckCurrentStatus ─────────────────────────────────────────────────────
+
+  describe('getTruckCurrentStatus', () => {
+    it('should return "Descanso" when the truck has no history', () => {
+      const truck: any = { ...mockTruck, history: [] };
+      expect(component.getTruckCurrentStatus(truck)).toBe('Descanso');
+    });
+
+    it('should return the status of the last history entry', () => {
+      const truck: any = {
+        ...mockTruck,
+        history: [
+          { id: 'h1', status: 'En Reparto', icon: '', updates: [] },
+          { id: 'h2', status: 'Completado', icon: '', updates: [] }
+        ]
+      };
+      expect(component.getTruckCurrentStatus(truck)).toBe('Completado');
+    });
+  });
+
+  // ── formatLastSeen ────────────────────────────────────────────────────────────
+
+  describe('formatLastSeen', () => {
+    beforeEach(() => jasmine.clock().install());
+    afterEach(() => jasmine.clock().uninstall());
+
+    it('should return "—" for null', () => {
+      expect(component.formatLastSeen(null)).toBe('—');
+    });
+
+    it('should return "—" for undefined', () => {
+      expect(component.formatLastSeen(undefined)).toBe('—');
+    });
+
+    it('should return "Ahora mismo" when less than 1 minute ago', () => {
+      const now = new Date();
+      jasmine.clock().mockDate(now);
+      const recent = new Date(now.getTime() - 10_000).toISOString();
+      expect(component.formatLastSeen(recent)).toBe('Ahora mismo');
+    });
+
+    it('should return minutes format when between 1 and 59 minutes ago', () => {
+      const now = new Date();
+      jasmine.clock().mockDate(now);
+      const ago = new Date(now.getTime() - 10 * 60_000).toISOString();
+      expect(component.formatLastSeen(ago)).toBe('hace 10 min');
+    });
+
+    it('should return hours format when between 1 and 23 hours ago', () => {
+      const now = new Date();
+      jasmine.clock().mockDate(now);
+      const ago = new Date(now.getTime() - 3 * 3600_000).toISOString();
+      expect(component.formatLastSeen(ago)).toBe('hace 3 h');
+    });
+
+    it('should return days format when 24+ hours ago', () => {
+      const now = new Date();
+      jasmine.clock().mockDate(now);
+      const ago = new Date(now.getTime() - 2 * 24 * 3600_000).toISOString();
+      expect(component.formatLastSeen(ago)).toBe('hace 2 d');
+    });
+  });
 });

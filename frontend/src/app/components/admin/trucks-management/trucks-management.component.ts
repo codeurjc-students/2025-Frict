@@ -326,14 +326,14 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
         this.markers.push(destMarker);
         bounds.extend([truck.shopAddress.latitude, truck.shopAddress.longitude]);
         this.drawRouteOnMap(pos.lat, pos.lng, truck.shopAddress.latitude, truck.shopAddress.longitude, '#3b82f6', marker);
-      } else if (currentStatus === 'En Reparto' && truck.selectedOrderAddress?.latitude && truck.selectedOrderAddress?.longitude) {
+      } else if (currentStatus === 'En Reparto' && truck.selectedOrderAddressLat && truck.selectedOrderAddressLng) {
         const destIcon = L.icon({ iconUrl: '/location-pointer.png', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
-        const destMarker = L.marker([truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude], { icon: destIcon })
+        const destMarker = L.marker([truck.selectedOrderAddressLat, truck.selectedOrderAddressLng], { icon: destIcon })
           .addTo(this.map!)
           .bindPopup(`<strong>Destino de entrega</strong><br><span class="text-xs">${truck.plateNumber}</span>`);
         this.markers.push(destMarker);
-        bounds.extend([truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude]);
-        this.drawRouteOnMap(pos.lat, pos.lng, truck.selectedOrderAddress.latitude, truck.selectedOrderAddress.longitude, '#8b5cf6', marker);
+        bounds.extend([truck.selectedOrderAddressLat, truck.selectedOrderAddressLng]);
+        this.drawRouteOnMap(pos.lat, pos.lng, truck.selectedOrderAddressLat, truck.selectedOrderAddressLng, '#8b5cf6', marker);
       }
     });
     if (hasCoords) this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });

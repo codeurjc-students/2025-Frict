@@ -41,7 +41,11 @@ const mockOrder: Order = {
   assignedShopId: 'shop-1', assignedTruckId: 'truck-1',
   estimatedCompletionTime: 60,
   totalItems: 2, subtotalCost: 20, totalDiscount: 0, shippingCost: 3, totalCost: 23, totalCapacity: 1,
-  cardNumberEnding: '1234', sendingAddress: mockAddress, createdAt: '2025-01-01'
+  cardNumberEnding: '1234',
+  sendingAddress: 'Calle Mayor, 1 2A 28001 Madrid (España)',
+  sendingAddressLat: mockAddress.latitude,
+  sendingAddressLng: mockAddress.longitude,
+  createdAt: '2025-01-01'
 };
 
 const mockPage: PageResponse<Order> = {

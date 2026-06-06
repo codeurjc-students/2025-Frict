@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800 pb-12">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-6 flex flex-col gap-8">
 
-      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="relative w-full h-64 rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white group">
         <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + shopImageUrl + ')'"></div>
@@ -66,16 +66,16 @@
 
             <ng-template pTemplate="header">
               <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
-                <th class="pl-4 font-semibold">Camión</th>
-                <th class="font-semibold">Conductor</th>
-                <th class="text-center font-semibold">Estado</th>
-                <th class="text-center font-semibold">Capacidad</th>
-                <th class="text-right pr-4 font-semibold">Acciones</th>
+                <th scope="col" class="pl-4 font-semibold">Camión</th>
+                <th scope="col" class="font-semibold">Conductor</th>
+                <th scope="col" class="text-center font-semibold">Estado</th>
+                <th scope="col" class="text-center font-semibold">Capacidad</th>
+                <th scope="col" class="text-right pr-4 font-semibold">Acciones</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-truck>
-              <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 last:border-0 group cursor-pointer" (click)="focusTruckOnMap(truck)">
+              <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 last:border-0 group cursor-pointer" (click)="focusTruckOnMap(truck)" (keydown.enter)="focusTruckOnMap(truck)" tabindex="0" role="button">
 
                 <!-- Matrícula + Ref -->
                 <td class="pl-4 py-3">
@@ -231,13 +231,13 @@
 
             <ng-template pTemplate="header">
               <tr class="bg-slate-50 text-slate-700 text-sm uppercase tracking-wider border-b border-slate-200">
-                <th class="pl-4 font-semibold w-16 text-center">Activo</th>
-                <th class="font-semibold">Producto</th>
-                <th class="text-center font-semibold">P. Compra</th>
-                <th class="text-center font-semibold">P. Venta</th>
-                <th class="text-center font-semibold">Stock</th>
-                <th class="text-center font-semibold">Capacidad</th>
-                <th class="text-right pr-4 font-semibold">Acciones</th>
+                <th scope="col" class="pl-4 font-semibold w-16 text-center">Activo</th>
+                <th scope="col" class="font-semibold">Producto</th>
+                <th scope="col" class="text-center font-semibold">P. Compra</th>
+                <th scope="col" class="text-center font-semibold">P. Venta</th>
+                <th scope="col" class="text-center font-semibold">Stock</th>
+                <th scope="col" class="text-center font-semibold">Capacidad</th>
+                <th scope="col" class="text-right pr-4 font-semibold">Acciones</th>
               </tr>
             </ng-template>
 
@@ -411,7 +411,7 @@
             </div>
 
             <div class="mb-4">
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Unidades a reponer</label>
+              <label for="replenish" class="block text-xs font-bold text-slate-500 uppercase mb-2">Unidades a reponer</label>
               <p-inputNumber [(ngModel)]="restockQuantity" [showButtons]="true" buttonLayout="horizontal"
                              inputId="replenish" [min]="1" [max]="getMaxRestockAllowed()"
                              decrementButtonClass="p-button-secondary p-button-outlined"

@@ -162,4 +162,82 @@ public class OrderApiFunctionalITest extends BaseApiFunctionalITest {
                 .then().statusCode(200)
                 .body("history[-1].status", equalTo("Enviado"));
     }
+
+    @Test
+    public void updateStatus_ToOnDeliveryWithoutTruck_ReturnsForbidden() {
+        given().spec(getSpec(BASE_URL_ORDERS, userCookie)).pathParam("id", testProduct.getId()).queryParam("quantity", 1).when().post("/cart/{id}");
+        Long orderId = given().spec(getSpec(BASE_URL_ORDERS, userCookie)).queryParam("addressId", addressId).queryParam("cardId", cardId)
+                .when().post().jsonPath().getLong("id");
+
+        given().spec(getSpec(BASE_URL_ORDERS, adminCookie))
+                .pathParam("id", orderId).queryParam("orderStatus", "ON_DELIVERY").queryParam("comment", "Go")
+                .when().put("/{id}")
+                .then().statusCode(403);
+    }
+
+    @Test
+    public void updateStatus_AssignTruckThenOnDelivery_ChangesStatus() {
+        given().spec(getSpec(BASE_URL_ORDERS, userCookie)).pathParam("id", testProduct.getId()).queryParam("quantity", 1).when().post("/cart/{id}");
+        Long orderId = given().spec(getSpec(BASE_URL_ORDERS, userCookie)).queryParam("addressId", addressId).queryParam("cardId", cardId)
+                .when().post().jsonPath().getLong("id");
+
+        given().spec(getSpec(BASE_URL_ORDERS, adminCookie))
+                .pathParam("orderId", orderId).pathParam("truckId", testTruck.getId()).queryParam("state", true)
+                .when().post("/{orderId}/assign/truck/{truckId}").then().statusCode(200);
+
+        given().spec(getSpec(BASE_URL_ORDERS, adminCookie))
+                .pathParam("id", orderId).queryParam("orderStatus", "ON_DELIVERY").queryParam("comment", "On the way")
+                .when().put("/{id}")
+                .then().statusCode(200)
+                .body("history[-1].status", equalTo("En Reparto"));
+    }
+
+    @Test
+    public void cancelOrder_ByOwner_SetsStatusCancelled() {
+        given().spec(getSpec(BASE_URL_ORDERS, userCookie)).pathParam("id", testProduct.getId()).queryParam("quantity", 1).when().post("/cart/{id}");
+        Long orderId = given().spec(getSpec(BASE_URL_ORDERS, userCookie)).queryParam("addressId", addressId).queryParam("cardId", cardId)
+                .when().post().jsonPath().getLong("id");
+
+        given().spec(getSpec(BASE_URL_ORDERS, userCookie))
+                .pathParam("id", orderId)
+                .when().put("/cancel/{id}")
+                .then().statusCode(200)
+                .body("history[-1].status", equalTo("Cancelado"));
+    }
+
+    @Test
+    public void unassignAsFinished_ByAssignedDriver_ClearsTruck() {
+        // Create a driver and assign it to the test truck
+        transactionTemplate.executeWithoutResult(status -> {
+            User driver = new User("Driver", "driver_ord", "driver@test.com", passwordEncoder.encode("pass"), "DRIVER");
+            driver = userRepository.saveAndFlush(driver);
+            Truck truck = truckRepository.findById(testTruck.getId()).orElseThrow();
+            truck.setAssignedDriver(driver);
+            truckRepository.saveAndFlush(truck);
+        });
+        String driverCookie = loginAndGetCookie("driver_ord", "pass");
+
+        // User places an order
+        given().spec(getSpec(BASE_URL_ORDERS, userCookie)).pathParam("id", testProduct.getId()).queryParam("quantity", 1).when().post("/cart/{id}");
+        Long orderId = given().spec(getSpec(BASE_URL_ORDERS, userCookie)).queryParam("addressId", addressId).queryParam("cardId", cardId)
+                .when().post().jsonPath().getLong("id");
+
+        // Admin assigns the truck and drives the order to COMPLETED
+        given().spec(getSpec(BASE_URL_ORDERS, adminCookie))
+                .pathParam("orderId", orderId).pathParam("truckId", testTruck.getId()).queryParam("state", true)
+                .when().post("/{orderId}/assign/truck/{truckId}").then().statusCode(200);
+        given().spec(getSpec(BASE_URL_ORDERS, adminCookie))
+                .pathParam("id", orderId).queryParam("orderStatus", "ON_DELIVERY").queryParam("comment", "Go")
+                .when().put("/{id}").then().statusCode(200);
+        given().spec(getSpec(BASE_URL_ORDERS, adminCookie))
+                .pathParam("id", orderId).queryParam("orderStatus", "COMPLETED").queryParam("comment", "Done")
+                .when().put("/{id}").then().statusCode(200);
+
+        // The assigned driver unassigns the finished order
+        given().spec(getSpec(BASE_URL_ORDERS, driverCookie))
+                .pathParam("orderId", orderId)
+                .when().post("/{orderId}/unassign")
+                .then().statusCode(200)
+                .body("assignedTruckId", nullValue());
+    }
 }

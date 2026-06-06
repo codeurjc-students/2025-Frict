@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Setter
 @Getter
 @Entity
+@Table(name = "app_users")
 public class User {
 
 	@Id

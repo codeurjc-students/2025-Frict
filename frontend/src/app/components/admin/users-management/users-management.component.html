@@ -8,7 +8,7 @@
   <div class="min-h-screen font-sans text-slate-800">
     <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-      <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+      <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
       <div class="mt-6 mb-8">
         <h1 class="text-3xl font-bold text-primary-600 flex items-center gap-2"><i class="pi pi-users" style="font-size: 1.35rem"></i> Gestor de usuarios</h1>
@@ -26,11 +26,11 @@
                 <h4 class="font-bold mb-4">Crear nuevo usuario interno:</h4>
                 <div class="grid grid-cols-1 gap-4">
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre completo</label>
+                    <label for="name" class="text-sm font-medium text-surface-600 mb-1 block">Nombre completo</label>
                     <input pInputText placeholder="Nombre y apellidos" id="name" formControlName="name" class="w-full"/>
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Nombre de usuario</label>
+                    <label for="username" class="text-sm font-medium text-surface-600 mb-1 block">Nombre de usuario</label>
                     <input pInputText placeholder="Alias" id="username" formControlName="username" class="w-full md:col-span-2"
                            [class.border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
                            [class.focus:border-red-500]="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched)"
@@ -48,7 +48,7 @@
                     }
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Correo electrónico</label>
+                    <label for="email" class="text-sm font-medium text-surface-600 mb-1 block">Correo electrónico</label>
                     <input pInputText placeholder="Dirección de correo" id="email" formControlName="email" class="w-full md:col-span-2"
                            [class.border-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"
                            [class.focus:border-red-500]="emailControl?.invalid && (emailControl?.dirty || emailControl?.touched)"
@@ -67,18 +67,18 @@
                   </div>
 
                   <div class="relative">
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Contraseña</label>
+                    <label for="password" class="text-sm font-medium text-surface-600 mb-1 block">Contraseña</label>
                     <input pInputText placeholder="Contraseña" id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password" class="w-full md:col-span-2" />
                     <button type="button" (click)="this.showPassword = !this.showPassword;" class="absolute right-3 top-7.5 p-1 text-surface-400 hover:text-surface-600 transition-colors rounded-lg hover:bg-surface-200/50">
                       <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
                     </button>
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Rol</label>
-                    <p-select formControlName="role" [options]="internalRoles" optionLabel="name" optionValue="code" placeholder="Selecciona un rol interno" class="w-full md:col-span-2" />
+                    <label for="role" class="text-sm font-medium text-surface-600 mb-1 block">Rol</label>
+                    <p-select inputId="role" formControlName="role" [options]="internalRoles" optionLabel="name" optionValue="code" placeholder="Selecciona un rol interno" class="w-full md:col-span-2" />
                   </div>
                   <div>
-                    <label class="text-sm font-medium text-surface-600 mb-1 block">Imagen de perrfil (Opcional)</label>
+                    <label for="image" class="text-sm font-medium text-surface-600 mb-1 block">Imagen de perrfil (Opcional)</label>
                     <input id="image" type="file" (change)="changeSelectedImage($event)" accept="image/jpeg"
                            class="block w-full text-md text-surface-500
                       file:mr-4 file:py-2.5 file:px-4
@@ -258,14 +258,14 @@
                       <h4 class="font-bold mb-4">Cambiar contraseña de usuario interno:</h4>
                       <div class="grid grid-cols-1 gap-4">
                         <div class="relative">
-                          <label class="text-sm font-medium text-surface-600 mb-1 block">Nueva contraseña</label>
+                          <label for="password" class="text-sm font-medium text-surface-600 mb-1 block">Nueva contraseña</label>
                           <input pInputText placeholder="Contraseña" id="password" [type]="showNewPassword ? 'text' : 'password'" formControlName="password" class="w-full"/>
                           <button type="button" (click)="showNewPassword = !showNewPassword;" class="absolute right-3 top-7.5 p-1 text-surface-400 hover:text-surface-600 transition-colors rounded-lg hover:bg-surface-200/50">
                             <i [class]="showNewPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
                           </button>
                         </div>
                         <div class="relative">
-                          <label class="text-sm font-medium text-surface-600 mb-1 block">Repetir contraseña</label>
+                          <label for="repeatPassword" class="text-sm font-medium text-surface-600 mb-1 block">Repetir contraseña</label>
                           <input pInputText placeholder="Repetir contraseña" id="repeatPassword" [type]="showNewPasswordConfirmation ? 'text' : 'password'" formControlName="repeatPassword" class="w-full"/>
                           <button type="button" (click)="showNewPasswordConfirmation = !showNewPasswordConfirmation;" class="absolute right-3 top-7.5 p-1 text-surface-400 hover:text-surface-600 transition-colors rounded-lg hover:bg-surface-200/50">
                             <i [class]="showNewPasswordConfirmation ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
@@ -310,12 +310,12 @@
 
           <ng-template #header>
             <tr class="bg-slate-50 text-slate-700 border-b border-slate-200 text-sm uppercase tracking-wider">
-              <th style="width: 3rem" class="pl-4">ID</th>
-              <th>Usuario</th>
-              <th>Roles</th>
-              <th>Estado</th>
-              <th>Pedidos / Reviews</th>
-              <th>Última Conexión</th>
+              <th scope="col" style="width: 3rem" class="pl-4">ID</th>
+              <th scope="col">Usuario</th>
+              <th scope="col">Roles</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Pedidos / Reviews</th>
+              <th scope="col">Última Conexión</th>
             </tr>
           </ng-template>
 

@@ -476,4 +476,15 @@ describe('SearchComponent', () => {
       expect(fixture.nativeElement.textContent).toContain('No hay filtros disponibles.');
     });
   });
+
+  // ── getAllCategories (isInitialLoad=true error path) ───────────────────────────
+
+  describe('getAllCategories with isInitialLoad=true on error', () => {
+    it('should NOT set error=true when isInitialLoad is true and categories fail', () => {
+      categoryServiceSpy.getAllCategories.and.returnValue(throwError(() => new Error('500')));
+      component.error = false;
+      (component as any).getAllCategories(true);
+      expect(component.error).toBeFalse();
+    });
+  });
 });

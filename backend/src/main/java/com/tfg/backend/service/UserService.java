@@ -198,6 +198,8 @@ public class UserService {
     public User createAddress(AddressDTO addressDTO){
         User loggedUser = this.findLoggedUserHelper();
         Address address = new Address(addressDTO.getAlias(), addressDTO.getStreet(), addressDTO.getNumber(), addressDTO.getFloor(), addressDTO.getPostalCode(), addressDTO.getCity(), addressDTO.getCountry());
+        address.setLatitude(addressDTO.getLatitude());
+        address.setLongitude(addressDTO.getLongitude());
         loggedUser.getAddresses().add(address);
         return loggedUser;
     }
@@ -215,6 +217,8 @@ public class UserService {
         address.setPostalCode(addressDTO.getPostalCode());
         address.setCity(addressDTO.getCity());
         address.setCountry(addressDTO.getCountry());
+        address.setLatitude(addressDTO.getLatitude());
+        address.setLongitude(addressDTO.getLongitude());
 
         return loggedUser;
     }
@@ -389,8 +393,7 @@ public class UserService {
             user.setAssignedTruck(null);
         }
 
-        // 3. Nullify address references in orders before cascade-deleting addresses
-        // (prevents FK violation: orders.full_sending_address_id → addresses.id with RESTRICT)
+        // 3. Nullify address string in orders (GDPR: erase personal address data when user is deleted)
         if (user.getRegisteredOrders() != null) {
             for (Order order : user.getRegisteredOrders()) {
                 order.setFullSendingAddress(null);

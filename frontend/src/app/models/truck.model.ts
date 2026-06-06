@@ -17,5 +17,7 @@ export interface Truck {
   currentCapacity: number;
   selectedOrderId?: string | null;
   shopAddress?: Address | null;
-  selectedOrderAddress?: Address | null;
+  selectedOrderAddress?: string | null;
+  selectedOrderAddressLat?: number | null;
+  selectedOrderAddressLng?: number | null;
 }

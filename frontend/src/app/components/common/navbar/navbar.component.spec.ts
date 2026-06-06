@@ -269,10 +269,10 @@ describe('NavbarComponent', () => {
       expect(component.manualToggleState().get(10)).toBeFalse();
     });
 
-    it('should track independent state per category id', () => {
+    it('should close other submenus when a new one is toggled (accordion)', () => {
       component.toggleSubmenu(1, false);
       component.toggleSubmenu(2, false);
-      expect(component.manualToggleState().get(1)).toBeTrue();
+      expect(component.manualToggleState().get(1)).toBeUndefined();
       expect(component.manualToggleState().get(2)).toBeTrue();
     });
   });

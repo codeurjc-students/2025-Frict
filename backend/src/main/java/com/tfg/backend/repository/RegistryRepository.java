@@ -51,12 +51,7 @@ public class RegistryRepository {
                     : new Document("$sum", "$metrics.value");
 
             AggregationOperation groupStage = context -> new Document("$group",
-                    new Document("_id",
-                            new Document("$dateTrunc",
-                                    new Document("date", "$timestamp")
-                                            .append("unit", interval != null ? interval.toLowerCase() : "day")
-                            )
-                    )
+                    new Document("_id", buildDateGroupId("$timestamp", interval))
                             .append("totalValue", groupAccumulator)
                             .append("recordCount", new Document("$sum", 1))
             );
@@ -198,6 +193,35 @@ public class RegistryRepository {
         return mongoTemplate.save(r, "registries");
     }
 
+    // $dateTrunc (MongoDB 5.0+) and $dateFromParts (MongoDB 3.6+) are not supported by DocumentDB.
+    // $dateToString is supported from MongoDB 3.0 and works in DocumentDB.
+    // Results are ISO date strings ("2026-05-30") that Angular's formatDate handles correctly.
+    private Document buildDateGroupId(String field, String interval) {
+        String unit = interval != null ? interval.toLowerCase() : "day";
+        switch (unit) {
+            case "hour":
+                return dateToString("%Y-%m-%dT%H:00:00", field);
+            case "week":
+                // Subtract days since Monday to truncate to start of ISO week.
+                // $dayOfWeek: 1=Sun..7=Sat → days since Monday = ($dayOfWeek + 5) % 7
+                Document daysSinceMonday = new Document("$mod", List.of(
+                        new Document("$add", List.of(new Document("$dayOfWeek", field), 5)), 7));
+                Document msToSubtract = new Document("$multiply", List.of(daysSinceMonday, 86400000L));
+                Document monday = new Document("$subtract", List.of(field, msToSubtract));
+                return dateToString("%Y-%m-%d", monday);
+            case "month":
+                return dateToString("%Y-%m-01", field);
+            case "year":
+                return dateToString("%Y-01-01", field);
+            default: // day
+                return dateToString("%Y-%m-%d", field);
+        }
+    }
+
+    private Document dateToString(String format, Object dateExpr) {
+        return new Document("$dateToString", new Document("format", format).append("date", dateExpr));
+    }
+
 
     public List<Document> getProductsTimelineStats(Collection<String> productRefs, String dataType, int days) {
         if (productRefs == null || productRefs.isEmpty()) {
@@ -212,11 +236,8 @@ public class RegistryRepository {
                 .and("timestamp").gte(sinceDate)));
         
         AggregationOperation groupStage = context -> new Document("$group",
-                new Document("_id",
-                        new Document("$dateTrunc",
-                                new Document("date", "$timestamp").append("unit", "day")
-                        )
-                ).append("value", new Document("$sum", "$metrics.value"))
+                new Document("_id", buildDateGroupId("$timestamp", "day"))
+                        .append("value", new Document("$sum", "$metrics.value"))
         );
         operations.add(groupStage);
         operations.add(Aggregation.sort(Sort.Direction.ASC, "_id"));

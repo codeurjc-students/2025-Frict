@@ -554,6 +554,136 @@ describe('CreateEditProductComponent', () => {
     });
   });
 
+  // ── searchSpecNames ───────────────────────────────────────────────────────────
+
+  describe('searchSpecNames', () => {
+    beforeEach(() => {
+      component.allSpecs = { Ram: ['8GB', '16GB'], CPU: ['i5', 'i7'] };
+    });
+
+    it('should populate filteredSpecNames matching the query (case-insensitive)', () => {
+      component.searchSpecNames('ram');
+      expect(component.filteredSpecNames).toEqual(['Ram']);
+    });
+
+    it('should return all keys when query is empty', () => {
+      component.searchSpecNames('');
+      expect(component.filteredSpecNames).toEqual(jasmine.arrayContaining(['Ram', 'CPU']));
+    });
+
+    it('should return empty array when no spec names match', () => {
+      component.searchSpecNames('xyz');
+      expect(component.filteredSpecNames).toEqual([]);
+    });
+  });
+
+  // ── searchSpecValues ──────────────────────────────────────────────────────────
+
+  describe('searchSpecValues', () => {
+    beforeEach(() => {
+      component.allSpecs = { Ram: ['8GB', '16GB', '32GB'] };
+      component.pendingSpecName = 'Ram';
+    });
+
+    it('should filter values by query', () => {
+      component.searchSpecValues('8');
+      expect(component.filteredSpecValues).toEqual(['8GB']);
+    });
+
+    it('should be case-insensitive', () => {
+      component.searchSpecValues('gb');
+      expect(component.filteredSpecValues).toEqual(['8GB', '16GB', '32GB']);
+    });
+
+    it('should return empty array when pendingSpecName has no known values', () => {
+      component.pendingSpecName = 'Unknown';
+      component.searchSpecValues('8');
+      expect(component.filteredSpecValues).toEqual([]);
+    });
+  });
+
+  // ── addSpec ───────────────────────────────────────────────────────────────────
+
+  describe('addSpec', () => {
+    it('should add a new spec entry when name and value are provided', () => {
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '16GB';
+      component.addSpec();
+      expect(component.specs().find(s => s.name === 'Ram')?.values).toContain('16GB');
+    });
+
+    it('should append a value to an existing spec entry', () => {
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '8GB';
+      component.addSpec();
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '16GB';
+      component.addSpec();
+      expect(component.specs().find(s => s.name === 'Ram')?.values).toEqual(['8GB', '16GB']);
+    });
+
+    it('should not add duplicate values for the same spec', () => {
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '8GB';
+      component.addSpec();
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '8GB';
+      component.addSpec();
+      expect(component.specs().find(s => s.name === 'Ram')?.values.length).toBe(1);
+    });
+
+    it('should clear pendingSpecName and pendingSpecValue after adding', () => {
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '8GB';
+      component.addSpec();
+      expect(component.pendingSpecName).toBe('');
+      expect(component.pendingSpecValue).toBe('');
+    });
+
+    it('should do nothing when pendingSpecName is blank', () => {
+      component.pendingSpecName = '   ';
+      component.pendingSpecValue = '8GB';
+      component.addSpec();
+      expect(component.specs()).toEqual([]);
+    });
+
+    it('should do nothing when pendingSpecValue is blank', () => {
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '   ';
+      component.addSpec();
+      expect(component.specs()).toEqual([]);
+    });
+  });
+
+  // ── removeSpecValue ───────────────────────────────────────────────────────────
+
+  describe('removeSpecValue', () => {
+    beforeEach(() => {
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '8GB';
+      component.addSpec();
+      component.pendingSpecName = 'Ram';
+      component.pendingSpecValue = '16GB';
+      component.addSpec();
+    });
+
+    it('should remove the specified value from a spec', () => {
+      component.removeSpecValue('Ram', '8GB');
+      expect(component.specs().find(s => s.name === 'Ram')?.values).not.toContain('8GB');
+    });
+
+    it('should keep other values intact', () => {
+      component.removeSpecValue('Ram', '8GB');
+      expect(component.specs().find(s => s.name === 'Ram')?.values).toContain('16GB');
+    });
+
+    it('should remove the entire spec entry when its last value is removed', () => {
+      component.removeSpecValue('Ram', '8GB');
+      component.removeSpecValue('Ram', '16GB');
+      expect(component.specs().find(s => s.name === 'Ram')).toBeUndefined();
+    });
+  });
+
   // ── DOM ───────────────────────────────────────────────────────────────────────
 
   describe('DOM', () => {

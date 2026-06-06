@@ -173,8 +173,8 @@ export class SearchComponent implements OnInit {
       this.selectedSortOption = this.sortOptions[0];
     }
 
-    const page = parseInt(params.get('page') ?? '0');
-    const size = parseInt(params.get('size') ?? '10');
+    const page = Number.parseInt(params.get('page') ?? '0');
+    const size = Number.parseInt(params.get('size') ?? '10');
     this.first = page * size;
     this.rows = size;
 

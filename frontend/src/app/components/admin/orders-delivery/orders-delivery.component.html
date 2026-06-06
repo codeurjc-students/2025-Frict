@@ -6,7 +6,7 @@
 
 @if (!loading && !error) {
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
-    <app-breadcrumb-reload (onReload)="loadDeliveryData()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (reload)="loadDeliveryData()"></app-breadcrumb-reload>
   </div>
 }
 
@@ -74,7 +74,7 @@
               <div class="p-6">
 
                 <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-2">
-                  <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</label>
+                  <span class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir nueva actualización de estado</span>
                   <div class="flex flex-col gap-3">
                     <p-select
                       [options]="truckStatusOptions"
@@ -157,9 +157,10 @@
               <div class="p-6 flex flex-col gap-6">
 
                 <div class="flex flex-col gap-2">
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
+                  <label for="delivery-order" class="block text-[10px] font-bold text-slate-500 uppercase ml-1">Selector de Pedido (Pág. actual)</label>
 
                   <p-select
+                    inputId="delivery-order"
                     [options]="ordersPage().items"
                     [ngModel]="selectedOrderId()"
                     (onChange)="onOrderSelectionChange($event.value)"
@@ -210,9 +211,9 @@
                             <p-table [value]="selectedOrder()?.orderItems || []" styleClass="p-datatable-sm" responsiveLayout="scroll">
                               <ng-template pTemplate="header">
                                 <tr class="bg-white text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
-                                  <th class="py-4 pl-6 w-40 text-center">Identificador</th>
-                                  <th class="py-4">Artículo</th>
-                                  <th class="py-4 text-center w-24">Cantidad</th>
+                                  <th scope="col" class="py-4 pl-6 w-40 text-center">Identificador</th>
+                                  <th scope="col" class="py-4">Artículo</th>
+                                  <th scope="col" class="py-4 text-center w-24">Cantidad</th>
                                 </tr>
                               </ng-template>
                               <ng-template pTemplate="body" let-item>
@@ -330,7 +331,7 @@
                           <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0"><i class="pi pi-map-marker"></i></div>
                           <div class="flex flex-col">
                             <span class="text-[10px] font-bold text-slate-500 uppercase">Ubicación de entrega</span>
-                            <span class="text-sm text-slate-600 leading-relaxed">{{ selectedOrder() ? formatAddress(selectedOrder()!.sendingAddress) : '--' }}</span>
+                            <span class="text-sm text-slate-600 leading-relaxed">{{ selectedOrder()?.sendingAddress ?? '--' }}</span>
                           </div>
                         </div>
 

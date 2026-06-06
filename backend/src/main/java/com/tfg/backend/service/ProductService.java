@@ -520,10 +520,23 @@ public class ProductService {
     }
 
     private void applySpecifications(Product product, List<ProductSpecDTO> dtos) {
-        product.getSpecifications().clear();
-        if (dtos == null) return;
-        for (ProductSpecDTO dto : dtos) {
-            if (dto.getName() != null && !dto.getName().isBlank() && dto.getValues() != null && !dto.getValues().isEmpty()) {
+        List<ProductSpecDTO> incoming = dtos != null ? dtos : List.of();
+
+        Set<Long> incomingIds = incoming.stream()
+                .map(ProductSpecDTO::getId).filter(Objects::nonNull).collect(Collectors.toSet());
+
+        product.getSpecifications().removeIf(s -> !incomingIds.contains(s.getId()));
+
+        Map<Long, ProductSpec> existingById = product.getSpecifications().stream()
+                .collect(Collectors.toMap(ProductSpec::getId, s -> s));
+
+        for (ProductSpecDTO dto : incoming) {
+            if (dto.getName() == null || dto.getName().isBlank() || dto.getValues() == null || dto.getValues().isEmpty()) continue;
+            if (dto.getId() != null && existingById.containsKey(dto.getId())) {
+                ProductSpec existing = existingById.get(dto.getId());
+                existing.setName(dto.getName());
+                existing.setValues(new ArrayList<>(dto.getValues()));
+            } else {
                 product.getSpecifications().add(new ProductSpec(dto.getName(), dto.getValues(), product));
             }
         }

@@ -141,6 +141,7 @@ jobs:
               "CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }}" \
               "CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }}" \
               "EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}" \
+              "HibernateDdlAuto=${{ vars.HIBERNATE_DDL_AUTO || 'update' }}" \
               "SenderMailHost=${{ secrets.SENDER_MAIL_HOST }}" \
               "SenderMailAddress=${{ secrets.SENDER_MAIL_ADDRESS }}" \
               "SenderMailUsername=${{ secrets.SENDER_MAIL_USERNAME }}" \

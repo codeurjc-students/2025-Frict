@@ -5,7 +5,7 @@
 <div *ngIf="!loading && !error" class="min-h-screen font-sans text-slate-800 pb-12">
   <div class="max-w-[95%] xl:max-w-[83%] mx-auto px-4 pb-8">
 
-    <app-breadcrumb-reload (onReload)="reloadAll()"></app-breadcrumb-reload>
+    <app-breadcrumb-reload (reload)="reloadAll()"></app-breadcrumb-reload>
 
     <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div class="mt-2">
@@ -45,7 +45,7 @@
                  class="flex-grow overflow-y-auto custom-scrollbar flex flex-col gap-3 min-h-[100px] pb-4 pr-1">
 
               @for (order of col.data(); track order.id) {
-                <div cdkDrag (click)="openOrderDetails(order)" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
+                <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0" role="button" class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all w-full min-w-0">
                   <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <div class="flex items-center gap-2 min-w-0 mr-2">
                       <i class="pi pi-stop-circle text-sm shrink-0" [ngClass]="getOrderStatusColorClass(getCurrentStatus(order))"></i>
@@ -59,7 +59,7 @@
                   <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.user.name }}</div>
 
                   <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
-                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ formatAddress(order.sendingAddress) }}
+                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.sendingAddress }}
                   </div>
 
                   <div class="flex flex-wrap gap-2 items-center pointer-events-none">
@@ -96,7 +96,7 @@
         </div>
         <div cdkDropList [cdkDropListData]="cancelledOrders()" (cdkDropListDropped)="drop($event, 'Cancelado')" class="flex flex-wrap gap-4 min-h-[100px] p-2 bg-white/50 rounded-xl border border-red-50/50 border-dashed">
           @for (order of cancelledOrders(); track order.id) {
-            <div cdkDrag (click)="openOrderDetails(order)"
+            <div cdkDrag (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)" tabindex="0" role="button"
                  class="w-full sm:w-[280px] md:w-[330px] shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm cursor-pointer hover:border-red-400 hover:shadow-md transition-all min-w-0">
 
               <div class="flex justify-between items-start mb-2 pointer-events-none">
@@ -114,7 +114,7 @@
               </div>
 
               <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
-                <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ formatAddress(order.sendingAddress) }}
+                <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.sendingAddress }}
               </div>
 
               <div class="flex flex-wrap gap-2 items-center pointer-events-none">
@@ -155,18 +155,18 @@
       <p-table [value]="ordersPage.items" styleClass="p-datatable-sm" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
           <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-            <th class="py-3 px-4 font-bold">Referencia</th>
-            <th class="py-3 px-4 font-bold">Destinatario</th>
-            <th class="py-3 px-4 font-bold">Estado</th>
-            <th class="py-3 px-4 font-bold">Tienda asignada</th>
-            <th class="py-3 px-4 font-bold">Camión asignado</th>
-            <th class="py-3 px-4 font-bold">Dirección</th>
-            <th class="py-3 px-4 font-bold text-center">Artículos</th>
-            <th class="py-3 px-4 font-bold text-right">Total</th>
+            <th scope="col" class="py-3 px-4 font-bold">Referencia</th>
+            <th scope="col" class="py-3 px-4 font-bold">Destinatario</th>
+            <th scope="col" class="py-3 px-4 font-bold">Estado</th>
+            <th scope="col" class="py-3 px-4 font-bold">Tienda asignada</th>
+            <th scope="col" class="py-3 px-4 font-bold">Camión asignado</th>
+            <th scope="col" class="py-3 px-4 font-bold">Dirección</th>
+            <th scope="col" class="py-3 px-4 font-bold text-center">Artículos</th>
+            <th scope="col" class="py-3 px-4 font-bold text-right">Total</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-order>
-          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-200" (click)="openOrderDetails(order)">
+          <tr class="cursor-pointer hover:bg-slate-50 transition-colors border-t border-slate-200" (click)="openOrderDetails(order)" (keydown.enter)="openOrderDetails(order)">
             <td class="py-3 px-4 font-mono text-sm font-medium text-slate-600">{{ order.referenceCode }}</td>
             <td class="py-3 px-4 text-sm text-slate-800 font-bold flex items-center gap-2">
               <p-avatar [image]="order.user.imageInfo.imageUrl" shape="circle" size="normal" styleClass="w-6 h-6 bg-slate-200 text-slate-600 text-xs"></p-avatar>
@@ -191,7 +191,7 @@
                 <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-truck"></i><i class="pi pi-times"></i></p-tag>
               }
             </td>
-            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="formatAddress(order.sendingAddress)"><i class="pi pi-map-marker mr-1"></i> {{ formatAddress(order.sendingAddress) }}</td>
+            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="order.sendingAddress"><i class="pi pi-map-marker mr-1"></i> {{ order.sendingAddress }}</td>
             <td class="py-3 px-4 text-center text-sm font-bold text-slate-600"><span class="bg-slate-100 px-2 py-1 rounded-md">{{ order.totalItems }}</span></td>
             <td class="py-3 px-4 text-right text-sm font-bold text-slate-800">{{ formatPrice(order.totalCost) }}</td>
           </tr>
@@ -214,9 +214,10 @@
   header="Confirmar cambio de estado">
 
   <div class="flex flex-col gap-3 pt-2">
-    <label class="text-sm font-bold text-slate-700">Comentario (opcional)</label>
+    <label for="order-comment" class="text-sm font-bold text-slate-700">Comentario (opcional)</label>
     <textarea
       pTextarea
+      id="order-comment"
       [(ngModel)]="pendingStatusComment"
       rows="4"
       class="w-full text-sm !border-slate-200 !rounded-lg focus:!ring-blue-500"
@@ -302,10 +303,10 @@
               <p-table [value]="selectedOrder.orderItems" [paginator]="true" [rows]="5" styleClass="p-datatable-sm mt-4 border border-slate-200 rounded-lg overflow-hidden">
                 <ng-template pTemplate="header">
                   <tr class="bg-slate-50 text-slate-500 text-xs">
-                    <th class="font-medium p-3">Producto</th>
-                    <th class="font-medium p-3 text-center w-24">Cant.</th>
-                    <th class="font-medium p-3 text-right w-32">Precio Und.</th>
-                    <th class="font-medium p-3 text-right w-32">Subtotal</th>
+                    <th scope="col" class="font-medium p-3">Producto</th>
+                    <th scope="col" class="font-medium p-3 text-center w-24">Cant.</th>
+                    <th scope="col" class="font-medium p-3 text-right w-32">Precio Und.</th>
+                    <th scope="col" class="font-medium p-3 text-right w-32">Subtotal</th>
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-item>
@@ -323,8 +324,9 @@
             <p-tabpanel value="1">
               <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 mt-4">
                 <ng-container *ngIf="listModeSelected">
-                  <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Estado del pedido</label>
+                  <label for="order-status" class="block text-xs font-bold text-blue-800 uppercase mb-2">Estado del pedido</label>
                   <p-select
+                    inputId="order-status"
                     [options]="orderStatuses"
                     [(ngModel)]="selectedStatusForUpdate"
                     appendTo="body"
@@ -332,7 +334,7 @@
                     class="w-full mb-3">
                   </p-select>
                 </ng-container>
-                <label *ngIf="!listModeSelected" class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</label>
+                <span *ngIf="!listModeSelected" class="block text-xs font-bold text-blue-800 uppercase mb-2">Añadir actualización a: {{ getCurrentStatus(selectedOrder) }}</span>
                 <textarea pInputTextarea [(ngModel)]="newComment" rows="2" class="w-full text-sm !border-blue-200 !rounded-lg focus:!ring-blue-500" placeholder="Escribe un comentario o nota..."></textarea>
                 <div class="flex justify-end mt-2"><p-button label="Publicar comentario" icon="pi pi-send" size="small" (click)="addComment()" [disabled]="!newComment.trim()" styleClass="!bg-blue-600 hover:!bg-blue-700 !border-none !text-xs !font-bold py-2"></p-button></div>
               </div>
@@ -427,8 +429,9 @@
           </div>
 
           <div class="mt-4 pt-4 border-t border-slate-200">
-            <label class="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Asignar / Cambiar Camión</label>
+            <label for="order-truck" class="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Asignar / Cambiar Camión</label>
             <p-select
+              inputId="order-truck"
               [options]="availableTrucks"
               [(ngModel)]="selectedTruck"
               optionLabel="referenceCode"
@@ -480,7 +483,7 @@
               <div class="flex flex-col">
                 <p class="text-sm font-bold text-slate-800">{{ selectedShop.name }}</p>
                 <p class="text-xs text-slate-500 mt-1 leading-tight">
-                  <i class="pi pi-map-marker mr-0.5"></i>{{ selectedShop.address.street }} {{ selectedShop.address.number }}, {{ selectedShop.address.city }}
+                  <i class="pi pi-map-marker mr-0.5"></i>{{ selectedShop.address.street }} {{ selectedShop.address.number }}{{ selectedShop.address.floor ? ', ' + selectedShop.address.floor : '' }}, {{ selectedShop.address.city }}
                 </p>
               </div>
             </div>
@@ -524,7 +527,7 @@
 
           <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm text-slate-700 flex items-start gap-2">
             <i class="pi pi-map-marker text-slate-400"></i>
-            <span class="leading-relaxed text-xs text-slate-600">{{ formatAddress(selectedOrder.sendingAddress) }}</span>
+            <span class="leading-relaxed text-xs text-slate-600">{{ selectedOrder.sendingAddress }}</span>
           </div>
         </div>
 
