@@ -25,7 +25,9 @@ public class TruckDTO {
     private double currentCapacity;
     private Long selectedOrderId;
     private AddressDTO shopAddress;
-    private AddressDTO selectedOrderAddress;
+    private String selectedOrderAddress;
+    private double selectedOrderAddressLat;
+    private double selectedOrderAddressLng;
 
     public TruckDTO() {
     }
@@ -49,9 +51,9 @@ public class TruckDTO {
         }
         if (t.getSelectedOrder() != null){
             this.selectedOrderId = t.getSelectedOrder().getId();
-            if (t.getSelectedOrder().getFullSendingAddress() != null){
-                this.selectedOrderAddress = new AddressDTO(t.getSelectedOrder().getFullSendingAddress());
-            }
+            this.selectedOrderAddress    = t.getSelectedOrder().getFullSendingAddress();
+            this.selectedOrderAddressLat = t.getSelectedOrder().getSendingAddressLat();
+            this.selectedOrderAddressLng = t.getSelectedOrder().getSendingAddressLng();
         }
         this.ordersToDeliver = t.getOrdersToDeliver().size();
         this.maxCapacity = t.getMaxCapacity();

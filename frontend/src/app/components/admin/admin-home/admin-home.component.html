@@ -296,7 +296,7 @@
                     </div>
                   </td>
                   @if (authService.isDriver()) {
-                    <td class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ formatAddress(order.sendingAddress) }}</td>
+                    <td class="py-3 text-xs text-slate-500 truncate max-w-[150px]"><i class="pi pi-map-marker mr-1"></i>{{ order.sendingAddress }}</td>
                   }
                   <td class="py-3">
                     <p-tag [value]="order.history[order.history.length - 1].status" severity="secondary"></p-tag>

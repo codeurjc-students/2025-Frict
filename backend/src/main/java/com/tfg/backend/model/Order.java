@@ -64,8 +64,9 @@ public class Order {
 
     private String cardNumberEnding; //Historic fields from Address and PaymentCard (prevent that, when the user deletes their addresses or cards, the order remains identifiable)
 
-    @ManyToOne
-    private Address fullSendingAddress;
+    private String fullSendingAddress;
+    private double sendingAddressLat;
+    private double sendingAddressLng;
 
     public Order() {
         this.history.add(new OrderStatusLog(OrderStatus.ORDER_MADE, "Pedido recibido correctamente"));
@@ -87,7 +88,13 @@ public class Order {
 
         this.assignedShop = assignedShop;
         this.cardNumberEnding = card.getNumber().substring(card.getNumber().length() - 4);
-        this.fullSendingAddress = address;
+        String floor = (address.getFloor() != null && !address.getFloor().isBlank())
+                ? " " + address.getFloor() : "";
+        this.fullSendingAddress = address.getStreet() + ", " + address.getNumber()
+                + floor + " " + address.getPostalCode()
+                + " " + address.getCity() + " (" + address.getCountry() + ")";
+        this.sendingAddressLat = address.getLatitude();
+        this.sendingAddressLng = address.getLongitude();
         this.updateSummaryFields();
     }
 

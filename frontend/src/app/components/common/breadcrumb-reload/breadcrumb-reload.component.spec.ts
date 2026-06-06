@@ -196,7 +196,7 @@ describe('BreadcrumbReloadComponent', () => {
   describe('triggerReload', () => {
     it('should emit onReload when called directly', () => {
       let emitted = false;
-      component.onReload.subscribe(() => emitted = true);
+      component.reload.subscribe(() => emitted = true);
       component.triggerReload();
       expect(emitted).toBeTrue();
     });
@@ -215,7 +215,7 @@ describe('BreadcrumbReloadComponent', () => {
 
     it('should emit onReload when the refresh button is clicked', () => {
       let emitted = false;
-      component.onReload.subscribe(() => emitted = true);
+      component.reload.subscribe(() => emitted = true);
       fixture.nativeElement.querySelector('button').click();
       expect(emitted).toBeTrue();
     });

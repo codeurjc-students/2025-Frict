@@ -59,7 +59,7 @@
                   <div class="font-bold text-slate-800 text-sm mb-1 truncate pointer-events-none">{{ order.user.name }}</div>
 
                   <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
-                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ formatAddress(order.sendingAddress) }}
+                    <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.sendingAddress }}
                   </div>
 
                   <div class="flex flex-wrap gap-2 items-center pointer-events-none">
@@ -114,7 +114,7 @@
               </div>
 
               <div class="text-xs text-slate-500 mb-4 truncate pointer-events-none">
-                <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ formatAddress(order.sendingAddress) }}
+                <i class="pi pi-map-marker text-xs mr-1 shrink-0"></i>{{ order.sendingAddress }}
               </div>
 
               <div class="flex flex-wrap gap-2 items-center pointer-events-none">
@@ -191,7 +191,7 @@
                 <p-tag severity="danger" styleClass="tag-standard"><i class="pi pi-truck"></i><i class="pi pi-times"></i></p-tag>
               }
             </td>
-            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="formatAddress(order.sendingAddress)"><i class="pi pi-map-marker mr-1"></i> {{ formatAddress(order.sendingAddress) }}</td>
+            <td class="py-3 px-4 text-xs text-slate-500 truncate max-w-[200px]" [title]="order.sendingAddress"><i class="pi pi-map-marker mr-1"></i> {{ order.sendingAddress }}</td>
             <td class="py-3 px-4 text-center text-sm font-bold text-slate-600"><span class="bg-slate-100 px-2 py-1 rounded-md">{{ order.totalItems }}</span></td>
             <td class="py-3 px-4 text-right text-sm font-bold text-slate-800">{{ formatPrice(order.totalCost) }}</td>
           </tr>
@@ -527,7 +527,7 @@
 
           <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm text-slate-700 flex items-start gap-2">
             <i class="pi pi-map-marker text-slate-400"></i>
-            <span class="leading-relaxed text-xs text-slate-600">{{ formatAddress(selectedOrder.sendingAddress) }}</span>
+            <span class="leading-relaxed text-xs text-slate-600">{{ selectedOrder.sendingAddress }}</span>
           </div>
         </div>
 

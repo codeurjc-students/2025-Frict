@@ -111,10 +111,9 @@ describe('UsersManagementComponent', () => {
     totalCost: 105,
     totalCapacity: 1,
     cardNumberEnding: '4242',
-    sendingAddress: {
-      id: 'addr-1', alias: 'Casa', street: 'Calle Mayor', number: '1',
-      floor: '2A', postalCode: '28001', city: 'Madrid', country: 'España'
-    },
+    sendingAddress: 'Calle Mayor, 1 2A 28001 Madrid (España)',
+    sendingAddressLat: 40.4168,
+    sendingAddressLng: -3.7038,
     estimatedCompletionTime: 30,
     createdAt: '2026-05-01T10:00:00'
   };

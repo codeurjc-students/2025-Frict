@@ -32,7 +32,9 @@ const STUB_ORDER: Order = {
   totalCost: 190,
   totalCapacity: 1,
   cardNumberEnding: '1234',
-  sendingAddress: { id: 'a1', alias: 'Casa', street: 'Calle Mayor', number: '1', floor: '2A', postalCode: '28001', city: 'Madrid', country: 'España' },
+  sendingAddress: 'Calle Mayor, 1 2A 28001 Madrid (España)',
+  sendingAddressLat: 40.4168,
+  sendingAddressLng: -3.7038,
   createdAt: '2025-01-01T12:00:00'
 };
 

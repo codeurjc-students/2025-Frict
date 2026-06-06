@@ -51,7 +51,9 @@ const STUB_ORDER: Order = {
   history: [{ id: 'h1', status: 'Pedido realizado', icon: 'pi pi-shopping-cart', updates: [] }],
   user: {} as any, orderItems: [], assignedShopId: null, assignedTruckId: null,
   estimatedCompletionTime: 3, totalItems: 1, subtotalCost: 100, totalDiscount: 0,
-  shippingCost: 0, totalCapacity: 1, cardNumberEnding: '1234', sendingAddress: STUB_ADDRESS
+  shippingCost: 0, totalCapacity: 1, cardNumberEnding: '1234',
+  sendingAddress: 'Calle Mayor, 1 2A 28001 Madrid (España)',
+  sendingAddressLat: 40.4168, sendingAddressLng: -3.7038
 };
 
 const STUB_REVIEW: Review = {

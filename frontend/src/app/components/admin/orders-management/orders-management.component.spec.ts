@@ -47,7 +47,9 @@ const mockOrder: Order = {
   estimatedCompletionTime: 60,
   totalItems: 3, subtotalCost: 30, totalDiscount: 0, shippingCost: 5, totalCost: 35, totalCapacity: 1,
   cardNumberEnding: '1234',
-  sendingAddress: mockAddress as any,
+  sendingAddress: 'Calle Mayor, 1 2A 28001 Madrid (España)',
+  sendingAddressLat: 40.4168,
+  sendingAddressLng: -3.7038,
   createdAt: '2025-01-01'
 };
 

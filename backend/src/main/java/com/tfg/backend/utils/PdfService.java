@@ -329,12 +329,8 @@ public class PdfService {
 
             // Dirección de envío
             colLeft.add(new Paragraph("DIRECCIÓN DE ENVÍO").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(5));
-            if (order.getFullSendingAddress() != null) {
-                colLeft.add(new Paragraph(order.getFullSendingAddress().getStreet() + " " + order.getFullSendingAddress().getNumber()).setFont(fontNorm).setFontSize(10).setFontColor(textDark));
-                colLeft.add(new Paragraph(order.getFullSendingAddress().getCity()).setFont(fontNorm).setFontSize(10).setFontColor(textDark).setMarginBottom(15));
-            } else {
-                colLeft.add(new Paragraph("Dirección no disponible").setFont(fontNorm).setFontSize(10).setFontColor(textDark).setMarginBottom(15));
-            }
+            String sendingAddr = order.getFullSendingAddress() != null ? order.getFullSendingAddress() : "Dirección no disponible";
+            colLeft.add(new Paragraph(sendingAddr).setFont(fontNorm).setFontSize(10).setFontColor(textDark).setMarginBottom(15));
 
             // Fecha Confirmación
             colLeft.add(new Paragraph("FECHA DE CONFIRMACIÓN").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(5));

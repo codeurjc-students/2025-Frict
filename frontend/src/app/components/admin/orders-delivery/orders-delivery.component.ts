@@ -17,7 +17,7 @@ import {TruckService} from '../../../services/truck.service';
 import {ShopService} from '../../../services/shop.service';
 import {LocationService} from '../../../services/location.service';
 import {AuthService} from '../../../services/auth.service';
-import {formatAddress, formatDuration} from '../../../utils/textFormat.util';
+import {formatDuration} from '../../../utils/textFormat.util';
 import {getOrderStatusTagInfo, getTruckHistoryStatusTagInfo} from '../../../utils/tagManager.util';
 import {PageResponse} from '../../../models/pageResponse.model';
 import {Order} from '../../../models/order.model';
@@ -282,10 +282,10 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
           this.deliveryMapEta = formatDuration(route.durationSeconds);
         });
       }
-    } else if (truckStatus === 'En Reparto' && activeOrder?.sendingAddress?.latitude && activeOrder?.sendingAddress?.longitude) {
-      addCustomMarker(activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido Activo');
+    } else if (truckStatus === 'En Reparto' && activeOrder?.sendingAddressLat && activeOrder?.sendingAddressLng) {
+      addCustomMarker(activeOrder.sendingAddressLat, activeOrder.sendingAddressLng, '/location-pointer.png', 'Destino del Pedido Activo');
       if (truckLat !== null && truckLng !== null) {
-        this.locationService.getRoute(truckLat, truckLng, activeOrder.sendingAddress.latitude, activeOrder.sendingAddress.longitude).subscribe(route => {
+        this.locationService.getRoute(truckLat, truckLng, activeOrder.sendingAddressLat, activeOrder.sendingAddressLng).subscribe(route => {
           if (!route || !this.map) return;
           const latlngs: L.LatLngTuple[] = route.coordinates.map(([lng, lat]) => [lat, lng]);
           this.routePolyline = L.polyline(latlngs, { color: '#8b5cf6', weight: 5, opacity: 0.75 }).addTo(this.map!);
@@ -295,8 +295,8 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     } else {
       // No active route: show selected order destination for reference
       const order = this.selectedOrder();
-      if (order?.sendingAddress?.latitude != null && order?.sendingAddress?.longitude != null) {
-        addCustomMarker(order.sendingAddress.latitude, order.sendingAddress.longitude, '/location-pointer.png', 'Destino del Pedido');
+      if (order?.sendingAddressLat != null && order?.sendingAddressLng != null) {
+        addCustomMarker(order.sendingAddressLat, order.sendingAddressLng, '/location-pointer.png', 'Destino del Pedido');
       }
     }
 
@@ -499,7 +499,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected readonly formatAddress = formatAddress;
 
   getLoadPercentage(active: number, max: number): number {
     return max === 0 ? 0 : Math.round((active / max) * 100);

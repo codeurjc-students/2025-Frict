@@ -36,7 +36,7 @@ import {ShopService} from '../../../services/shop.service';
 import {TruckService} from '../../../services/truck.service';
 import {LocationService} from '../../../services/location.service';
 import {LoadingScreenComponent} from '../../common/loading-screen/loading-screen.component';
-import {formatAddress, formatDuration, formatPrice} from '../../../utils/textFormat.util';
+import {formatDuration, formatPrice} from '../../../utils/textFormat.util';
 import {getOrderStatusTagInfo, getOrderStatusColorClass, getOrderStatusBgColorClass} from '../../../utils/tagManager.util';
 
 import * as L from 'leaflet';
@@ -243,8 +243,8 @@ export class OrdersManagementComponent implements OnInit {
     this.markersGroup = L.featureGroup().addTo(this.orderMap);
 
     // Destinations pointer
-    if (this.selectedOrder?.sendingAddress?.latitude && this.selectedOrder?.sendingAddress?.longitude) {
-      L.marker([this.selectedOrder.sendingAddress.latitude, this.selectedOrder.sendingAddress.longitude], { icon: orderIcon })
+    if (this.selectedOrder?.sendingAddressLat && this.selectedOrder?.sendingAddressLng) {
+      L.marker([this.selectedOrder.sendingAddressLat, this.selectedOrder.sendingAddressLng], { icon: orderIcon })
         .bindPopup('<b>Destino</b><br>' + this.selectedOrder.user.name)
         .addTo(this.markersGroup);
     }
@@ -312,8 +312,8 @@ export class OrdersManagementComponent implements OnInit {
           this.orderMapEta = formatDuration(route.durationSeconds);
         });
 
-    } else if (truckStatus === 'En Reparto' && order?.sendingAddress?.latitude && order?.sendingAddress?.longitude) {
-      this.locationService.getRoute(truckPos.lat, truckPos.lng, order.sendingAddress.latitude, order.sendingAddress.longitude)
+    } else if (truckStatus === 'En Reparto' && order?.sendingAddressLat && order?.sendingAddressLng) {
+      this.locationService.getRoute(truckPos.lat, truckPos.lng, order.sendingAddressLat, order.sendingAddressLng)
         .subscribe(route => {
           if (!route || !this.orderMap) return;
           if (this.routePolyline) this.routePolyline.remove();
@@ -536,7 +536,6 @@ export class OrdersManagementComponent implements OnInit {
   }
 
   protected readonly formatPrice = formatPrice;
-  protected readonly formatAddress = formatAddress;
   protected readonly formatDuration = formatDuration;
   protected readonly getOrderStatusTagInfo = getOrderStatusTagInfo;
   protected readonly getOrderStatusColorClass = getOrderStatusColorClass;
