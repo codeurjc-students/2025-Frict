@@ -157,33 +157,45 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
     const shopIcon = L.icon({ iconUrl: './shopIcon.png', iconSize: [35, 35], iconAnchor: [17, 35], popupAnchor: [0, -35] });
     const truckIcon = L.icon({ iconUrl: './truckIcon.png', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20] });
 
+    const formatAddr = (a: { street: string; number: string; floor: string; city: string }): string => {
+      let line = `${a.street} ${a.number}`.trim();
+      if (a.floor) line += `, ${a.floor}`;
+      if (a.city) line += `<br>${a.city}`;
+      return line;
+    };
+
     if (this.order.sendingAddressLat && this.order.sendingAddressLng) {
+      const destPopup = `<b>Tu dirección de entrega</b><br>${this.order.user.name}<br><span style="font-size:11px;color:#94a3b8">${this.order.sendingAddress}</span>`;
       L.marker([this.order.sendingAddressLat, this.order.sendingAddressLng], { icon: destIcon })
-        .bindPopup('<b>Tu dirección de entrega</b>')
+        .bindPopup(destPopup, { maxWidth: 240 })
         .addTo(markersGroup);
     }
 
     if (this.shop?.address?.latitude && this.shop?.address?.longitude) {
+      const shopPopup = `<b>Tienda de origen</b><br>${this.shop.name}<br><span style="font-size:11px;color:#94a3b8">${formatAddr(this.shop.address)}</span>`;
       L.marker([this.shop.address.latitude, this.shop.address.longitude], { icon: shopIcon })
-        .bindPopup('<b>Tienda de origen</b><br>' + this.shop.name)
+        .bindPopup(shopPopup, { maxWidth: 240 })
         .addTo(markersGroup);
     }
 
     let truckLat: number | undefined;
     let truckLng: number | undefined;
+    let truckPopupHtml = '';
     if (this.truck) {
       if (this.truck.assignedDriver && this.truck.driverLocation?.address?.latitude && this.truck.driverLocation?.address?.longitude) {
         truckLat = this.truck.driverLocation.address.latitude;
         truckLng = this.truck.driverLocation.address.longitude;
+        truckPopupHtml = `<b>Tu camión de reparto</b><br>${this.truck.plateNumber}<br><span style="font-size:11px;color:#94a3b8">📍 Posición GPS actual</span>`;
       } else if (this.truck.address?.latitude && this.truck.address?.longitude) {
         truckLat = this.truck.address.latitude;
         truckLng = this.truck.address.longitude;
+        truckPopupHtml = `<b>Tu camión de reparto</b><br>${this.truck.plateNumber}<br><span style="font-size:11px;color:#94a3b8">📍 ${formatAddr(this.truck.address)}</span>`;
       }
     }
 
     if (truckLat !== undefined && truckLng !== undefined) {
       L.marker([truckLat, truckLng], { icon: truckIcon })
-        .bindPopup('<b>Tu camión de reparto</b><br>' + this.truck?.plateNumber)
+        .bindPopup(truckPopupHtml, { maxWidth: 240 })
         .addTo(markersGroup);
     }
 
