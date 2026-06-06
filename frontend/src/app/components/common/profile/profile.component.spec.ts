@@ -878,6 +878,88 @@ describe('ProfileComponent', () => {
     });
   });
 
+  // ── loadManagerShops ──────────────────────────────────────────────────────────
+
+  describe('loadManagerShops', () => {
+    beforeEach(() => {
+      authServiceSpy.isUser.and.returnValue(false);
+      authServiceSpy.isManager.and.returnValue(true);
+    });
+
+    it('should call shopService.getAssignedShopsPage and set assignedShopsPage', () => {
+      const page = makePage([]);
+      shopServiceSpy.getAssignedShopsPage.and.callFake(() => of(page));
+      (component as any).loadManagerShops();
+      expect(shopServiceSpy.getAssignedShopsPage).toHaveBeenCalled();
+      expect(component.assignedShopsPage).toEqual(page);
+    });
+
+    it('should set assignedShopsPage to null on error', () => {
+      shopServiceSpy.getAssignedShopsPage.and.returnValue(throwError(() => new Error('500')));
+      (component as any).loadManagerShops();
+      expect(component.assignedShopsPage).toBeNull();
+    });
+  });
+
+  // ── loadDriverTruck ───────────────────────────────────────────────────────────
+
+  describe('loadDriverTruck', () => {
+    beforeEach(() => {
+      authServiceSpy.isUser.and.returnValue(false);
+      authServiceSpy.isDriver.and.returnValue(true);
+    });
+
+    it('should call getAssignedTruckByDriverId with user id and set assignedTruck', () => {
+      (component as any).loadDriverTruck();
+      expect(truckServiceSpy.getAssignedTruckByDriverId).toHaveBeenCalledWith(STUB_USER.id);
+      expect(component.assignedTruck).not.toBeNull();
+    });
+
+    it('should set assignedTruck to null on error', () => {
+      truckServiceSpy.getAssignedTruckByDriverId.and.returnValue(throwError(() => new Error('500')));
+      (component as any).loadDriverTruck();
+      expect(component.assignedTruck).toBeNull();
+    });
+  });
+
+  // ── loadUserOrders ────────────────────────────────────────────────────────────
+
+  describe('loadUserOrders', () => {
+    it('should call getLoggedUserOrders and populate foundOrders', () => {
+      const page = makePage([STUB_ORDER]);
+      orderServiceSpy.getLoggedUserOrders.and.callFake(() => of(page));
+      (component as any).loadUserOrders();
+      expect(orderServiceSpy.getLoggedUserOrders).toHaveBeenCalled();
+      expect(component.foundOrders).toEqual(page);
+    });
+
+    it('should set error=true and loading=false on failure', () => {
+      orderServiceSpy.getLoggedUserOrders.and.returnValue(throwError(() => new Error('500')));
+      (component as any).loadUserOrders();
+      expect(component.error).toBeTrue();
+      expect(component.loading).toBeFalse();
+    });
+  });
+
+  // ── loadUserReviews ───────────────────────────────────────────────────────────
+
+  describe('loadUserReviews', () => {
+    it('should call getLoggedUserReviews and populate foundReviews', () => {
+      const page = makePage([STUB_REVIEW]);
+      reviewServiceSpy.getLoggedUserReviews.and.callFake(() => of(page));
+      (component as any).loadUserReviews();
+      expect(reviewServiceSpy.getLoggedUserReviews).toHaveBeenCalled();
+      expect(component.foundReviews).toEqual(page);
+    });
+
+    it('should set error=true and loading=false on failure', () => {
+      reviewServiceSpy.getLoggedUserReviews.and.returnValue(throwError(() => new Error('500')));
+      (component as any).loadUserReviews();
+      expect(component.error).toBeTrue();
+      expect(component.loading).toBeFalse();
+    });
+  });
+
   // ── DOM ───────────────────────────────────────────────────────────────────────
 
   describe('DOM', () => {

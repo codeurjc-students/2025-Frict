@@ -614,6 +614,66 @@ class ProductServiceUTest {
         }
 
         @Test
+        @DisplayName("updateProduct updates an existing specification in place when the DTO id matches an existing spec")
+        void updateProduct_WithSpecs_UpdatesExistingSpecById() {
+            ProductSpec existingSpec = new ProductSpec("Color", List.of("Rojo"), product);
+            existingSpec.setId(42L);
+            product.getSpecifications().add(existingSpec);
+
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            productDTO.setCategories(null);
+            productDTO.setSpecifications(List.of(new ProductSpecDTO(42L, "Color", List.of("Verde", "Negro"))));
+
+            Product result = productService.updateProduct(1L, productDTO);
+
+            assertEquals(1, result.getSpecifications().size(), "Spec must be updated in place, not duplicated");
+            ProductSpec updated = result.getSpecifications().getFirst();
+            assertSame(existingSpec, updated, "The same managed spec entity must be reused");
+            assertEquals(42L, updated.getId());
+            assertEquals(List.of("Verde", "Negro"), updated.getValues());
+        }
+
+        @Test
+        @DisplayName("createProduct skips specification DTOs with a blank name or empty values")
+        void createProduct_SkipsInvalidSpecDtos() {
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+            when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+            productDTO.setSpecifications(List.of(
+                    new ProductSpecDTO(null, "   ", List.of("X")),        // blank name → skipped
+                    new ProductSpecDTO(null, "Talla", List.of()),         // empty values → skipped
+                    new ProductSpecDTO(null, "Color", List.of("Rojo"))    // valid → kept
+            ));
+
+            Product result = productService.createProduct(productDTO);
+
+            assertEquals(1, result.getSpecifications().size(), "Only the single valid spec must be added");
+            assertEquals("Color", result.getSpecifications().getFirst().getName());
+        }
+
+        @Test
+        @DisplayName("updateProduct with null specifications removes all pre-existing specs")
+        void updateProduct_NullSpecs_RemovesExistingSpecs() {
+            ProductSpec existingSpec = new ProductSpec("Old", List.of("V1"), product);
+            existingSpec.setId(7L);
+            product.getSpecifications().add(existingSpec);
+
+            when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            productDTO.setCategories(null);
+            productDTO.setSpecifications(null);
+
+            Product result = productService.updateProduct(1L, productDTO);
+
+            assertTrue(result.getSpecifications().isEmpty(), "All specs must be removed when DTO specifications is null");
+        }
+
+        @Test
         @DisplayName("updateProduct maps DTO fields to entity and falls back to 'Otros' for null categories")
         void updateProduct_MapsFieldsAndCategories() {
             when(categoryService.findByName("Otros")).thenReturn(Optional.of(othersCategory));
@@ -912,6 +972,49 @@ class ProductServiceUTest {
                 assertEquals(1, product.getImages().size());
                 assertEquals(defaultImg, product.getImages().getFirst().getImageInfo());
             }
+        }
+
+        @Test
+        @DisplayName("updateProductImages removes a discarded default image from the list but does NOT call S3 delete")
+        void updateProductImages_DiscardedDefaultImage_NotDeletedFromS3() {
+            ProductImageInfo defaultImg = new ProductImageInfo();
+            defaultImg.getImageInfo().setS3Key("default.jpg");
+            product.getImages().add(defaultImg);
+
+            MultipartFile newFile = new MockMultipartFile("file", "new.jpg", "image/jpeg", new byte[0]);
+            ImageInfo newS3Info = new ImageInfo("url", "new.jpg", "new.jpg");
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            try (MockedStatic<GlobalDefaults> mockedDefaults = mockStatic(GlobalDefaults.class)) {
+                mockedDefaults.when(() -> GlobalDefaults.isDefaultProductImage(any())).thenReturn(true);
+                when(imageService.uploadImageAndGetInfo(any(), eq("products"))).thenReturn(newS3Info);
+
+                // existingImages is empty → the current default image is discarded
+                productService.updateProductImages(1L, List.of(), List.of(newFile));
+
+                verify(imageService, never()).deleteFile(any());
+                List<String> keys = product.getImages().stream().map(ProductImageInfo::getS3Key).toList();
+                assertFalse(keys.contains("default.jpg"), "Discarded default image must be removed from the list");
+                assertTrue(keys.contains("new.jpg"), "Newly uploaded image must be present");
+            }
+        }
+
+        @Test
+        @DisplayName("updateProductImages keeps current images whose S3 key is null and never deletes them")
+        void updateProductImages_NullS3KeyImage_IsKept() {
+            ProductImageInfo nullKeyImg = new ProductImageInfo(); // default ImageInfo → null S3 key
+            product.getImages().add(nullKeyImg);
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(userService.getLoggedUser()).thenReturn(Optional.empty());
+
+            productService.updateProductImages(1L, List.of(), null);
+
+            verify(imageService, never()).deleteFile(any());
+            assertEquals(1, product.getImages().size(), "Image with a null S3 key must be kept");
+            assertSame(nullKeyImg, product.getImages().getFirst());
         }
     }
 

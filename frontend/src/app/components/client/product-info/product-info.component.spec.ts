@@ -325,6 +325,7 @@ describe('ProductInfoComponent', () => {
   });
 
   it('should call checkInFavourites with the product id', () => {
+    authServiceMock.isUser.and.returnValue(true);
     fixture.detectChanges();
     expect(productServiceSpy.checkInFavourites).toHaveBeenCalledWith('1');
   });
@@ -423,6 +424,7 @@ describe('ProductInfoComponent', () => {
   // ─── Favourites ───────────────────────────────────────────────────────────────
 
   it('should set inFavourites=true when checkInFavourites returns true', () => {
+    authServiceMock.isUser.and.returnValue(true);
     productServiceSpy.checkInFavourites.and.returnValue(of(true));
 
     fixture.detectChanges();
@@ -447,6 +449,7 @@ describe('ProductInfoComponent', () => {
 
   it('should remove the product from favourites and set inFavourites=false', () => {
     authServiceMock.isLogged.and.returnValue(true);
+    authServiceMock.isUser.and.returnValue(true);
     productServiceSpy.checkInFavourites.and.returnValue(of(true));
     productServiceSpy.deleteProductFromFavourites.and.returnValue(of(undefined as any));
 

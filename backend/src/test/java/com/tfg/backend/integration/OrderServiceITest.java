@@ -267,4 +267,98 @@ public class OrderServiceITest {
 
         assertFalse(orderRepository.existsById(pendingOrder.getId()), "Order should be completely removed from DB");
     }
+
+    /**
+     * Tests that cancelling an order restores the shop stock that was reduced during checkout,
+     * exercising the full createOrder → cancelOrder → restoreStockAndCapacityOnCancellation flow against MySQL.
+     */
+    @Test
+    @DisplayName("Cancel order restores the previously reduced shop stock back into the database")
+    void testCancelOrder_RestoresStock() {
+        // 1. Authenticate buyer and place an order for 2 TVs (stock 5 → 3)
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(buyer.getUsername(), "pass", List.of()));
+
+        User activeBuyer = userRepository.findById(buyer.getId()).orElseThrow();
+        activeBuyer.getAllOrderItems().add(new OrderItem(tvProduct, activeBuyer, 2));
+        userRepository.save(activeBuyer);
+
+        Order createdOrder = orderService.createOrder(shippingAddress.getId(), paymentCard.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        Integer afterPurchase = shopStockRepository.findUnitsByProductIdAndShopId(tvProduct.getId(), mainShop.getId()).orElse(0);
+        assertEquals(3, afterPurchase, "Stock should be 3 right after buying 2");
+
+        // 2. Cancel the order as the buyer
+        orderService.cancelOrder(createdOrder.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Assert status and full stock restoration
+        Order cancelled = orderRepository.findById(createdOrder.getId()).orElseThrow();
+        assertEquals(OrderStatus.CANCELLED, cancelled.getCurrentStatus());
+
+        Integer afterCancel = shopStockRepository.findUnitsByProductIdAndShopId(tvProduct.getId(), mainShop.getId()).orElse(0);
+        assertEquals(5, afterCancel, "Stock must be fully restored after cancellation (3 + 2)");
+    }
+
+    /**
+     * Tests the happy path of transitioning an order to ON_DELIVERY once it has an assigned truck.
+     */
+    @Test
+    @DisplayName("Update status to ON_DELIVERY succeeds when a truck is assigned to the order")
+    void testUpdateStatus_ToOnDeliveryWithTruck_Succeeds() {
+        // 1. Assign the truck through the service
+        orderService.setAssignedTruck(pendingOrder.getId(), deliveryTruck.getId(), true);
+        entityManager.flush();
+        entityManager.clear();
+
+        // 2. Transition to ON_DELIVERY
+        orderService.commentAndOrUpdateOrderStatus(pendingOrder.getId(), OrderStatus.ON_DELIVERY, "Out for delivery");
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Assert status changed and truck is still linked
+        Order updated = orderRepository.findById(pendingOrder.getId()).orElseThrow();
+        assertEquals(OrderStatus.ON_DELIVERY, updated.getCurrentStatus());
+        assertNotNull(updated.getAssignedTruck());
+    }
+
+    /**
+     * Tests that the assigned driver can unassign a completed order, clearing both the order's truck
+     * and the truck's currently selected order.
+     */
+    @Test
+    @DisplayName("Unassign finished order clears the truck from a completed order for the assigned driver")
+    void testUnassignAsFinished_ClearsTruck() {
+        // 1. Assign the truck and mark the order as COMPLETED, with the truck pointing to this order
+        orderService.setAssignedTruck(pendingOrder.getId(), deliveryTruck.getId(), true);
+
+        Order toComplete = orderRepository.findById(pendingOrder.getId()).orElseThrow();
+        toComplete.changeOrderStatus(OrderStatus.COMPLETED, "Delivered");
+        orderRepository.save(toComplete);
+
+        Truck truck = truckRepository.findById(deliveryTruck.getId()).orElseThrow();
+        truck.setSelectedOrder(toComplete);
+        truckRepository.save(truck);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 2. Authenticate as the assigned driver and unassign
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(driver.getUsername(), "pass", List.of()));
+
+        orderService.unassignAsFinished(pendingOrder.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Assert the order and the truck are unlinked
+        Order updated = orderRepository.findById(pendingOrder.getId()).orElseThrow();
+        assertNull(updated.getAssignedTruck(), "Truck must be unassigned from the order");
+
+        Truck updatedTruck = truckRepository.findById(deliveryTruck.getId()).orElseThrow();
+        assertNull(updatedTruck.getSelectedOrder(), "Truck's selected order must be cleared");
+    }
 }

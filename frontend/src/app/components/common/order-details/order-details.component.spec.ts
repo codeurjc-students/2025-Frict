@@ -6,9 +6,14 @@ import {of, Subject, throwError} from 'rxjs';
 
 import {OrderDetailsComponent} from './order-details.component';
 import {OrderService} from '../../../services/order.service';
+import {ShopService} from '../../../services/shop.service';
+import {TruckService} from '../../../services/truck.service';
+import {LocationService} from '../../../services/location.service';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
 import {AuthService} from '../../../services/auth.service';
 import {Order} from '../../../models/order.model';
+import {Shop} from '../../../models/shop.model';
+import {Truck} from '../../../models/truck.model';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -38,12 +43,37 @@ const STUB_ORDER: Order = {
   createdAt: '2025-01-01T12:00:00'
 };
 
+const STUB_SHOP: Shop = {
+  id: 'shop-1', referenceCode: 'SHP-001', name: 'Tienda Test',
+  address: { id: 'a1', alias: 'A', street: 'Calle', number: '1', floor: '', postalCode: '28001', city: 'Madrid', country: 'España', latitude: 40.4168, longitude: -3.7038 },
+  assignedBudget: 0, maxCapacity: 0, occupiedCapacity: 0,
+  imageInfo: { id: '', imageUrl: '', s3Key: '', fileName: '' },
+  totalAvailableProducts: 0, totalAssignedTrucks: 0
+};
+
+const STUB_TRUCK: Truck = {
+  id: 'truck-1', referenceCode: 'TRK-001', plateNumber: 'AB-1234',
+  history: [], shopId: 'shop-1',
+  address: { id: 'a2', alias: 'B', street: 'Calle', number: '2', floor: '', postalCode: '28001', city: 'Madrid', country: 'España', latitude: 40.42, longitude: -3.71 },
+  ordersToDeliver: 1, maxCapacity: 10, currentCapacity: 0
+};
+
+const STUB_ORDER_IN_DELIVERY: Order = {
+  ...STUB_ORDER,
+  history: [{ id: 'h1', icon: '', status: 'En Reparto', updates: [] }],
+  assignedShopId: 'shop-1',
+  assignedTruckId: 'truck-1'
+};
+
 // ── Spec ───────────────────────────────────────────────────────────────────────
 
 describe('OrderDetailsComponent', () => {
   let component: OrderDetailsComponent;
   let fixture: ComponentFixture<OrderDetailsComponent>;
   let orderServiceSpy: jasmine.SpyObj<OrderService>;
+  let shopServiceSpy: jasmine.SpyObj<ShopService>;
+  let truckServiceSpy: jasmine.SpyObj<TruckService>;
+  let locationServiceSpy: jasmine.SpyObj<LocationService>;
   let breadcrumbSpy: jasmine.SpyObj<BreadcrumbService>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
   let routerSpy: jasmine.SpyObj<Router>;
@@ -56,6 +86,15 @@ describe('OrderDetailsComponent', () => {
     orderServiceSpy.cancelOrder.and.callFake(() => of({ ...STUB_ORDER }));
     orderServiceSpy.getOrderQrTokenById.and.callFake(() => of('qr-token-abc'));
     orderServiceSpy.downloadOrderInvoice.and.callFake(() => of(new Blob(['pdf'], { type: 'application/pdf' })));
+
+    shopServiceSpy = jasmine.createSpyObj('ShopService', ['getShopById']);
+    shopServiceSpy.getShopById.and.callFake(() => of({ ...STUB_SHOP }));
+
+    truckServiceSpy = jasmine.createSpyObj('TruckService', ['getTruckById']);
+    truckServiceSpy.getTruckById.and.callFake(() => of({ ...STUB_TRUCK }));
+
+    locationServiceSpy = jasmine.createSpyObj('LocationService', ['getRoute']);
+    locationServiceSpy.getRoute.and.callFake(() => of(null));
 
     breadcrumbSpy = jasmine.createSpyObj('BreadcrumbService', [
       'insertPenultimateNodesForUrl', 'setBaseBreadcrumbs', 'breadcrumbs'
@@ -80,6 +119,9 @@ describe('OrderDetailsComponent', () => {
         provideNoopAnimations(),
         provideHttpClient(),
         { provide: OrderService, useValue: orderServiceSpy },
+        { provide: ShopService, useValue: shopServiceSpy },
+        { provide: TruckService, useValue: truckServiceSpy },
+        { provide: LocationService, useValue: locationServiceSpy },
         { provide: BreadcrumbService, useValue: breadcrumbSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: Router, useValue: routerSpy },
@@ -343,6 +385,79 @@ describe('OrderDetailsComponent', () => {
     it('should revoke the object URL after download', () => {
       component.downloadInvoice();
       expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:test-url');
+    });
+  });
+
+  // ── isInDelivery ──────────────────────────────────────────────────────────────
+
+  describe('isInDelivery', () => {
+    it('should return true when last history status is "En Reparto"', () => {
+      component.order = { ...STUB_ORDER_IN_DELIVERY };
+      expect(component.isInDelivery()).toBeTrue();
+    });
+
+    it('should return false when last status is "Pedido Realizado"', () => {
+      component.order = { ...STUB_ORDER };
+      expect(component.isInDelivery()).toBeFalse();
+    });
+
+    it('should return false when history is empty', () => {
+      component.order = { ...STUB_ORDER, history: [] };
+      expect(component.isInDelivery()).toBeFalse();
+    });
+
+    it('should return false when order is undefined', () => {
+      (component as any).order = undefined;
+      expect(component.isInDelivery()).toBeFalse();
+    });
+  });
+
+  // ── ngOnDestroy ───────────────────────────────────────────────────────────────
+
+  describe('ngOnDestroy', () => {
+    it('should call remove() on the map when orderMap is set', () => {
+      const mockMap = { remove: jasmine.createSpy('remove') };
+      (component as any).orderMap = mockMap;
+      component.ngOnDestroy();
+      expect(mockMap.remove).toHaveBeenCalled();
+    });
+
+    it('should set orderMap to undefined after destroy', () => {
+      (component as any).orderMap = { remove: jasmine.createSpy('remove') };
+      component.ngOnDestroy();
+      expect((component as any).orderMap).toBeUndefined();
+    });
+
+    it('should not throw when orderMap is undefined', () => {
+      (component as any).orderMap = undefined;
+      expect(() => component.ngOnDestroy()).not.toThrow();
+    });
+  });
+
+  // ── loadOrder — En Reparto (forkJoin) path ────────────────────────────────────
+
+  describe('loadOrder when order is in delivery', () => {
+    beforeEach(() => {
+      orderServiceSpy.getOrderById.and.callFake(() => of({ ...STUB_ORDER_IN_DELIVERY }));
+      component.loadOrder();
+    });
+
+    it('should call shopService.getShopById with the assigned shop id', () => {
+      expect(shopServiceSpy.getShopById).toHaveBeenCalledWith('shop-1');
+    });
+
+    it('should call truckService.getTruckById with the assigned truck id', () => {
+      expect(truckServiceSpy.getTruckById).toHaveBeenCalledWith('truck-1');
+    });
+
+    it('should set component.shop after forkJoin resolves', () => {
+      expect(component.shop).not.toBeNull();
+      expect(component.shop?.id).toBe('shop-1');
+    });
+
+    it('should set component.truck after forkJoin resolves', () => {
+      expect(component.truck).not.toBeNull();
+      expect(component.truck?.id).toBe('truck-1');
     });
   });
 

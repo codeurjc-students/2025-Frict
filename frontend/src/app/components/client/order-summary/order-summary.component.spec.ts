@@ -1,8 +1,9 @@
-import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
 import {OrderSummaryComponent} from './order-summary.component';
 import {OrderService} from '../../../services/order.service';
 import {UserService} from '../../../services/user.service';
 import {BreadcrumbService} from '../../../utils/breadcrumb.service';
+import {LocationService} from '../../../services/location.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MessageService} from 'primeng/api';
 import {of, Subject, throwError} from 'rxjs';
@@ -24,6 +25,7 @@ describe('OrderSummaryComponent', () => {
   let userServiceSpy: jasmine.SpyObj<UserService>;
   let messageServiceSpy: jasmine.SpyObj<MessageService>;
   let breadcrumbServiceSpy: jasmine.SpyObj<BreadcrumbService>;
+  let locationServiceSpy: jasmine.SpyObj<LocationService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -90,6 +92,10 @@ describe('OrderSummaryComponent', () => {
 
     messageServiceSpy = jasmine.createSpyObj('MessageService', ['add']);
 
+    locationServiceSpy = jasmine.createSpyObj('LocationService', ['getCoordinatesFromAddress', 'getAddressFromCoordinates']);
+    locationServiceSpy.getCoordinatesFromAddress.and.returnValue(of({ latitude: 40.4168, longitude: -3.7038 }));
+    locationServiceSpy.getAddressFromCoordinates.and.returnValue(of({ street: 'Calle', number: '1', city: 'Madrid', postalCode: '28001', country: 'España' }));
+
     breadcrumbServiceSpy = jasmine.createSpyObj('BreadcrumbService', [
       'insertPenultimateNodesForUrl', 'setBaseBreadcrumbs', 'breadcrumbs'
     ]);
@@ -114,6 +120,7 @@ describe('OrderSummaryComponent', () => {
         { provide: UserService,       useValue: userServiceSpy },
         { provide: MessageService,    useValue: messageServiceSpy },
         { provide: BreadcrumbService, useValue: breadcrumbServiceSpy },
+        { provide: LocationService, useValue: locationServiceSpy },
         { provide: Router,            useValue: routerSpy },
         {
           provide: ActivatedRoute,
@@ -397,5 +404,282 @@ describe('OrderSummaryComponent', () => {
     const prevCallCount = breadcrumbServiceSpy.insertPenultimateNodesForUrl.calls.count();
     (component as any).getUserInfo();
     expect(breadcrumbServiceSpy.insertPenultimateNodesForUrl.calls.count()).toBeGreaterThan(prevCallCount);
+  });
+
+  // ─── toggleAddressForm ────────────────────────────────────────────────────────
+
+  describe('toggleAddressForm', () => {
+    it('should set showNewAddressForm to true', () => {
+      component.showNewAddressForm = false;
+      component.toggleAddressForm();
+      expect(component.showNewAddressForm).toBeTrue();
+    });
+
+    it('should set newAddress.alias to "Nueva dirección de envío"', () => {
+      component.toggleAddressForm();
+      expect(component.newAddress.alias).toBe('Nueva dirección de envío');
+    });
+  });
+
+  // ─── cancelNewAddress (with map) ──────────────────────────────────────────────
+
+  describe('cancelNewAddress when addressMap exists', () => {
+    let mockMap: any;
+
+    beforeEach(() => {
+      mockMap = { remove: jasmine.createSpy('remove') };
+      (component as any).addressMap = mockMap;
+      (component as any).addressMarker = {};
+    });
+
+    it('should call remove() on the map', () => {
+      (component as any).cancelNewAddress();
+      expect(mockMap.remove).toHaveBeenCalled();
+    });
+
+    it('should set addressMap and addressMarker to undefined', () => {
+      (component as any).cancelNewAddress();
+      expect((component as any).addressMap).toBeUndefined();
+      expect((component as any).addressMarker).toBeUndefined();
+    });
+
+    it('should reset geocoding flags and hide the form', () => {
+      (component as any).isGeocodingActive = true;
+      (component as any).lastAddressCheck = 'street|1|city|28001|España';
+      component.submittedAddress = true;
+      (component as any).cancelNewAddress();
+      expect((component as any).isGeocodingActive).toBeFalse();
+      expect((component as any).lastAddressCheck).toBe('');
+      expect(component.submittedAddress).toBeFalse();
+      expect(component.showNewAddressForm).toBeFalse();
+    });
+  });
+
+  // ─── togglePaymentForm ────────────────────────────────────────────────────────
+
+  describe('togglePaymentForm', () => {
+    it('should show the payment form and set alias when form is hidden', () => {
+      component.showNewPaymentForm = false;
+      component.togglePaymentForm();
+      expect(component.showNewPaymentForm).toBeTrue();
+      expect(component.newCard.alias).toBe('Nueva tarjeta');
+    });
+
+    it('should call cancelNewCard and hide the form when form is already visible', () => {
+      component.showNewPaymentForm = true;
+      component.newCard = { ...mockCard };
+      component.togglePaymentForm();
+      expect(component.showNewPaymentForm).toBeFalse();
+      expect(component.newCard.alias).toBe('');
+    });
+  });
+
+  // ─── isCardFieldInvalid ───────────────────────────────────────────────────────
+
+  describe('isCardFieldInvalid', () => {
+    it('should return false when submittedCard is false regardless of value', () => {
+      component.submittedCard = false;
+      expect(component.isCardFieldInvalid('')).toBeFalse();
+    });
+
+    it('should return true when submittedCard is true and value is blank', () => {
+      component.submittedCard = true;
+      expect(component.isCardFieldInvalid('   ')).toBeTrue();
+      expect(component.isCardFieldInvalid('')).toBeTrue();
+    });
+
+    it('should return false when submittedCard is true and value is non-blank', () => {
+      component.submittedCard = true;
+      expect(component.isCardFieldInvalid('VISA')).toBeFalse();
+    });
+  });
+
+  // ─── isCardDueDateInvalid ─────────────────────────────────────────────────────
+
+  describe('isCardDueDateInvalid', () => {
+    it('should return false when submittedCard is false', () => {
+      component.submittedCard = false;
+      component.newCard.dueDate = '13/99';
+      expect(component.isCardDueDateInvalid()).toBeFalse();
+    });
+
+    it('should return true when submittedCard is true and dueDate is invalid', () => {
+      component.submittedCard = true;
+      component.newCard.dueDate = '13/99';
+      expect(component.isCardDueDateInvalid()).toBeTrue();
+    });
+
+    it('should return false when submittedCard is true and dueDate is valid', () => {
+      component.submittedCard = true;
+      component.newCard.dueDate = '06/27';
+      expect(component.isCardDueDateInvalid()).toBeFalse();
+    });
+  });
+
+  // ─── isAddressFieldInvalid ────────────────────────────────────────────────────
+
+  describe('isAddressFieldInvalid', () => {
+    it('should return false when submittedAddress is false', () => {
+      component.submittedAddress = false;
+      expect(component.isAddressFieldInvalid('')).toBeFalse();
+    });
+
+    it('should return true when submittedAddress is true and value is blank', () => {
+      component.submittedAddress = true;
+      expect(component.isAddressFieldInvalid('')).toBeTrue();
+      expect(component.isAddressFieldInvalid('  ')).toBeTrue();
+    });
+
+    it('should return false when submittedAddress is true and value is non-blank', () => {
+      component.submittedAddress = true;
+      expect(component.isAddressFieldInvalid('Madrid')).toBeFalse();
+    });
+  });
+
+  // ─── hasAddressValidationErrors ───────────────────────────────────────────────
+
+  describe('hasAddressValidationErrors', () => {
+    it('should return false when all required address fields are filled', () => {
+      component.newAddress = { ...mockAddress };
+      expect((component as any).hasAddressValidationErrors()).toBeFalse();
+    });
+
+    it('should return true when street is blank', () => {
+      component.newAddress = { ...mockAddress, street: '' };
+      expect((component as any).hasAddressValidationErrors()).toBeTrue();
+    });
+
+    it('should return true when city is blank', () => {
+      component.newAddress = { ...mockAddress, city: '' };
+      expect((component as any).hasAddressValidationErrors()).toBeTrue();
+    });
+
+    it('should return true when country is blank', () => {
+      component.newAddress = { ...mockAddress, country: '' };
+      expect((component as any).hasAddressValidationErrors()).toBeTrue();
+    });
+  });
+
+  // ─── saveNewAddress (validation error) ───────────────────────────────────────
+
+  describe('saveNewAddress validation errors', () => {
+    it('should show error message and set submittedAddress=true when fields are blank', () => {
+      component.newAddress = { id: '', alias: '', street: '', number: '', floor: '', postalCode: '', city: '', country: '' };
+      (component as any).saveNewAddress();
+      expect(component.submittedAddress).toBeTrue();
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ severity: 'error' }));
+      expect(userServiceSpy.submitAddress).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── onAddressFieldChange ─────────────────────────────────────────────────────
+
+  describe('onAddressFieldChange', () => {
+    it('should not throw when called', () => {
+      expect(() => component.onAddressFieldChange()).not.toThrow();
+    });
+  });
+
+  // ─── getAddressFromCoordinates ────────────────────────────────────────────────
+
+  describe('getAddressFromCoordinates', () => {
+    it('should call locationService.getAddressFromCoordinates', () => {
+      (component as any).getAddressFromCoordinates(40.4, -3.7);
+      expect(locationServiceSpy.getAddressFromCoordinates).toHaveBeenCalledWith(40.4, -3.7);
+    });
+
+    it('should update newAddress fields and show "Dirección Exacta" when number is returned', () => {
+      locationServiceSpy.getAddressFromCoordinates.and.returnValue(
+        of({ street: 'Gran Vía', number: '5', city: 'Madrid', postalCode: '28001', country: 'España' } as any)
+      );
+      (component as any).getAddressFromCoordinates(40.4, -3.7);
+      expect(component.newAddress.street).toBe('Gran Vía');
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ summary: 'Dirección Exacta' }));
+    });
+
+    it('should show "Zona detectada" when addressData has no number', () => {
+      locationServiceSpy.getAddressFromCoordinates.and.returnValue(
+        of({ street: 'Gran Vía', number: '', city: 'Madrid', postalCode: '28001', country: 'España' } as any)
+      );
+      (component as any).getAddressFromCoordinates(40.4, -3.7);
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ summary: 'Zona detectada' }));
+    });
+
+    it('should show "Dirección no encontrada" when addressData is null', () => {
+      locationServiceSpy.getAddressFromCoordinates.and.returnValue(of(null));
+      (component as any).getAddressFromCoordinates(40.4, -3.7);
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ summary: 'Dirección no encontrada' }));
+    });
+
+    it('should show "Aviso" and re-enable geocoding on error', () => {
+      locationServiceSpy.getAddressFromCoordinates.and.returnValue(throwError(() => new Error('500')));
+      (component as any).isGeocodingActive = false;
+      (component as any).getAddressFromCoordinates(40.4, -3.7);
+      expect((component as any).isGeocodingActive).toBeTrue();
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ summary: 'Aviso' }));
+    });
+  });
+
+  // ─── setupAddressListener pipeline ───────────────────────────────────────────
+
+  describe('setupAddressListener pipeline', () => {
+    beforeEach(() => {
+      component.newAddress = { id: '', alias: '', street: 'Calle Mayor', number: '1', floor: '', postalCode: '28001', city: 'Madrid', country: 'España' };
+      (component as any).isGeocodingActive = true;
+      (component as any).lastAddressCheck = '';
+      (component as any).addressMap = {
+        addLayer: jasmine.createSpy('addLayer').and.returnValue({}),
+        setView: jasmine.createSpy('setView'),
+        remove: jasmine.createSpy('remove')
+      };
+    });
+
+    it('should call getCoordinatesFromAddress after debounce when geocoding is active', fakeAsync(() => {
+      locationServiceSpy.getCoordinatesFromAddress.and.returnValue(of({ latitude: 40.4, longitude: -3.7 }));
+      component.onAddressFieldChange();
+      tick(1000);
+      expect(locationServiceSpy.getCoordinatesFromAddress).toHaveBeenCalled();
+    }));
+
+    it('should update newAddress lat/lng and show "Ubicación actualizada" on coords returned', fakeAsync(() => {
+      locationServiceSpy.getCoordinatesFromAddress.and.returnValue(of({ latitude: 40.4, longitude: -3.7 }));
+      component.onAddressFieldChange();
+      tick(1000);
+      expect(component.newAddress.latitude).toBe(40.4);
+      expect(component.newAddress.longitude).toBe(-3.7);
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ summary: 'Ubicación actualizada' }));
+    }));
+
+    it('should show "Dirección no encontrada" when getCoordinatesFromAddress returns null', fakeAsync(() => {
+      locationServiceSpy.getCoordinatesFromAddress.and.returnValue(of(null));
+      component.onAddressFieldChange();
+      tick(1000);
+      expect(messageServiceSpy.add).toHaveBeenCalledWith(jasmine.objectContaining({ summary: 'Dirección no encontrada' }));
+    }));
+
+    it('should not call geocoding service when isGeocodingActive is false', fakeAsync(() => {
+      (component as any).isGeocodingActive = false;
+      locationServiceSpy.getCoordinatesFromAddress.calls.reset();
+      component.onAddressFieldChange();
+      tick(1000);
+      expect(locationServiceSpy.getCoordinatesFromAddress).not.toHaveBeenCalled();
+    }));
+
+    it('should not call geocoding service when address has not changed since last check', fakeAsync(() => {
+      const addr = component.newAddress;
+      (component as any).lastAddressCheck = `${addr.street}|${addr.number}|${addr.city}|${addr.postalCode}|${addr.country}`;
+      locationServiceSpy.getCoordinatesFromAddress.calls.reset();
+      component.onAddressFieldChange();
+      tick(1000);
+      expect(locationServiceSpy.getCoordinatesFromAddress).not.toHaveBeenCalled();
+    }));
+
+    it('should not call geocoding service when street is blank', fakeAsync(() => {
+      component.newAddress.street = '';
+      locationServiceSpy.getCoordinatesFromAddress.calls.reset();
+      component.onAddressFieldChange();
+      tick(1000);
+      expect(locationServiceSpy.getCoordinatesFromAddress).not.toHaveBeenCalled();
+    }));
   });
 });

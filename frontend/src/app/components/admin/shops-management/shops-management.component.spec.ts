@@ -604,4 +604,33 @@ describe('ShopsManagementComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain(mockNotification.subject);
   });
+
+  // ─── locateShopOnMap ──────────────────────────────────────────────────────────
+
+  describe('locateShopOnMap', () => {
+    it('should call flyTo on the map when map and coordinates are present', () => {
+      const mockMap = { flyTo: jasmine.createSpy('flyTo'), remove: jasmine.createSpy('remove') };
+      (component as any).map = mockMap;
+      component.locateShopOnMap(mockShopWithManager);
+      expect(mockMap.flyTo).toHaveBeenCalledWith(
+        [mockAddress.latitude, mockAddress.longitude], 14, jasmine.any(Object)
+      );
+    });
+
+    it('should do nothing when map is undefined', () => {
+      (component as any).map = undefined;
+      expect(() => component.locateShopOnMap(mockShopWithManager)).not.toThrow();
+    });
+
+    it('should do nothing when shop has no coordinates', () => {
+      const mockMap = { flyTo: jasmine.createSpy('flyTo'), remove: jasmine.createSpy('remove') };
+      (component as any).map = mockMap;
+      const shopNoCoords: any = {
+        ...mockShopWithManager,
+        address: { ...mockAddress, latitude: null, longitude: null }
+      };
+      component.locateShopOnMap(shopNoCoords);
+      expect(mockMap.flyTo).not.toHaveBeenCalled();
+    });
+  });
 });
