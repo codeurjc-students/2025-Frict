@@ -1,6 +1,6 @@
 import {Component, inject, LOCALE_ID, OnInit} from '@angular/core';
 import {GalleriaModule} from 'primeng/galleria';
-import {carouselResponsiveOptions, galleryResponsiveOptions} from '../../../app.config';
+import {galleryResponsiveOptions} from '../../../app.config';
 import {Product} from '../../../models/product.model';
 import {Tab, TabList, TabPanel, TabPanels, Tabs} from 'primeng/tabs';
 import {FormsModule} from '@angular/forms';
@@ -97,7 +97,6 @@ export class ProductInfoComponent implements OnInit {
   private locale = inject(LOCALE_ID);
 
   protected readonly galleryResponsiveOptions = galleryResponsiveOptions;
-  protected readonly carouselResponsiveOptions = carouselResponsiveOptions;
   protected readonly formatPrice = formatPrice;
   protected readonly getStockLevelTagInfo = getStockLevelTagInfo;
   protected readonly Math = Math;
@@ -251,13 +250,16 @@ export class ProductInfoComponent implements OnInit {
             this.loadSelectedShop();
           }
 
-          this.loadCartItemUnits();
           this.loadProductCategory();
-          this.checkInFavourites();
           this.loadShopStocks();
           this.loadReviews();
           this.loadReviewStats();
           this.loadLoggedUser();
+
+          if(this.authService.isUser()){
+            this.loadCartItemUnits();
+            this.checkInFavourites();
+          }
 
           // --- Load analytics ---
           this.loadTodayViews();

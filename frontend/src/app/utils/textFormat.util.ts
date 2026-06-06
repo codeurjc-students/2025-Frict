@@ -44,7 +44,9 @@ export function formatCardDueDate(isoDate: string | undefined): string { //Input
 }
 
 export function formatAddress(address: Address): string {
-  return `${address.street}, ${address.number} ${address.floor} ${address.postalCode} ${address.city} (${address.country})`
+  const numberPart = address.number ? `${address.number} ` : '';
+  const floorPart = address.floor ? `${address.floor} ` : '';
+  return `${address.street}, ${numberPart}${floorPart}${address.postalCode} ${address.city} (${address.country})`;
 }
 
 export function formatDuration(seconds: number): string {

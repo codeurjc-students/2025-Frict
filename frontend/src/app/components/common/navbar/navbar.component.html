@@ -185,7 +185,7 @@
   </div>
 </nav>
 
-<p-drawer #drawerRef [(visible)]="visible" [autoZIndex]="true" [baseZIndex]="40" [blockScroll]="true" styleClass="!bg-surface-800 !border-none !w-90">
+<p-drawer #drawerRef [(visible)]="visible" [autoZIndex]="true" [baseZIndex]="40" [blockScroll]="true" [transitionOptions]="'150ms ease-in-out'" styleClass="!bg-surface-800 !border-none !w-90">
   <ng-template #headless>
     <div class="mt-22 flex flex-col h-full overflow-y-auto">
 
@@ -227,7 +227,7 @@
                  [ngClass]="productService.searchScope() === 'GLOBAL'
                ? 'border-l-4 border-primary-500 bg-surface-700 text-white cursor-default'
                : 'text-surface-100 hover:bg-surface-700 cursor-pointer'"
-                 (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null">
+                 (click)="productService.searchScope() !== 'GLOBAL' ? onScopeChange('GLOBAL') : null; closeDrawerDelayed()">
                 <i class="pi pi-globe mr-3 text-lg"></i>
                 <span class="font-medium">Global</span>
               </a>
@@ -240,7 +240,7 @@
          'text-surface-100 hover:bg-surface-700 cursor-pointer': productService.searchScope() !== 'LOCAL' && authService.hasShopSelected(),
          'text-surface-500 opacity-50 cursor-not-allowed': !authService.hasShopSelected()
        }"
-                 (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null">
+                 (click)="authService.hasShopSelected() && productService.searchScope() !== 'LOCAL' ? onScopeChange('LOCAL') : null; closeDrawerDelayed()">
                 <i class="pi pi-map-marker mr-3 text-lg"></i>
                 <span class="font-medium">Tienda seleccionada</span>
                 @if (!authService.hasShopSelected()) {
@@ -359,6 +359,7 @@
              routerLinkActive="border-l-4 border-primary-500 bg-surface-700 text-white"
              [routerLinkActiveOptions]="{ exact: false }"
              #rla="routerLinkActive"
+             (click)="toggleSubmenu(+cat.id, rla.isActive)"
              class="flex-1 flex items-center cursor-pointer p-4 text-surface-100 hover:text-primary-400 transition-colors"
              [style.padding-left.rem]="1 + (level * 1.5)">
 

@@ -198,6 +198,8 @@ public class UserService {
     public User createAddress(AddressDTO addressDTO){
         User loggedUser = this.findLoggedUserHelper();
         Address address = new Address(addressDTO.getAlias(), addressDTO.getStreet(), addressDTO.getNumber(), addressDTO.getFloor(), addressDTO.getPostalCode(), addressDTO.getCity(), addressDTO.getCountry());
+        address.setLatitude(addressDTO.getLatitude());
+        address.setLongitude(addressDTO.getLongitude());
         loggedUser.getAddresses().add(address);
         return loggedUser;
     }
@@ -215,6 +217,8 @@ public class UserService {
         address.setPostalCode(addressDTO.getPostalCode());
         address.setCity(addressDTO.getCity());
         address.setCountry(addressDTO.getCountry());
+        address.setLatitude(addressDTO.getLatitude());
+        address.setLongitude(addressDTO.getLongitude());
 
         return loggedUser;
     }
