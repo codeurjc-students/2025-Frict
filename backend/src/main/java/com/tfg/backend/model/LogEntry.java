@@ -1,5 +1,6 @@
 package com.tfg.backend.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,8 @@ import java.time.LocalDateTime;
 public class LogEntry {
 
     private LocalDateTime date;
+
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     public LogEntry() {

@@ -349,6 +349,7 @@
 </p-drawer>
 
 <ng-template #categoryTree let-items let-level="level">
+  <ul class="list-none p-0 m-0">
   @for (cat of items; track cat.id) {
     <li>
       @if (cat.children && cat.children.length > 0) {
@@ -381,10 +382,10 @@
 
         </div>
 
-        <ul [class.hidden]="!isOpen"
-            class="list-none p-0 m-0 overflow-hidden block">
+        <div [class.hidden]="!isOpen"
+             class="overflow-hidden">
           <ng-container *ngTemplateOutlet="categoryTree; context: { $implicit: cat.children, level: level + 1 }"></ng-container>
-        </ul>
+        </div>
       }
 
       @else {
@@ -400,4 +401,5 @@
       }
     </li>
   }
+  </ul>
 </ng-template>

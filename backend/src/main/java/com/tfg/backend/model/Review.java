@@ -25,6 +25,7 @@ public class Review {
 
     private int rating;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String text;
 
     @CreationTimestamp

@@ -29,8 +29,8 @@ public class ProductSpecifications {
     }
 
     /**
-     * El producto debe tener una ProductSpec con name=filter.name()
-     * y al menos un valor de su lista en filter.values().
+     * The product must have a ProductSpec with name=filter.name()
+     * and at least one value from its list in filter.values().
      */
     public static Specification<Product> hasSpec(SpecFilterDTO filter) {
         return (root, query, cb) -> {
