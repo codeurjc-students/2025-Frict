@@ -59,15 +59,6 @@ jobs:
         run: |
           ACCOUNT_ID="${{ steps.info.outputs.account_id }}"
 
-          # Empty images bucket so CloudFormation can delete it
-          IMAGES_BUCKET="${STACK_NAME}-images-${ACCOUNT_ID}-${AWS_REGION}"
-          if aws s3api head-bucket --bucket "$IMAGES_BUCKET" \
-            --region $AWS_REGION 2>/dev/null; then
-            echo "Emptying bucket: $IMAGES_BUCKET"
-            aws s3 rm "s3://$IMAGES_BUCKET" --recursive \
-              --region $AWS_REGION 2>/dev/null || true
-          fi
-
           # Delete artifacts bucket entirely (not managed by CF)
           ARTIFACTS_BUCKET="${STACK_NAME}-cfn-artifacts-${ACCOUNT_ID}-${AWS_REGION}"
           if aws s3api head-bucket --bucket "$ARTIFACTS_BUCKET" \

@@ -18,6 +18,8 @@ env:
   ECR_REPOSITORY: frict-app
   ECS_CLUSTER: frict-cluster
   ECS_SERVICE: frict-svc
+  RDS_INSTANCE: frict-mysql
+  DOCDB_CLUSTER: frict-docdb
   DOCKERHUB_IMAGE: mjpulido/frict
 
 jobs:
@@ -100,6 +102,63 @@ jobs:
         id: account
         run: echo "id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve snapshot parameters
+        id: snap
+        run: |
+          MYSQL_SNAP=""
+          DOCDB_SNAP=""
+
+          STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query "Stacks[0].StackStatus" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "DOES_NOT_EXIST")
+
+          if [ "$STACK_STATUS" != "DOES_NOT_EXIST" ]; then
+            # Stack exists: echo back the current parameter values unchanged so CloudFormation
+            # sees no diff and never touches the running database instances.
+            MYSQL_SNAP=$(aws cloudformation describe-stacks \
+              --stack-name $STACK_NAME \
+              --query "Stacks[0].Parameters[?ParameterKey=='MySQLSnapshotArn'].ParameterValue | [0]" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$MYSQL_SNAP" = "None" ] && MYSQL_SNAP=""
+
+            DOCDB_SNAP=$(aws cloudformation describe-stacks \
+              --stack-name $STACK_NAME \
+              --query "Stacks[0].Parameters[?ParameterKey=='DocDBSnapshotArn'].ParameterValue | [0]" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$DOCDB_SNAP" = "None" ] && DOCDB_SNAP=""
+
+            echo "Stack exists — keeping snapshot parameters unchanged"
+            echo "  MySQLSnapshotArn:  ${MYSQL_SNAP:-<empty>}"
+            echo "  DocDBSnapshotArn:  ${DOCDB_SNAP:-<empty>}"
+
+          elif [ "${{ vars.RESTORE_FROM_SNAPSHOT }}" = "true" ]; then
+            # Stack does not exist + restore requested: find the latest manual snapshot of each DB.
+            echo "Stack not found — restore mode: searching for latest snapshots..."
+
+            MYSQL_SNAP=$(aws rds describe-db-snapshots \
+              --db-instance-identifier $RDS_INSTANCE \
+              --snapshot-type manual \
+              --query "max_by(DBSnapshots[?Status=='available'], &SnapshotCreateTime).DBSnapshotArn" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$MYSQL_SNAP" = "None" ] && MYSQL_SNAP=""
+
+            DOCDB_SNAP=$(aws rds describe-db-cluster-snapshots \
+              --db-cluster-identifier $DOCDB_CLUSTER \
+              --snapshot-type manual \
+              --query "max_by(DBClusterSnapshots[?Status=='available'], &SnapshotCreateTime).DBClusterSnapshotArn" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$DOCDB_SNAP" = "None" ] && DOCDB_SNAP=""
+
+            echo "  MySQLSnapshotArn:  ${MYSQL_SNAP:-NONE FOUND — fresh DB will be created}"
+            echo "  DocDBSnapshotArn:  ${DOCDB_SNAP:-NONE FOUND — fresh cluster will be created}"
+          else
+            echo "Stack not found — fresh deploy (no snapshot restore)"
+          fi
+
+          echo "mysql=$MYSQL_SNAP" >> "$GITHUB_OUTPUT"
+          echo "docdb=$DOCDB_SNAP" >> "$GITHUB_OUTPUT"
+
       - name: Ensure artifact bucket
         env:
           BUCKET: ${{ env.STACK_NAME }}-cfn-artifacts-${{ steps.account.outputs.id }}-${{ env.AWS_REGION }}
@@ -148,6 +207,8 @@ jobs:
               "SenderMailPassword=${{ secrets.SENDER_MAIL_PASSWORD }}" \
               "SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }}" \
               "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}" \
+              "MySQLSnapshotArn=${{ steps.snap.outputs.mysql }}" \
+              "DocDBSnapshotArn=${{ steps.snap.outputs.docdb }}" \
               "ImageTag=${{ needs.push-to-ecr.outputs.tag }}"
 
       - name: Upload default images to S3
