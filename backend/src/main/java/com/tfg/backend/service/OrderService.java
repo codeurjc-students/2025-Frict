@@ -273,8 +273,8 @@ public class OrderService {
         Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, orderTotal, selectedShop.getReferenceCode(), selectedShop.getName(), loggedUser.getUsername(), loggedUser.getName(), null, null, savedOrder.getReferenceCode(), "Pedido " + savedOrder.getReferenceCode());
         eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
 
-        // Send email confirmation
-        emailService.sendOrderConfirmation(loggedUser.getEmail(), loggedUser.getName(), savedOrder.getReferenceCode(), savedOrder.getItems(), savedOrder.getTotalCost());
+        // Send email confirmation (items already initialized in the loop above)
+        emailService.sendOrderConfirmation(loggedUser.getEmail(), savedOrder);
         return savedOrder;
     }
 

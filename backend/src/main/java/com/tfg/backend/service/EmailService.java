@@ -1,6 +1,8 @@
 package com.tfg.backend.service;
 
-import com.tfg.backend.model.OrderItem;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.tfg.backend.model.Order;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,10 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.List;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 
 @Service
 @Slf4j //Custom logs enablement
@@ -32,14 +37,12 @@ public class EmailService {
 
     // @Async allows that this function can be executed concurrently
     @Async
-    public void sendOrderConfirmation(String to, String userName, String orderRef, List<OrderItem> items, Double total) {
+    public void sendOrderConfirmation(String to, Order order) {
         try {
             // Prepare Thymeleaf context
             Context context = new Context();
-            context.setVariable("userName", userName);
-            context.setVariable("orderRef", orderRef);
-            context.setVariable("items", items);
-            context.setVariable("totalAmount", total);
+            context.setVariable("order", order);
+            context.setVariable("qrBase64", generateQrBase64(order.getQrDeliveryToken()));
 
             // Process HTML
             String htmlContent = templateEngine.process("email-order-confirmation", context);
@@ -50,7 +53,7 @@ public class EmailService {
 
             if (!fromAddress.isBlank()) helper.setFrom(fromAddress);
             helper.setTo(to);
-            helper.setSubject("Confirmación de Pedido - " + orderRef);
+            helper.setSubject("Confirmación de Pedido - " + order.getReferenceCode());
             helper.setText(htmlContent, true); //It is true that is HTML
 
             // Send
@@ -60,6 +63,25 @@ public class EmailService {
         } catch (MessagingException e) {
             // Do not raise exceptions in order not to interrupt the main thread
             log.error("Error al enviar email: {}", e.getMessage());
+        }
+    }
+
+    private String generateQrBase64(String token) {
+        if (token == null || token.isBlank()) return null;
+        try {
+            var matrix = new QRCodeWriter().encode(token, BarcodeFormat.QR_CODE, 120, 120);
+            var image = new BufferedImage(120, 120, BufferedImage.TYPE_INT_RGB);
+            for (int x = 0; x < 120; x++) {
+                for (int y = 0; y < 120; y++) {
+                    image.setRGB(x, y, matrix.get(x, y) ? 0x000000 : 0xFFFFFF);
+                }
+            }
+            var baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "PNG", baos);
+            return Base64.getEncoder().encodeToString(baos.toByteArray());
+        } catch (Exception e) {
+            log.warn("No se pudo generar el QR para el email de pedido: {}", e.getMessage());
+            return null;
         }
     }
 
