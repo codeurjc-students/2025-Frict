@@ -2,6 +2,12 @@ name: Destroy Environment
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment to destroy"
+        type: choice
+        options: [loadtest, frict]
+        default: loadtest
 
 permissions:
   id-token: write
@@ -9,13 +15,21 @@ permissions:
 
 env:
   AWS_REGION: eu-west-1
-  STACK_NAME: frict
 
 jobs:
   destroy:
     name: Destroy All Resources
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve environment
+        run: |
+          ENV="${{ inputs.environment }}"
+          echo "STACK_NAME=$ENV" >> "$GITHUB_ENV"
+          echo "Destroying environment: $ENV"
+          # Note: DB snapshots are created automatically by CloudFormation
+          # (DeletionPolicy: Snapshot) on stack deletion — this workflow never
+          # creates or manages snapshots.
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -43,11 +57,12 @@ jobs:
               --output text --region $AWS_REGION 2>/dev/null || echo "None")
           fi
 
-          # Fallback: search for orphaned VPC by CloudFormation tags
+          # Fallback: search for orphaned VPC by exact Name tag (templates tag it "${Env}-vpc").
+          # Exact match (not a substring 'contains') so we only ever touch this env's VPC.
           if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
             VPC_ID=$(aws ec2 describe-vpcs \
-              --filters "Name=isDefault,Values=false" \
-              --query "Vpcs[?Tags[?contains(Value,'${STACK_NAME}')]].VpcId | [0]" \
+              --filters "Name=isDefault,Values=false" "Name=tag:Name,Values=${STACK_NAME}-vpc" \
+              --query "Vpcs[0].VpcId" \
               --output text --region $AWS_REGION 2>/dev/null || echo "None")
           fi
 

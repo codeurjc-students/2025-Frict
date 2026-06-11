@@ -2,6 +2,12 @@ name: Start Environment
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        options: [frict, loadtest]
+        default: frict
 
 permissions:
   id-token: write
@@ -9,16 +15,21 @@ permissions:
 
 env:
   AWS_REGION: eu-west-1
-  ECS_CLUSTER: frict-cluster
-  ECS_SERVICE: frict-svc
-  RDS_INSTANCE: frict-mysql
-  DOCDB_CLUSTER: frict-docdb
 
 jobs:
   start:
     name: Start All Services
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve environment
+        run: |
+          ENV="${{ inputs.environment }}"
+          echo "STACK_NAME=$ENV"          >> "$GITHUB_ENV"
+          echo "ECS_CLUSTER=$ENV-cluster" >> "$GITHUB_ENV"
+          echo "ECS_SERVICE=$ENV-svc"     >> "$GITHUB_ENV"
+          echo "RDS_INSTANCE=$ENV-mysql"  >> "$GITHUB_ENV"
+          echo "DOCDB_CLUSTER=$ENV-docdb" >> "$GITHUB_ENV"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
