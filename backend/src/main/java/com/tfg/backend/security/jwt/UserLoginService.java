@@ -157,7 +157,7 @@ public class UserLoginService {
 		// Saved automatically
 
 		// If this fails, OTP is not stored in DB
-		emailService.sendRecoveryOtp(user.getEmail(), user.getUsername(), user.getOtpCode());
+		emailService.sendRecoveryOtp(user.getEmail(), user.getUsername(), user.getOtpCode(), user.getRole());
 	}
 
 	public boolean verifyOtp(String username, String otpCode){

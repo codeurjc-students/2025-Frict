@@ -9,7 +9,16 @@
     <table style="width: 100%; border-collapse: collapse;">
       <tr>
         <td style="vertical-align: middle;">
-          <span style="font-size: 20px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Frict</span>
+          <table style="border-collapse: collapse;">
+            <tr>
+              <td style="vertical-align: middle; padding-right: 8px;">
+                <img src="cid:logo" width="20" height="20" alt="" style="display: block;"/>
+              </td>
+              <td style="vertical-align: middle;">
+                <span style="font-size: 20px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;" th:text="${appName}">TecHub</span>
+              </td>
+            </tr>
+          </table>
         </td>
         <td style="text-align: right; vertical-align: middle;">
           <span style="font-size: 11px; color: rgba(255,255,255,0.75);" th:text="'Ref: ' + ${order.referenceCode}">Ref: ORD-XXXX</span>
@@ -44,12 +53,11 @@
         </td>
         <!-- QR de confirmación -->
         <td style="text-align: right; vertical-align: top; width: 110px;">
-          <img th:if="${qrBase64 != null}"
-               th:src="'data:image/png;base64,' + ${qrBase64}"
+          <img th:if="${hasQr}" src="cid:qr"
                width="90" height="90"
                alt="QR de confirmación"
                style="border: 1px solid #e2e8f0; border-radius: 6px; display: block; margin-left: auto;"/>
-          <span th:if="${qrBase64 != null}" style="display: block; font-size: 9px; color: #94a3b8; text-align: center; margin-top: 4px;">Código QR</span>
+          <span th:if="${hasQr}" style="display: block; font-size: 9px; color: #94a3b8; text-align: center; margin-top: 4px;">Código QR</span>
         </td>
       </tr>
     </table>

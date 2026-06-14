@@ -62,7 +62,7 @@ class EmailServiceUTest {
         when(templateEngine.process(eq("otp-code-sending"), any(Context.class))).thenReturn(expectedHtml);
 
         // Act
-        emailService.sendRecoveryOtp(TARGET_EMAIL, USERNAME, OTP_CODE);
+        emailService.sendRecoveryOtp(TARGET_EMAIL, USERNAME, OTP_CODE, "USER");
 
         // Assert 1: Verify Thymeleaf context was built correctly
         verify(templateEngine).process(eq("otp-code-sending"), contextCaptor.capture());
@@ -88,7 +88,7 @@ class EmailServiceUTest {
 
         // Act & Assert
         // assertDoesNotThrow guarantees that the exception was caught and swallowed internally
-        assertDoesNotThrow(() -> emailService.sendRecoveryOtp(TARGET_EMAIL, USERNAME, OTP_CODE));
+        assertDoesNotThrow(() -> emailService.sendRecoveryOtp(TARGET_EMAIL, USERNAME, OTP_CODE, "USER"));
 
         // Verify it actually tried to send it
         verify(mailSender).send(mimeMessage);
