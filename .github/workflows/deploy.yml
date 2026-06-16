@@ -306,6 +306,9 @@ jobs:
               "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}" \
               "MySQLSnapshotArn=${{ steps.snap.outputs.mysql }}" \
               "DocDBSnapshotArn=${{ steps.snap.outputs.docdb }}" \
+              "MySQLMasterPassword=${{ secrets.RDS_MASTER_PASSWORD }}" \
+              "DocDBMasterPassword=${{ secrets.DOCDB_MASTER_PASSWORD }}" \
+              "DBEncryptionKey=${{ secrets.RDS_ENCRYPTION_KEY }}" \
               "ImageTag=${{ needs.push-to-ecr.outputs.tag }}"
 
       - name: Upload default images to S3

@@ -61,6 +61,15 @@ Parameters:
   DocDBSnapshotArn:
     Type: String
     Default: ""
+  MySQLMasterPassword:
+    Type: String
+    NoEcho: true
+  DocDBMasterPassword:
+    Type: String
+    NoEcho: true
+  DBEncryptionKey:
+    Type: String
+    NoEcho: true
   CloudFrontPrefixListId:
     Type: String
     Description: AWS-managed prefix list ID for CloudFront origin-facing IPs
@@ -96,6 +105,9 @@ Resources:
         EnableDocDB: !Ref EnableDocDB
         MySQLSnapshotArn: !Ref MySQLSnapshotArn
         DocDBSnapshotArn: !Ref DocDBSnapshotArn
+        MySQLMasterPassword: !Ref MySQLMasterPassword
+        DocDBMasterPassword: !Ref DocDBMasterPassword
+        DBEncryptionKey: !Ref DBEncryptionKey
         SenderMailHost: !Ref SenderMailHost
         SenderMailAddress: !Ref SenderMailAddress
         SenderMailUsername: !Ref SenderMailUsername
