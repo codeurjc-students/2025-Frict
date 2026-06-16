@@ -76,14 +76,10 @@ Resources:
         EnvironmentName: !Ref EnvironmentName
         CloudFrontPrefixListId: !Ref CloudFrontPrefixListId
 
-  # ── Storage (S3 + ECR) ──────────────────────────────────────────────
-  StorageStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./storage.yml
-      Parameters:
-        EnvironmentName: !Ref EnvironmentName
-        DomainName: !Ref DomainName
+  # Note: the images S3 bucket is intentionally NOT managed here. It is persistent
+  # state (user images) and must outlive this ephemeral app stack, so it is created
+  # idempotently by the deploy workflow and never deleted on stack destroy. Its name
+  # is deterministic: "${EnvironmentName}-images-${AWS::AccountId}-${AWS::Region}".
 
   # ── Data (RDS + DocumentDB + Secrets) ────────────────────────────────
   DataStack:
@@ -135,8 +131,8 @@ Resources:
         ALBSecurityGroupId: !GetAtt NetworkStack.Outputs.ALBSecurityGroupId
         FargateSecurityGroupId: !GetAtt NetworkStack.Outputs.FargateSecurityGroupId
         ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EnvironmentName}-app:${ImageTag}"
-        ImagesBucketName: !GetAtt StorageStack.Outputs.ImagesBucketName
-        ImagesBucketArn: !GetAtt StorageStack.Outputs.ImagesBucketArn
+        ImagesBucketName: !Sub "${EnvironmentName}-images-${AWS::AccountId}-${AWS::Region}"
+        ImagesBucketArn: !Sub "arn:aws:s3:::${EnvironmentName}-images-${AWS::AccountId}-${AWS::Region}"
         MySQLEndpoint: !GetAtt DataStack.Outputs.MySQLEndpoint
         MySQLPort: !GetAtt DataStack.Outputs.MySQLPort
         MySQLSecretArn: !GetAtt DataStack.Outputs.MySQLSecretArn

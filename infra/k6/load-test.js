@@ -15,16 +15,15 @@ import { Rate, Trend, Counter } from "k6/metrics";
  * The test is split into traffic-shaped scenarios so the summary tells you
  * which kind of usage is hurting and which endpoint is the bottleneck.
  *
- * This test MUTATES data (product views, WS presence, optional writes), so it is
- * meant to run against the disposable load-test clone (loadtest.frict.es), NOT
- * production. A hard guard in setup() aborts the run if BASE_URL points at the
- * prod apex frict.es — there is no override.
+ * This test MUTATES data (product views, WS presence, optional writes), so it
+ * runs ONLY against the disposable load-test clone ("loadtest.<domain>") or
+ * localhost — NEVER production. A hard guard in setup() aborts otherwise.
+ * BASE_URL defaults to localhost; CI passes https://loadtest.<domain>.
  *
  * Run examples:
- *   k6 run infra/k6/load-test.js                       # default load profile vs loadtest.frict.es
- *   k6 run -e PROFILE=smoke infra/k6/load-test.js      # 5 VUs, quick sanity check
+ *   k6 run infra/k6/load-test.js                       # defaults to http://localhost:8080
+ *   k6 run -e BASE_URL=https://loadtest.example.com -e PROFILE=smoke infra/k6/load-test.js
  *   k6 run -e PROFILE=scale infra/k6/load-test.js      # provoke a measured ECS scale-out
- *   k6 run -e BASE_URL=http://localhost:8080 -e PROFILE=smoke infra/k6/load-test.js
  *   k6 run -e STAFF_USER=manager -e STAFF_PASS=managerpass infra/k6/load-test.js
  *   k6 run -e INCLUDE_WRITES=true infra/k6/load-test.js  # add reversible writes
  */
@@ -32,7 +31,9 @@ import { Rate, Trend, Counter } from "k6/metrics";
 // ---------------------------------------------------------------------------
 // Configuration (all overridable via -e ENV=value)
 // ---------------------------------------------------------------------------
-const BASE_URL = (__ENV.BASE_URL || "https://loadtest.frict.es").replace(/\/+$/, "");
+// No hardcoded domain: defaults to localhost for ad-hoc local runs; CI always
+// passes BASE_URL=https://loadtest.<domain> (derived from the prod apex secret).
+const BASE_URL = (__ENV.BASE_URL || "http://localhost:8080").replace(/\/+$/, "");
 const WS_URL = BASE_URL.replace(/^https/, "wss").replace(/^http/, "ws");
 const API = `${BASE_URL}/api/v1`;
 
@@ -168,14 +169,16 @@ export const options = {
 // Setup: bootstrap real category/product IDs once, share with every VU.
 // ---------------------------------------------------------------------------
 export function setup() {
-  // Hard guard: never run against production. This test mutates data, so hitting
-  // the prod apex is forbidden with no override.
+  // Hard guard (allowlist): this test mutates data, so it may ONLY hit the
+  // disposable loadtest clone ("loadtest.<domain>") or localhost. Anything else —
+  // notably any production host — is refused. No hardcoded prod domain needed.
   const host = BASE_URL.replace(/^https?:\/\//, "").split("/")[0].split(":")[0].toLowerCase();
-  if (host === "frict.es" || host === "www.frict.es") {
+  const allowed = host === "localhost" || host === "127.0.0.1" || host.indexOf("loadtest.") === 0;
+  if (!allowed) {
     throw new Error(
-      `Refusing to load-test PRODUCTION host '${host}'. This test mutates data ` +
-        `(product views, WS presence). Point BASE_URL at the disposable clone ` +
-        `(https://loadtest.frict.es).`
+      `Refusing host '${host}'. This test mutates data (product views, WS presence) ` +
+        `and only runs against the loadtest clone ('loadtest.<domain>') or localhost. ` +
+        `Set BASE_URL accordingly.`
     );
   }
 

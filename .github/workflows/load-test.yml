@@ -3,10 +3,6 @@ name: Load Test (k6)
 on:
   workflow_dispatch:
     inputs:
-      base_url:
-        description: "Target URL (the disposable clone — NOT prod frict.es)"
-        required: false
-        default: "https://loadtest.frict.es"
       profile:
         description: "Load profile"
         type: choice
@@ -43,7 +39,9 @@ jobs:
 
       - name: Run k6 load test
         env:
-          BASE_URL: ${{ inputs.base_url }}
+          # Target is ALWAYS the loadtest clone, derived from the prod apex secret.
+          # Not overridable — this workflow never runs against any other host.
+          BASE_URL: https://loadtest.${{ secrets.DOMAIN_NAME }}
           PROFILE: ${{ inputs.profile }}
           INCLUDE_WRITES: ${{ inputs.include_writes }}
           TEST_USER: ${{ secrets.LOAD_TEST_USER }}

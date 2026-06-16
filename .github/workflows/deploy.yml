@@ -127,18 +127,21 @@ jobs:
           echo "RESTORE_SOURCE=frict" >> "$GITHUB_ENV"
           echo "RESTORE_FROM_SNAPSHOT=${{ inputs.restore_from_snapshot || 'true' }}" >> "$GITHUB_ENV"
 
-          # Per-environment domain. Non-prod uses a fixed subdomain; prod uses the secret.
+          # Domain derives from the prod apex (secrets.DOMAIN_NAME) as the single source
+          # of truth: prod uses it directly, non-prod prefixes its env name as subdomain
+          # (e.g. loadtest -> loadtest.frict.es). Follows automatically if the apex changes.
+          PROD_DOMAIN="${{ secrets.DOMAIN_NAME }}"
           if [ "$ENV" = "frict" ]; then
-            DOMAIN="${{ secrets.DOMAIN_NAME }}"
+            DOMAIN="$PROD_DOMAIN"
           else
-            DOMAIN="loadtest.frict.es"
+            DOMAIN="${ENV}.${PROD_DOMAIN}"
           fi
           echo "DOMAIN_NAME=$DOMAIN" >> "$GITHUB_ENV"
 
           # Guard: a non-prod env must never resolve to the prod apex, or edge.yml's
           # Route53 A record would repoint production DNS to the clone's CloudFront.
-          if [ "$ENV" != "frict" ] && [ "$DOMAIN" = "frict.es" ]; then
-            echo "::error::Non-prod environment '$ENV' resolved to apex 'frict.es'. Aborting to protect prod DNS."
+          if [ "$ENV" != "frict" ] && [ "$DOMAIN" = "$PROD_DOMAIN" ]; then
+            echo "::error::Non-prod environment '$ENV' resolved to apex '$PROD_DOMAIN'. Aborting to protect prod DNS."
             exit 1
           fi
           echo "Environment: $ENV | Domain: $DOMAIN | Restore from snapshot: $RESTORE_FROM_SNAPSHOT (source: frict)"
@@ -218,6 +221,46 @@ jobs:
           BUCKET: ${{ env.STACK_NAME }}-cfn-artifacts-${{ steps.account.outputs.id }}-${{ env.AWS_REGION }}
         run: |
           aws s3 mb "s3://$BUCKET" --region $AWS_REGION 2>/dev/null || true
+
+      # Images bucket = persistent user data, NOT a stack resource. Created here
+      # idempotently (create only if missing; never blocks) and never deleted on
+      # destroy, so images survive across deploys/destroys. Name is deterministic
+      # and matches what main.yml passes to the ECS task (APP_STORAGE_*).
+      - name: Ensure images bucket (persistent)
+        env:
+          ACCOUNT_ID: ${{ steps.account.outputs.id }}
+        run: |
+          BUCKET="${STACK_NAME}-images-${ACCOUNT_ID}-${AWS_REGION}"
+
+          if aws s3api head-bucket --bucket "$BUCKET" --region "$AWS_REGION" 2>/dev/null; then
+            echo "Images bucket already exists — reusing: $BUCKET"
+          else
+            echo "Creating images bucket: $BUCKET"
+            aws s3api create-bucket --bucket "$BUCKET" --region "$AWS_REGION" \
+              --create-bucket-configuration LocationConstraint="$AWS_REGION"
+          fi
+
+          # Re-apply configuration every run (idempotent). Order matters: the public
+          # access block must allow bucket policies before we set the public-read one.
+          aws s3api put-public-access-block --bucket "$BUCKET" --region "$AWS_REGION" \
+            --public-access-block-configuration \
+            BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false
+
+          aws s3api put-bucket-cors --bucket "$BUCKET" --region "$AWS_REGION" \
+            --cors-configuration "{\"CORSRules\":[{\"AllowedHeaders\":[\"*\"],\"AllowedMethods\":[\"GET\",\"PUT\"],\"AllowedOrigins\":[\"https://${DOMAIN_NAME}\"],\"MaxAgeSeconds\":3600}]}"
+
+          POLICY=$(jq -n --arg acct "$ACCOUNT_ID" --arg bkt "$BUCKET" '{
+            Version: "2012-10-17",
+            Statement: [
+              { Sid: "AllowFargateTaskRole", Effect: "Allow",
+                Principal: { AWS: ("arn:aws:iam::" + $acct + ":root") },
+                Action: ["s3:GetObject","s3:PutObject","s3:DeleteObject","s3:ListBucket"],
+                Resource: [("arn:aws:s3:::" + $bkt), ("arn:aws:s3:::" + $bkt + "/*")] },
+              { Sid: "AllowPublicRead", Effect: "Allow", Principal: "*",
+                Action: "s3:GetObject", Resource: ("arn:aws:s3:::" + $bkt + "/*") }
+            ]
+          }')
+          aws s3api put-bucket-policy --bucket "$BUCKET" --region "$AWS_REGION" --policy "$POLICY"
 
       - name: Package CloudFormation templates
         env:
