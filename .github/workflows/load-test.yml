@@ -4,23 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: "Target URL (e.g. https://app.example.com)"
-        required: true
-      vus:
-        description: "Max virtual users"
+        description: "Target URL (the disposable clone — NOT prod frict.es)"
         required: false
-        default: "100"
-      duration:
-        description: "Sustained phase duration (e.g. 2m, 5m)"
-        required: false
-        default: "2m"
+        default: "https://loadtest.frict.es"
+      profile:
+        description: "Load profile"
+        type: choice
+        options: [smoke, load, scale, soak]
+        default: load
+      include_writes:
+        description: "Include reversible write operations (favourite add/remove)"
+        type: boolean
+        default: false
+      run_staff:
+        description: "Also drive the staff (manager) dashboard scenario"
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
   contents: read
-
-env:
-  AWS_REGION: eu-west-1
 
 jobs:
   load-test:
@@ -40,16 +43,59 @@ jobs:
 
       - name: Run k6 load test
         env:
-          BASE_URL: ${{ github.event.inputs.base_url }}
+          BASE_URL: ${{ inputs.base_url }}
+          PROFILE: ${{ inputs.profile }}
+          INCLUDE_WRITES: ${{ inputs.include_writes }}
           TEST_USER: ${{ secrets.LOAD_TEST_USER }}
           TEST_PASS: ${{ secrets.LOAD_TEST_PASS }}
+          STAFF_USER: ${{ inputs.run_staff && secrets.LOAD_TEST_STAFF_USER || '' }}
+          STAFF_PASS: ${{ inputs.run_staff && secrets.LOAD_TEST_STAFF_PASS || '' }}
         run: |
           k6 run infra/k6/load-test.js \
             --out json=results.json \
-            --summary-export=summary.json \
-            -e BASE_URL="$BASE_URL" \
-            -e TEST_USER="$TEST_USER" \
-            -e TEST_PASS="$TEST_PASS"
+            --summary-export=summary.json
+
+      # Build a readable markdown digest from summary.json and render it on the
+      # run's Summary tab. This does NOT touch k6's native console output (kept in
+      # the step log above, preserved even when thresholds fail).
+      - name: Publish report to job summary
+        if: always()
+        run: |
+          node -e '
+          const fs = require("fs");
+          let s;
+          try { s = JSON.parse(fs.readFileSync("summary.json", "utf8")); }
+          catch (e) { console.log("## k6\n\nNo se generó summary.json (el test pudo abortar en setup)."); process.exit(0); }
+          const m = s.metrics || {};
+          const get = (n, k) => (m[n] && m[n][k] !== undefined ? m[n][k] : undefined);
+          const rateOf = (n) => {
+            const x = m[n]; if (!x) return undefined;
+            if (x.value !== undefined) return x.value;
+            if (x.passes !== undefined && x.fails !== undefined) { const t = x.passes + x.fails; return t ? x.passes / t : 0; }
+            return undefined;
+          };
+          const r = (x) => (x === undefined ? "—" : Math.round(x * 100) / 100);
+          const ms = (x) => (x === undefined ? "—" : r(x) + " ms");
+          const pct = (x) => (x === undefined ? "—" : r(x * 100) + " %");
+          const vus = get("vus_max", "value") !== undefined ? get("vus_max", "value") : get("vus_max", "max");
+          const o = [];
+          o.push("## 📊 k6 load test");
+          o.push("");
+          o.push("| Métrica | Valor |");
+          o.push("| --- | --- |");
+          o.push("| Requests | " + (get("http_reqs", "count") === undefined ? "—" : get("http_reqs", "count")) + " (" + r(get("http_reqs", "rate")) + " req/s) |");
+          o.push("| VUs máx | " + (vus === undefined ? "—" : vus) + " |");
+          o.push("| Latencia avg | " + ms(get("http_req_duration", "avg")) + " |");
+          o.push("| Latencia p95 | " + ms(get("http_req_duration", "p(95)")) + " |");
+          o.push("| Latencia p99 | " + ms(get("http_req_duration", "p(99)")) + " |");
+          o.push("| TTFB (waiting) p95 | " + ms(get("http_req_waiting", "p(95)")) + " |");
+          o.push("| http_req_failed | " + pct(rateOf("http_req_failed")) + " |");
+          o.push("| errores (app) | " + pct(rateOf("errors")) + " |");
+          o.push("| checks OK | " + pct(rateOf("checks")) + " |");
+          o.push("");
+          o.push("_Umbrales y desglose por endpoint: ver el log del step de k6 y el estado (rojo/verde) del job._");
+          console.log(o.join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         if: always()

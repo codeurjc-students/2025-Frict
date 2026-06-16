@@ -41,9 +41,19 @@ Parameters:
     Type: String
     Default: ""
     NoEcho: true
+  MySQLSnapshotArn:
+    Type: String
+    Default: ""
+    Description: "ARN of the RDS snapshot to restore from (leave empty for a fresh instance)"
+  DocDBSnapshotArn:
+    Type: String
+    Default: ""
+    Description: "ARN of the DocumentDB cluster snapshot to restore from (leave empty for a fresh cluster)"
 
 Conditions:
   CreateDocDB: !Equals [!Ref EnableDocDB, "true"]
+  RestoreMySQL: !Not [!Equals [!Ref MySQLSnapshotArn, ""]]
+  RestoreDocDB: !Not [!Equals [!Ref DocDBSnapshotArn, ""]]
 
 Resources:
 
@@ -134,9 +144,13 @@ Resources:
       DBInstanceClass: db.t4g.micro
       AllocatedStorage: 20
       StorageType: gp3
-      MasterUsername: !Sub "{{resolve:secretsmanager:${MySQLSecret}:SecretString:username}}"
+      DBSnapshotIdentifier: !If [RestoreMySQL, !Ref MySQLSnapshotArn, !Ref "AWS::NoValue"]
+      MasterUsername: !If
+        - RestoreMySQL
+        - !Ref "AWS::NoValue"
+        - !Sub "{{resolve:secretsmanager:${MySQLSecret}:SecretString:username}}"
       MasterUserPassword: !Sub "{{resolve:secretsmanager:${MySQLSecret}:SecretString:password}}"
-      DBName: Frict
+      DBName: !If [RestoreMySQL, !Ref "AWS::NoValue", "Frict"]
       DBSubnetGroupName: !Ref RDSSubnetGroup
       VPCSecurityGroups:
         - !Ref RDSSecurityGroupId
@@ -170,7 +184,11 @@ Resources:
     UpdateReplacePolicy: Snapshot
     Properties:
       DBClusterIdentifier: !Sub "${EnvironmentName}-docdb"
-      MasterUsername: !Sub "{{resolve:secretsmanager:${DocDBSecret}:SecretString:username}}"
+      SnapshotIdentifier: !If [RestoreDocDB, !Ref DocDBSnapshotArn, !Ref "AWS::NoValue"]
+      MasterUsername: !If
+        - RestoreDocDB
+        - !Ref "AWS::NoValue"
+        - !Sub "{{resolve:secretsmanager:${DocDBSecret}:SecretString:username}}"
       MasterUserPassword: !Sub "{{resolve:secretsmanager:${DocDBSecret}:SecretString:password}}"
       DBSubnetGroupName: !Ref DocDBSubnetGroup
       VpcSecurityGroupIds:

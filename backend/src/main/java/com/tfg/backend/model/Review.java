@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "reviews")
+@FilterDef(name = "activeProductReviewFilter")
+@Filter(name = "activeProductReviewFilter", condition = "product_id IN (SELECT p.id FROM products p WHERE p.is_active = true)")
 public class Review {
 
     @Id
@@ -25,6 +29,7 @@ public class Review {
 
     private int rating;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String text;
 
     @CreationTimestamp

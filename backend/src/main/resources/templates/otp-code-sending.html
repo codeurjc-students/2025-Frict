@@ -1,44 +1,69 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Recuperación de Contraseña</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body style="font-family: Arial, sans-serif; background-color: #f1f5f9; padding: 24px; margin: 0;">
 
-<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; margin-top: 40px; margin-bottom: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
+<div style="max-width: 620px; margin: 0 auto;">
 
-    <div style="height: 6px; background: linear-gradient(90deg, #06b6d4 0%, #a855f7 100%); width: 100%;"></div>
+  <!-- ===== CABECERA AZUL ===== -->
+  <div style="background: #2563eb; padding: 20px 30px; border-radius: 10px 10px 0 0;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="vertical-align: middle;">
+          <table style="border-collapse: collapse;">
+            <tr>
+              <td style="vertical-align: middle; padding-right: 8px;">
+                <img src="cid:logo" width="20" height="20" alt="" style="display: block;"/>
+              </td>
+              <td style="vertical-align: middle;">
+                <span style="font-size: 20px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;" th:text="${appName}">TecHub</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <span style="font-size: 11px; color: rgba(255,255,255,0.75);">Recuperación de contraseña</span>
+        </td>
+      </tr>
+    </table>
+  </div>
 
-    <div style="padding: 40px 30px;">
+  <!-- ===== CUERPO PRINCIPAL ===== -->
+  <div style="background: #ffffff; padding: 36px 30px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
 
-        <div style="text-align: center; margin-bottom: 30px;">
-            <span style="font-size: 24px; font-weight: 800; color: #0f172a; tracking-wide: -0.5px;">MiTienda</span>
-        </div>
+    <h1 style="margin: 0 0 8px 0; font-size: 22px; color: #2563eb; font-weight: bold;">Código de verificación</h1>
+    <p style="margin: 0 0 28px 0; font-size: 14px; color: #334155;">
+      Hola <strong th:text="${username}">Usuario</strong>, hemos recibido una solicitud para restablecer tu contraseña.
+    </p>
 
-        <h1 style="color: #0f172a; font-size: 20px; font-weight: 700; margin-bottom: 10px; text-align: center;">Código de verificación</h1>
+    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 0 0 28px 0;"/>
 
-        <p style="color: #64748b; font-size: 16px; line-height: 1.5; text-align: center; margin-bottom: 25px;">
-            Hola <strong th:text="${username}" style="color: #0f172a;">Usuario</strong>, hemos recibido una solicitud para restablecer tu contraseña.
-        </p>
-
-        <div style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 25px;">
-            <span style="display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Tu código de seguridad</span>
-            <span th:text="${otpCode}" style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 800; color: #0f172a; letter-spacing: 5px; display: block;">123456</span>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 30px;">
-            <a th:href="${resetLink}" style="display: inline-block; background-color: #06b6d4; color: #ffffff; text-decoration: none; font-weight: 600; padding: 12px 24px; border-radius: 8px; font-size: 16px;">Restablecer contraseña</a>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-
-        <p style="color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
-            Si no has solicitado este cambio, puedes ignorar este correo. Tu contraseña no cambiará hasta que introduzcas este código.<br>
-            &copy; 2025 MiTienda Inc.
-        </p>
+    <!-- BLOQUE DEL CÓDIGO OTP -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 28px;">
+      <span style="display: block; font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Tu código de seguridad</span>
+      <span th:text="${otpCode}"
+            style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: bold; color: #1e293b; letter-spacing: 8px; display: block;">123456</span>
     </div>
-</div>
 
+    <!-- BOTÓN CTA -->
+    <div style="text-align: center; margin-bottom: 28px;">
+      <a th:href="${resetLink}"
+         style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 28px; border-radius: 8px; font-size: 14px;">
+        Restablecer contraseña
+      </a>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 0;"/>
+
+  </div>
+
+  <!-- ===== PIE ===== -->
+  <div style="background: #f8fafc; padding: 20px 30px; border-radius: 0 0 10px 10px; border: 1px solid #e2e8f0; border-top: 0; text-align: center;">
+    <p style="margin: 0 0 4px 0; font-size: 12px; color: #64748b;">
+      Si no has solicitado este cambio, puedes ignorar este correo. Tu contraseña no cambiará.
+    </p>
+    <p style="margin: 0; font-size: 11px; color: #94a3b8;">&copy; Frict &mdash; El equipo de TecHub</p>
+  </div>
+
+</div>
 </body>
 </html>

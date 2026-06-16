@@ -25,9 +25,11 @@ public class ProductVisibilityAspect {
         Session session = entityManager.unwrap(Session.class);
 
         if (shouldFilterProducts()) {
-            Filter filter = session.enableFilter("activeProductFilter");
+            session.enableFilter("activeProductFilter");
+            session.enableFilter("activeProductReviewFilter");
         } else {
             session.disableFilter("activeProductFilter");
+            session.disableFilter("activeProductReviewFilter");
         }
 
         return joinPoint.proceed();

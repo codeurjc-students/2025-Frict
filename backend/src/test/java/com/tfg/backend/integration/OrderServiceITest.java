@@ -143,7 +143,7 @@ public class OrderServiceITest {
         assertEquals("Smart TV", savedItem.getProductName(), "The product name must be hardcoded");
 
         // 6. Assert Email was triggered
-        verify(emailService).sendOrderConfirmation(anyString(), anyString(), anyString(), anyList(), anyDouble());
+        verify(emailService).sendOrderConfirmation(anyString(), any(Order.class));
     }
 
     /**
@@ -247,7 +247,7 @@ public class OrderServiceITest {
     }
 
     /**
-     * Tests the final deletion of an order, ensuring it's only possible if it's completed or cancelled.
+     * Tests the final deletion of an order, ensuring it's only possible if it's completed or canceled.
      */
     @Test
     @DisplayName("Delete finished order removes it from DB only if status is COMPLETED or CANCELLED")

@@ -364,7 +364,7 @@ class OrderServiceUTest {
             assertTrue(selectedShop.getAssignedBudget() > 1000.0);
             assertNull(cartItem.getProduct());
             assertEquals("Phone", cartItem.getProductName());
-            verify(emailService).sendOrderConfirmation(anyString(), anyString(), eq("REF-123"), anyList(), anyDouble());
+            verify(emailService).sendOrderConfirmation(anyString(), any(Order.class));
         }
 
         @Test

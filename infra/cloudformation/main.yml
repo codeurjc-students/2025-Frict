@@ -55,6 +55,12 @@ Parameters:
     Type: String
     Default: ""
     NoEcho: true
+  MySQLSnapshotArn:
+    Type: String
+    Default: ""
+  DocDBSnapshotArn:
+    Type: String
+    Default: ""
   CloudFrontPrefixListId:
     Type: String
     Description: AWS-managed prefix list ID for CloudFront origin-facing IPs
@@ -92,6 +98,8 @@ Resources:
         RDSSecurityGroupId: !GetAtt NetworkStack.Outputs.RDSSecurityGroupId
         DocDBSecurityGroupId: !GetAtt NetworkStack.Outputs.DocDBSecurityGroupId
         EnableDocDB: !Ref EnableDocDB
+        MySQLSnapshotArn: !Ref MySQLSnapshotArn
+        DocDBSnapshotArn: !Ref DocDBSnapshotArn
         SenderMailHost: !Ref SenderMailHost
         SenderMailAddress: !Ref SenderMailAddress
         SenderMailUsername: !Ref SenderMailUsername

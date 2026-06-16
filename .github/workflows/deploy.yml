@@ -6,18 +6,38 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        options: [frict, loadtest]
+        default: frict
+      image_tag:
+        description: "Docker image tag to deploy (manual runs)"
+        type: string
+        required: false
+        default: "dev"
+      hibernate_ddl_auto:
+        description: "Hibernate schema mode"
+        type: choice
+        options: [validate, update]
+        default: validate
+      restore_from_snapshot:
+        description: "Restore DBs from the latest manual prod snapshot (only on first deploy of an env)"
+        type: choice
+        options: ["true", "false"]
+        default: "true"
 
 permissions:
   id-token: write
   contents: read
   actions: read
 
+# Per-environment resource names are derived in a "Resolve environment" step in
+# each job (GITHUB_ENV is per-job). The automatic workflow_run trigger has no
+# inputs, so environment defaults to 'frict'.
 env:
   AWS_REGION: eu-west-1
-  STACK_NAME: frict
-  ECR_REPOSITORY: frict-app
-  ECS_CLUSTER: frict-cluster
-  ECS_SERVICE: frict-svc
   DOCKERHUB_IMAGE: mjpulido/frict
 
 jobs:
@@ -30,6 +50,12 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.value }}
     steps:
+      - name: Resolve environment
+        run: |
+          ENV="${{ inputs.environment || 'frict' }}"
+          echo "ECR_REPOSITORY=$ENV-app" >> "$GITHUB_ENV"
+          echo "Target environment: $ENV (ECR repo: $ENV-app)"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -69,7 +95,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             echo "value=$(cat image_tag.txt)" >> "$GITHUB_OUTPUT"
           else
-            echo "value=${{ vars.DEPLOY_IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+            echo "value=${{ inputs.image_tag }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Pull from Docker Hub and push to ECR
@@ -89,6 +115,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve environment
+        run: |
+          ENV="${{ inputs.environment || 'frict' }}"
+          echo "STACK_NAME=$ENV"          >> "$GITHUB_ENV"
+          echo "RDS_INSTANCE=$ENV-mysql"  >> "$GITHUB_ENV"
+          echo "DOCDB_CLUSTER=$ENV-docdb" >> "$GITHUB_ENV"
+
+          # Restore always clones from PROD's latest manual snapshot (loadtest reads prod;
+          # a fresh prod deploy reads its own). Controlled by the restore_from_snapshot input.
+          echo "RESTORE_SOURCE=frict" >> "$GITHUB_ENV"
+          echo "RESTORE_FROM_SNAPSHOT=${{ inputs.restore_from_snapshot || 'true' }}" >> "$GITHUB_ENV"
+
+          # Per-environment domain. Non-prod uses a fixed subdomain; prod uses the secret.
+          if [ "$ENV" = "frict" ]; then
+            DOMAIN="${{ secrets.DOMAIN_NAME }}"
+          else
+            DOMAIN="loadtest.frict.es"
+          fi
+          echo "DOMAIN_NAME=$DOMAIN" >> "$GITHUB_ENV"
+
+          # Guard: a non-prod env must never resolve to the prod apex, or edge.yml's
+          # Route53 A record would repoint production DNS to the clone's CloudFront.
+          if [ "$ENV" != "frict" ] && [ "$DOMAIN" = "frict.es" ]; then
+            echo "::error::Non-prod environment '$ENV' resolved to apex 'frict.es'. Aborting to protect prod DNS."
+            exit 1
+          fi
+          echo "Environment: $ENV | Domain: $DOMAIN | Restore from snapshot: $RESTORE_FROM_SNAPSHOT (source: frict)"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -99,6 +153,65 @@ jobs:
       - name: Get AWS account ID
         id: account
         run: echo "id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve snapshot parameters
+        id: snap
+        run: |
+          MYSQL_SNAP=""
+          DOCDB_SNAP=""
+
+          STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query "Stacks[0].StackStatus" --output text \
+            --region $AWS_REGION 2>/dev/null || echo "DOES_NOT_EXIST")
+
+          if [ "$STACK_STATUS" != "DOES_NOT_EXIST" ]; then
+            # Stack exists: echo back the current parameter values unchanged so CloudFormation
+            # sees no diff and never touches the running database instances.
+            MYSQL_SNAP=$(aws cloudformation describe-stacks \
+              --stack-name $STACK_NAME \
+              --query "Stacks[0].Parameters[?ParameterKey=='MySQLSnapshotArn'].ParameterValue | [0]" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$MYSQL_SNAP" = "None" ] && MYSQL_SNAP=""
+
+            DOCDB_SNAP=$(aws cloudformation describe-stacks \
+              --stack-name $STACK_NAME \
+              --query "Stacks[0].Parameters[?ParameterKey=='DocDBSnapshotArn'].ParameterValue | [0]" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$DOCDB_SNAP" = "None" ] && DOCDB_SNAP=""
+
+            echo "Stack exists — keeping snapshot parameters unchanged"
+            echo "  MySQLSnapshotArn:  ${MYSQL_SNAP:-<empty>}"
+            echo "  DocDBSnapshotArn:  ${DOCDB_SNAP:-<empty>}"
+
+          elif [ "$RESTORE_FROM_SNAPSHOT" = "true" ]; then
+            # Stack does not exist + restore requested: clone the latest manual snapshot of PROD's
+            # DBs ($RESTORE_SOURCE) into this env's new instances. The source DBs are only read;
+            # restore creates brand-new instances and never touches the source.
+            echo "Stack not found — restore mode: searching latest manual snapshots of '$RESTORE_SOURCE'..."
+
+            MYSQL_SNAP=$(aws rds describe-db-snapshots \
+              --db-instance-identifier "${RESTORE_SOURCE}-mysql" \
+              --snapshot-type manual \
+              --query "max_by(DBSnapshots[?Status=='available'], &SnapshotCreateTime).DBSnapshotArn" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$MYSQL_SNAP" = "None" ] && MYSQL_SNAP=""
+
+            DOCDB_SNAP=$(aws rds describe-db-cluster-snapshots \
+              --db-cluster-identifier "${RESTORE_SOURCE}-docdb" \
+              --snapshot-type manual \
+              --query "max_by(DBClusterSnapshots[?Status=='available'], &SnapshotCreateTime).DBClusterSnapshotArn" \
+              --output text --region $AWS_REGION 2>/dev/null || echo "")
+            [ "$DOCDB_SNAP" = "None" ] && DOCDB_SNAP=""
+
+            echo "  MySQLSnapshotArn:  ${MYSQL_SNAP:-NONE FOUND — fresh DB will be created}"
+            echo "  DocDBSnapshotArn:  ${DOCDB_SNAP:-NONE FOUND — fresh cluster will be created}"
+          else
+            echo "Stack not found — fresh deploy (no snapshot restore)"
+          fi
+
+          echo "mysql=$MYSQL_SNAP" >> "$GITHUB_OUTPUT"
+          echo "docdb=$DOCDB_SNAP" >> "$GITHUB_OUTPUT"
 
       - name: Ensure artifact bucket
         env:
@@ -136,18 +249,20 @@ jobs:
             --no-fail-on-empty-changeset \
             --parameter-overrides \
               "EnvironmentName=$STACK_NAME" \
-              "DomainName=${{ secrets.DOMAIN_NAME }}" \
+              "DomainName=$DOMAIN_NAME" \
               "HostedZoneId=${{ secrets.HOSTED_ZONE_ID }}" \
               "CloudFrontCertificateArn=${{ secrets.CF_CERT_ARN }}" \
               "CloudFrontPrefixListId=${{ steps.prefix.outputs.cf_prefix_list }}" \
-              "EnableDocDB=${{ vars.ENABLE_DOCDB || 'true' }}" \
-              "HibernateDdlAuto=${{ vars.HIBERNATE_DDL_AUTO || 'update' }}" \
+              "EnableDocDB=true" \
+              "HibernateDdlAuto=${{ inputs.hibernate_ddl_auto || 'validate' }}" \
               "SenderMailHost=${{ secrets.SENDER_MAIL_HOST }}" \
               "SenderMailAddress=${{ secrets.SENDER_MAIL_ADDRESS }}" \
               "SenderMailUsername=${{ secrets.SENDER_MAIL_USERNAME }}" \
               "SenderMailPassword=${{ secrets.SENDER_MAIL_PASSWORD }}" \
               "SenderMailPort=${{ secrets.SENDER_MAIL_PORT || '587' }}" \
               "GoogleAuthClientId=${{ secrets.GOOGLE_AUTH_CLIENT_ID }}" \
+              "MySQLSnapshotArn=${{ steps.snap.outputs.mysql }}" \
+              "DocDBSnapshotArn=${{ steps.snap.outputs.docdb }}" \
               "ImageTag=${{ needs.push-to-ecr.outputs.tag }}"
 
       - name: Upload default images to S3
@@ -188,6 +303,12 @@ jobs:
     needs: [infra]
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve environment
+        run: |
+          ENV="${{ inputs.environment || 'frict' }}"
+          echo "ECS_CLUSTER=$ENV-cluster" >> "$GITHUB_ENV"
+          echo "ECS_SERVICE=$ENV-svc"     >> "$GITHUB_ENV"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
