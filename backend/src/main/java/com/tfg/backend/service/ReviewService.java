@@ -103,7 +103,10 @@ public class ReviewService {
         eventPublisher.publishEvent(reviewEvent);
 
         //Add registries
-        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, 1.0, loggedUser.getSelectedShop().getReferenceCode(), loggedUser.getSelectedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), product.getReferenceCode(), product.getName(), null, null);
+        Shop selectedShop = loggedUser.getSelectedShop();
+        String shopCode = selectedShop != null ? selectedShop.getReferenceCode() : null;
+        String shopName = selectedShop != null ? selectedShop.getName() : null;
+        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, 1.0, shopCode, shopName, loggedUser.getUsername(), loggedUser.getName(), product.getReferenceCode(), product.getName(), null, null);
         eventPublisher.publishEvent(new RegistryEvent(reviewRegistry));
 
         return reviewRepository.save(newReview);
@@ -148,7 +151,10 @@ public class ReviewService {
         eventPublisher.publishEvent(reviewEvent);
 
         //Add registries
-        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, -1.0, loggedUser.getSelectedShop().getReferenceCode(), loggedUser.getSelectedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), reviewedProduct.getReferenceCode(), reviewedProduct.getName(), null, null);
+        Shop selectedShop = loggedUser.getSelectedShop();
+        String shopCode = selectedShop != null ? selectedShop.getReferenceCode() : null;
+        String shopName = selectedShop != null ? selectedShop.getName() : null;
+        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, -1.0, shopCode, shopName, loggedUser.getUsername(), loggedUser.getName(), reviewedProduct.getReferenceCode(), reviewedProduct.getName(), null, null);
         eventPublisher.publishEvent(new RegistryEvent(reviewRegistry));
 
         reviewRepository.delete(review);
