@@ -7,10 +7,10 @@ import {MenuItem} from 'primeng/api';
 export class BreadcrumbService {
   private readonly baseBreadcrumbs = signal<MenuItem[]>([]);
 
-  // Nodos que van al final (ej: Nombre del Producto)
+  // Ending nodes
   private readonly appendedNodes = signal<Record<string, MenuItem[]>>({});
 
-  // NUEVO: Nodos que van antes del último (ej: Categorías, Búsqueda)
+  // Penultimate nodes
   private readonly penultimateNodes = signal<Record<string, MenuItem[]>>({});
 
   private readonly currentUrl = signal<string>('');

@@ -3,33 +3,15 @@ package com.tfg.backend.event;
 import com.tfg.backend.dto.EntityType;
 import com.tfg.backend.dto.EventAction;
 import com.tfg.backend.model.*;
-import com.tfg.backend.service.NotificationMessageBuilder;
-import com.tfg.backend.service.NotificationMessageBuilder.NotificationMessage;
-import com.tfg.backend.service.NotificationMessageBuilder.OrderMessageContext;
-import com.tfg.backend.service.NotificationMessageBuilder.ProductMessageContext;
-import com.tfg.backend.service.NotificationMessageBuilder.ReviewMessageContext;
-import com.tfg.backend.service.NotificationMessageBuilder.ShopMessageContext;
-import com.tfg.backend.service.NotificationMessageBuilder.ShopStockMessageContext;
-import com.tfg.backend.service.NotificationMessageBuilder.TruckMessageContext;
-import com.tfg.backend.service.NotificationMessageBuilder.UserMessageContext;
-import com.tfg.backend.service.NotificationService;
-import com.tfg.backend.service.OrderService;
-import com.tfg.backend.service.ProductService;
-import com.tfg.backend.service.ReviewService;
-import com.tfg.backend.service.ShopService;
-import com.tfg.backend.service.TruckService;
-import com.tfg.backend.service.UserService;
+import com.tfg.backend.service.*;
+import com.tfg.backend.service.NotificationMessageBuilder.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @Slf4j
