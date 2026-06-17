@@ -80,7 +80,7 @@ export class ReportsComponent implements OnInit {
   graphData = signal<any[]>([]);
   tableData = signal<any[]>([]);
 
-  // SEÑALES DE PAGINACIÓN
+  // Pagination signals
   totalRecords = signal<number>(0);
   currentPage = signal<number>(0);
   pageSize = signal<number>(10);
@@ -88,7 +88,7 @@ export class ReportsComponent implements OnInit {
   selectedDynamicColumns = signal<string[]>([]);
 
   private entityFieldMap: Record<string, { id: string, name: string }> = {
-    'SHOP': { id: 'meta_shopId', name: 'meta_shopName' }, // <-- Cambiado
+    'SHOP': { id: 'meta_shopId', name: 'meta_shopName' },
     'PRODUCT': { id: 'meta_productId', name: 'meta_productName' },
     'USER': { id: 'meta_userId', name: 'meta_userName' },
     'ORDER': { id: 'meta_orderId', name: 'meta_orderName' },
@@ -115,8 +115,8 @@ export class ReportsComponent implements OnInit {
     'timestamp': 'Fecha',
     'metric_value': 'Variación',
     'metric_total': 'Acumulado',
-    'meta_shopId': 'ID Tienda',   // <-- Cambiado
-    'meta_shopName': 'Tienda',    // <-- Cambiado
+    'meta_shopId': 'ID Tienda',
+    'meta_shopName': 'Tienda',
     'meta_productId': 'ID Prod.',
     'meta_productName': 'Producto',
     'meta_userId': 'ID Usuario',
@@ -198,7 +198,7 @@ export class ReportsComponent implements OnInit {
 
     data.forEach(row => {
       if (row.metadata) {
-        if (row.metadata.shopId) foundEntities.add('SHOP'); // <-- Cambiado
+        if (row.metadata.shopId) foundEntities.add('SHOP');
         if (row.metadata.productId) foundEntities.add('PRODUCT');
         if (row.metadata.userId) foundEntities.add('USER');
         if (row.metadata.orderId) foundEntities.add('ORDER');
@@ -283,7 +283,7 @@ export class ReportsComponent implements OnInit {
 
         this.registryService.getCrossReferences(entity, metric).subscribe({
           next: (referencesMap) => {
-            this.shopOptions.set((referencesMap.shopId || []).filter((item: any) => item != null)); // <-- Cambiado
+            this.shopOptions.set((referencesMap.shopId || []).filter((item: any) => item != null));
             this.productOptions.set((referencesMap.productId || []).filter((item: any) => item != null));
             this.userOptions.set((referencesMap.userId || []).filter((item: any) => item != null));
             this.orderOptions.set((referencesMap.orderId || []).filter((item: any) => item != null));
@@ -296,11 +296,11 @@ export class ReportsComponent implements OnInit {
 
   private resetAssociatedEntities() {
     this.selectedProducts.set([]);
-    this.selectedShops.set([]); // <-- Cambiado
+    this.selectedShops.set([]);
     this.selectedOrders.set([]);
     this.selectedUsers.set([]);
     this.productOptions.set([]);
-    this.shopOptions.set([]); // <-- Cambiado
+    this.shopOptions.set([]);
     this.orderOptions.set([]);
     this.userOptions.set([]);
 

@@ -66,7 +66,7 @@ export class CustomValidators {
     const password = group.get('password')?.value;
     const repeatPassword = group.get('repeatPassword')?.value;
 
-    // Si no coinciden y ambos tienen valor, devolvemos error
+    // If not matched and both have values, throw error
     return password === repeatPassword ? null : { mismatch: true };
   };
 }

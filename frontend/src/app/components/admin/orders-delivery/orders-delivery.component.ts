@@ -74,7 +74,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   newComment: string = '';
   activeTab: string = '0';
 
-  // --- VARIABLES PARA LOS MODALES DE RECOGIDA Y CANCELACIÓN ---
   displayCollectDialog = false;
   collectComment = '';
 
@@ -97,7 +96,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   newTruckStatus: string = '';
   newTruckComment: string = '';
 
-  // Instancia del escáner QR
+  // QR scanner instance
   private html5QrcodeScanner: Html5QrcodeScanner | null = null;
 
   ngOnInit() {

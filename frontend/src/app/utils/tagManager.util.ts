@@ -92,7 +92,7 @@ export function getStockTagInfo(units: number | null | undefined, localMode: boo
       severity: 'warn'
     };
   } else {
-    // Si units es 0 o menor
+    // Units = 0
     return {
       message: `${prefix}: Agotado`,
       icon: 'pi pi-times',
@@ -113,7 +113,7 @@ export function getOrderStatusTagInfo(status: string): TagInformation {
   }
 }
 
-// TRUCK HISTORY STATUS TAGS (desde el string del historial)
+// TRUCK HISTORY STATUS TAGS
 export function getTruckHistoryStatusTagInfo(status: string): TagInformation {
   switch (status) {
     case 'Descanso':            return { message: 'Descanso',            icon: 'pi pi-moon',         severity: 'success' };
@@ -124,7 +124,7 @@ export function getTruckHistoryStatusTagInfo(status: string): TagInformation {
   }
 }
 
-// STOCK LEVEL TAGS — siempre visible (distinto de getStockTagInfo, que devuelve null si stock > 10)
+// STOCK LEVEL TAGS
 export function getStockLevelTagInfo(units: number): TagInformation {
   if (units < 0)  return { message: 'No disponible', icon: 'pi pi-ban',                  severity: 'secondary' };
   if (units > 20) return { message: `${units} uds.`, icon: 'pi pi-box',                  severity: 'success' };

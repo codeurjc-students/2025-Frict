@@ -1,9 +1,11 @@
 package com.tfg.backend.controller;
 
-import com.tfg.backend.dto.*;
 import com.tfg.backend.dto.PageResponse;
-import com.tfg.backend.model.Product;
+import com.tfg.backend.dto.ProductDTO;
+import com.tfg.backend.dto.ShopStockDTO;
+import com.tfg.backend.dto.SpecFilterDTO;
 import com.tfg.backend.model.ImageInfo;
+import com.tfg.backend.model.Product;
 import com.tfg.backend.service.ProductService;
 import com.tfg.backend.utils.PageFormatter;
 import io.swagger.v3.oas.annotations.Operation;
