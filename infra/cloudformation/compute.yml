@@ -390,6 +390,7 @@ Resources:
               "x": 0, "y": 1, "width": 24, "height": 9,
               "properties": {
                 "title": "Autoescalado ECS + Carga k6",
+                "region": "${AWS::Region}",
                 "view": "timeSeries",
                 "stacked": false,
                 "period": 60,
@@ -427,6 +428,7 @@ Resources:
               "x": 0, "y": 10, "width": 12, "height": 6,
               "properties": {
                 "title": "Tareas ECS (desired / running)",
+                "region": "${AWS::Region}",
                 "view": "timeSeries",
                 "stacked": false,
                 "period": 60,
@@ -441,6 +443,7 @@ Resources:
                     { "label": "Running", "color": "#1D9E75", "stat": "Maximum" } ]
                 ],
                 "yAxis": { "left": { "min": 0, "max": 10, "label": "Tareas" } },
+                "annotations": { "horizontal": [] },
                 "legend": { "position": "bottom" }
               }
             },
@@ -449,6 +452,7 @@ Resources:
               "x": 12, "y": 10, "width": 12, "height": 6,
               "properties": {
                 "title": "Latencia k6 (p95 · p99)",
+                "region": "${AWS::Region}",
                 "view": "timeSeries",
                 "stacked": false,
                 "period": 60,
@@ -473,6 +477,7 @@ Resources:
               "x": 0, "y": 16, "width": 12, "height": 6,
               "properties": {
                 "title": "Tasa de errores k6",
+                "region": "${AWS::Region}",
                 "view": "timeSeries",
                 "stacked": false,
                 "period": 60,
@@ -496,6 +501,7 @@ Resources:
               "x": 12, "y": 16, "width": 12, "height": 6,
               "properties": {
                 "title": "ALB — Request count y latencia",
+                "region": "${AWS::Region}",
                 "view": "timeSeries",
                 "stacked": false,
                 "period": 60,
@@ -511,6 +517,7 @@ Resources:
                   "left":  { "label": "Segundos", "min": 0 },
                   "right": { "label": "Requests/min", "min": 0 }
                 },
+                "annotations": { "horizontal": [] },
                 "legend": { "position": "bottom" }
               }
             }
