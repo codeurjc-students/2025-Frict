@@ -21,11 +21,22 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  ENVIRONMENT_NAME: loadtest    # load tests always target the loadtest environment
+  AWS_REGION: eu-west-1         # must match the region where the stack is deployed
+  K6_NAMESPACE: k6/loadtest     # CloudWatch namespace for k6 metrics
+
 jobs:
   load-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Install k6
         run: |
@@ -38,8 +49,7 @@ jobs:
 
       - name: Run k6 load test
         env:
-          # Target is ALWAYS the loadtest clone, derived from the prod apex secret.
-          # Not overridable — this workflow never runs against any other host.
+          # Target is ALWAYS the loadtest clone, never overridable.
           BASE_URL: https://loadtest.${{ secrets.DOMAIN_NAME }}
           PROFILE: ${{ inputs.profile }}
           INCLUDE_WRITES: ${{ inputs.include_writes }}
@@ -47,8 +57,17 @@ jobs:
           TEST_PASS: ${{ secrets.LOAD_TEST_PASS }}
           STAFF_USER: ${{ inputs.run_staff && secrets.LOAD_TEST_STAFF_USER || '' }}
           STAFF_PASS: ${{ inputs.run_staff && secrets.LOAD_TEST_STAFF_PASS || '' }}
+          # experimental-cloudwatch: sends k6 metrics to CloudWatch in real time.
+          # Credentials come from the OIDC session configured above — no extra secrets needed.
+          K6_CLOUDWATCH_REGION: ${{ env.AWS_REGION }}
+          K6_CLOUDWATCH_NAMESPACE: ${{ env.K6_NAMESPACE }}
+          # Tag every data point with the run ID and profile so the dashboard can
+          # filter by a specific test run using the "run_id" dimension.
+          K6_CLOUDWATCH_DIMENSIONS: run_id=${{ github.run_id }},profile=${{ inputs.profile }}
+          K6_CLOUDWATCH_FLUSH_PERIOD: 5s
         run: |
           k6 run infra/k6/load-test.js \
+            --out experimental-cloudwatch \
             --out json=results.json \
             --summary-export=summary.json
 
@@ -57,12 +76,15 @@ jobs:
       # the step log above, preserved even when thresholds fail).
       - name: Publish report to job summary
         if: always()
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ENVIRONMENT_NAME: ${{ env.ENVIRONMENT_NAME }}
         run: |
-          node -e '
+          node << 'NODE'
           const fs = require("fs");
           let s;
           try { s = JSON.parse(fs.readFileSync("summary.json", "utf8")); }
-          catch (e) { console.log("## k6\n\nNo se generó summary.json (el test pudo abortar en setup)."); process.exit(0); }
+          catch (e) { process.stdout.write("## k6\n\nNo se generó summary.json (el test pudo abortar en setup).\n"); process.exit(0); }
           const m = s.metrics || {};
           const get = (n, k) => (m[n] && m[n][k] !== undefined ? m[n][k] : undefined);
           const rateOf = (n) => {
@@ -71,28 +93,35 @@ jobs:
             if (x.passes !== undefined && x.fails !== undefined) { const t = x.passes + x.fails; return t ? x.passes / t : 0; }
             return undefined;
           };
-          const r = (x) => (x === undefined ? "—" : Math.round(x * 100) / 100);
-          const ms = (x) => (x === undefined ? "—" : r(x) + " ms");
+          const r   = (x) => (x === undefined ? "—" : Math.round(x * 100) / 100);
+          const ms  = (x) => (x === undefined ? "—" : r(x) + " ms");
           const pct = (x) => (x === undefined ? "—" : r(x * 100) + " %");
           const vus = get("vus_max", "value") !== undefined ? get("vus_max", "value") : get("vus_max", "max");
+          const region = process.env.AWS_REGION || "eu-west-1";
+          const env    = process.env.ENVIRONMENT_NAME || "frict";
+          const cwUrl  = "https://" + region + ".console.aws.amazon.com/cloudwatch/home?region=" + region
+                       + "#dashboards:name=" + env + "-load-test";
           const o = [];
           o.push("## 📊 k6 load test");
           o.push("");
           o.push("| Métrica | Valor |");
           o.push("| --- | --- |");
-          o.push("| Requests | " + (get("http_reqs", "count") === undefined ? "—" : get("http_reqs", "count")) + " (" + r(get("http_reqs", "rate")) + " req/s) |");
+          o.push("| Requests | " + (get("http_reqs","count") === undefined ? "—" : get("http_reqs","count")) + " (" + r(get("http_reqs","rate")) + " req/s) |");
           o.push("| VUs máx | " + (vus === undefined ? "—" : vus) + " |");
-          o.push("| Latencia avg | " + ms(get("http_req_duration", "avg")) + " |");
-          o.push("| Latencia p95 | " + ms(get("http_req_duration", "p(95)")) + " |");
-          o.push("| Latencia p99 | " + ms(get("http_req_duration", "p(99)")) + " |");
-          o.push("| TTFB (waiting) p95 | " + ms(get("http_req_waiting", "p(95)")) + " |");
+          o.push("| Latencia avg | " + ms(get("http_req_duration","avg")) + " |");
+          o.push("| Latencia p95 | " + ms(get("http_req_duration","p(95)")) + " |");
+          o.push("| Latencia p99 | " + ms(get("http_req_duration","p(99)")) + " |");
+          o.push("| TTFB (waiting) p95 | " + ms(get("http_req_waiting","p(95)")) + " |");
           o.push("| http_req_failed | " + pct(rateOf("http_req_failed")) + " |");
           o.push("| errores (app) | " + pct(rateOf("errors")) + " |");
           o.push("| checks OK | " + pct(rateOf("checks")) + " |");
           o.push("");
+          o.push("> 📈 **[Ver gráfica en CloudWatch Dashboard](" + cwUrl + ")**");
+          o.push("");
           o.push("_Umbrales y desglose por endpoint: ver el log del step de k6 y el estado (rojo/verde) del job._");
-          console.log(o.join("\n"));
-          ' >> "$GITHUB_STEP_SUMMARY"
+          process.stdout.write(o.join("\n") + "\n");
+          NODE
+          >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         if: always()

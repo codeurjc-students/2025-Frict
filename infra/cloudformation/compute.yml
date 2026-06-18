@@ -370,6 +370,154 @@ Resources:
         ScaleOutCooldown: 60
         ScaleInCooldown: 300
 
+  # ── CloudWatch Dashboard — load test + autoscaling ───────────────────
+  LoadTestDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "${EnvironmentName}-load-test"
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "text",
+              "x": 0, "y": 0, "width": 24, "height": 1,
+              "properties": {
+                "markdown": "## ${EnvironmentName} — Autoescalado ECS durante prueba de carga k6\n*Namespace k6: k6/${EnvironmentName} · Cluster: ${EnvironmentName}-cluster · Servicio: ${EnvironmentName}-svc*"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 1, "width": 24, "height": 9,
+              "properties": {
+                "title": "Autoescalado ECS + Carga k6",
+                "view": "timeSeries",
+                "stacked": false,
+                "period": 60,
+                "stat": "Average",
+                "metrics": [
+                  [ "AWS/ECS", "CPUUtilization",
+                    "ClusterName", "${EnvironmentName}-cluster",
+                    "ServiceName", "${EnvironmentName}-svc",
+                    { "label": "% CPU (backend)", "color": "#e07070", "yAxis": "left" } ],
+                  [ "AWS/ECS", "MemoryUtilization",
+                    "ClusterName", "${EnvironmentName}-cluster",
+                    "ServiceName", "${EnvironmentName}-svc",
+                    { "label": "% Memoria (backend)", "color": "#70a0e0", "yAxis": "left" } ],
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"vus\"', 'Maximum', 60)",
+                      "label": "VUs activos (k6)", "color": "#9b6dd0", "yAxis": "right", "id": "vus" } ],
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_reqs\"', 'Sum', 60)",
+                      "label": "Req/min (k6)", "color": "#50a87e", "yAxis": "right", "id": "rps" } ]
+                ],
+                "yAxis": {
+                  "left":  { "label": "% Utilización", "min": 0, "max": 100 },
+                  "right": { "label": "VUs / Req·min⁻¹", "min": 0 }
+                },
+                "annotations": {
+                  "horizontal": [
+                    { "label": "Umbral scale-out (CPU 60%)", "value": 60,
+                      "color": "#e07070", "fill": "above" }
+                  ]
+                },
+                "legend": { "position": "bottom" },
+                "liveData": false
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 10, "width": 12, "height": 6,
+              "properties": {
+                "title": "Tareas ECS (desired / running)",
+                "view": "timeSeries",
+                "stacked": false,
+                "period": 60,
+                "metrics": [
+                  [ "ECS/ContainerInsights", "DesiredTaskCount",
+                    "ClusterName", "${EnvironmentName}-cluster",
+                    "ServiceName", "${EnvironmentName}-svc",
+                    { "label": "Desired", "color": "#4a90d9", "stat": "Maximum" } ],
+                  [ "ECS/ContainerInsights", "RunningTaskCount",
+                    "ClusterName", "${EnvironmentName}-cluster",
+                    "ServiceName", "${EnvironmentName}-svc",
+                    { "label": "Running", "color": "#1D9E75", "stat": "Maximum" } ]
+                ],
+                "yAxis": { "left": { "min": 0, "max": 10, "label": "Tareas" } },
+                "legend": { "position": "bottom" }
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 10, "width": 12, "height": 6,
+              "properties": {
+                "title": "Latencia k6 (p95 · p99)",
+                "view": "timeSeries",
+                "stacked": false,
+                "period": 60,
+                "metrics": [
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration\"', 'p95', 60)",
+                      "label": "Latencia p95 (ms)", "color": "#BA7517", "id": "p95" } ],
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration\"', 'p99', 60)",
+                      "label": "Latencia p99 (ms)", "color": "#E24B4A", "id": "p99" } ]
+                ],
+                "annotations": {
+                  "horizontal": [
+                    { "label": "SLO p95 < 800 ms", "value": 800, "color": "#BA7517" },
+                    { "label": "SLO p99 < 2000 ms", "value": 2000, "color": "#E24B4A" }
+                  ]
+                },
+                "yAxis": { "left": { "min": 0, "label": "ms" } },
+                "legend": { "position": "bottom" }
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 16, "width": 12, "height": 6,
+              "properties": {
+                "title": "Tasa de errores k6",
+                "view": "timeSeries",
+                "stacked": false,
+                "period": 60,
+                "metrics": [
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_failed\"', 'Average', 60)",
+                      "label": "http_req_failed", "color": "#E24B4A" } ],
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"errors\"', 'Average', 60)",
+                      "label": "errores app", "color": "#D85A30" } ]
+                ],
+                "annotations": {
+                  "horizontal": [
+                    { "label": "SLO errors < 5%", "value": 0.05, "color": "#E24B4A", "fill": "above" }
+                  ]
+                },
+                "yAxis": { "left": { "min": 0, "max": 0.2, "label": "Fracción" } },
+                "legend": { "position": "bottom" }
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 16, "width": 12, "height": 6,
+              "properties": {
+                "title": "ALB — Request count y latencia",
+                "view": "timeSeries",
+                "stacked": false,
+                "period": 60,
+                "metrics": [
+                  [ "AWS/ApplicationELB", "RequestCount",
+                    "LoadBalancer", "${ALB.LoadBalancerFullName}",
+                    { "label": "Requests/min", "color": "#50a87e", "stat": "Sum", "yAxis": "right" } ],
+                  [ "AWS/ApplicationELB", "TargetResponseTime",
+                    "LoadBalancer", "${ALB.LoadBalancerFullName}",
+                    { "label": "Latencia ALB (s)", "color": "#378ADD", "stat": "p95", "yAxis": "left" } ]
+                ],
+                "yAxis": {
+                  "left":  { "label": "Segundos", "min": 0 },
+                  "right": { "label": "Requests/min", "min": 0 }
+                },
+                "legend": { "position": "bottom" }
+              }
+            }
+          ]
+        }
+
+
 Outputs:
   ALBDnsName:
     Value: !GetAtt ALB.DNSName
@@ -385,3 +533,5 @@ Outputs:
     Value: !GetAtt TaskExecutionRole.Arn
   TaskRoleArn:
     Value: !GetAtt TaskRole.Arn
+  LoadTestDashboardUrl:
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${EnvironmentName}-load-test"
