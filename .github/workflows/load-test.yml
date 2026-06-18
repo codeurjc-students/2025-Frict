@@ -38,14 +38,11 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install k6
+      - name: Install k6 with CloudWatch extension
         run: |
-          curl -fsSL https://dl.k6.io/key.gpg \
-            | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
-            | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install -y k6
+          go install go.k6.io/xk6/cmd/xk6@latest
+          ~/go/bin/xk6 build --with github.com/leonyork/xk6-output-cloudwatch@latest
+          sudo mv k6 /usr/local/bin/k6
 
       - name: Run k6 load test
         env:
@@ -67,7 +64,7 @@ jobs:
           K6_CLOUDWATCH_FLUSH_PERIOD: 5s
         run: |
           k6 run infra/k6/load-test.js \
-            --out experimental-cloudwatch \
+            --out cloudwatch \
             --out json=results.json \
             --summary-export=summary.json
 
