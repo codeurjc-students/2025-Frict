@@ -71,10 +71,6 @@ jobs:
 
           ns   = "${{ env.K6_NAMESPACE }}"
           reg  = "${{ env.AWS_REGION }}"
-          dims = [
-              {"Name": "run_id",  "Value": "${{ github.run_id }}"},
-              {"Name": "profile", "Value": "${{ inputs.profile }}"},
-          ]
 
           # Buckets por minuto — todo sale de results.json con timestamps reales
           vus_by_min    = defaultdict(list)
@@ -116,7 +112,7 @@ jobs:
           all_data = []
           def point(name, ts_min, value, unit="None"):
               all_data.append({"MetricName": name, "Timestamp": ts_min + ":00Z",
-                               "Value": float(value), "Unit": unit, "Dimensions": dims})
+                               "Value": float(value), "Unit": unit})
 
           for m, v in sorted(vus_by_min.items()):
               point("vus", m, max(v), "Count")

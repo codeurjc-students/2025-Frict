@@ -404,14 +404,12 @@ Resources:
                     "ClusterName", "${EnvironmentName}-cluster",
                     "ServiceName", "${EnvironmentName}-svc",
                     { "label": "% Memoria (backend)", "color": "#70a0e0", "yAxis": "left" } ],
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"vus\"', 'Maximum', 60)",
-                      "label": "VUs activos (k6)", "color": "#9b6dd0", "yAxis": "right", "id": "vus" } ],
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_reqs\"', 'Sum', 60)",
-                      "label": "Req/min (k6)", "color": "#50a87e", "yAxis": "right", "id": "rps" } ]
+                  [ "k6/${EnvironmentName}", "vus",
+                    { "stat": "Maximum", "period": 60, "label": "VUs activos (k6)", "color": "#9b6dd0", "yAxis": "right" } ]
                 ],
                 "yAxis": {
                   "left":  { "label": "% Utilización", "min": 0, "max": 100 },
-                  "right": { "label": "VUs / Req·min⁻¹", "min": 0 }
+                  "right": { "label": "VUs activos", "min": 0 }
                 },
                 "annotations": {
                   "horizontal": [
@@ -457,10 +455,10 @@ Resources:
                 "stacked": false,
                 "period": 60,
                 "metrics": [
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration_p95\"', 'Average', 60)",
-                      "label": "Latencia p95 (ms)", "color": "#BA7517", "id": "p95" } ],
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration_p99\"', 'Average', 60)",
-                      "label": "Latencia p99 (ms)", "color": "#E24B4A", "id": "p99" } ]
+                  [ "k6/${EnvironmentName}", "http_req_duration_p95",
+                    { "stat": "Average", "period": 60, "label": "Latencia p95 (ms)", "color": "#BA7517" } ],
+                  [ "k6/${EnvironmentName}", "http_req_duration_p99",
+                    { "stat": "Average", "period": 60, "label": "Latencia p99 (ms)", "color": "#E24B4A" } ]
                 ],
                 "annotations": {
                   "horizontal": [
@@ -482,10 +480,10 @@ Resources:
                 "stacked": false,
                 "period": 60,
                 "metrics": [
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_failed\"', 'Average', 60)",
-                      "label": "http_req_failed", "color": "#E24B4A" } ],
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"errors\"', 'Average', 60)",
-                      "label": "errores app", "color": "#D85A30" } ]
+                  [ "k6/${EnvironmentName}", "http_req_failed",
+                    { "stat": "Average", "period": 60, "label": "http_req_failed", "color": "#E24B4A" } ],
+                  [ "k6/${EnvironmentName}", "errors",
+                    { "stat": "Average", "period": 60, "label": "errores app", "color": "#D85A30" } ]
                 ],
                 "annotations": {
                   "horizontal": [
