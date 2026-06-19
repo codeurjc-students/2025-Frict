@@ -38,11 +38,14 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install k6 with CloudWatch extension
+      - name: Install k6
         run: |
-          go install go.k6.io/xk6/cmd/xk6@latest
-          ~/go/bin/xk6 build --with github.com/leonyork/xk6-output-cloudwatch@latest
-          sudo mv k6 /usr/local/bin/k6
+          curl -fsSL https://dl.k6.io/key.gpg \
+            | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
 
       - name: Run k6 load test
         env:
@@ -54,19 +57,95 @@ jobs:
           TEST_PASS: ${{ secrets.LOAD_TEST_PASS }}
           STAFF_USER: ${{ inputs.run_staff && secrets.LOAD_TEST_STAFF_USER || '' }}
           STAFF_PASS: ${{ inputs.run_staff && secrets.LOAD_TEST_STAFF_PASS || '' }}
-          # experimental-cloudwatch: sends k6 metrics to CloudWatch in real time.
-          # Credentials come from the OIDC session configured above — no extra secrets needed.
-          K6_CLOUDWATCH_REGION: ${{ env.AWS_REGION }}
-          K6_CLOUDWATCH_NAMESPACE: ${{ env.K6_NAMESPACE }}
-          # Tag every data point with the run ID and profile so the dashboard can
-          # filter by a specific test run using the "run_id" dimension.
-          K6_CLOUDWATCH_DIMENSIONS: run_id=${{ github.run_id }},profile=${{ inputs.profile }}
-          K6_CLOUDWATCH_FLUSH_PERIOD: 5s
         run: |
           k6 run infra/k6/load-test.js \
-            --out cloudwatch \
             --out json=results.json \
             --summary-export=summary.json
+
+      - name: Push k6 metrics to CloudWatch
+        if: always()
+        run: |
+          python3 << 'PYEOF'
+          import json, subprocess, sys
+          from collections import defaultdict
+
+          ns   = "${{ env.K6_NAMESPACE }}"
+          reg  = "${{ env.AWS_REGION }}"
+          dims = [
+              {"Name": "run_id",  "Value": "${{ github.run_id }}"},
+              {"Name": "profile", "Value": "${{ inputs.profile }}"},
+          ]
+
+          # Buckets por minuto — todo sale de results.json con timestamps reales
+          vus_by_min    = defaultdict(list)
+          dur_by_min    = defaultdict(list)
+          failed_by_min = defaultdict(list)
+          errors_by_min = defaultdict(list)
+
+          try:
+              with open("results.json") as f:
+                  for line in f:
+                      line = line.strip()
+                      if not line:
+                          continue
+                      try:
+                          obj = json.loads(line)
+                      except Exception:
+                          continue
+                      if obj.get("type") != "Point":
+                          continue
+                      metric = obj.get("metric")
+                      d      = obj.get("data", {})
+                      value  = d.get("value")
+                      ts     = d.get("time", "")
+                      if value is None or len(ts) < 16:
+                          continue
+                      minute = ts[:16]
+                      if   metric == "vus":              vus_by_min[minute].append(value)
+                      elif metric == "http_req_duration": dur_by_min[minute].append(value)
+                      elif metric == "http_req_failed":   failed_by_min[minute].append(value)
+                      elif metric == "errors":            errors_by_min[minute].append(value)
+          except Exception as e:
+              print(f"results.json: {e}")
+              sys.exit(0)
+
+          def ptile(values, p):
+              s = sorted(values)
+              return s[min(int(len(s) * p / 100), len(s) - 1)]
+
+          all_data = []
+          def point(name, ts_min, value, unit="None"):
+              all_data.append({"MetricName": name, "Timestamp": ts_min + ":00Z",
+                               "Value": float(value), "Unit": unit, "Dimensions": dims})
+
+          for m, v in sorted(vus_by_min.items()):
+              point("vus", m, max(v), "Count")
+
+          for m, v in sorted(dur_by_min.items()):
+              point("http_req_duration_p95", m, ptile(v, 95), "Milliseconds")
+              point("http_req_duration_p99", m, ptile(v, 99), "Milliseconds")
+
+          for m, v in sorted(failed_by_min.items()):
+              point("http_req_failed", m, sum(v) / len(v))
+
+          for m, v in sorted(errors_by_min.items()):
+              point("errors", m, sum(v) / len(v))
+
+          print(f"Minutos: vus={len(vus_by_min)} dur={len(dur_by_min)} failed={len(failed_by_min)} errors={len(errors_by_min)}")
+
+          if not all_data:
+              print("Nada que enviar a CloudWatch")
+              sys.exit(0)
+
+          for i in range(0, len(all_data), 20):
+              subprocess.run(
+                  ["aws", "cloudwatch", "put-metric-data",
+                   "--namespace", ns, "--region", reg,
+                   "--metric-data", json.dumps(all_data[i:i+20])],
+                  check=True
+              )
+          print(f"Total enviado: {len(all_data)} métricas a {ns}")
+          PYEOF
 
       # Build a readable markdown digest from summary.json and render it on the
       # run's Summary tab. This does NOT touch k6's native console output (kept in

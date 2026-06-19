@@ -457,9 +457,9 @@ Resources:
                 "stacked": false,
                 "period": 60,
                 "metrics": [
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration\"', 'p95', 60)",
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration_p95\"', 'Average', 60)",
                       "label": "Latencia p95 (ms)", "color": "#BA7517", "id": "p95" } ],
-                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration\"', 'p99', 60)",
+                  [ { "expression": "SEARCH('{k6/${EnvironmentName}} MetricName=\"http_req_duration_p99\"', 'Average', 60)",
                       "label": "Latencia p99 (ms)", "color": "#E24B4A", "id": "p99" } ]
                 ],
                 "annotations": {
