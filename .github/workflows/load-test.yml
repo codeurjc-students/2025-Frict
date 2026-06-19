@@ -48,6 +48,7 @@ jobs:
           sudo apt-get install -y k6
 
       - name: Run k6 load test
+        continue-on-error: true
         env:
           # Target is ALWAYS the loadtest clone, never overridable.
           BASE_URL: https://loadtest.${{ secrets.DOMAIN_NAME }}

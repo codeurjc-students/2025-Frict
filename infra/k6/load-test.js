@@ -39,10 +39,11 @@ const PROFILES = {
     { duration: "3m", target: 30 },
     { duration: "1m", target: 0 },
   ],
-  scale: [ // Provoke scale-out
-    { duration: "2m", target: 40 },
+  scale: [ // Two-step staircase — provokes two distinct scale-out events
+    { duration: "2m", target: 50 },
     { duration: "3m", target: 100 },
-    { duration: "4m", target: 100 },
+    { duration: "3m", target: 150 },
+    { duration: "3m", target: 150 },
     { duration: "2m", target: 0 },
   ],
   soak: [ // Endurance test
