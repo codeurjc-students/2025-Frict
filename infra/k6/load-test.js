@@ -33,22 +33,28 @@ const AUTH_TOKEN_COOKIE = "AuthToken";
 
 // Load profiles (auto-scaling optimized)
 const PROFILES = {
-  smoke: [{ duration: "30s", target: 5 }], // Quick sanity check
-  load: [ // Baseline load
-    { duration: "1m", target: 30 },
-    { duration: "3m", target: 30 },
+  smoke: [ // Sanity check: connectivity + no errors (~11 VUs total, 2 min)
+    { duration: "1m", target: 5 },
     { duration: "1m", target: 0 },
   ],
-  scale: [ // Two-step staircase — provokes two distinct scale-out events
-    { duration: "2m", target: 50 },
-    { duration: "3m", target: 100 },
-    { duration: "3m", target: 150 },
-    { duration: "3m", target: 150 },
+  load: [ // Baseline: steady-state latency under normal traffic (~68 VUs total, 9 min)
+    { duration: "1m", target: 10 },  // JVM warmup
+    { duration: "2m", target: 35 },  // ramp to steady state
+    { duration: "5m", target: 35 },  // plateau — no scaling expected
+    { duration: "1m", target: 0 },
+  ],
+  scale: [ // Autoscaling: two distinct scale-out events (~108 → ~140 VUs total, 16 min)
+    { duration: "2m", target: 10 },  // JVM warmup
+    { duration: "2m", target: 65 },  // ramp to first plateau
+    { duration: "4m", target: 65 },  // plateau 1 (~108 VUs) → scale-out 2→3 tasks
+    { duration: "2m", target: 90 },  // ramp to second plateau
+    { duration: "4m", target: 90 },  // plateau 2 (~140 VUs) → scale-out 3→4 tasks
     { duration: "2m", target: 0 },
   ],
-  soak: [ // Endurance test
-    { duration: "2m", target: 30 },
-    { duration: "18m", target: 30 },
+  soak: [ // Endurance: detect memory leaks and pool exhaustion (~68 VUs total, 27 min)
+    { duration: "2m", target: 15 },  // JVM warmup
+    { duration: "3m", target: 35 },  // ramp to soak level
+    { duration: "20m", target: 35 }, // sustained plateau — no scaling expected
     { duration: "2m", target: 0 },
   ],
 };
