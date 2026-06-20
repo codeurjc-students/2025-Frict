@@ -209,6 +209,8 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: "30"
+        - Key: slow_start.duration_seconds
+          Value: "60"
         - Key: stickiness.enabled
           Value: "true"
         - Key: stickiness.type
@@ -373,6 +375,7 @@ Resources:
   # ── CloudWatch Dashboard — load test + autoscaling ───────────────────
   LoadTestDashboard:
     Type: AWS::CloudWatch::Dashboard
+    DeletionPolicy: Retain
     Properties:
       DashboardName: !Sub "${EnvironmentName}-load-test"
       DashboardBody: !Sub |
