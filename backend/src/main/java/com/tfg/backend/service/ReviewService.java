@@ -61,10 +61,10 @@ public class ReviewService {
             starMap.put((Integer) row[0], (Long) row[1]);
 
         boolean userReviewed = false;
-        try {
-            User u = userService.findLoggedUserHelper();
-            userReviewed = reviewRepository.existsByProductIdAndUserId(productId, u.getId());
-        } catch (ResponseStatusException ignored) {}
+        Optional<User> loggedUser = userService.getLoggedUser();
+        if (loggedUser.isPresent()){
+            userReviewed = reviewRepository.existsByProductIdAndUserId(productId, loggedUser.get().getId());
+        }
 
         return new ReviewStatsDTO(total, avg,
             starMap.getOrDefault(5, 0L), starMap.getOrDefault(4, 0L),
