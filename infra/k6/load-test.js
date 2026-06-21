@@ -43,12 +43,12 @@ const PROFILES = {
     { duration: "5m", target: 35 },  // plateau — no scaling expected
     { duration: "1m", target: 0 },
   ],
-  scale: [ // Autoscaling: two distinct scale-out events (~108 → ~140 VUs total, 16 min)
+  scale: [ // Autoscaling: two distinct scale-out events (~108 → ~166 VUs total, 22 min)
     { duration: "2m", target: 10 },  // JVM warmup
     { duration: "2m", target: 65 },  // ramp to first plateau
-    { duration: "4m", target: 65 },  // plateau 1 (~108 VUs) → scale-out 2→3 tasks
-    { duration: "2m", target: 90 },  // ramp to second plateau
-    { duration: "4m", target: 90 },  // plateau 2 (~140 VUs) → scale-out 3→4 tasks
+    { duration: "7m", target: 65 },  // plateau 1 (~108 VUs) → scale-out 2→3 tasks; 7 min = trigger (~3m) + cold start + slow_start (~2m) + 2m visible stable state
+    { duration: "2m", target: 110 }, // ramp to second plateau
+    { duration: "7m", target: 110 }, // plateau 2 (~166 VUs) → scale-out 3→4 tasks; 110 VUs = ~55/task with 3 tasks → 66% CPU; 7 min exceeds ScaleOutCooldown (60s) + 3 eval periods
     { duration: "2m", target: 0 },
   ],
   soak: [ // Endurance: detect memory leaks and pool exhaustion (~68 VUs total, 27 min)
@@ -260,6 +260,7 @@ export function clientJourney(data) {
     group("client_write_favourite", () => {
       const pid = pick(data.productIds);
       const add = http.post(`${API}/products/favourites/${pid}`, null, tag("POST /products/favourites/:id"));
+      if (add.status === 409) return; // another VU already added this product for the same user — not an error
       if (recordOk(add, "fav_add")) writesPerformed.add(1);
       sleep(0.5);
       const del = http.del(`${API}/products/favourites/${pid}`, null, tag("DELETE /products/favourites/:id"));
