@@ -334,24 +334,23 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     this.firstTruck = event.first ?? 0;
     this.trucksRows = event.rows ?? 5;
 
-    // Al paginar camiones, recargamos datos y actualizamos marcadores
+    // On page change, reload trucks and refresh map markers without reinitializing the map
     this.truckService.getTrucksPageByShopId(this.shop.id, this.firstTruck / this.trucksRows, this.trucksRows).subscribe({
       next: (page) => {
         this.trucksPage = page;
-        this.updateTruckMarkers(); // Solo actualizamos pines, no reiniciamos el mapa
+        this.updateTruckMarkers();
       }
     });
   }
 
-  // --- MAPA ---
+  // Map initialization
   private initMap(): void {
-    // Si no hay tienda o el mapa ya existe, salimos
+    // Exit early if the shop is not set or the map is already initialized
     if (!this.shop || this.map) {
-      if (this.map) this.updateTruckMarkers(); // Si ya existe, solo actualizamos pines
+      if (this.map) this.updateTruckMarkers(); // If exists, only update pins
       return;
     }
 
-    // Verificar que el elemento existe en el DOM
     const mapContainer = document.getElementById('fleet-map');
     if (!mapContainer) {
       console.error("Map container not found");
@@ -373,7 +372,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(this.map);
     this.map.attributionControl.setPrefix('Leaflet');
 
-    // Crear LayerGroup para poder borrar marcadores luego
+    // Use a LayerGroup to allow individual marker cleanup later
     this.markersLayer = L.layerGroup().addTo(this.map);
 
     this.updateTruckMarkers();
@@ -432,8 +431,7 @@ export class ShopDetailsComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  // --- ACTIONS (Sin cambios) ---
-  // --- ACTIONS ---
+  // --- ACTIONS (unchanged) ---
   /*
     calculateStorageUsage(): number {
       const s = this.shop;

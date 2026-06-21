@@ -217,7 +217,7 @@ public class ProductService {
 
 
     public Map<String, Object> getCategoryGlobalMetrics(Long categoryId) {
-        if (!productRepository.existsById(categoryId)) { // O con tu categoryRepository según corresponda
+        if (!productRepository.existsById(categoryId)) {
             throw new EntityNotFoundException("La categoría no existe");
         }
 

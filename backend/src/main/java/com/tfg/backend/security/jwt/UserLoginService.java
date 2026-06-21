@@ -124,7 +124,7 @@ public class UserLoginService {
 		return new AuthResponse(AuthResponse.Status.SUCCESS, "Auth successful. Tokens are created in cookie.");
 	}
 
-	// Igual que login, solo lee y genera tokens.
+	// Like login, but skips authentication and only generates new tokens
 	public AuthResponse refresh(HttpServletResponse response, String refreshToken) {
 		try {
 			var claims = jwtTokenProvider.validateToken(refreshToken);

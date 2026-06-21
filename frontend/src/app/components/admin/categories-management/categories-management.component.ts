@@ -40,7 +40,6 @@ export class CategoriesManagementComponent implements OnInit {
   orgChartNodes = signal<TreeNode[]>([]);
   treeTableNodes = signal<TreeNode[]>([]);
 
-  // Métricas
   totalCategories = signal<number>(0);
   maxDepth = signal<number>(0);
   usagePercentage = signal<number>(0);

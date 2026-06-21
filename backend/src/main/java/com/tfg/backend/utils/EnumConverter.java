@@ -26,7 +26,7 @@ public class EnumConverter {
         }
     }
 
-    // --- NUEVOS CONVERSORES PARA REGISTROS Y NOTIFICACIONES ---
+    // Converters for records and notifications
 
     @Component
     public static class ToEntityType implements Converter<String, EntityType> {

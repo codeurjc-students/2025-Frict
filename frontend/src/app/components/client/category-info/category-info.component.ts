@@ -56,7 +56,6 @@ export class CategoryInfoComponent implements OnInit {
   loading: boolean = true;
   error: boolean = false;
 
-  // Datos estructurales
   mainCategory!: Category;
   similarCategories: Category[] = [];
   subCategories: Category[] = [];
@@ -67,14 +66,12 @@ export class CategoryInfoComponent implements OnInit {
   topSalesError: boolean = false;
   protected readonly responsiveOptions = carouselResponsiveOptions;
 
-  // Métricas de la categoría
   totalSalesCount: number = 0;
   totalViewsCount: number = 0;
   totalShopsCount: number = 0;
   totalProductsCount: number = 0;
 
 
-  // Gráficas y Rangos de tiempo
   viewsChartData: any;
   salesChartData: any;
 
@@ -86,7 +83,7 @@ export class CategoryInfoComponent implements OnInit {
   selectedViewsRange: number = 30;
   selectedSalesRange: number = 30;
 
-  // Estilo "Clean" para las gráficas (Líneas rectas, sin grid pesado)
+  // Clean chart style: straight lines, minimal grid
   chartOptions = {
     plugins: {
       legend: { display: false },
@@ -111,7 +108,7 @@ export class CategoryInfoComponent implements OnInit {
     },
     elements: {
       line: {
-        tension: 0, // 0 = Líneas totalmente rectas
+        tension: 0, // 0 = perfectly straight lines (no bezier curve)
         borderWidth: 2,
         borderColor: '#3b82f6'
       },
@@ -191,7 +188,6 @@ export class CategoryInfoComponent implements OnInit {
   loadCategoryMetrics(categoryId: string) {
     this.productService.getCategoryMetrics(categoryId).subscribe({
       next: (metrics: any) => {
-        // Mapeamos los datos reales combinados de la base de datos
         this.totalSalesCount = metrics.totalSales || 0;
         this.totalViewsCount = metrics.totalViews || 0;
         this.totalShopsCount = metrics.totalShops || 0;
@@ -261,7 +257,6 @@ export class CategoryInfoComponent implements OnInit {
 
     this.productService.getCategoryTopSales(categoryId, 10).subscribe({
       next: (pageResponse: any) => {
-        // Asignamos directamente la propiedad 'items' que vemos en tu captura de consola
         this.topSalesProducts = pageResponse.items || [];
         this.topSalesLoading = false;
       },

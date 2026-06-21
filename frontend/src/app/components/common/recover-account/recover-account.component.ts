@@ -45,7 +45,6 @@ export class RecoverAccountComponent {
 
     const username = this.recoverForm.get('username')?.value;
 
-    // Llamada al servicio (Simulada o real)
     this.authService.initPasswordRecovery(username).subscribe({
       next: () => {
         this.loading = false;

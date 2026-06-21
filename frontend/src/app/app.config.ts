@@ -9,11 +9,9 @@ import {AuthService} from './services/auth.service';
 import {finalize} from 'rxjs';
 import {ConfirmationService, MessageService} from 'primeng/api';
 
-// Importaciones para el idioma español
 import {registerLocaleData} from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 
-// Registrar los datos de cultura de España
 registerLocaleData(localeEs);
 
 export const carouselResponsiveOptions = [

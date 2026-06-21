@@ -157,7 +157,7 @@ jobs:
           const fs = require("fs");
           let s;
           try { s = JSON.parse(fs.readFileSync("summary.json", "utf8")); }
-          catch (e) { process.stdout.write("## k6\n\nNo se generó summary.json (el test pudo abortar en setup).\n"); process.exit(0); }
+          catch (e) { process.stdout.write("## k6\n\nsummary.json was not generated (the test may have aborted during setup).\n"); process.exit(0); }
           const m = s.metrics || {};
           const get = (n, k) => (m[n] && m[n][k] !== undefined ? m[n][k] : undefined);
           const rateOf = (n) => {

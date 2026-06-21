@@ -70,12 +70,12 @@ public class SecurityConfig {
                         // --- 1. AUTHENTICATION (AuthRestController) ---
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/recovery", "/api/v1/auth/verification", "/api/v1/auth/reset").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh", "/api/v1/auth/logout").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/google", "/api/v1/auth/signup").permitAll() // Públicos por lógica de negocio, aunque marcados como (User)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/google", "/api/v1/auth/signup").permitAll() // Open to all despite being categorized as user-facing endpoints
                         .requestMatchers(HttpMethod.PUT, "/api/v1/auth/reset/*").hasAuthority("ADMIN")
 
                         // --- 2. CATEGORIES (CategoryRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll() // (All)
-                        .requestMatchers("/api/v1/categories/**").hasAuthority("ADMIN") // (Admin) para POST, PUT, DELETE e imágenes
+                        .requestMatchers("/api/v1/categories/**").hasAuthority("ADMIN") // (Admin) for POST, PUT, DELETE and image endpoints
 
                         // --- 3. PRODUCTS (ProductRestController) ---
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/filter", "/api/v1/products/{id}", "/api/v1/products/stock/*").permitAll() // (All)

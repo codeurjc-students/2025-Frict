@@ -64,10 +64,9 @@ public class ShopTruckOrchestrator {
     public Truck createTruck(TruckDTO truckDTO) {
         Shop assignedShop = null;
         if (truckDTO.getShopId() != null) {
-            // El orquestador obtiene la tienda legalmente a través de su servicio
             assignedShop = shopService.findShopHelper(truckDTO.getShopId());
         }
-        // Le pasamos la entidad ya cargada al servicio de camiones
+        // Pass the already-loaded entity to the truck service
         return truckService.createTruck(truckDTO, assignedShop);
     }
 

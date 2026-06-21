@@ -115,7 +115,7 @@ public class ProductRestController {
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         Product savedProduct = productService.createProduct(productDTO);
 
-        // 2. Creación de URI dinámica, independiente de si la API cambia de prefijo en el futuro
+        // Build a dynamic URI from the current request to be robust against future path prefix changes
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(savedProduct.getId())

@@ -40,16 +40,16 @@ public class ShopUserOrchestratorITest {
 
     @BeforeEach
     void setUpOrchestrator() {
-        // 1. Guardar y capturar el usuario
+        // 1. Save and capture the user
         activeUser = new User("Orch User", "user_orch", "orch@test.com", "pass", "USER,MANAGER");
         activeUser = userRepository.saveAndFlush(activeUser);
 
-        // 2. Guardar y capturar la tienda
+        // 2. Save and capture the shop
         localShop = new Shop("Local Store", null, 3000.0);
         localShop.setReferenceCode("SHOP-LOC-001");
         localShop = shopRepository.saveAndFlush(localShop);
 
-        // 3. Autenticar al usuario para el contexto de seguridad
+        // 3. Authenticate the user for the security context
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(activeUser.getUsername(), "pass", java.util.List.of())
         );
@@ -63,7 +63,7 @@ public class ShopUserOrchestratorITest {
     @Test
     @DisplayName("setSelectedShop extracts ID from map and correctly assigns local shop to logged user")
     void testSetSelectedShop_UpdatesLoggedUser() {
-        // Preparamos el Map simulando el body del controlador
+        // Simulate the controller request body as a map
         Map<String, Long> requestBody = new HashMap<>();
         requestBody.put("shopId", localShop.getId());
 

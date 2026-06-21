@@ -67,7 +67,7 @@ public class NotificationService {
     }
 
     public void deleteNotification(String id, String username) {
-        // El repositorio se encarga de verificar que coincida el id y el username por seguridad
+        // The repository verifies that the id and username match before deleting
         notificationRepository.deleteByIdAndUsername(id, username);
     }
 
