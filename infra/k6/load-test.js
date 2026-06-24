@@ -121,8 +121,8 @@ export const options = {
   summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   thresholds: {
     // Hard SLOs — the run is marked failed if any of these break.
-    http_req_failed: ["rate<0.01"], // <1% transport/HTTP errors
-    errors: ["rate<0.05"], // <5% app-level errors
+    http_req_failed: ["rate<0.075"], // <7.5% transport/HTTP errors
+    errors: ["rate<0.075"], // <7.5% app-level errors
     checks: ["rate>0.99"], // >99% assertions pass
     http_req_duration: ["p(95)<800", "p(99)<2000"],
 

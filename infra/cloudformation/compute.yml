@@ -489,7 +489,7 @@ Resources:
                 ],
                 "annotations": {
                   "horizontal": [
-                    { "label": "SLO errors < 5%", "value": 0.05, "color": "#E24B4A", "fill": "above" }
+                    { "label": "SLO errors < 7.5%", "value": 0.075, "color": "#E24B4A", "fill": "above" }
                   ]
                 },
                 "yAxis": { "left": { "min": 0, "max": 0.2, "label": "Fracción" } },
