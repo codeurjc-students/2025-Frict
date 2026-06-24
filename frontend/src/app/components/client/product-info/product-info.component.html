@@ -96,7 +96,7 @@
 
             <p-tabpanels>
               <p-tabpanel value="0">
-                <div class="prose prose-slate max-w-none leading-relaxed break-words" [innerHTML]="product.description | safeHtml"></div>
+                <div class="prose prose-slate max-w-none leading-relaxed" [innerHTML]="product.description | safeHtml"></div>
               </p-tabpanel>
               <p-tabpanel value="1">
                 @if (product.specifications.length) {
