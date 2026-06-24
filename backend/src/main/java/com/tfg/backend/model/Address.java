@@ -41,6 +41,7 @@ public class Address {
 
     @Override
     public String toString() {
-        return street + " " + number + ", " + floor + " " + postalCode + " " + city + " (" + country + ")";
+        String floorPart = (floor != null && !floor.isBlank()) ? floor + " " : "";
+        return street + " " + number + ", " + floorPart + postalCode + " " + city + " (" + country + ")";
     }
 }
