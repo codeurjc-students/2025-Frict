@@ -128,7 +128,7 @@ export class NotificationService implements OnDestroy {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
-      .set('type', type.toUpperCase()); // Convertimos a mayúsculas para el Enum de Java
+      .set('type', type.toUpperCase()); // Convert to uppercase to match the Java enum naming convention
 
     return this.http.get<PageResponse<Notification>>('/api/v1/notifications/', { params });
   }

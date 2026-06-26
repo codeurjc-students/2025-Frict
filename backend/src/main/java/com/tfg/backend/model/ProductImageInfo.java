@@ -31,7 +31,7 @@ public class ProductImageInfo {
         this.product = product;
     }
 
-    // Un equals seguro para Entidades basado en la clave de negocio (S3 Key)
+    // Business-key-based equals using the S3 key, safe for JPA-managed entities
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -46,7 +46,7 @@ public class ProductImageInfo {
         return imageInfo != null && imageInfo.getS3Key() != null ? imageInfo.getS3Key().hashCode() : 31;
     }
 
-    // Métodos delegados (Opcional, para no romper tu código actual)
+    // Delegate accessors to avoid unwrapping imageInfo at call sites
     public String getImageUrl() {
         return imageInfo != null ? imageInfo.getImageUrl() : null;
     }

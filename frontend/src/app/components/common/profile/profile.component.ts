@@ -81,17 +81,15 @@ export class ProfileComponent implements OnInit {
 
   user!: User;
 
-  // Paginación de pedidos
   foundOrders : PageResponse<Order> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstOrder: number = 0;
   ordersRows: number = 5;
 
-  // Paginación de reseñas
   foundReviews: PageResponse<Review> = {items: [], totalItems: 0, currentPage: 0, lastPage: -1, pageSize: 0};
   firstReview: number = 0;
   reviewsRows: number = 5;
 
-  // Variables exclusivas para empleados
+  // Employee-only state
   assignedTruck: Truck | null = null;
   assignedShopsPage: PageResponse<Shop> | null = null;
   firstShop: number = 0;
@@ -234,7 +232,7 @@ export class ProfileComponent implements OnInit {
       next: (user) => {
         this.user = user;
 
-        // Carga condicional según los roles desde las signals de authService
+        // Load data conditionally based on the user's role
         if (this.authService.isUser()) {
           this.loadSelectedShop();
           this.loadUserOrders();
@@ -256,9 +254,8 @@ export class ProfileComponent implements OnInit {
     })
   }
 
-  // Carga de entidades exclusivas para Empleados
+  // Load employee-only entities
   protected loadManagerShops() {
-    // Si tu servicio devuelve un Observable<PageResponse<Shop>>
     this.shopService.getAssignedShopsPage(this.firstShop / this.shopsRows, this.shopsRows).subscribe({
       next: (page) => {
         this.assignedShopsPage = page;
@@ -282,7 +279,6 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  // Resto de métodos (Clientes)
   loadSelectedShop() {
     const selectedShopId = this.user.selectedShopId;
     if (selectedShopId){

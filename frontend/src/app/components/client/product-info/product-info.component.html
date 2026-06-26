@@ -90,13 +90,13 @@
             <p-tablist class="!border-b !border-surface-200 mb-6">
               <p-tab value="0" class="!font-bold">Información</p-tab>
               <p-tab value="1" class="!font-bold">Especificaciones</p-tab>
-              <!-- NUEVA PESTAÑA: VISUALIZACIONES -->
+              <!-- Visualizations tab -->
               <p-tab value="2" class="!font-bold">Visualizaciones</p-tab>
             </p-tablist>
 
             <p-tabpanels>
               <p-tabpanel value="0">
-                <div class="prose prose-slate max-w-none leading-relaxed break-words" [innerHTML]="product.description | safeHtml"></div>
+                <div class="prose prose-slate max-w-none leading-relaxed" [innerHTML]="product.description | safeHtml"></div>
               </p-tabpanel>
               <p-tabpanel value="1">
                 @if (product.specifications.length) {
@@ -132,7 +132,7 @@
                       <span class="text-3xl font-extrabold text-surface-900">{{ viewsToday }}</span>
                     </div>
 
-                    <!-- Agrupador de filtros dinámicos -->
+                    <!-- Dynamic filter group -->
                     <div class="flex items-center gap-4 flex-wrap">
 
                       <!-- NUEVO: Rango de fechas -->
@@ -164,7 +164,6 @@
                       <!-- Divisor visual -->
                       <div class="hidden sm:block w-px h-10 bg-surface-200"></div>
 
-                      <!-- Agrupación (Conservada) -->
                       <div class="flex flex-col gap-1.5">
                         <label for="view-interval" class="text-[10px] font-bold text-surface-500 uppercase">Agrupación gráfica</label>
                         <p-select
@@ -182,9 +181,9 @@
                     </div>
                   </div>
 
-                  <!-- Gráfico de Variación -->
+                  <!-- Variation chart -->
                   <div class="w-full h-[300px] relative">
-                    <!-- Loader de Gráfica -->
+                    <!-- Chart loading overlay -->
                     @if (isViewsLoading) {
                       <div class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-2 rounded-xl">
                         <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>

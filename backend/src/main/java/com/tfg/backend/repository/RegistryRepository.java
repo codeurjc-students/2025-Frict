@@ -251,7 +251,7 @@ public class RegistryRepository {
 
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("metadata.productId").in(productRefs)
-                        .and("metadata.dataType").is(RegistryType.PRODUCT_VIEWS)), // Ojo, sin .name() si se guarda como Enum
+                        .and("metadata.dataType").is(RegistryType.PRODUCT_VIEWS)), // Omit .name() when stored as an enum (Spring Data serializes it directly)
                 Aggregation.group().sum("metrics.value").as("totalViews")
         );
 

@@ -16,12 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -66,10 +61,10 @@ public class ReviewService {
             starMap.put((Integer) row[0], (Long) row[1]);
 
         boolean userReviewed = false;
-        try {
-            User u = userService.findLoggedUserHelper();
-            userReviewed = reviewRepository.existsByProductIdAndUserId(productId, u.getId());
-        } catch (ResponseStatusException ignored) {}
+        Optional<User> loggedUser = userService.getLoggedUser();
+        if (loggedUser.isPresent()){
+            userReviewed = reviewRepository.existsByProductIdAndUserId(productId, loggedUser.get().getId());
+        }
 
         return new ReviewStatsDTO(total, avg,
             starMap.getOrDefault(5, 0L), starMap.getOrDefault(4, 0L),
@@ -103,7 +98,10 @@ public class ReviewService {
         eventPublisher.publishEvent(reviewEvent);
 
         //Add registries
-        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, 1.0, loggedUser.getSelectedShop().getReferenceCode(), loggedUser.getSelectedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), product.getReferenceCode(), product.getName(), null, null);
+        Shop selectedShop = loggedUser.getSelectedShop();
+        String shopCode = selectedShop != null ? selectedShop.getReferenceCode() : null;
+        String shopName = selectedShop != null ? selectedShop.getName() : null;
+        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, 1.0, shopCode, shopName, loggedUser.getUsername(), loggedUser.getName(), product.getReferenceCode(), product.getName(), null, null);
         eventPublisher.publishEvent(new RegistryEvent(reviewRegistry));
 
         return reviewRepository.save(newReview);
@@ -148,7 +146,10 @@ public class ReviewService {
         eventPublisher.publishEvent(reviewEvent);
 
         //Add registries
-        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, -1.0, loggedUser.getSelectedShop().getReferenceCode(), loggedUser.getSelectedShop().getName(), loggedUser.getUsername(), loggedUser.getName(), reviewedProduct.getReferenceCode(), reviewedProduct.getName(), null, null);
+        Shop selectedShop = loggedUser.getSelectedShop();
+        String shopCode = selectedShop != null ? selectedShop.getReferenceCode() : null;
+        String shopName = selectedShop != null ? selectedShop.getName() : null;
+        Registry reviewRegistry = new Registry(EntityType.USER, RegistryType.USER_REVIEWS, -1.0, shopCode, shopName, loggedUser.getUsername(), loggedUser.getName(), reviewedProduct.getReferenceCode(), reviewedProduct.getName(), null, null);
         eventPublisher.publishEvent(new RegistryEvent(reviewRegistry));
 
         reviewRepository.delete(review);

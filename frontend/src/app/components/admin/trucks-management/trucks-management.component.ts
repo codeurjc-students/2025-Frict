@@ -85,15 +85,14 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
   assignedChartData: any = { labels: [], datasets: [] };
   chartOptions: any;
 
-  // Diálogo de Edición
   selectedTruck: Truck | null = null;
 
-  // Diálogo de Historial
+  // History dialog state
   displayHistoryDialog: boolean = false;
   newHistoryStatus: string = '';
   newHistoryComment: string = '';
 
-  // --- NUEVAS VARIABLES PARA ASIGNACIÓN DE CONDUCTOR ---
+  // Driver assignment dialog state
   displayAssignmentDialog: boolean = false;
   drivers: User[] = [];
   selectedDriver: User | undefined = undefined;
@@ -251,7 +250,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       }]
     };
 
-    // --- Gráfica 2: Asignaciones (NUEVO) ---
+    // Chart 2: driver assignment distribution
     const assigned = items.filter(t => t.assignedDriver).length;
     const unassigned = items.filter(t => !t.assignedDriver).length;
 
@@ -259,7 +258,7 @@ export class TrucksManagementComponent implements OnInit, OnDestroy {
       labels: ['Conductor Asignado', 'Sin Conductor Asignado'],
       datasets: [{
         data: [assigned, unassigned],
-        backgroundColor: ['#8b5cf6', '#94a3b8'], // Morado y Gris para diferenciarse de los estados
+        backgroundColor: ['#8b5cf6', '#94a3b8'], // Purple and grey to differentiate from the status chart colors
         hoverOffset: 15,
         borderWidth: 0
       }]

@@ -18,7 +18,7 @@ public class ChangeStreamConfig {
         MessageListenerContainer container = new DefaultMessageListenerContainer(template);
         container.start();
 
-        // Ya no hace falta forzar los genéricos, el builder lo lee del propio listener
+        // Generics are inferred from the listener; no need to force them on the builder
         ChangeStreamRequest<Notification> request = ChangeStreamRequest.builder(listener)
                 .collection("notifications")
                 .build();

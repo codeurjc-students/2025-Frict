@@ -259,10 +259,10 @@ describe('TrucksManagementComponent', () => {
 
   it('should build chartData dataset with correct counts', () => {
     const data = component.chartData.datasets[0].data;
-    expect(data[0]).toBe(1); // Descanso
-    expect(data[1]).toBe(0); // En ruta a la tienda
-    expect(data[2]).toBe(1); // En Reparto
-    expect(data[3]).toBe(1); // Fuera de servicio
+    expect(data[0]).toBe(1); // "Descanso" (resting)
+    expect(data[1]).toBe(0); // "En ruta a la tienda" (on route to shop)
+    expect(data[2]).toBe(1); // "En Reparto" (on delivery)
+    expect(data[3]).toBe(1); // "Fuera de servicio" (out of service)
   });
 
   it('should build assignedChartData with 2 labels after load', () => {
@@ -765,7 +765,7 @@ describe('TrucksManagementComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('No se encontraron camiones.');
   });
 
-  // ─── DOM: "Añadir Camión" button ──────────────────────────────────────────────
+  // DOM: "Add truck" button
 
   it('should render the "Añadir Camión" button', () => {
     expect(fixture.nativeElement.textContent).toContain('Añadir Camión');

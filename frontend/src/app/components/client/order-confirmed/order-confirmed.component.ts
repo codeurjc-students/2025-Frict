@@ -34,8 +34,6 @@ export class OrderConfirmedComponent implements OnInit {
   error: boolean = false;
 
   ngOnInit(): void {
-    // Intentamos obtener la referencia de la URL (ej: /order-confirmed/ORD-123)
-    // O desde los queryParams
     this.route.queryParams.subscribe(params => {
       if(params['ref']) this.orderRefCode = params['ref'];
       if(params['id'])  this.orderId = params['id'];

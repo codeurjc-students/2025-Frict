@@ -1,0 +1,380 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CFNStack",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:*Stack*",
+        "cloudformation:*ChangeSet*",
+        "cloudformation:GetTemplate*",
+        "cloudformation:ListStackResources",
+        "cloudformation:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:cloudformation:eu-west-1:ACCOUNT_ID:stack/frict*",
+        "arn:aws:cloudformation:eu-west-1:ACCOUNT_ID:stack/loadtest*"
+      ]
+    },
+    {
+      "Sid": "CFNValidate",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:ValidateTemplate",
+        "cloudformation:GetTemplateSummary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3Artifacts",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::frict-cfn-artifacts-*",
+        "arn:aws:s3:::frict-cfn-artifacts-*/*",
+        "arn:aws:s3:::loadtest-cfn-artifacts-*",
+        "arn:aws:s3:::loadtest-cfn-artifacts-*/*"
+      ]
+    },
+    {
+      "Sid": "S3Images",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:*BucketPolicy",
+        "s3:*BucketCORS",
+        "s3:*BucketPublicAccessBlock",
+        "s3:*BucketTagging",
+        "s3:*LifecycleConfiguration",
+        "s3:GetBucketLocation",
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::frict-images-*",
+        "arn:aws:s3:::frict-images-*/*",
+        "arn:aws:s3:::loadtest-images-*",
+        "arn:aws:s3:::loadtest-images-*/*"
+      ]
+    },
+    {
+      "Sid": "ECR",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ECRRepo",
+      "Effect": "Allow",
+      "Action": "ecr:*",
+      "Resource": [
+        "arn:aws:ecr:eu-west-1:ACCOUNT_ID:repository/frict-*",
+        "arn:aws:ecr:eu-west-1:ACCOUNT_ID:repository/loadtest-*"
+      ]
+    },
+    {
+      "Sid": "ECSScoped",
+      "Effect": "Allow",
+      "Action": "ecs:*",
+      "Resource": [
+        "arn:aws:ecs:eu-west-1:ACCOUNT_ID:cluster/frict-*",
+        "arn:aws:ecs:eu-west-1:ACCOUNT_ID:service/frict-*/*",
+        "arn:aws:ecs:eu-west-1:ACCOUNT_ID:cluster/loadtest-*",
+        "arn:aws:ecs:eu-west-1:ACCOUNT_ID:service/loadtest-*/*"
+      ]
+    },
+    {
+      "Sid": "ECSGlobal",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:RegisterTaskDefinition",
+        "ecs:DeregisterTaskDefinition",
+        "ecs:DescribeTaskDefinition",
+        "ecs:ListTaskDefinitions",
+        "ecs:DescribeServices",
+        "ecs:ListTasks",
+        "ecs:DescribeTasks"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/frict-*",
+        "arn:aws:iam::ACCOUNT_ID:role/loadtest-*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "ecs-tasks.amazonaws.com",
+            "lambda.amazonaws.com",
+            "events.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "IAMRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:*RolePolicy",
+        "iam:List*RolePolicies",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:CreatePolicy",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:CreateUser",
+        "iam:AttachUserPolicy",
+        "iam:CreateOpenIDConnectProvider",
+        "iam:GetOpenIDConnectProvider"
+      ],
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/frict-*",
+        "arn:aws:iam::ACCOUNT_ID:role/loadtest-*",
+        "arn:aws:iam::ACCOUNT_ID:role/gha-deploy-frict",
+        "arn:aws:iam::ACCOUNT_ID:policy/gha-deploy-frict-policy",
+        "arn:aws:iam::ACCOUNT_ID:user/frict-ses-smtp",
+        "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      ]
+    },
+    {
+      "Sid": "SLR",
+      "Effect": "Allow",
+      "Action": "iam:CreateServiceLinkedRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/aws-service-role/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:AWSServiceName": [
+            "ecs.amazonaws.com",
+            "elasticloadbalancing.amazonaws.com",
+            "ecs.application-autoscaling.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "EC2VPC",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:*Vpc*",
+        "ec2:*Subnet*",
+        "ec2:*InternetGateway*",
+        "ec2:*Route*",
+        "ec2:*SecurityGroup*",
+        "ec2:*Tags",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeAccountAttributes",
+        "ec2:DescribeManagedPrefixLists",
+        "ec2:DetachNetworkInterface",
+        "ec2:DeleteNetworkInterface"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RDS",
+      "Effect": "Allow",
+      "Action": [
+        "rds:*DBInstance*",
+        "rds:*DBSubnetGroup*",
+        "rds:*DBCluster*",
+        "rds:*DBClusterParameterGroup*",
+        "rds:DescribeDBClusterParameters",
+        "rds:*DBClusterSnapshot*",
+        "rds:*DBSnapshot*",
+        "rds:AddTagsToResource",
+        "rds:RemoveTagsFromResource",
+        "rds:ListTagsForResource",
+        "rds:DescribeDBEngineVersions",
+        "rds:DescribeOrderableDBInstanceOptions"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "eu-west-1"
+        }
+      }
+    },
+    {
+      "Sid": "Secrets",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:*Secret*",
+        "secretsmanager:TagResource",
+        "secretsmanager:UntagResource",
+        "secretsmanager:GetRandomPassword"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:ACCOUNT_ID:secret:frict/*",
+        "arn:aws:secretsmanager:eu-west-1:ACCOUNT_ID:secret:loadtest/*"
+      ]
+    },
+    {
+      "Sid": "SecretsGlobal",
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetRandomPassword",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Lambda",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*Function*",
+        "lambda:*Permission",
+        "lambda:GetPolicy",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:ListTags"
+      ],
+      "Resource": [
+        "arn:aws:lambda:eu-west-1:ACCOUNT_ID:function:frict-*",
+        "arn:aws:lambda:eu-west-1:ACCOUNT_ID:function:loadtest-*"
+      ]
+    },
+    {
+      "Sid": "CloudFront",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:*Distribution*",
+        "cloudfront:*CachePolicy",
+        "cloudfront:*OriginRequestPolicy",
+        "cloudfront:TagResource",
+        "cloudfront:UntagResource",
+        "cloudfront:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Route53",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets",
+        "route53:GetHostedZone",
+        "route53:ListResourceRecordSets",
+        "route53:*VpcWithHostedZone",
+        "route53:CreateHostedZone",
+        "route53:ListHostedZones",
+        "route53:GetChange"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ACM",
+      "Effect": "Allow",
+      "Action": [
+        "acm:RequestCertificate",
+        "acm:DescribeCertificate",
+        "acm:ListCertificates",
+        "acm:GetCertificate",
+        "acm:DeleteCertificate",
+        "acm:AddTagsToCertificate"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SES",
+      "Effect": "Allow",
+      "Action": [
+        "ses:*EmailIdentity*",
+        "ses:*MailFromAttributes*",
+        "ses:GetAccount",
+        "ses:CreateSmtpCredentials"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ALB",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:*LoadBalancer*",
+        "elasticloadbalancing:*TargetGroup*",
+        "elasticloadbalancing:*TargetHealth",
+        "elasticloadbalancing:*Listener*",
+        "elasticloadbalancing:*Rule*",
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:RemoveTags",
+        "elasticloadbalancing:DescribeTags",
+        "elasticloadbalancing:SetSecurityGroups",
+        "elasticloadbalancing:SetSubnets"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "eu-west-1"
+        }
+      }
+    },
+    {
+      "Sid": "AutoScaling",
+      "Effect": "Allow",
+      "Action": [
+        "application-autoscaling:*ScalableTarget*",
+        "application-autoscaling:*ScalingPolic*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatch",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricData",
+        "cloudwatch:PutDashboard",
+        "cloudwatch:GetDashboard",
+        "cloudwatch:DeleteDashboards"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Logs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:*LogGroup*",
+        "logs:PutRetentionPolicy",
+        "logs:TagResource",
+        "logs:ListTagsForResource"
+      ],
+      "Resource": [
+        "arn:aws:logs:eu-west-1:ACCOUNT_ID:log-group:/ecs/frict*",
+        "arn:aws:logs:eu-west-1:ACCOUNT_ID:log-group:/ecs/loadtest*"
+      ]
+    },
+    {
+      "Sid": "Events",
+      "Effect": "Allow",
+      "Action": [
+        "events:*Rule",
+        "events:*Targets*",
+        "events:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:events:eu-west-1:ACCOUNT_ID:rule/frict-*",
+        "arn:aws:events:eu-west-1:ACCOUNT_ID:rule/loadtest-*"
+      ]
+    },
+    {
+      "Sid": "STS",
+      "Effect": "Allow",
+      "Action": "sts:GetCallerIdentity",
+      "Resource": "*"
+    }
+  ]
+}

@@ -125,10 +125,13 @@ public class ShopService {
         );
         eventPublisher.publishEvent(stockEvent);
 
+        Registry budgetRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_BUDGET, -supplyCost, restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+        eventPublisher.publishEvent(new RegistryEvent(budgetRegistry));
+
         Registry stockRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_STOCK, (double) units, restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
         eventPublisher.publishEvent(new RegistryEvent(stockRegistry));
 
-        Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, (double) units * product.getCapacity(), restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
+        Registry capacityRegistry = new Registry(EntityType.SHOP, RegistryType.SHOP_USED_CAPACITY, units * product.getCapacity(), restockingShop.getReferenceCode(), restockingShop.getName(), restockingShop.getAssignedManager().getUsername(), restockingShop.getAssignedManager().getName(), product.getReferenceCode(), product.getName(), null, null);
         eventPublisher.publishEvent(new RegistryEvent(capacityRegistry));
 
         return targetStock;

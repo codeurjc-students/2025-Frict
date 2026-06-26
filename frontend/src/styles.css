@@ -50,3 +50,13 @@
 .prose blockquote { border-left: 4px solid; }
 .prose pre code { background: transparent; padding: 0; }
 
+/* Quill v2 getSemanticHTML() can carry white-space: pre-wrap — force normal wrapping on text elements */
+.prose p,
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6,
+.prose li,
+.prose blockquote,
+.prose span {
+  white-space: normal;
+}
+
+

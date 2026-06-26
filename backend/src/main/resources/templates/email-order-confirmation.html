@@ -4,7 +4,7 @@
 
 <div style="max-width: 620px; margin: 0 auto;">
 
-  <!-- ===== CABECERA AZUL ===== -->
+  <!-- Blue header -->
   <div style="background: #2563eb; padding: 20px 30px; border-radius: 10px 10px 0 0;">
     <table style="width: 100%; border-collapse: collapse;">
       <tr>
@@ -30,7 +30,7 @@
   <!-- ===== CUERPO PRINCIPAL ===== -->
   <div style="background: #ffffff; padding: 30px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
 
-    <!-- TÍTULO + QR -->
+    <!-- Title and QR code -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
       <tr>
         <td style="vertical-align: top; padding-right: 16px;">
@@ -51,7 +51,7 @@
             </tr>
           </table>
         </td>
-        <!-- QR de confirmación -->
+        <!-- Confirmation QR code -->
         <td style="text-align: right; vertical-align: top; width: 110px;">
           <img th:if="${hasQr}" src="cid:qr"
                width="90" height="90"
@@ -64,11 +64,11 @@
 
     <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 0 0 24px 0;"/>
 
-    <!-- ===== SECCIÓN: DIRECCIÓN + PAGO | RESUMEN ECONÓMICO ===== -->
+    <!-- Address, payment and financial summary -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px;">
       <tr>
 
-        <!-- COLUMNA IZQUIERDA: Dirección + Pago -->
+        <!-- Left column: address and payment -->
         <td style="vertical-align: top; width: 50%; padding-right: 20px;">
 
           <span style="display: block; font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Dirección de Envío</span>
@@ -83,7 +83,7 @@
 
         </td>
 
-        <!-- COLUMNA DERECHA: Resumen económico -->
+        <!-- Right column: financial summary -->
         <td style="vertical-align: top; width: 50%;">
           <div style="background: #f8fafc; border-radius: 8px; padding: 16px;">
 
@@ -131,12 +131,12 @@
       </tr>
     </table>
 
-    <!-- ===== TABLA DE PRODUCTOS ===== -->
+    <!-- Product table -->
     <span style="display: block; font-size: 9px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Contenido del Pedido</span>
 
     <table style="width: 100%; border-collapse: collapse;">
 
-      <!-- Cabecera -->
+      <!-- Header row -->
       <tr style="background-color: #f8fafc;">
         <th style="padding: 9px 10px; text-align: left; font-size: 11px; color: #64748b; font-weight: bold; border-bottom: 2px solid #e2e8f0;">Producto</th>
         <th style="padding: 9px 10px; text-align: center; font-size: 11px; color: #64748b; font-weight: bold; border-bottom: 2px solid #e2e8f0;">Precio/ud.</th>
@@ -144,7 +144,7 @@
         <th style="padding: 9px 10px; text-align: right; font-size: 11px; color: #64748b; font-weight: bold; border-bottom: 2px solid #e2e8f0;">Importe</th>
       </tr>
 
-      <!-- Filas de artículos -->
+      <!-- Item rows -->
       <tr th:each="item : ${order.items}" style="border-bottom: 1px solid #f1f5f9;">
         <td style="padding: 11px 10px; font-size: 13px; color: #1e293b;" th:text="${item.productName}">Producto X</td>
         <td style="padding: 11px 10px; font-size: 12px; color: #64748b; text-align: center;">

@@ -5,7 +5,7 @@ import com.tfg.backend.model.ProductImageInfo;
 
 public class GlobalDefaults {
 
-    // Tu DatabaseInitializer seguirá llenando estas variables al arrancar
+    // Populated by DatabaseInitializer at startup
     public static ImageInfo USER_IMAGE;
     public static ImageInfo CATEGORY_IMAGE;
     public static ImageInfo PRODUCT_IMAGE;
@@ -13,7 +13,7 @@ public class GlobalDefaults {
 
     private GlobalDefaults() {}
 
-    // --- 1. MÉTODOS FACTORÍA (Para ASIGNAR imágenes de forma segura para Hibernate) ---
+    // 1. Factory methods for safely assigning images to Hibernate entities
 
     public static ImageInfo getDefaultUserImage() {
         if (USER_IMAGE == null) return null;
@@ -35,7 +35,7 @@ public class GlobalDefaults {
         return new ImageInfo(SHOP_IMAGE.getImageUrl(), SHOP_IMAGE.getS3Key(), SHOP_IMAGE.getFileName());
     }
 
-    // --- 2. MÉTODOS DE COMPARACIÓN (Para COMPROBAR antes de borrar de S3) ---
+    // 2. Comparison methods for checking before deleting from S3
 
     public static boolean isDefaultUserImage(ImageInfo imageToCheck) {
         return imageToCheck != null && USER_IMAGE != null &&
@@ -52,7 +52,7 @@ public class GlobalDefaults {
                 imageToCheck.getS3Key().equals(SHOP_IMAGE.getS3Key());
     }
 
-    // Fíjate que este recibe un ProductImageInfo, extrayendo su imageInfo interno
+    // Takes a ProductImageInfo and extracts its inner imageInfo to compare the S3 key
     public static boolean isDefaultProductImage(ProductImageInfo productImageToCheck) {
         return productImageToCheck != null &&
                 productImageToCheck.getImageInfo() != null &&

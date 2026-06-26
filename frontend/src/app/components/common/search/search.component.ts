@@ -85,7 +85,7 @@ export class SearchComponent implements OnInit {
 
   ngOnInit(): void {
     this.productService.getSpecsCatalog().subscribe(s => this.allSpecs = s);
-    // Le decimos que SÍ es la carga inicial
+    // Mark as initial load
     this.getAllCategories(true);
   }
 

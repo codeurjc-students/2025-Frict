@@ -183,7 +183,6 @@ export class AdminHomeComponent implements OnInit {
           const sent = Number(orders.find(m => m.label === 'Enviados')?.value || 0);
           const onDelivery = Number(orders.find(m => m.label === 'En Reparto')?.value || 0);
 
-          // 2. Actualizamos los KPIs del conductor con los valores reales
           this.driverKpis.update(current => ({
             ...current,
             orderMade,
@@ -298,7 +297,7 @@ export class AdminHomeComponent implements OnInit {
             const shopParams = { ...baseParams, shopIds: [shop.referenceCode] };
             return this.registryService.loadInternalRegistry(shopParams).pipe(
               map((res: any) => ({
-                name: shop.name, // Guardamos el nombre para la leyenda
+                name: shop.name,
                 data: res.items || res
               }))
             );
@@ -392,7 +391,7 @@ export class AdminHomeComponent implements OnInit {
 
   private loadDriverHistoryData() {
     const truck = this.driverTruck();
-    if (!truck) return; // Si el conductor no tiene camión, no pedimos la gráfica
+    if (!truck) return; // Skip the chart request if the driver has no assigned truck
 
     const endDate = new Date();
     const startDate = new Date();
@@ -402,17 +401,15 @@ export class AdminHomeComponent implements OnInit {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       entityType: 'ORDER',
-      metricMode: 'VALUE', // "Modo variación" (eventos diarios)
+      metricMode: 'VALUE', // Variation mode: tracks daily event deltas, not the cumulative total
       viewType: 'GRAPH',
       interval: 'day',
       userIds: [this.loginInfo.username]
     };
 
-    // Preparamos las dos peticiones
     const reqCompleted = this.registryService.loadInternalRegistry({ ...baseParams, dataType: 'ORDERS_COMPLETED' });
     const reqCancelled = this.registryService.loadInternalRegistry({ ...baseParams, dataType: 'ORDERS_CANCELLED' });
 
-    // Las lanzamos en paralelo
     forkJoin([reqCompleted, reqCancelled]).subscribe({
       next: ([resCompleted, resCancelled]: [any, any]) => {
         const dataCompleted = resCompleted.items || resCompleted;

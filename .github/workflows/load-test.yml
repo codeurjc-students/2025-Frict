@@ -3,10 +3,6 @@ name: Load Test (k6)
 on:
   workflow_dispatch:
     inputs:
-      base_url:
-        description: "Target URL (the disposable clone — NOT prod frict.es)"
-        required: false
-        default: "https://loadtest.frict.es"
       profile:
         description: "Load profile"
         type: choice
@@ -25,25 +21,37 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  ENVIRONMENT_NAME: loadtest    # load tests always target the loadtest environment
+  AWS_REGION: eu-west-1         # must match the region where the stack is deployed
+  K6_NAMESPACE: k6/loadtest     # CloudWatch namespace for k6 metrics
+
 jobs:
   load-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Install k6
         run: |
-          sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
-            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
+          curl -fsSL https://dl.k6.io/key.gpg \
+            | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
           echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
             | sudo tee /etc/apt/sources.list.d/k6.list
           sudo apt-get update
           sudo apt-get install -y k6
 
       - name: Run k6 load test
+        continue-on-error: true
         env:
-          BASE_URL: ${{ inputs.base_url }}
+          # Target is ALWAYS the loadtest clone, never overridable.
+          BASE_URL: https://loadtest.${{ secrets.DOMAIN_NAME }}
           PROFILE: ${{ inputs.profile }}
           INCLUDE_WRITES: ${{ inputs.include_writes }}
           TEST_USER: ${{ secrets.LOAD_TEST_USER }}
@@ -55,17 +63,101 @@ jobs:
             --out json=results.json \
             --summary-export=summary.json
 
+      - name: Push k6 metrics to CloudWatch
+        if: always()
+        run: |
+          python3 << 'PYEOF'
+          import json, subprocess, sys
+          from collections import defaultdict
+
+          ns   = "${{ env.K6_NAMESPACE }}"
+          reg  = "${{ env.AWS_REGION }}"
+
+          # Buckets por minuto — todo sale de results.json con timestamps reales
+          vus_by_min    = defaultdict(list)
+          dur_by_min    = defaultdict(list)
+          failed_by_min = defaultdict(list)
+          errors_by_min = defaultdict(list)
+
+          try:
+              with open("results.json") as f:
+                  for line in f:
+                      line = line.strip()
+                      if not line:
+                          continue
+                      try:
+                          obj = json.loads(line)
+                      except Exception:
+                          continue
+                      if obj.get("type") != "Point":
+                          continue
+                      metric = obj.get("metric")
+                      d      = obj.get("data", {})
+                      value  = d.get("value")
+                      ts     = d.get("time", "")
+                      if value is None or len(ts) < 16:
+                          continue
+                      minute = ts[:16]
+                      if   metric == "vus":              vus_by_min[minute].append(value)
+                      elif metric == "http_req_duration": dur_by_min[minute].append(value)
+                      elif metric == "http_req_failed":   failed_by_min[minute].append(value)
+                      elif metric == "errors":            errors_by_min[minute].append(value)
+          except Exception as e:
+              print(f"results.json: {e}")
+              sys.exit(0)
+
+          def ptile(values, p):
+              s = sorted(values)
+              return s[min(int(len(s) * p / 100), len(s) - 1)]
+
+          all_data = []
+          def point(name, ts_min, value, unit="None"):
+              all_data.append({"MetricName": name, "Timestamp": ts_min + ":00Z",
+                               "Value": float(value), "Unit": unit})
+
+          for m, v in sorted(vus_by_min.items()):
+              point("vus", m, max(v), "Count")
+
+          for m, v in sorted(dur_by_min.items()):
+              point("http_req_duration_p95", m, ptile(v, 95), "Milliseconds")
+              point("http_req_duration_p99", m, ptile(v, 99), "Milliseconds")
+
+          for m, v in sorted(failed_by_min.items()):
+              point("http_req_failed", m, sum(v) / len(v))
+
+          for m, v in sorted(errors_by_min.items()):
+              point("errors", m, sum(v) / len(v))
+
+          print(f"Minutos: vus={len(vus_by_min)} dur={len(dur_by_min)} failed={len(failed_by_min)} errors={len(errors_by_min)}")
+
+          if not all_data:
+              print("Nada que enviar a CloudWatch")
+              sys.exit(0)
+
+          for i in range(0, len(all_data), 20):
+              subprocess.run(
+                  ["aws", "cloudwatch", "put-metric-data",
+                   "--namespace", ns, "--region", reg,
+                   "--metric-data", json.dumps(all_data[i:i+20])],
+                  check=True
+              )
+          print(f"Total enviado: {len(all_data)} métricas a {ns}")
+          PYEOF
+
       # Build a readable markdown digest from summary.json and render it on the
       # run's Summary tab. This does NOT touch k6's native console output (kept in
       # the step log above, preserved even when thresholds fail).
       - name: Publish report to job summary
         if: always()
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ENVIRONMENT_NAME: ${{ env.ENVIRONMENT_NAME }}
         run: |
-          node -e '
+          node << 'NODE'
           const fs = require("fs");
           let s;
           try { s = JSON.parse(fs.readFileSync("summary.json", "utf8")); }
-          catch (e) { console.log("## k6\n\nNo se generó summary.json (el test pudo abortar en setup)."); process.exit(0); }
+          catch (e) { process.stdout.write("## k6\n\nsummary.json was not generated (the test may have aborted during setup).\n"); process.exit(0); }
           const m = s.metrics || {};
           const get = (n, k) => (m[n] && m[n][k] !== undefined ? m[n][k] : undefined);
           const rateOf = (n) => {
@@ -74,28 +166,35 @@ jobs:
             if (x.passes !== undefined && x.fails !== undefined) { const t = x.passes + x.fails; return t ? x.passes / t : 0; }
             return undefined;
           };
-          const r = (x) => (x === undefined ? "—" : Math.round(x * 100) / 100);
-          const ms = (x) => (x === undefined ? "—" : r(x) + " ms");
+          const r   = (x) => (x === undefined ? "—" : Math.round(x * 100) / 100);
+          const ms  = (x) => (x === undefined ? "—" : r(x) + " ms");
           const pct = (x) => (x === undefined ? "—" : r(x * 100) + " %");
           const vus = get("vus_max", "value") !== undefined ? get("vus_max", "value") : get("vus_max", "max");
+          const region = process.env.AWS_REGION || "eu-west-1";
+          const env    = process.env.ENVIRONMENT_NAME || "frict";
+          const cwUrl  = "https://" + region + ".console.aws.amazon.com/cloudwatch/home?region=" + region
+                       + "#dashboards:name=" + env + "-load-test";
           const o = [];
           o.push("## 📊 k6 load test");
           o.push("");
           o.push("| Métrica | Valor |");
           o.push("| --- | --- |");
-          o.push("| Requests | " + (get("http_reqs", "count") === undefined ? "—" : get("http_reqs", "count")) + " (" + r(get("http_reqs", "rate")) + " req/s) |");
+          o.push("| Requests | " + (get("http_reqs","count") === undefined ? "—" : get("http_reqs","count")) + " (" + r(get("http_reqs","rate")) + " req/s) |");
           o.push("| VUs máx | " + (vus === undefined ? "—" : vus) + " |");
-          o.push("| Latencia avg | " + ms(get("http_req_duration", "avg")) + " |");
-          o.push("| Latencia p95 | " + ms(get("http_req_duration", "p(95)")) + " |");
-          o.push("| Latencia p99 | " + ms(get("http_req_duration", "p(99)")) + " |");
-          o.push("| TTFB (waiting) p95 | " + ms(get("http_req_waiting", "p(95)")) + " |");
+          o.push("| Latencia avg | " + ms(get("http_req_duration","avg")) + " |");
+          o.push("| Latencia p95 | " + ms(get("http_req_duration","p(95)")) + " |");
+          o.push("| Latencia p99 | " + ms(get("http_req_duration","p(99)")) + " |");
+          o.push("| TTFB (waiting) p95 | " + ms(get("http_req_waiting","p(95)")) + " |");
           o.push("| http_req_failed | " + pct(rateOf("http_req_failed")) + " |");
           o.push("| errores (app) | " + pct(rateOf("errors")) + " |");
           o.push("| checks OK | " + pct(rateOf("checks")) + " |");
           o.push("");
+          o.push("> 📈 **[Ver gráfica en CloudWatch Dashboard](" + cwUrl + ")**");
+          o.push("");
           o.push("_Umbrales y desglose por endpoint: ver el log del step de k6 y el estado (rojo/verde) del job._");
-          console.log(o.join("\n"));
-          ' >> "$GITHUB_STEP_SUMMARY"
+          process.stdout.write(o.join("\n") + "\n");
+          NODE
+          >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         if: always()

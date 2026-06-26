@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ReviewEvent {
     private final EventAction action;
-    private final String reviewId; // Puede ser null en CREATED
-    private final String productId; // ¡Obligatorio siempre!
-    private final List<String> managerUsernames; // La lista que calculas en el servicio
+    private final String reviewId; // Can be null for CREATED events
+    private final String productId;
+    private final List<String> managerUsernames;
 }

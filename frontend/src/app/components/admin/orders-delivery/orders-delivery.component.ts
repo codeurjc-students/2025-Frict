@@ -74,7 +74,6 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   newComment: string = '';
   activeTab: string = '0';
 
-  // --- VARIABLES PARA LOS MODALES DE RECOGIDA Y CANCELACIÓN ---
   displayCollectDialog = false;
   collectComment = '';
 
@@ -97,7 +96,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   newTruckStatus: string = '';
   newTruckComment: string = '';
 
-  // Instancia del escáner QR
+  // QR scanner instance
   private html5QrcodeScanner: Html5QrcodeScanner | null = null;
 
   ngOnInit() {
@@ -397,7 +396,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     return this.getCurrentStatus(this.selectedOrder()) === 'Pedido Realizado';
   }
 
-  // --- ACCIONES CON MODALES (RECOGER / CANCELAR) ---
+  // Modal actions (pick up / cancel)
 
   openCollectDialog() {
     this.collectComment = 'Pedido recogido para su entrega.';
@@ -466,7 +465,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- NUEVA ACCIÓN: DESASIGNAR PEDIDO ---
+  // Unassign order action
   unassignOrder() {
     const order = this.selectedOrder();
     if (!order) return;
@@ -481,13 +480,13 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- MÉTODOS DEL ESCÁNER QR ---
+  // QR scanner methods
 
   openScanner() {
     this.displayQrScanner = true;
     this.scanning = true;
 
-    // setTimeout para dar tiempo a PrimeNG de renderizar el div del dialog
+    // Defer initialization to let PrimeNG render the dialog div before the scanner attaches to it
     setTimeout(() => {
       this.html5QrcodeScanner = new Html5QrcodeScanner(
         "qr-reader",
@@ -511,7 +510,7 @@ export class OrdersDeliveryComponent implements OnInit, OnDestroy {
   }
 
   onScanFailure(error: any) {
-    // Ignoramos el error, ya que se dispara por cada frame que no reconoce un QR
+    // Suppress errors that fire for every frame without a readable QR code
   }
 
   onQrSuccess(result: string) {

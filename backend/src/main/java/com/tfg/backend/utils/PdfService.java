@@ -34,8 +34,11 @@ import com.tfg.backend.dto.PdfReportDTO;
 import com.tfg.backend.model.Order;
 import com.tfg.backend.model.OrderItem;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -45,6 +48,7 @@ import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -52,7 +56,17 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class PdfService {
 
-    // --- MANEJADOR DE CABECERA Y PIE DE PÁGINA (iText 8) ---
+    private static final Locale LOCALE_ES = new Locale("es", "ES");
+
+    private final S3Client s3Client;
+
+    @Value("${app.storage.public-url}")
+    private String storagePublicUrl;
+
+    @Value("${app.storage.bucket-name}")
+    private String storageBucketName;
+
+    // Header and footer handler (iText 8)
     private static class HeaderFooterEventHandler implements IEventHandler {
         private final String rightSideText;
         private Image logoImage;
@@ -106,35 +120,41 @@ public class PdfService {
     }
 
     /**
-     * Helper para descargar imágenes saltándose los bloqueos 403 Forbidden de servidores externos
-     * simulando ser un navegador Chrome estándar y forzando formatos compatibles con iText.
+     * Helper that downloads images while bypassing 403 Forbidden blocks from external servers
+     * by spoofing a standard Chrome browser and enforcing iText-compatible formats.
      */
     private Image safeLoadImage(String imageUrl, float width, float height) {
         try {
             if (imageUrl == null || imageUrl.trim().isEmpty()) return null;
-            if (imageUrl.startsWith("//")) imageUrl = "https:" + imageUrl; // Arreglar URLs sin protocolo
+            if (imageUrl.startsWith("//")) imageUrl = "https:" + imageUrl;
 
+            // Use the S3 SDK for images stored in our own bucket (works in both local MinIO
+            // and AWS private-subnet ECS, where anonymous HTTP would get 403).
+            if (imageUrl.startsWith(storagePublicUrl)) {
+                String key = imageUrl.substring(storagePublicUrl.length()).replaceFirst("^/+", "");
+                try (var s3Stream = s3Client.getObject(
+                        GetObjectRequest.builder().bucket(storageBucketName).key(key).build())) {
+                    return new Image(ImageDataFactory.create(s3Stream.readAllBytes())).scaleToFit(width, height);
+                }
+            }
+
+            // Fallback: plain HTTP for any external image URL
             java.net.URL url = URI.create(imageUrl).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            // Disfrazar la petición de Java como si fuera un navegador web real
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
             connection.setRequestProperty("Accept", "image/jpeg, image/png, image/gif");
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
 
-            // Manejar redirecciones automáticamente
             int status = connection.getResponseCode();
             if (status == HttpURLConnection.HTTP_MOVED_TEMP
                     || status == HttpURLConnection.HTTP_MOVED_PERM
                     || status == HttpURLConnection.HTTP_SEE_OTHER) {
-                String newUrl = connection.getHeaderField("Location");
-                return safeLoadImage(newUrl, width, height);
+                return safeLoadImage(connection.getHeaderField("Location"), width, height);
             }
 
             try (InputStream in = connection.getInputStream()) {
-                byte[] bytes = in.readAllBytes();
-                return new Image(ImageDataFactory.create(bytes)).scaleToFit(width, height);
+                return new Image(ImageDataFactory.create(in.readAllBytes())).scaleToFit(width, height);
             }
         } catch (Exception e) {
             System.err.println("No se pudo pintar la imagen (" + imageUrl + ") en el PDF: " + e.getMessage());
@@ -143,7 +163,7 @@ public class PdfService {
     }
 
     // =========================================================================
-    // 1. GENERADOR DE INFORMES DE MÉTRICAS (iText 8)
+    // 1. Metrics report generator (iText 8)
     // =========================================================================
     public byte[] generateCustomPdfReport(List<org.bson.Document> records, PdfReportDTO request) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -214,7 +234,7 @@ public class PdfService {
             if (records != null) {
                 cLVal = new Cell().add(new Paragraph(String.valueOf(records.size())).setFont(fontBold).setFontSize(18).setFontColor(primaryBlue)).setBorder(Border.NO_BORDER).setBackgroundColor(bgLight).setPaddingBottom(12).setPaddingLeft(15);
             }
-            Cell cRVal = new Cell().add(new Paragraph(String.format(java.util.Locale.US, "%.1f", kpiValue).replace(".0", "")).setFont(fontBold).setFontSize(18).setFontColor(primaryBlue)).setBorder(Border.NO_BORDER).setBackgroundColor(bgLight).setPaddingBottom(12).setPaddingRight(15).setTextAlignment(TextAlignment.RIGHT);
+            Cell cRVal = new Cell().add(new Paragraph(String.format(LOCALE_ES, "%,.1f", kpiValue).replaceAll(",0$", "")).setFont(fontBold).setFontSize(18).setFontColor(primaryBlue)).setBorder(Border.NO_BORDER).setBackgroundColor(bgLight).setPaddingBottom(12).setPaddingRight(15).setTextAlignment(TextAlignment.RIGHT);
 
             kpiTable.addCell(cLLabel).addCell(cRLabel).addCell(cLVal).addCell(cRVal);
             document.add(kpiTable);
@@ -259,7 +279,7 @@ public class PdfService {
     }
 
     // =========================================================================
-    // 2. GENERADOR DE FACTURAS DE PEDIDO (Unificado con el componente Angular)
+    // 2. Order invoice generator (mirrors the Angular component layout)
     // =========================================================================
     public byte[] generateOrderInvoicePdf(Order order, String qrToken) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -282,7 +302,6 @@ public class PdfService {
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm");
 
-            // Determinar estado actual y fecha de actualización
             String statusName = "Desconocido";
             String statusDate = "";
             if (order.getHistory() != null && !order.getHistory().isEmpty()) {
@@ -293,7 +312,7 @@ public class PdfService {
                 }
             }
 
-            // --- 1. CABECERA TIPO INFORME (Resumen y QR) ---
+            // 1. Header section (order summary and QR code)
             Table headerTable = new Table(UnitValue.createPercentArray(new float[]{3f, 1f})).useAllAvailableWidth();
 
             Cell infoCell = new Cell().setBorder(Border.NO_BORDER);
@@ -320,19 +339,16 @@ public class PdfService {
             document.add(headerTable);
             document.add(new Paragraph("\n"));
 
-            // --- 2. GRID PRINCIPAL (Dos Columnas: Datos y Resumen Económico) ---
-            // Un 55% para la izquierda (texto) y 45% para la derecha (números)
+            // 2. Main grid: left column takes ~55% (text details), right column takes ~45% (numbers)
             Table gridTable = new Table(UnitValue.createPercentArray(new float[]{1.2f, 1f})).useAllAvailableWidth().setMarginBottom(20);
 
-            // --- COLUMNA 1: Izquierda (Dirección, Fecha y Pago) ---
+            // Column 1: address, date, and payment
             Cell colLeft = new Cell().setBorder(Border.NO_BORDER).setPaddingRight(20);
 
-            // Dirección de envío
             colLeft.add(new Paragraph("DIRECCIÓN DE ENVÍO").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(5));
             String sendingAddr = order.getFullSendingAddress() != null ? order.getFullSendingAddress() : "Dirección no disponible";
             colLeft.add(new Paragraph(sendingAddr).setFont(fontNorm).setFontSize(10).setFontColor(textDark).setMarginBottom(15));
 
-            // Fecha Confirmación
             colLeft.add(new Paragraph("FECHA DE CONFIRMACIÓN").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(5));
             colLeft.add(new Paragraph(order.getCreatedAt().format(formatter)).setFont(fontNorm).setFontSize(10).setFontColor(textDark).setMarginBottom(15));
 
@@ -344,20 +360,19 @@ public class PdfService {
 
             gridTable.addCell(colLeft);
 
-            // --- COLUMNA 2: Derecha (Resumen Económico) ---
+            // Column 2: financial summary
             Cell colRight = new Cell().setBorder(Border.NO_BORDER).setBackgroundColor(bgLight).setPadding(15);
             colRight.add(new Paragraph("RESUMEN").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(10));
 
             Table summaryInner = new Table(UnitValue.createPercentArray(new float[]{3f, 1.5f})).useAllAvailableWidth();
             // Subtotal
             summaryInner.addCell(new Cell().add(new Paragraph(String.format("Subtotal (%d artículos):", order.getTotalItems())).setFont(fontNorm).setFontSize(9).setFontColor(textMuted)).setBorder(Border.NO_BORDER).setPaddingBottom(5));
-            summaryInner.addCell(new Cell().add(new Paragraph(String.format(java.util.Locale.US, "%.2f €", order.getSubtotalCost())).setFont(fontBold).setFontSize(10).setFontColor(textDark)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT).setPaddingBottom(5));
+            summaryInner.addCell(new Cell().add(new Paragraph(String.format(LOCALE_ES, "%,.2f €", order.getSubtotalCost())).setFont(fontBold).setFontSize(10).setFontColor(textDark)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT).setPaddingBottom(5));
             // Descuentos
             summaryInner.addCell(new Cell().add(new Paragraph("Descuentos aplicados:").setFont(fontNorm).setFontSize(9).setFontColor(textMuted)).setBorder(Border.NO_BORDER).setPaddingBottom(5));
-            summaryInner.addCell(new Cell().add(new Paragraph(String.format(java.util.Locale.US, "-%.2f €", order.getTotalDiscount())).setFont(fontBold).setFontSize(10).setFontColor(textDark)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT).setPaddingBottom(5));
-            // Envío
+            summaryInner.addCell(new Cell().add(new Paragraph(String.format(LOCALE_ES, "-%,.2f €", order.getTotalDiscount())).setFont(fontBold).setFontSize(10).setFontColor(textDark)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT).setPaddingBottom(5));
             summaryInner.addCell(new Cell().add(new Paragraph("Coste de envío:").setFont(fontNorm).setFontSize(9).setFontColor(textMuted)).setBorder(Border.NO_BORDER).setPaddingBottom(5));
-            summaryInner.addCell(new Cell().add(new Paragraph(String.format(java.util.Locale.US, "%.2f €", order.getShippingCost())).setFont(fontBold).setFontSize(10).setFontColor(textDark)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT).setPaddingBottom(5));
+            summaryInner.addCell(new Cell().add(new Paragraph(String.format(LOCALE_ES, "%,.2f €", order.getShippingCost())).setFont(fontBold).setFontSize(10).setFontColor(textDark)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT).setPaddingBottom(5));
 
             colRight.add(summaryInner);
             colRight.add(new Paragraph("").setMarginTop(5).setMarginBottom(10).setBorderBottom(new SolidBorder(borderLight, 1f))); // Separador
@@ -365,13 +380,13 @@ public class PdfService {
             Table totalInner = new Table(UnitValue.createPercentArray(new float[]{1f, 1f})).useAllAvailableWidth();
             totalInner.addCell(new Cell().add(new Paragraph("Total").setFont(fontBold).setFontSize(12).setFontColor(textDark)).setBorder(Border.NO_BORDER).setVerticalAlignment(VerticalAlignment.BOTTOM));
             Double totalValue = order.getTotalCost() + order.getShippingCost();
-            totalInner.addCell(new Cell().add(new Paragraph(String.format(java.util.Locale.US, "%.2f €", totalValue)).setFont(fontBold).setFontSize(16).setFontColor(primaryBlue)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT));
+            totalInner.addCell(new Cell().add(new Paragraph(String.format(LOCALE_ES, "%,.2f €", totalValue)).setFont(fontBold).setFontSize(16).setFontColor(primaryBlue)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT));
             colRight.add(totalInner);
 
             gridTable.addCell(colRight);
             document.add(gridTable);
 
-            // --- 3. SECCIÓN DE TIENDA (Con foto e información del Manager) ---
+            // 3. Shop section (photo and manager contact info)
             document.add(new Paragraph("ATENDIDO POR").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(5));
             Table shopInnerTable = new Table(UnitValue.createPercentArray(new float[]{1f, 7f})).useAllAvailableWidth().setMarginBottom(20);
 
@@ -386,7 +401,7 @@ public class PdfService {
                 if (shopImg != null) {
                     shopImgCell.add(shopImg);
                 } else {
-                    // Placeholder vacío si no hay imagen
+                    // Empty placeholder to preserve layout when no image is available
                     shopImgCell.add(new Paragraph(" ").setHeight(50).setWidth(50));
                 }
 
@@ -396,7 +411,6 @@ public class PdfService {
                     shopTextCell.add(new Paragraph(order.getAssignedShop().getAddress().getStreet() + ", " + order.getAssignedShop().getAddress().getCity()).setFont(fontNorm).setFontSize(9).setFontColor(textMuted));
                 }
 
-                // Información de contacto del Manager
                 if (order.getAssignedShop().getAssignedManager() != null) {
                     var manager = order.getAssignedShop().getAssignedManager();
                     String contactName = "Manager: " + manager.getName();
@@ -410,13 +424,13 @@ public class PdfService {
             shopInnerTable.addCell(shopImgCell).addCell(shopTextCell);
             document.add(shopInnerTable);
 
-            // --- 4. LISTA DE PRODUCTOS ---
+            // 4. Product list
             document.add(new Paragraph("CONTENIDO DEL PEDIDO").setFont(fontBold).setFontSize(9).setFontColor(textMuted).setMarginBottom(10));
 
             Table listTable = new Table(UnitValue.createPercentArray(new float[]{1.5f, 5f, 1.5f, 2f})).useAllAvailableWidth();
 
             for (OrderItem item : order.getItems()) {
-                // 1. FOTO (Carga segura)
+                // 1. Photo (safe load)
                 Cell imgCell = new Cell().setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(borderLight, 1f)).setPadding(10).setVerticalAlignment(VerticalAlignment.MIDDLE);
                 Image pImg = safeLoadImage(item.getProductImageUrl(), 40, 40);
                 if (pImg != null) {
@@ -425,20 +439,20 @@ public class PdfService {
                 }
                 listTable.addCell(imgCell);
 
-                // 2. DETALLES (Nombre + Precio/ud debajo)
+                // 2. Details (name and unit price)
                 Cell detailsContentCell = new Cell().setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(borderLight, 1f)).setPadding(10).setVerticalAlignment(VerticalAlignment.MIDDLE);
                 detailsContentCell.add(new Paragraph(item.getProductName()).setFont(fontBold).setFontSize(10).setFontColor(textDark));
-                detailsContentCell.add(new Paragraph(String.format(java.util.Locale.US, "%.2f € / ud.", item.getProductPrice())).setFont(fontNorm).setFontSize(9).setFontColor(textMuted));
+                detailsContentCell.add(new Paragraph(String.format(LOCALE_ES, "%,.2f € / ud.", item.getProductPrice())).setFont(fontNorm).setFontSize(9).setFontColor(textMuted));
                 listTable.addCell(detailsContentCell);
 
-                // 3. UNIDADES
+                // 3. Quantity
                 Cell qtyListCell = new Cell().setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(borderLight, 1f)).setPadding(10).setVerticalAlignment(VerticalAlignment.MIDDLE).setTextAlignment(TextAlignment.CENTER);
                 qtyListCell.add(new Paragraph(item.getQuantity() + " uds.").setFont(fontBold).setFontSize(10).setFontColor(textDark));
                 listTable.addCell(qtyListCell);
 
-                // 4. TOTAL (Destacado en Azul)
+                // 4. Total (highlighted in blue)
                 Cell totalListCell = new Cell().setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(borderLight, 1f)).setPadding(10).setVerticalAlignment(VerticalAlignment.MIDDLE).setTextAlignment(TextAlignment.RIGHT);
-                totalListCell.add(new Paragraph(String.format(java.util.Locale.US, "%.2f €", item.getQuantity() * item.getProductPrice())).setFont(fontBold).setFontSize(11).setFontColor(primaryBlue));
+                totalListCell.add(new Paragraph(String.format(LOCALE_ES, "%,.2f €", item.getQuantity() * item.getProductPrice())).setFont(fontBold).setFontSize(11).setFontColor(primaryBlue));
                 listTable.addCell(totalListCell);
             }
             document.add(listTable);

@@ -5,9 +5,9 @@ import com.tfg.backend.dto.UserSignupDTO;
 import com.tfg.backend.event.UserEvent;
 import com.tfg.backend.model.User;
 import com.tfg.backend.security.GoogleTokenDTO;
-import com.tfg.backend.service.EmailService;
 import com.tfg.backend.security.oauth2.GoogleAuthPayload;
 import com.tfg.backend.security.oauth2.GoogleAuthVerifier;
+import com.tfg.backend.service.EmailService;
 import com.tfg.backend.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -124,7 +124,7 @@ public class UserLoginService {
 		return new AuthResponse(AuthResponse.Status.SUCCESS, "Auth successful. Tokens are created in cookie.");
 	}
 
-	// Igual que login, solo lee y genera tokens.
+	// Like login, but skips authentication and only generates new tokens
 	public AuthResponse refresh(HttpServletResponse response, String refreshToken) {
 		try {
 			var claims = jwtTokenProvider.validateToken(refreshToken);

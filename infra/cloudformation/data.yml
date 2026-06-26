@@ -49,6 +49,18 @@ Parameters:
     Type: String
     Default: ""
     Description: "ARN of the DocumentDB cluster snapshot to restore from (leave empty for a fresh cluster)"
+  MySQLMasterPassword:
+    Type: String
+    NoEcho: true
+    Description: "Fixed RDS master password (from CI secret). Constant so snapshot restores always match."
+  DocDBMasterPassword:
+    Type: String
+    NoEcho: true
+    Description: "Fixed DocumentDB master password (from CI secret). Constant so snapshot restores always match."
+  DBEncryptionKey:
+    Type: String
+    NoEcho: true
+    Description: "Fixed AES key for DB field encryption (from CI secret). Constant so a clone can decrypt restored data."
 
 Conditions:
   CreateDocDB: !Equals [!Ref EnableDocDB, "true"]
@@ -81,11 +93,7 @@ Resources:
     Properties:
       Name: !Sub "${EnvironmentName}/mysql"
       Description: RDS MySQL credentials
-      GenerateSecretString:
-        SecretStringTemplate: '{"username": "frict_admin"}'
-        GenerateStringKey: password
-        PasswordLength: 32
-        ExcludePunctuation: true
+      SecretString: !Sub '{"username":"frict_admin","password":"${MySQLMasterPassword}"}'
 
   DocDBSecret:
     Type: AWS::SecretsManager::Secret
@@ -93,11 +101,7 @@ Resources:
     Properties:
       Name: !Sub "${EnvironmentName}/docdb"
       Description: DocumentDB credentials
-      GenerateSecretString:
-        SecretStringTemplate: '{"username": "frict_admin"}'
-        GenerateStringKey: password
-        PasswordLength: 32
-        ExcludePunctuation: true
+      SecretString: !Sub '{"username":"frict_admin","password":"${DocDBMasterPassword}"}'
 
   JWTSecret:
     Type: AWS::SecretsManager::Secret
@@ -113,10 +117,9 @@ Resources:
     Properties:
       Name: !Sub "${EnvironmentName}/db-encryption-key"
       Description: AES key for encrypting sensitive fields in the database
-      GenerateSecretString:
-        PasswordLength: 16
-        ExcludeCharacters: '"@/\'
-        ExcludePunctuation: true
+      # Fixed (from CI secret) and constant across envs, so a clone restored from
+      # a snapshot can decrypt fields encrypted by the source (Order, PaymentCard).
+      SecretString: !Ref DBEncryptionKey
 
   MailSecret:
     Type: AWS::SecretsManager::Secret
