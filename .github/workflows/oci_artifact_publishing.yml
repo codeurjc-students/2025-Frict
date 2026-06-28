@@ -70,9 +70,9 @@ jobs:
       - name: Render compose files for publishing
         run: |
           sed -i "s|\${IMAGE_TAG}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }} ${{ env.DEV_COMPOSE_FILE }}
-          HAPROXY_CFG="$(cat docker/haproxy.cfg)" yq -i '.configs.haproxy_cfg = {"content": strenv(HAPROXY_CFG)}' ${{ env.COMPOSE_FILE }}
-          PUBLIC_CRT="$(cat docker/certs/public.crt)" yq -i '.configs.minio_public_crt = {"content": strenv(PUBLIC_CRT)}' ${{ env.DEV_COMPOSE_FILE }}
-          PRIVATE_KEY="$(cat docker/certs/private.key)" yq -i '.configs.minio_private_key = {"content": strenv(PRIVATE_KEY)}' ${{ env.DEV_COMPOSE_FILE }}
+          HAPROXY_CFG="$(cat docker/haproxy.cfg)"$'\n' yq -i '.configs.haproxy_cfg = {"content": strenv(HAPROXY_CFG)}' ${{ env.COMPOSE_FILE }}
+          PUBLIC_CRT="$(cat docker/certs/public.crt)"$'\n' yq -i '.configs.minio_public_crt = {"content": strenv(PUBLIC_CRT)}' ${{ env.DEV_COMPOSE_FILE }}
+          PRIVATE_KEY="$(cat docker/certs/private.key)"$'\n' yq -i '.configs.minio_private_key = {"content": strenv(PRIVATE_KEY)}' ${{ env.DEV_COMPOSE_FILE }}
 
       # --- 4. PUBLISH SPECIFIC COMPOSE FILE (release, dev, or manual) ---
       # Publishes the docker-compose.yml file with the name "<image-version>-compose"
