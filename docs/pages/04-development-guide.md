@@ -437,7 +437,7 @@ This workflow automates the containerization, versioning, and distribution of th
   - The specific release tag (e.g., `v1.0.0`) alongside the `latest` tag when a formal release is published.
   - A custom tag combining the branch name, timestamp, and commit SHA for manual executions.
 - **Build & Registry Push:** Safely builds the Docker image and pushes it to the public Docker Hub registry (`mjpulido/frict`).
-- **Compose OCI Artifacts:** Automatically parses the `docker-compose.yml` file to inject the exact generated image tag, and publishes the Compose file itself as an OCI artifact (e.g., `dev-compose` or `latest-compose`). This enables users to seamlessly deploy the entire stack remotely using the `docker compose -f oci://...` command without needing to download any files.
+- **Compose OCI Artifacts:** Automatically injects the exact generated image tag into the Compose files and publishes **two** self-contained OCI artifacts: the production topology (`dev-compose` / `latest-compose`) and the single-instance development environment (`dev-compose-single` / `latest-compose-single`). Bind-mounted files (the HAProxy config and the MinIO TLS certificates) are bundled into the artifacts as Compose `configs`, so users can deploy either stack remotely with `docker compose -f oci://...` without cloning the repository or downloading any files.
 
 #### AWS Deployment Pipeline (deploy.yml)
 

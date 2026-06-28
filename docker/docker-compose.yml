@@ -4,7 +4,7 @@ x-app-common: &app-common
   image: mjpulido/frict:${IMAGE_TAG}
   restart: unless-stopped
   env_file:
-    - path: ../backend/.env
+    - path: .env
       required: false
   environment:
     SPRING_PROFILES_ACTIVE: local
@@ -36,8 +36,9 @@ services:
     container_name: frict-haproxy
     ports:
       - "80:80"
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    configs:
+      - source: haproxy_cfg
+        target: /usr/local/etc/haproxy/haproxy.cfg
     depends_on:
       - app-1
       - app-2
@@ -123,3 +124,7 @@ volumes:
   mysql_data:
   mongodb_data:
   minio_data:
+
+configs:
+  haproxy_cfg:
+    file: ./haproxy.cfg

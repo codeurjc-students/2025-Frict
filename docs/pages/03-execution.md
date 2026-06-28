@@ -18,19 +18,14 @@ The only requirement is having Docker installed and available on your system's P
 
 * **Linux:** Install the **[Docker Engine](https://docs.docker.com/engine/install/)** (which includes the Docker CLI) and the **[Docker Compose V2](https://docs.docker.com/compose/install/linux/)** plugin separately, following the official guide for your distribution.
 
-With Docker ready, create a `.env` file with the credentials of the external services:
+With Docker ready, you must provide the credentials for the external services (Google sign-in and email delivery). This is the same for **both** environments: before starting the containers, create a `.env` file **in the directory from which you run the command**, with the following content:
 
 ```env
 GOOGLE_AUTH_CLIENT_ID=your_google_client_id
+SENDER_MAIL_HOST=smtp.gmail.com
 SENDER_MAIL_ADDRESS=your_email@example.com
 SENDER_MAIL_PORT=587
 SENDER_MAIL_PASSWORD=your_email_app_password
-```
-
-For the **local production environment**, place this file in your working directory. For the **development environment**, place it in the root directory of the cloned repository and add the following extra variable:
-
-```env
-SENDER_MAIL_HOST=smtp.gmail.com
 ```
 
 > ℹ️ **NOTE:** These variables are directly responsible for the application's email delivery and third-party authentication functionalities. To enable them, you must provide valid credentials and connection details from a real SMTP server.
@@ -74,12 +69,10 @@ docker compose -f oci://mjpulido/frict down
 
 ### 🛠️ Development Environment
 
-This environment brings up a single application instance with debugging support and self-signed TLS certificates for MinIO. It requires cloning the repository beforehand:
+This environment brings up a single application instance over HTTPS with self-signed TLS certificates for MinIO. Like the production environment, it does **not** require cloning the repository — the Compose artifact is pulled directly from DockerHub. From a terminal located in the same folder as your `.env` file:
 
 ```bash
-git clone https://github.com/codeurjc-students/2025-Frict frict
-cd frict
-docker compose -f docker-compose-dev.yml up -d
+docker compose -f oci://mjpulido/frict:dev-compose-single up -d
 ```
 
 Once all containers are healthy, the application is accessible at:

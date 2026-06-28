@@ -69,7 +69,6 @@ jobs:
       # Publishes the docker-compose.yml file with the name "<image-version>-compose"
       - name: Publish Compose Artifact
         run: |
-          echo "" > backend/.env
           yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.artifact_tag }}
 
       # --- 5. PUBLISH LATEST COMPOSE FILE (releases only) ---
@@ -80,7 +79,26 @@ jobs:
           sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" ${{ env.COMPOSE_FILE }}
           yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_latest }}
 
-      # --- 6. EXPORT IMAGE TAG FOR DOWNSTREAM WORKFLOWS ---
+      # --- 6. DEV (SINGLE-INSTANCE) COMPOSE TAG RENDERING ---
+      # The dev compose hardcodes "mjpulido/frict:dev"; replace that literal with the calculated tag.
+      # On push to main IMAGE_TAG="dev", so this is a harmless no-op.
+      - name: Dev compose image tag rendering
+        run: |
+          sed -i "s|image: ${{ env.IMAGE_NAME }}:dev|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|g" docker/docker-compose-dev.yml
+
+      # --- 7. PUBLISH DEV (SINGLE-INSTANCE) COMPOSE (release, dev, or manual) ---
+      - name: Publish Dev Compose Artifact
+        run: |
+          yes | docker compose -f docker/docker-compose-dev.yml publish --with-env ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}-compose-single
+
+      # --- 8. PUBLISH LATEST DEV COMPOSE (releases only) ---
+      - name: Publish Latest Dev Compose Artifact (Re-rendered)
+        if: steps.vars.outputs.is_release == 'true'
+        run: |
+          sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" docker/docker-compose-dev.yml
+          yes | docker compose -f docker/docker-compose-dev.yml publish --with-env ${{ env.IMAGE_NAME }}:latest-compose-single
+
+      # --- 9. EXPORT IMAGE TAG FOR DOWNSTREAM WORKFLOWS ---
       - name: Save image tag artifact
         run: echo "${{ env.IMAGE_TAG }}" > image_tag.txt
 
