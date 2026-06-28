@@ -60,11 +60,19 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ steps.vars.outputs.is_release == 'true' && format('{0}:latest', env.IMAGE_NAME) || '' }}
 
-      # --- 3. COMPOSE FILES TAG NAME RENDERING ---
-      # Change the ${IMAGE_TAG} placeholder in both Compose files with the calculated tag (release tag, "dev", or manual tag)
-      - name: Compose files image tag rendering
+      # --- 3. PREPARE COMPOSE FILES FOR PUBLISHING ---
+      # (a) Replace the ${IMAGE_TAG} placeholder with the calculated tag (release tag, "dev", or manual tag).
+      # (b) Inline the config/secret file contents: `docker compose publish` does NOT bundle
+      #     configs declared with `file:` (it keeps only the path reference, which is missing on
+      #     the consumer side). Converting them to inline `content:` embeds them in the published
+      #     compose.yaml so the artifact is truly self-contained. Source files keep `file:` so that
+      #     a local `docker compose up` still works.
+      - name: Render compose files for publishing
         run: |
           sed -i "s|\${IMAGE_TAG}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }} ${{ env.DEV_COMPOSE_FILE }}
+          HAPROXY_CFG="$(cat docker/haproxy.cfg)" yq -i '.configs.haproxy_cfg = {"content": strenv(HAPROXY_CFG)}' ${{ env.COMPOSE_FILE }}
+          PUBLIC_CRT="$(cat docker/certs/public.crt)" yq -i '.configs.minio_public_crt = {"content": strenv(PUBLIC_CRT)}' ${{ env.DEV_COMPOSE_FILE }}
+          PRIVATE_KEY="$(cat docker/certs/private.key)" yq -i '.configs.minio_private_key = {"content": strenv(PRIVATE_KEY)}' ${{ env.DEV_COMPOSE_FILE }}
 
       # --- 4. PUBLISH SPECIFIC COMPOSE FILE (release, dev, or manual) ---
       # Publishes the docker-compose.yml file with the name "<image-version>-compose"
