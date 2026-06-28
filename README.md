@@ -13,46 +13,47 @@ Built on a high-performance, reactive architecture, FRICT streamlines complex lo
 
 * **Customer-Centric Commerce**: Offers an intuitive online shopping environment where users can easily purchase products, track their orders in real-time, and contribute to the community through a transparent rating system.
 
-&nbsp;
-#### Featured in-app screenshots (v0.1):
-
-![Client Home Page](/docs/images/v0.1/client-home.png)
-
-![Product Details Page](/docs/images/v0.1/product-details.png)
-
-![Profile Page](/docs/images/v0.1/profile.png)
-
-![Admin Home Page](/docs/images/v0.1/admin-home.png)
-
-![Admin Categories Page](/docs/images/v0.1/admin-categories.png)
-
-![Admin Users Page](/docs/images/v0.1/admin-users.png)
-
-![Manager Shop Page](/docs/images/v0.1/manager-shop.png)
-
-![Driver Home Page](/docs/images/v0.1/driver-home.png)
+The platform is the result of two complementary Bachelor's Final Projects (TFGs): the first covering the **design and implementation** of the application, and the second extending it with a **production-grade, fully automated deployment on Amazon Web Services**.
 
 &nbsp;
 
-#### Client Subsystem Walkthrough Video:
+## 🛠️ Tech Stack
 
-- 🎥 [Frict Client](https://drive.google.com/file/d/1WN6dweSRKxQMpdlhnbIMXCex2Wc-6Yd3/view?usp=sharing)
-
-#### Management Subsystem Walkthrough Video:
-
-- 🎥 [Frict Management](https://drive.google.com/file/d/1_kL5ZykifSWLnz6QAOWpVEkjU00rx7pG/view?usp=sharing)
-
-&nbsp;
-
-
-
-> ℹ️ NOTE: This software is yet under active development to expand its features, upgrade the existing ones and improve general stability.
+| Layer | Technologies |
+|:---|:---|
+| **Frontend** | Angular 19, TypeScript, Tailwind CSS, PrimeNG 19 |
+| **Backend** | Java 21, Spring Boot 3, Spring Data JPA, Spring Security (JWT, OAuth2) |
+| **Persistence** | MySQL, MongoDB, MinIO (S3-compatible object storage) |
+| **DevOps & Cloud** | Docker, Docker Compose, GitHub Actions (CI/CD), AWS (CloudFormation) |
+| **Quality** | JUnit 5, Mockito, REST Assured, Jasmine, JaCoCo, Istanbul, SonarQube Cloud |
 
 &nbsp;
 
-## ⏩ Project Next Steps (remaining Advanced Functionality)
+#### Featured in-app screenshots (v1.0):
 
-- Trucks location ping while driver connections
+![Client Home Page](/docs/images/v1.0/client-home.png)
+
+![Product Details Page](/docs/images/v1.0/product-info.png)
+
+![Profile Page](/docs/images/v1.0/profile.png)
+
+![Admin Home Page](/docs/images/v1.0/admin-home.png)
+
+![Admin Categories Page](/docs/images/v1.0/categories-management.png)
+
+![Admin Users Page](/docs/images/v1.0/users-management.png)
+
+![Manager Shop Page](/docs/images/v1.0/shop-details.png)
+
+![Driver Home Page](/docs/images/v1.0/read-qr-code-menu.png)
+
+&nbsp;
+
+## 🔗 Links
+
+* 🎥 **Demo Video:** [Frict Demo](https://youtu.be/Uf_-_bBRLT4)
+* 🐳 **Docker Image:** [`mjpulido/frict`](https://hub.docker.com/r/mjpulido/frict)
+* 📝 **Project Blog:** [Medium](https://medium.com/@mjpulido03/list/frict-527a48059e82)
 
 &nbsp;
 

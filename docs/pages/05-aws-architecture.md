@@ -3,15 +3,14 @@
 ### 🔎 Index
 
 1. [Overview](#-overview)
-2. [Architecture Diagram](#-architecture-diagram)
-3. [AWS Services Used](#-aws-services-used)
-4. [Infrastructure as Code](#-infrastructure-as-code)
-5. [Spring Profiles](#-spring-profiles)
-6. [CI/CD Pipelines](#-cicd-pipelines)
-7. [Autoscaling](#-autoscaling)
-8. [Multi-Replica Architecture](#-multi-replica-architecture)
+2. [AWS Services Used](#-aws-services-used)
+3. [Network & Isolation](#-network--isolation)
+4. [Edge & Global Distribution](#-edge--global-distribution)
+5. [Compute](#-compute)
+6. [Data & Storage](#-data--storage)
+7. [Lambda Functions](#-lambda-functions)
+8. [Infrastructure as Code](#-infrastructure-as-code)
 9. [Security](#-security)
-10. [Cost Estimate](#-cost-estimate)
 
 &nbsp;
 
@@ -19,42 +18,11 @@
 
 ### 📍 Overview
 
-The application is deployed on **Amazon Web Services (AWS)** following a cloud-native architecture designed for high availability, horizontal scalability, and fully automated delivery. The deployment strategy builds on the single Docker image approach described in the [Development Guide](/docs/pages/04-development-guide.md), extending it to a production-grade environment with the following pillars:
+The application is deployed on **Amazon Web Services (AWS)** following a cloud-native architecture designed for high availability, horizontal scalability, and fully automated delivery. The decoupled client-server application stays the same as the one built in the previous project; in the cloud, it is extended over a private virtual network where each responsibility —compute, storage, databases, security, and traffic distribution— is handled by one or more independent AWS services.
 
-- **ECS Fargate** for serverless container orchestration with horizontal autoscaling
-- **Infrastructure as Code** via CloudFormation nested stacks for reproducible, version-controlled infrastructure
-- **Continuous Deployment** via GitHub Actions with OIDC authentication (no stored AWS credentials)
-- **Cost target:** under $50 USD/month during normal usage
+The result is a layered system where no critical component is exposed directly to the outside, and incoming traffic crosses successive control layers before reaching the application core. A key requirement throughout was that the same artifact must still run locally without any external account, keeping development and testing fully autonomous.
 
-&nbsp;
-
-
-
-### 🗺️ Architecture Diagram
-
-```
-                  Route53 (domain)
-                        |
-                  WAF (IP-based access control)
-                        |
-                  CloudFront (static cache + TLS)
-                        |
-                  ALB (sticky sessions, CloudFront-only SG)
-                        |
-            ┌───────────┼───────────┐         ← Application Auto Scaling
-        Task 1      Task 2      Task N        (target tracking on CPU 60%)
-       (Fargate)   (Fargate)   (Fargate)
-            └─────┬─────┴─────┬─────┘
-                  │           │
-              RDS MySQL   DocumentDB
-                              │
-                       ChangeStream delivers to ALL tasks
-                       → each task pushes WS to its local users
-
-  Each task → invoke → Lambda Geocoding → Nominatim
-  Each task → S3 (images via IAM task role)
-  Each task → Secrets Manager (JWT, DB creds)
-```
+> ℹ️ **NOTE:** The deployment workflows, the environment lifecycle management (start / stop / status), and the load-testing setup are described in the [Development Guide](/docs/pages/04-development-guide.md).
 
 &nbsp;
 
@@ -62,22 +30,80 @@ The application is deployed on **Amazon Web Services (AWS)** following a cloud-n
 
 ### 📋 AWS Services Used
 
-| Service | Purpose | Tier/Size |
-|:---|:---|:---|
-| **ECS Fargate** | Application containers (2-8 tasks) | 0.5 vCPU / 1 GB per task |
-| **ALB** | Load balancing with sticky sessions | CloudFront-only ingress |
-| **WAF** | IP-based access control on CloudFront | 1 Web ACL + 1 IP set rule |
-| **RDS MySQL** | Transactional data | db.t4g.micro (free tier) |
-| **DocumentDB** | Notifications + ChangeStreams | db.t3.medium (1 instance) |
-| **S3** | Image storage | Standard |
-| **CloudFront** | CDN + TLS termination | PriceClass_100 |
-| **Route53** | DNS management | Public hosted zone |
-| **ACM** | TLS certificates | Free (DNS validated) |
-| **Lambda** | Geocoding proxy + DocumentDB auto-stop | Python 3.12 |
-| **ECR** | Docker image registry | Private repo, keep 10 images |
-| **Secrets Manager** | JWT secret, DB credentials | Auto-generated |
-| **EventBridge** | Daily DocumentDB auto-stop check | rate(1 day) |
-| **CloudWatch Logs** | Container log aggregation | 14-day retention |
+| Layer | Services |
+|:---|:---|
+| **Compute** | Amazon ECS Fargate |
+| **Load balancing** | Amazon ELB (Application Load Balancer) |
+| **Databases** | Amazon RDS (MySQL), Amazon DocumentDB |
+| **Storage** | Amazon S3, Amazon ECR |
+| **Network & distribution** | Amazon VPC, Amazon CloudFront, Amazon Route 53 |
+| **Security** | AWS WAF, AWS IAM, AWS ACM, AWS Secrets Manager |
+| **External services** | AWS Lambda, Amazon SES |
+| **Monitoring & cost** | Amazon CloudWatch, AWS Budgets |
+
+&nbsp;
+
+
+
+### 🌐 Network & Isolation
+
+The foundation of the infrastructure is a **VPC** divided into four subnets across two availability zones:
+
+- **Public subnets:** host the load balancer and are the only entry point for external traffic.
+- **Private subnets:** host the application containers and databases, with no direct internet access. Inbound traffic can only come from the load balancer, and outbound traffic is handled through **VPC Endpoints** (so the tasks reach AWS services without leaving the private network).
+
+![VPC Subnets Diagram](../diagrams/v1.0/aws-vpc.png)
+
+Traffic between components is governed by **security groups** following the least-privilege principle, so each service only accepts connections from the specific component that needs to reach it (the ALB from CloudFront, the tasks from the ALB, and the databases from the tasks).
+
+![Security Groups Diagram](../diagrams/v1.0/aws-security-groups.png)
+
+&nbsp;
+
+
+
+### 🛰️ Edge & Global Distribution
+
+The global distribution layer is composed of **CloudFront**, **Route 53**, and **AWS WAF**. CloudFront acts as the front layer of the whole architecture, receiving every request before forwarding it to the internal load balancer; direct access to the ALB is blocked, forcing all traffic through this layer. Cache behavior is differentiated by content type, disabling caching for the API and WebSocket routes while optimizing delivery of the static frontend content.
+
+**Route 53** maps the public domain to the CloudFront distribution, and **AWS ACM** provisions and renews the SSL certificate automatically.
+
+&nbsp;
+
+
+
+### 💻 Compute
+
+The operational core is an **ECS cluster** running the application tasks on **Fargate**, each hosting the unified FRICT container with sensitive environment variables injected directly from Secrets Manager.
+
+![Compute Layer Diagram](../diagrams/v1.0/aws-compute.png)
+
+The **Application Load Balancer (ALB)** accepts traffic from CloudFront and forwards it to the tasks, performing periodic health checks on `/actuator/health` and using session-affinity cookies so a user's requests always reach the same instance (required for WebSocket connections). Autoscaling is driven by a target tracking policy on average CPU utilization, between a minimum of 2 tasks (for high availability) and a maximum of 8 (to absorb demand peaks).
+
+To deliver notifications across multiple active instances, each task keeps its own DocumentDB change stream open: when any task writes a notification, all of them receive it and each delivers it only to the users connected to that specific task, with no explicit coordination between instances.
+
+IAM roles attached to the tasks follow the least-privilege principle, separating the permissions needed at container startup (pulling images, reading secrets) from those used during runtime (S3, Lambda, SES).
+
+&nbsp;
+
+
+
+### 🗄️ Data & Storage
+
+- **Amazon RDS** hosts the MySQL database, replacing the local MySQL container and guaranteeing the persistence of the business data without manual server administration.
+- **Amazon DocumentDB** is a managed MongoDB-compatible database that handles usage data, notifications, and real-time connections. Its driver compatibility allowed reusing the existing code with minimal changes, with specific adaptations where DocumentDB diverges from MongoDB.
+- **Amazon S3** stores the multimedia assets. Being S3-compatible, the migration from MinIO required no significant code changes.
+- **Amazon ECR** acts as the private Docker image registry: on each deployment, the image published to DockerHub is pulled into ECR, from where ECS launches the instances.
+
+All sensitive values (database credentials, JWT signing key, database-encryption key, mail credentials, and Google OAuth client ID) are centralized in **AWS Secrets Manager** and injected into the tasks at startup, never exposed in the source code or the logs.
+
+&nbsp;
+
+
+
+### λ Lambda Functions
+
+To keep all components inside private subnets, four **AWS Lambda** functions act as intermediaries between the application and external services, avoiding direct internet access from the Fargate tasks: a geocoding proxy (Nominatim), a routing proxy (OSRM), a Google OAuth token validation proxy, and the DocumentDB auto-stop function. Email delivery is handled through **Amazon SES**, which replaces the external SMTP server of the local environment.
 
 &nbsp;
 
@@ -85,100 +111,17 @@ The application is deployed on **Amazon Web Services (AWS)** following a cloud-n
 
 ### 🏗️ Infrastructure as Code
 
-The entire infrastructure is defined as **CloudFormation nested stacks**, enabling modular management, independent updates, and clear separation of concerns across layers.
+The entire infrastructure is defined as **CloudFormation nested stacks**, organized under a root stack that orchestrates the rest. This separation lets each layer be managed independently, easing both partial updates and a full reproduction of the environment from scratch.
 
 ```
 infra/cloudformation/
-  main.yml        — Root stack orchestrating all nested stacks
-  network.yml     — VPC, subnets, security groups
-  storage.yml     — S3 bucket, ECR repository
-  data.yml        — RDS MySQL, DocumentDB, Secrets Manager
-  lambda.yml      — Geocoding Lambda, auto-stop Lambda, EventBridge
-  compute.yml     — ECS cluster, ALB, task definition, autoscaling
-  edge.yml        — CloudFront, Route53
-
-infra/scripts/
-  package.sh      — Package nested templates to S3
-  deploy.sh       — Deploy the stack
-  docdb-start.sh  — Start DocumentDB manually
-  docdb-stop.sh   — Stop DocumentDB manually
+  main.yml      — Root stack orchestrating all nested stacks
+  network.yml   — VPC, subnets, security groups, VPC endpoints
+  data.yml      — RDS MySQL, DocumentDB, Secrets Manager
+  lambda.yml    — Geocoding/Google/OSRM Lambdas, auto-stop Lambda, EventBridge
+  compute.yml   — ECS cluster, ALB, task definition, autoscaling
+  edge.yml      — CloudFront, Route53
 ```
-
-**Root stack parameters:** `DomainName`, `HostedZoneId`, `ImageTag`, `MinTaskCount`, `MaxTaskCount`, `EnableDocDB`, `ALBCertificateArn`, `CloudFrontCertificateArn`, `CloudFrontPrefixListId`.
-
-&nbsp;
-
-
-
-### ⚙️ Spring Profiles
-
-| Profile | Activated by | Behavior |
-|:---|:---|:---|
-| `local` | `.env` in development | Nominatim direct geocoding, `ddl-auto=create-drop`, MinIO for S3 |
-| `prod` | ECS TaskDefinition env var | Lambda geocoding, Flyway migrations, real S3, DocumentDB |
-| `test` | CI workflows | Nominatim direct geocoding, test databases |
-
-&nbsp;
-
-
-
-### 🚀 CI/CD Pipelines
-
-Two GitHub Actions workflows automate the build, infrastructure provisioning, and validation cycle.
-
-#### deploy.yml
-
-Triggered on push to `main` when `backend/**`, `frontend/**`, `docker/Dockerfile`, `infra/cloudformation/**`, or `infra/lambda/**` change. Runs three jobs:
-
-1. **Deploy Infrastructure** and **Build & Push Image** run in parallel:
-   - *Infra*: Authenticate via OIDC → package CloudFormation templates → deploy stack
-   - *Build*: Authenticate via OIDC → build Docker image → wait for ECR → push with commit SHA and `latest` tags
-2. **Activate Deployment** runs after both complete:
-   - Force new ECS deployment → wait for service stability
-
-This design eliminates the chicken-and-egg problem on first deployments: the Docker image is pushed to ECR while CloudFormation is still creating the database layer (~15 min), ensuring the image is available before ECS starts. On subsequent deployments, CloudFormation exits immediately if there are no infrastructure changes (`--no-fail-on-empty-changeset`), and ECS picks up the new image via `force-new-deployment`.
-
-&nbsp;
-
-#### load-test.yml
-
-Manual trigger (`workflow_dispatch`):
-
-1. Run k6 load test against the deployed environment
-2. Ramp from 0 to 100 virtual users
-3. Upload results as GitHub artifact
-
-&nbsp;
-
-
-
-### 📊 Autoscaling
-
-The ECS service uses **Application Auto Scaling** with a target tracking policy on average CPU utilization:
-
-- **Target value:** 60% average CPU
-- **Min capacity:** 2 tasks
-- **Max capacity:** 8 tasks
-- **Scale-out cooldown:** 60 seconds
-- **Scale-in cooldown:** 300 seconds
-
-WebSocket reconnection with exponential backoff on the client side handles scale-in events gracefully, ensuring users experience minimal disruption when tasks are terminated.
-
-&nbsp;
-
-
-
-### 🔄 Multi-Replica Architecture
-
-Running multiple ECS tasks behind an ALB requires careful coordination of stateful WebSocket connections and event delivery:
-
-- **ChangeStreams fan-out:** Each ECS task opens its own MongoDB ChangeStream listener. When any task writes a notification, ALL tasks receive the event via the ChangeStream. Each task only delivers the notification via WebSocket to users connected to THAT specific task.
-
-- **ALB sticky sessions:** Configured with `lb_cookie` (24-hour duration) to keep a user's WebSocket connection pinned to the same task for the duration of their session.
-
-- **Deregistration delay:** Set to 30 seconds, allowing graceful WebSocket closure during scale-in events before the ALB removes the task from the target group.
-
-- **Frontend reconnection:** The Angular client reconnects automatically with exponential backoff (1-second base, 30-second cap) when a WebSocket connection is lost.
 
 &nbsp;
 
@@ -188,42 +131,9 @@ Running multiple ECS tasks behind an ALB requires careful coordination of statef
 
 The architecture implements defense in depth across multiple layers:
 
-#### Network isolation
-
-- **ALB restricted to CloudFront:** The ALB security group only allows inbound HTTP from the AWS-managed CloudFront prefix list (`com.amazonaws.global.cloudfront.origin-facing`). This prevents direct access to the ALB, forcing all traffic through CloudFront. The prefix list ID is resolved dynamically during deployment.
-- **Internal traffic isolation:** All inter-service traffic within the VPC uses HTTP, isolated by security groups. TLS termination occurs only at the edge (CloudFront and ALB).
-
-#### Access control
-
-- **AWS WAF on CloudFront:** A Web ACL with an IP set rule controls which end-user IPs can access the application. The default action is **Block**, with an explicit **Allow** rule for whitelisted IPs. This is managed via the AWS console (not IaC, as it is intended as a temporary measure during pre-release). WAF costs ~$6/month (Web ACL + 1 rule + requests).
-- **No AWS credentials stored in GitHub:** OIDC federation with an IAM role restricted to the specific repository and branch.
-
-#### Data protection
-
-- **Secrets Manager** for all sensitive values (database passwords, JWT secret) with auto-generated credentials.
-- **S3 block public access** enabled on the images bucket; images are served exclusively via presigned URLs.
-- **Least-privilege IAM task role:** Scoped to S3 access on the specific bucket and Lambda invoke on the specific geocoding function.
-
-&nbsp;
-
-
-
-### 💰 Cost Estimate
-
-| Resource | Normal Usage | During Load Test | During Demo |
-|:---|:---|:---|:---|
-| **ECS Fargate** (2 tasks baseline) | ~$15/month | ~$20/month (burst to 4-8 tasks) | ~$15/month |
-| **RDS MySQL** (db.t4g.micro) | $0 (free tier) | $0 | $0 |
-| **DocumentDB** (db.t3.medium) | ~$12/month (with auto-stop) | ~$15/month (always on) | ~$12/month |
-| **ALB** | ~$5/month | ~$6/month | ~$5/month |
-| **CloudFront** | ~$1/month | ~$2/month | ~$1/month |
-| **S3 + ECR** | ~$1/month | ~$1/month | ~$1/month |
-| **Lambda + EventBridge** | < $1/month | < $1/month | < $1/month |
-| **WAF** (1 Web ACL + 1 rule) | ~$6/month | ~$6/month | ~$6/month |
-| **Route53 + ACM** | ~$1/month | ~$1/month | ~$1/month |
-| **Secrets Manager** | ~$2/month | ~$2/month | ~$2/month |
-| **CloudWatch Logs** | ~$1/month | ~$2/month | ~$1/month |
-| **Total** | **~$45/month** | **~$56/month** | **~$45/month** |
+- **Network isolation:** databases, containers, and storage live in private subnets with no direct internet access, and the ALB only accepts traffic from CloudFront. TLS termination occurs at the edge.
+- **Perimeter protection:** **AWS WAF** is integrated with CloudFront as the first line of defense, filtering malicious traffic (SQL injection, XSS, bad inputs, malicious IPs, and brute-force attempts) before it reaches the internal services.
+- **Access control & data protection:** **Secrets Manager** stores all sensitive values, **least-privilege IAM roles** govern every internal communication, and there are **no AWS credentials stored in GitHub** (OIDC federation restricted to the specific repository and branch).
 
 &nbsp;
 

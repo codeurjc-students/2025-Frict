@@ -61,8 +61,11 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data_dev:/data
-      - ./certs/public.crt:/root/.minio/certs/public.crt:ro
-      - ./certs/private.key:/root/.minio/certs/private.key:ro
+    configs:
+      - source: minio_public_crt
+        target: /root/.minio/certs/public.crt
+      - source: minio_private_key
+        target: /root/.minio/certs/private.key
     healthcheck:
       test: ["CMD", "curl", "-k", "-f", "https://localhost:9000/minio/health/live"]
       interval: 10s
@@ -70,7 +73,7 @@ services:
       retries: 5
 
   app:
-    image: mjpulido/frict:dev
+    image: mjpulido/frict:${IMAGE_TAG}
     container_name: frict-dev-app
     restart: unless-stopped
     ports:
@@ -91,13 +94,12 @@ services:
       JWT_SECRET: c3VwZXJfc2VjcmV0X2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXNfb25seV8xMjM0NTY3ODkw
       DB_ENCRYPTION_KEY: "1234567890123456"
       CORS_ALLOWED_ORIGIN: https://localhost
-      SENDER_MAIL_HOST: ${SENDER_MAIL_HOST:-smtp.gmail.com}
-      SENDER_MAIL_PORT: ${SENDER_MAIL_PORT:-587}
-      SENDER_MAIL_ADDRESS: ${SENDER_MAIL_ADDRESS:-}
-      SENDER_MAIL_PASSWORD: ${SENDER_MAIL_PASSWORD:-}
-      GOOGLE_AUTH_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID}
-    volumes:
-      - ./certs:/certs:ro
+    env_file:
+      - path: .env
+        required: false
+    configs:
+      - source: minio_public_crt
+        target: /certs/public.crt
     depends_on:
       mysql:
         condition: service_healthy
@@ -110,3 +112,9 @@ volumes:
   mysql_data_dev:
   mongodb_data_dev:
   minio_data_dev:
+
+configs:
+  minio_public_crt:
+    file: ./certs/public.crt
+  minio_private_key:
+    file: ./certs/private.key

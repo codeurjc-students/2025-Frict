@@ -10,6 +10,7 @@ on:
 env:
   IMAGE_NAME: mjpulido/frict
   COMPOSE_FILE: docker/docker-compose.yml
+  DEV_COMPOSE_FILE: docker/docker-compose-dev.yml
 
 jobs:
   build-publish:
@@ -59,17 +60,24 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ steps.vars.outputs.is_release == 'true' && format('{0}:latest', env.IMAGE_NAME) || '' }}
 
-      # --- 3. COMPOSE FILE TAG NAME RENDERING ---
-      # Change the ${IMAGE_TAG} placeholder in Compose file with the calculated tag (release tag, "dev", or manual tag)
-      - name: Compose file image tag rendering
+      # --- 3. PREPARE COMPOSE FILES FOR PUBLISHING ---
+      # (a) Replace the ${IMAGE_TAG} placeholder with the calculated tag (release tag, "dev", or manual tag).
+      # (b) Inline the config/secret file contents: `docker compose publish` does NOT bundle
+      #     configs declared with `file:` (it keeps only the path reference, which is missing on
+      #     the consumer side). Converting them to inline `content:` embeds them in the published
+      #     compose.yaml so the artifact is truly self-contained. Source files keep `file:` so that
+      #     a local `docker compose up` still works.
+      - name: Render compose files for publishing
         run: |
-          sed -i "s|\${IMAGE_TAG}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }}
+          sed -i "s|\${IMAGE_TAG}|${{ env.IMAGE_TAG }}|g" ${{ env.COMPOSE_FILE }} ${{ env.DEV_COMPOSE_FILE }}
+          HAPROXY_CFG="$(cat docker/haproxy.cfg)"$'\n' yq -i '.configs.haproxy_cfg = {"content": strenv(HAPROXY_CFG)}' ${{ env.COMPOSE_FILE }}
+          PUBLIC_CRT="$(cat docker/certs/public.crt)"$'\n' yq -i '.configs.minio_public_crt = {"content": strenv(PUBLIC_CRT)}' ${{ env.DEV_COMPOSE_FILE }}
+          PRIVATE_KEY="$(cat docker/certs/private.key)"$'\n' yq -i '.configs.minio_private_key = {"content": strenv(PRIVATE_KEY)}' ${{ env.DEV_COMPOSE_FILE }}
 
       # --- 4. PUBLISH SPECIFIC COMPOSE FILE (release, dev, or manual) ---
       # Publishes the docker-compose.yml file with the name "<image-version>-compose"
       - name: Publish Compose Artifact
         run: |
-          echo "" > backend/.env
           yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.artifact_tag }}
 
       # --- 5. PUBLISH LATEST COMPOSE FILE (releases only) ---
@@ -80,7 +88,20 @@ jobs:
           sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" ${{ env.COMPOSE_FILE }}
           yes | docker compose -f ${{ env.COMPOSE_FILE }} publish --with-env ${{ steps.vars.outputs.compose_tag_latest }}
 
-      # --- 6. EXPORT IMAGE TAG FOR DOWNSTREAM WORKFLOWS ---
+      # --- 6. PUBLISH DEV (SINGLE-INSTANCE) COMPOSE (release, dev, or manual) ---
+      # Publishes the docker-compose-dev.yml file with the name "<image-version>-compose-single"
+      - name: Publish Dev Compose Artifact
+        run: |
+          yes | docker compose -f ${{ env.DEV_COMPOSE_FILE }} publish --with-env ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}-compose-single
+
+      # --- 7. PUBLISH LATEST DEV COMPOSE (releases only) ---
+      - name: Publish Latest Dev Compose Artifact (Re-rendered)
+        if: steps.vars.outputs.is_release == 'true'
+        run: |
+          sed -i "s|image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|image: ${{ env.IMAGE_NAME }}:latest|g" ${{ env.DEV_COMPOSE_FILE }}
+          yes | docker compose -f ${{ env.DEV_COMPOSE_FILE }} publish --with-env ${{ env.IMAGE_NAME }}:latest-compose-single
+
+      # --- 8. EXPORT IMAGE TAG FOR DOWNSTREAM WORKFLOWS ---
       - name: Save image tag artifact
         run: echo "${{ env.IMAGE_TAG }}" > image_tag.txt
 
