@@ -1,5 +1,25 @@
 name: frict
 
+x-app-env: &app-env
+  SPRING_PROFILES_ACTIVE: local
+  SERVER_SSL_ENABLED: "false"
+  APP_COOKIE_SECURE: "false"
+  MYSQL_HOST: mysql
+  MYSQL_PORT: "3306"
+  MYSQL_DATABASE: Frict
+  MYSQL_USERNAME: user
+  MYSQL_PASSWORD: password
+  MONGODB_URI: "mongodb://user:password@mongodb:27017/Frict?authSource=admin&replicaSet=rs0"
+  APP_STORAGE_ENDPOINT: http://minio:9000
+  APP_STORAGE_PUBLIC_URL: http://localhost:9000/images
+  APP_STORAGE_BUCKET_NAME: images
+  AWS_ACCESS_KEY_ID: user
+  AWS_SECRET_ACCESS_KEY: password
+  CORS_ALLOWED_ORIGIN: http://localhost
+  # Exclude mail from /actuator/health so an unreachable SMTP server does not
+  # mark every instance DOWN in HAProxy (mail sending itself is unaffected).
+  MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+
 x-app-common: &app-common
   image: mjpulido/frict:${IMAGE_TAG}
   restart: unless-stopped
@@ -7,21 +27,7 @@ x-app-common: &app-common
     - path: .env
       required: false
   environment:
-    SPRING_PROFILES_ACTIVE: local
-    SERVER_SSL_ENABLED: "false"
-    APP_COOKIE_SECURE: "false"
-    MYSQL_HOST: mysql
-    MYSQL_PORT: "3306"
-    MYSQL_DATABASE: Frict
-    MYSQL_USERNAME: user
-    MYSQL_PASSWORD: password
-    MONGODB_URI: "mongodb://user:password@mongodb:27017/Frict?authSource=admin&replicaSet=rs0"
-    APP_STORAGE_ENDPOINT: http://minio:9000
-    APP_STORAGE_PUBLIC_URL: http://localhost:9000/images
-    APP_STORAGE_BUCKET_NAME: images
-    AWS_ACCESS_KEY_ID: user
-    AWS_SECRET_ACCESS_KEY: password
-    CORS_ALLOWED_ORIGIN: http://localhost
+    <<: *app-env
   depends_on:
     mysql:
       condition: service_healthy
@@ -44,17 +50,43 @@ services:
       - app-2
       - app-3
 
+  # app-1 is the single initializer: it creates the schema (ddl-auto=create-drop)
+  # and loads the seed data (app.db.init=all from the local profile). app-2/app-3
+  # wait until it is healthy, then start WITHOUT touching the schema or re-seeding,
+  # avoiding the deadlocks / duplicate-key errors of 3 instances seeding one DB.
   app-1:
     <<: *app-common
     container_name: frict-app-1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8443/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
 
   app-2:
     <<: *app-common
     container_name: frict-app-2
+    environment:
+      <<: *app-env
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      APP_DB_INIT: none
+      APP_STORAGE_UPLOAD_DEFAULTS: "false"
+    depends_on:
+      app-1:
+        condition: service_healthy
 
   app-3:
     <<: *app-common
     container_name: frict-app-3
+    environment:
+      <<: *app-env
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      APP_DB_INIT: none
+      APP_STORAGE_UPLOAD_DEFAULTS: "false"
+    depends_on:
+      app-1:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0
