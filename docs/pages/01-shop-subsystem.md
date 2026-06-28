@@ -1,19 +1,10 @@
 ## 🛒 Shop Subsystem: Features and Screens
 
-**Signup Page**
-
-Create a new user account to start placing or tracking orders, checking prices, or posting product reviews.
-
-![Signup Page](/docs/images/v0.1/signup.png)
-
-&nbsp;
-
-
 **Client Home Page**
 
 Application home page. Browse main product categories, as well as a list of featured products, recommendations based on your previous searches, or current bestsellers.
 
-![Home Page](/docs/images/v0.1/client-home.png)
+![Home Page](/docs/images/v1.0/client-home.png)
 
 &nbsp;
 
@@ -22,7 +13,7 @@ Application home page. Browse main product categories, as well as a list of feat
 
 View detailed product information, including photos, specifications, user reviews, stock availability, and related products. You can also post a product review to inform other users about its quality.
 
-![Product Details Page](/docs/images/v0.1/product-details.png)
+![Product Information Page](/docs/images/v1.0/product-info.png)
 
 &nbsp;
 
@@ -31,7 +22,7 @@ View detailed product information, including photos, specifications, user review
 
 Search and filter products by name or related fields. For each item, check availability (including stores where it is on sale, total stock, and local stock at a selected location), as well as price, discounts, and customer ratings.
 
-![Search Result Page](/docs/images/v0.1/search.png)
+![Search Result Page](/docs/images/v1.0/search.png)
 
 &nbsp;
 
@@ -40,7 +31,16 @@ Search and filter products by name or related fields. For each item, check avail
 
 View the items added to your cart so far, your favourite products, and the current order total price.
 
-![Cart Page](/docs/images/v0.1/cart.png)
+![Cart Page](/docs/images/v1.0/cart.png)
+
+&nbsp;
+
+
+**Order Summary Menu**
+
+Review the full breakdown of your purchase before confirming it: selected products, quantities, shipping address, payment method, and the resulting total price.
+
+![Order Summary Menu](/docs/images/v1.0/order-summary.png)
 
 &nbsp;
 
@@ -49,7 +49,7 @@ View the items added to your cart so far, your favourite products, and the curre
 
 Verify that your order was placed successfully and review your order reference code.
 
-![Order Confirmation Page](/docs/images/v0.1/order-confirmation.png)
+![Order Confirmation Page](/docs/images/v1.0/order-confirmed.png)
 
 &nbsp;
 
@@ -58,7 +58,7 @@ Verify that your order was placed successfully and review your order reference c
 
 Review your personal information stored in the application, and check your most recent orders and reviews.
 
-![Profile Page](/docs/images/v0.1/profile.png)
+![Profile Page](/docs/images/v1.0/profile.png)
 
 &nbsp;
 
@@ -67,7 +67,7 @@ Review your personal information stored in the application, and check your most 
 
 Update the personal information used within the application. This data includes your full name, your username and email address (which must be unique), and your contact phone number.
 
-![Edit Information Menu](/docs/images/v0.1/edit-information-menu.png)
+![Edit Information Menu](/docs/images/v1.0/edit-information-menu.png)
 
 &nbsp;
 
@@ -76,7 +76,7 @@ Update the personal information used within the application. This data includes 
 
 Create or update your different shipping addresses information.
 
-![Create/Edit Address Menu](/docs/images/v0.1/create-edit-address-menu.png)
+![Create/Edit Address Menu](/docs/images/v1.0/create-edit-address-menu.png)
 
 &nbsp;
 
@@ -85,7 +85,7 @@ Create or update your different shipping addresses information.
 
 Create or update your different payment methods information.
 
-![Create/Edit Card Menu](/docs/images/v0.1/create-edit-card-menu.png)
+![Create/Edit Card Menu](/docs/images/v1.0/create-edit-card-menu.png)
 
 &nbsp;
 
@@ -94,7 +94,7 @@ Create or update your different payment methods information.
 
 Maintain detailed tracking of your order status and any updates provided by managers and administrators. For orders out for delivery, you can view the approximate geographic location of the delivery truck.
 
-![Order Details Page](/docs/images/v0.1/order-details.png)
+![Order Details Page](/docs/images/v1.0/order-details.png)
 
 &nbsp;
 
@@ -103,7 +103,7 @@ Maintain detailed tracking of your order status and any updates provided by mana
 
 Shows the confirmation QR code for the selected order. After being scanned by the assigned delivery driver, the order will be marked as completed.
 
-![Show QR Menu](/docs/images/v0.2/show-qr-menu.png)
+![Show QR Menu](/docs/images/v1.0/show-qr-code-menu.png)
 
 &nbsp;
 
@@ -112,6 +112,6 @@ Shows the confirmation QR code for the selected order. After being scanned by th
 
 Review the error details and restart the loading process to resolve the issue.
 
-![Error Page](/docs/images/v0.1/error.png)
+![Error Page](/docs/images/v1.0/error.png)
 
 &nbsp;

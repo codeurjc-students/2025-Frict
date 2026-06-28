@@ -1,29 +1,24 @@
 ## 🏁 App execution
 
-Due to the application's extensive dependency list, Docker Compose is used for execution. This allows for the concurrent management of the application and its required services, including the MySQL database and MinIO image storage.
+The application runs entirely on Docker, so no language runtimes or build tools need to be installed locally. The project ships with two distinct Docker Compose configurations depending on your goal:
 
-### Prerequisites
+* **Local Production Environment** — replicates the AWS production topology by running three application instances load-balanced behind HAProxy. Ideal for evaluating the system as it behaves in the cloud.
+* **Development Environment** — runs a single application instance with debugging support and self-signed TLS certificates for MinIO. Ideal for working on the source code.
 
-To get the application up and running, ensure you have the following tools installed based on your operating system:
-
-* **Windows / macOS:** Install **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**. This package includes Docker Engine, Docker CLI, and Docker Compose, providing everything needed to orchestrate the application containers.
-
-
-* **Linux:** You will need to install the **Docker Engine** (which includes the **Docker CLI**) and the **Docker Compose** plugin:
-     * **[Install Docker Engine](https://docs.docker.com/engine/install/)**: Follow the official guide for your specific distribution (e.g., Ubuntu, Debian, Fedora).
-     * **[Install Docker Compose V2](https://docs.docker.com/compose/install/linux/)**: Ensure the Compose plugin is available to manage the multi-container stack.
+Both environments bundle the full stack: the application, the MySQL relational database, the MongoDB database (replica set enabled), and MinIO object storage. The application containers wait for all data services to report `healthy` before starting, so the very first launch may take a little longer while the databases initialize.
 
 &nbsp;
 
-### Docker-based execution
+### ⚙️ Prerequisites and Environment Setup
 
-In order to run the application using a Docker Compose container composition, the following steps should be executed. This approach allows for the concurrent management of the main application and its required auxiliary services (**MySQL** database and **MinIO** object storage).
+The only requirement is having Docker installed and available on your system's PATH:
 
-Ensure Docker is installed and added to your system's PATH before proceeding.
+* **Windows / macOS:** Install **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**, which includes Docker Engine, Docker CLI, and Docker Compose.
 
-#### 1. Environment Variables Configuration
 
-Before running the stack, you must provide the necessary credentials to prevent startup warnings and ensure full functionality. Create a file named `.env` in your working directory with the following structure:
+* **Linux:** Install the **[Docker Engine](https://docs.docker.com/engine/install/)** (which includes the Docker CLI) and the **[Docker Compose V2](https://docs.docker.com/compose/install/linux/)** plugin separately, following the official guide for your distribution.
+
+With Docker ready, create a `.env` file with the credentials of the external services:
 
 ```env
 GOOGLE_AUTH_CLIENT_ID=your_google_client_id
@@ -32,42 +27,71 @@ SENDER_MAIL_PORT=587
 SENDER_MAIL_PASSWORD=your_email_app_password
 ```
 
-> ℹ️ **NOTE:** This environment variables are directly responsible for the application's email delivery and third-party authentication functionalities. In order for this feature to work properly, you must provide valid credentials and connection details from a real SMTP server.
+For the **local production environment**, place this file in your working directory. For the **development environment**, place it in the root directory of the cloned repository and add the following extra variable:
+
+```env
+SENDER_MAIL_HOST=smtp.gmail.com
+```
+
+> ℹ️ **NOTE:** These variables are directly responsible for the application's email delivery and third-party authentication functionalities. To enable them, you must provide valid credentials and connection details from a real SMTP server.
 
 &nbsp;
 
-#### 2. Deploy the stack
+### 🚀 Local Production Environment
 
-Execute the composition directly from the remote registry using a terminal window located in the same folder as your `.env` file. Docker Compose will automatically read it, fetch the required images, and orchestrate all containers simultaneously in detached mode (running in the background):
+This environment replicates the AWS production setup, bringing up three application instances balanced through HAProxy. It does not require cloning the repository, since the Compose artifact is pulled directly from DockerHub.
+
+#### 1. Deploy the stack
+
+From a terminal located in the same folder as your `.env` file, run one of the following commands. Docker Compose will automatically read the file, fetch the required images, and orchestrate all containers in detached mode (running in the background):
 
 ```bash
-# For the development version:
+# For the development version (:dev image):
 docker compose -f oci://mjpulido/frict:dev-compose up -d
 
-# For the production (latest) version, with DB ports not exposed:
+# For the production version (:latest image), with DB ports not exposed:
 docker compose -f oci://mjpulido/frict up -d
 ```
 
-##### Managing the Stack (Stop / Restart):
-* **To stop the application:** You can safely stop the services to free up system resources without losing any data. You can do this via the Docker Desktop interface or by running the same command replacing `up -d` with `down` (e.g., `docker compose -f oci://mjpulido/frict down`).
-
-
-* **To launch it again:** Use **exactly the same `up -d` command** shown above. Docker is smart enough to detect that the images and configuration are already on your system, so it will bypass the download phase and start the services almost instantaneously.
-
-&nbsp;
-
-#### 3. Access the Application
+#### 2. Access the application
 
 Once all containers are healthy, open your browser and navigate to:
 
-* **Main Application:** **`http://localhost`** (served via HAProxy on port 80)
+* **Main Application:** **`http://localhost`** (port 80, served via HAProxy)
 * **MinIO Console (optional):** `http://localhost:9001` for managing stored images
+
+#### 3. Managing the stack (Stop / Restart)
+
+* **To stop the application:** You can safely stop the services to free up system resources without losing any data, either via the Docker Desktop interface or by replacing `up -d` with `down`:
+
+```bash
+docker compose -f oci://mjpulido/frict down
+```
+
+* **To launch it again:** Use **exactly the same `up -d` command** as before. Docker detects that the images and configuration are already on your system, so it skips the download phase and starts the services almost instantly.
 
 &nbsp;
 
-#### 4. Login Credentials
+### 🛠️ Development Environment
 
-The application comes pre-configured with a set of example accounts to test the different organizational roles. You can use the following credentials to log in (using the login page):
+This environment brings up a single application instance with debugging support and self-signed TLS certificates for MinIO. It requires cloning the repository beforehand:
+
+```bash
+git clone https://github.com/codeurjc-students/2025-Frict frict
+cd frict
+docker compose -f docker-compose-dev.yml up -d
+```
+
+Once all containers are healthy, the application is accessible at:
+
+* **Main Application:** **`https://localhost`** (port 443)
+* **MinIO Console (optional):** `https://localhost:9001` for managing stored images
+
+&nbsp;
+
+### 🔑 Login Credentials
+
+Both environments come pre-configured with the same set of example accounts to test the different organizational roles. You can use the following credentials to log in (using the login page):
 
 | Role | Username | Password | Permissions                                                                                                     |
 | :--- | :--- | :--- |:----------------------------------------------------------------------------------------------------------------|
@@ -80,9 +104,9 @@ The application comes pre-configured with a set of example accounts to test the 
 
 &nbsp;
 
-#### 5. Default Data
+### 📦 Default Data
 
-Upon startup, the application's database is automatically populated with a comprehensive set of seed data to facilitate immediate testing and demonstration, using `DatabaseInitializer` class. This environment includes:
+Upon startup, the application's database is automatically populated with a comprehensive set of seed data to facilitate immediate testing and demonstration, using the `DatabaseInitializer` class. This environment includes:
 
 * **Users:** Four predefined accounts representing each system role (Standard User, Admin, Manager, and Driver). The customer and admin accounts are fully populated with mock personal data, including geolocated addresses and saved payment cards.
 
