@@ -71,6 +71,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/recovery", "/api/v1/auth/verification", "/api/v1/auth/reset").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh", "/api/v1/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/google", "/api/v1/auth/signup").permitAll() // Open to all despite being categorized as user-facing endpoints
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/auth/reset").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/auth/reset/*").hasAuthority("ADMIN")
 
                         // --- 2. CATEGORIES (CategoryRestController) ---
